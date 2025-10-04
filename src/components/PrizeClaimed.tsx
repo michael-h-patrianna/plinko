@@ -5,6 +5,8 @@
 
 import { motion } from 'framer-motion';
 import type { PrizeConfig } from '../game/types';
+import { useTheme } from '../theme';
+import { ThemedButton } from './ThemedButton';
 
 interface PrizeClaimedProps {
   prize: PrizeConfig;
@@ -12,6 +14,7 @@ interface PrizeClaimedProps {
 }
 
 export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
+  const { theme } = useTheme();
   return (
     <motion.div
       className="absolute inset-0 z-50 flex items-center justify-center p-6"
@@ -27,41 +30,42 @@ export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
           width: '120px',
           height: '120px',
           borderRadius: '50%',
-          background: 'rgba(16,15,29,0.1)',
+          background: `${theme.colors.status.success}1a`,
         }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
+        transition={{ duration: 0.25, delay: 0.1, ease: [0.34, 1.56, 0.64, 1] }}
       >
         <motion.div
           className="absolute inset-0 flex items-center justify-center text-6xl"
           initial={{ scale: 0, rotate: -45 }}
           animate={{ scale: 1, rotate: 0 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+          transition={{ duration: 0.35, delay: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
         >
           ✓
         </motion.div>
       </motion.div>
 
       <div className="relative text-center">
-        {/* Prize Claimed header */}
+        {/* Prize Claimed header - matching StartScreen title style */}
         <motion.h2
-          className="text-4xl font-extrabold mb-4"
+          className="text-4xl font-extrabold mb-6 text-center"
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #3b82f6 50%, #8b5cf6 100%)',
+            background: theme.gradients.titleGradient || theme.gradients.buttonPrimary,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-            filter: 'drop-shadow(0 0 20px rgba(16,185,129,0.5)) drop-shadow(0 0 20px rgba(139,92,246,0.5)) drop-shadow(0 4px 12px rgba(0,0,0,0.9))',
+            fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
+            filter: `drop-shadow(0 0 20px ${theme.colors.shadows.colored}) drop-shadow(0 4px 12px ${theme.colors.shadows.default})`,
           }}
-          initial={{ scale: 0, rotate: -10 }}
+          initial={{ scale: 0, rotate: -5 }}
           animate={{
             scale: 1,
             rotate: 0,
           }}
           transition={{
-            duration: 0.6,
-            delay: 0.5,
+            duration: 0.35,
+            delay: 0.2,
             ease: [0.34, 1.56, 0.64, 1]
           }}
         >
@@ -70,28 +74,23 @@ export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
 
         {/* Prize summary */}
         <motion.p
-          className="text-slate-300 mb-8 text-lg"
+          className="mb-8 text-lg"
+          style={{ color: theme.colors.text.secondary }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.7 }}
+          transition={{ duration: 0.25, delay: 0.7 }}
         >
           Your reward has been claimed successfully.
         </motion.p>
 
         {/* Close button */}
-        <motion.button
+        <ThemedButton
           onClick={onClose}
-          className="btn-primary"
-          initial={{ y: 20, opacity: 0, scale: 0.9 }}
-          animate={{ y: 0, opacity: 1, scale: 1 }}
-          transition={{
-            y: { duration: 0.4, delay: 0.9 },
-            opacity: { duration: 0.4, delay: 0.9 },
-          }}
-          data-testid="close-button"
+          delay={0.3}
+          testId="close-button"
         >
           Close
-        </motion.button>
+        </ThemedButton>
       </div>
     </motion.div>
   );

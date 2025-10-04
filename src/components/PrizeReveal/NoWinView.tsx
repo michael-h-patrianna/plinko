@@ -3,10 +3,11 @@
  * Subdued, encouraging, not celebratory
  */
 
-import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Prize } from '../../game/prizeTypes';
 import noWinImage from '../../assets/nowin.png';
+import { useTheme } from '../../theme';
+import { ThemedButton } from '../ThemedButton';
 
 interface NoWinViewProps {
   prize: Prize;
@@ -15,14 +16,7 @@ interface NoWinViewProps {
 }
 
 export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
-  const claimButtonRef = useRef<HTMLButtonElement>(null);
-  const [isPressed, setIsPressed] = useState(false);
-
-  useEffect(() => {
-    if (canClaim && claimButtonRef.current) {
-      claimButtonRef.current.focus();
-    }
-  }, [canClaim]);
+  const { theme } = useTheme();
 
   return (
     <motion.div
@@ -36,9 +30,9 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
       <motion.div
         className="relative rounded-2xl p-8 max-w-sm w-full"
         style={{
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          border: '1px solid rgba(71,85,105,0.4)',
+          background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
+          boxShadow: `0 4px 12px ${theme.colors.shadows.default}4d`,
+          border: `1px solid ${theme.colors.surface.elevated}66`,
         }}
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{
@@ -46,7 +40,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
           opacity: 1,
         }}
         transition={{
-          duration: 0.5,
+          duration: 0.25,
           ease: [0.34, 1.56, 0.64, 1],
         }}
       >
@@ -58,17 +52,18 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             className="w-24 h-24 mx-auto mb-4"
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 0.8 }}
-            transition={{ duration: 0.4, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+            transition={{ duration: 0.25, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
           />
 
           <motion.h2
-            className="text-2xl font-bold text-slate-300 mb-4"
+            className="text-2xl font-bold mb-4"
             style={{
-              textShadow: '0 2px 6px rgba(0,0,0,0.6)',
+              color: theme.colors.text.primary,
+              textShadow: `0 2px 6px ${theme.colors.shadows.default}99`,
             }}
             initial={{ y: 10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.3 }}
+            transition={{ duration: 0.25, delay: 0.3 }}
           >
             {prize.title}
           </motion.h2>
@@ -77,40 +72,30 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
           <motion.div
             className="my-6 p-4 rounded-lg"
             style={{
-              background: 'rgba(71,85,105,0.2)',
-              border: '1px solid rgba(148,163,184,0.2)',
+              background: `${theme.colors.surface.elevated}33`,
+              border: `1px solid ${theme.colors.text.tertiary}33`,
             }}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
+            transition={{ duration: 0.25, delay: 0.4 }}
           >
-            <p className="text-slate-300 text-base leading-relaxed">
+            <p className="text-base leading-relaxed" style={{ color: theme.colors.text.secondary }}>
               {prize.description || "Better luck next time!"}
             </p>
-            <p className="text-slate-400 text-sm mt-2">
+            <p className="text-sm mt-2" style={{ color: theme.colors.text.tertiary }}>
               Keep trying - your big win could be just around the corner!
             </p>
           </motion.div>
 
           {/* Try again button */}
-          <motion.button
-            ref={claimButtonRef}
+          <ThemedButton
             onClick={onClaim}
             disabled={!canClaim}
-            className="w-full btn-primary"
-            initial={{ y: 20, opacity: 0, scale: 0.9 }}
-            animate={{
-              y: 0,
-              opacity: 1,
-              scale: 1,
-            }}
-            transition={{
-              y: { duration: 0.4, delay: 0.6 },
-              opacity: { duration: 0.4, delay: 0.6 },
-            }}
+            delay={0.6}
+            className="w-full"
           >
             Try Again
-          </motion.button>
+          </ThemedButton>
         </div>
       </motion.div>
     </motion.div>

@@ -5,6 +5,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { useTheme } from '../../theme';
 
 interface SlotWinRevealProps {
   x: number;
@@ -17,6 +18,7 @@ interface SlotWinRevealProps {
 }
 
 export function SlotWinReveal({ x, y, width, height, color, label, isActive }: SlotWinRevealProps) {
+  const { theme } = useTheme();
   if (!isActive) return null;
 
   return (
@@ -117,12 +119,12 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
             background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
             boxShadow: `
               0 8px 24px ${color}66,
-              0 4px 12px rgba(0,0,0,0.5),
-              inset 0 1px 2px rgba(255,255,255,0.3),
-              inset 0 -1px 2px rgba(0,0,0,0.3)
+              0 4px 12px ${theme.colors.shadows.default}50,
+              inset 0 1px 2px ${theme.colors.text.inverse}30,
+              inset 0 -1px 2px ${theme.colors.shadows.default}30
             `,
             border: `1px solid ${color}88`,
-            textShadow: '0 2px 4px rgba(0,0,0,0.6)',
+            textShadow: `0 2px 4px ${theme.colors.shadows.default}60`,
           }}
         >
           {label}
@@ -147,7 +149,7 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
             left: '-100%',
             width: '100%',
             height: '100%',
-            background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)`,
+            background: `linear-gradient(90deg, transparent 0%, ${theme.colors.text.inverse}60 50%, transparent 100%)`,
           }}
           animate={{
             left: ['100%', '-100%'],
@@ -176,7 +178,7 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
               top: `${y + offsetY}px`,
               width: '4px',
               height: '4px',
-              background: `radial-gradient(circle, #ffffff 0%, ${color} 70%, transparent 100%)`,
+              background: `radial-gradient(circle, ${theme.colors.text.inverse} 0%, ${color} 70%, transparent 100%)`,
               boxShadow: `0 0 8px ${color}`,
             }}
             initial={{

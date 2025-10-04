@@ -12,7 +12,9 @@ import { Countdown } from './components/Countdown';
 import { PrizeReveal } from './components/PrizeReveal';
 import { PrizeClaimed } from './components/PrizeClaimed';
 import { ViewportSelector } from './components/ViewportSelector';
+import { ThemeSelector } from './components/ThemeSelector';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
+import { ThemeProvider, themes, useTheme } from './theme';
 
 // Detect if user is on actual mobile device
 const isMobileDevice = () => {
@@ -22,8 +24,9 @@ const isMobileDevice = () => {
   return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
 };
 
-export function App() {
+function AppContent() {
   const [isMobile, setIsMobile] = useState(false);
+  const { theme } = useTheme();
 
   // Detect mobile on mount
   useEffect(() => {
@@ -101,18 +104,22 @@ export function App() {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center"
+      className="min-h-screen flex flex-col items-center justify-center"
       style={{
+        background: theme.gradients.backgroundMain,
         padding: isMobile ? '0' : '1rem'
       }}
     >
-      {/* Viewport selector - hidden on actual mobile devices */}
+      {/* Theme and Viewport selectors - hidden on actual mobile devices */}
       {!isMobile && (
-        <ViewportSelector
-          selectedWidth={viewportWidth}
-          onWidthChange={handleViewportChange}
-          disabled={isViewportLocked}
-        />
+        <>
+          <ThemeSelector />
+          <ViewportSelector
+            selectedWidth={viewportWidth}
+            onWidthChange={handleViewportChange}
+            disabled={isViewportLocked}
+          />
+        </>
       )}
 
       {/* Game container */}
@@ -171,6 +178,7 @@ export function App() {
 
           {/* Prize reveal overlay with smooth entrance */}
           <AnimatePresence mode="wait">
+            {(console.log('[App] State:', state, 'SelectedPrize:', selectedPrize), false)}
             {state === 'revealed' && selectedPrize && (
               <PrizeReveal
                 key="prize-reveal"
@@ -196,11 +204,19 @@ export function App() {
 
       {/* Info text - only show on desktop */}
       {!isMobile && (
-        <div className="mt-4 text-slate-400 text-xs text-center max-w-md">
+        <div className="mt-4 text-xs text-center max-w-md" style={{ color: theme.colors.text.tertiary }}>
           Select a viewport size to test different mobile devices.
           The viewport is locked during gameplay to ensure physics accuracy.
         </div>
       )}
     </div>
+  );
+}
+
+export function App() {
+  return (
+    <ThemeProvider themes={themes}>
+      <AppContent />
+    </ThemeProvider>
   );
 }

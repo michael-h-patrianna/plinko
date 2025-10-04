@@ -5,6 +5,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { useTheme } from '../theme';
 
 interface SlotAnticipationProps {
   x: number;
@@ -14,6 +15,7 @@ interface SlotAnticipationProps {
 }
 
 export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipationProps) {
+  const { theme } = useTheme();
   if (!isActive) return null;
 
   return (

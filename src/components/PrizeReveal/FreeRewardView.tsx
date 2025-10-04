@@ -4,9 +4,10 @@
  */
 
 import { motion } from 'framer-motion';
-import { useEffect, useRef, useState } from 'react';
 import type { Prize } from '../../game/prizeTypes';
 import { RewardItem } from './RewardItem';
+import { useTheme } from '../../theme';
+import { ThemedButton } from '../ThemedButton';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -15,14 +16,7 @@ interface FreeRewardViewProps {
 }
 
 export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps) {
-  const claimButtonRef = useRef<HTMLButtonElement>(null);
-  const [isPressed, setIsPressed] = useState(false);
-
-  useEffect(() => {
-    if (canClaim && claimButtonRef.current) {
-      claimButtonRef.current.focus();
-    }
-  }, [canClaim]);
+  const { theme } = useTheme();
 
   const rewards = prize.freeReward;
   if (!rewards) return null;
@@ -52,9 +46,9 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
       <motion.div
         className="relative rounded-2xl p-8 max-w-md w-full"
         style={{
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          border: '1px solid rgba(71,85,105,0.4)',
+          background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
+          boxShadow: `0 4px 12px ${theme.colors.shadows.default}4d`,
+          border: `1px solid ${theme.colors.surface.elevated}66`,
         }}
         initial={{ scale: 0, rotate: -10, opacity: 0 }}
         animate={{
@@ -63,7 +57,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           opacity: [0, 1, 1],
         }}
         transition={{
-          duration: 0.7,
+          duration: 0.25,
           ease: [0.34, 1.56, 0.64, 1],
         }}
       >
@@ -72,11 +66,11 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           <motion.h2
             className="text-4xl font-extrabold mb-4 relative inline-block"
             style={{
-              background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
+              background: `linear-gradient(135deg, ${theme.colors.primary.light} 0%, ${theme.colors.primary.main} 50%, ${theme.colors.primary.dark} 100%)`,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 20px rgba(59,130,246,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.9))',
+              filter: `drop-shadow(0 0 20px ${theme.colors.primary.main}99) drop-shadow(0 4px 12px ${theme.colors.shadows.default}90)`,
             }}
             initial={{ scale: 0, rotate: -5 }}
             animate={{
@@ -84,7 +78,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               rotate: 0,
             }}
             transition={{
-              duration: 0.6,
+              duration: 0.35,
               delay: 0.3,
               ease: [0.34, 1.56, 0.64, 1]
             }}
@@ -99,7 +93,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             className="flex flex-wrap gap-3 justify-center my-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.6 }}
+            transition={{ duration: 0.25, delay: 0.6 }}
           >
             {rewardItems.map((item, index) => (
               <RewardItem
@@ -113,34 +107,25 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           {/* Description if available */}
           {prize.description && (
             <motion.p
-              className="text-slate-300 mb-6 text-sm"
+              className="mb-6 text-sm"
+              style={{ color: theme.colors.text.secondary }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 1 }}
+              transition={{ duration: 0.25, delay: 1 }}
             >
               {prize.description}
             </motion.p>
           )}
 
           {/* Claim button */}
-          <motion.button
-            ref={claimButtonRef}
+          <ThemedButton
             onClick={onClaim}
             disabled={!canClaim}
-            className="w-full btn-primary"
-            initial={{ y: 20, opacity: 0, scale: 0.9 }}
-            animate={{
-              y: 0,
-              opacity: 1,
-              scale: 1,
-            }}
-            transition={{
-              y: { duration: 0.4, delay: 1.2 },
-              opacity: { duration: 0.4, delay: 1.2 },
-            }}
+            delay={0.5}
+            className="w-full"
           >
             Claim Prize
-          </motion.button>
+          </ThemedButton>
         </div>
       </motion.div>
     </motion.div>

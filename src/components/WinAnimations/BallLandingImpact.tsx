@@ -6,6 +6,7 @@
 
 import { motion } from 'framer-motion';
 import { useEffect, useState } from 'react';
+import { useTheme } from '../theme';
 
 interface BallLandingImpactProps {
   x: number;
@@ -15,6 +16,7 @@ interface BallLandingImpactProps {
 }
 
 export function BallLandingImpact({ x, y, color, trigger }: BallLandingImpactProps) {
+  const { theme } = useTheme();
   const [key, setKey] = useState(0);
 
   useEffect(() => {

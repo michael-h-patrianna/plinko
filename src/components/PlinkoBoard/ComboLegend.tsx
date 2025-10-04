@@ -5,6 +5,7 @@
 import type { PrizeConfig } from '../../game/types';
 import { getSlotDisplayText } from '../../game/prizeTypes';
 import { abbreviateNumber } from '../../utils/formatNumber';
+import { useTheme } from '../../theme';
 
 interface ComboLegendProps {
   slots: Array<{
@@ -14,6 +15,7 @@ interface ComboLegendProps {
 }
 
 export function ComboLegend({ slots }: ComboLegendProps) {
+  const { theme } = useTheme();
   // Filter slots that have combo badges
   const comboSlots = slots.filter(slot => slot.comboBadgeNumber !== undefined);
 
@@ -24,7 +26,7 @@ export function ComboLegend({ slots }: ComboLegendProps) {
   return (
     <div className="mt-6 px-3 text-xs space-y-1.5">
       {comboSlots.map((slot) => {
-        const color = (slot.prize as any).slotColor || slot.prize.color || '#64748B';
+        const color = (slot.prize as any).slotColor || slot.prize.color || theme.colors.game.slot.border;
         const fullComboText = getSlotDisplayText(slot.prize as any, abbreviateNumber, true);
 
         return (
@@ -34,13 +36,14 @@ export function ComboLegend({ slots }: ComboLegendProps) {
           >
             {/* Badge number */}
             <div
-              className="font-bold text-white leading-none flex-shrink-0"
+              className="font-bold leading-none flex-shrink-0"
               style={{
+                color: theme.colors.primary.contrast,
                 width: '18px',
                 height: '18px',
                 borderRadius: '50%',
                 background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-                boxShadow: `0 2px 6px rgba(0,0,0,0.3), 0 0 0 1.5px rgba(255,255,255,0.2)`,
+                boxShadow: `0 2px 6px ${theme.colors.shadows.default}4d, 0 0 0 1.5px ${theme.colors.text.inverse}33`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -51,7 +54,7 @@ export function ComboLegend({ slots }: ComboLegendProps) {
             </div>
 
             {/* Full combo text */}
-            <div className="text-slate-200 flex-1">
+            <div className="flex-1" style={{ color: theme.colors.text.primary }}>
               {fullComboText}
             </div>
           </div>

@@ -1,8 +1,10 @@
 /**
  * Individual peg component - pinball machine style brief flash
+ * FULLY THEMEABLE - No hard-coded styles
  */
 
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useTheme } from '../../theme';
 
 interface PegProps {
   row: number;
@@ -15,11 +17,11 @@ interface PegProps {
 }
 
 export function Peg({ row, col, x, y, isActive = false, shouldReset = false, radius = 7 }: PegProps) {
-  const pegSize = radius * 2; // diameter
   const [isFlashing, setIsFlashing] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
   const lastActiveRef = useRef(false);
   const activeTimeoutRef = useRef<number | null>(null);
+  const { theme } = useTheme();
 
   // Reset when new ball drop starts
   useEffect(() => {
@@ -75,7 +77,7 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false, rad
             width: '14px',
             height: '14px',
             transform: 'translate(-50%, -50%)',
-            border: '2px solid rgba(251,191,36,0.9)',
+            border: `2px solid ${theme.colors.game.peg.highlight}`,
             animation: 'pulseRing 300ms ease-out',
             zIndex: 15
           }}
@@ -84,7 +86,7 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false, rad
 
       {/* Peg itself - lights up briefly then smoothly turns off */}
       <div
-        className="absolute rounded-full"
+        className="absolute"
         style={{
           left: `${x}px`,
           top: `${y}px`,
@@ -92,16 +94,17 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false, rad
           height: '14px',
           transform: 'translate(-50%, -50%)',
           background: isFlashing
-            ? 'radial-gradient(circle at 35% 35%, #fef3c7, #fde047, #facc15, #eab308)' // YELLOW
-            : 'radial-gradient(circle at 35% 35%, #f1f5f9, #cbd5e1, #94a3b8, #64748b)', // GRAY
-          boxShadow: `
-            0 2px 6px rgba(0,0,0,0.4),
+            ? theme.gradients.pegActive  // Active/hit state gradient
+            : theme.gradients.pegDefault, // Default state gradient
+          boxShadow: theme.colors.game.peg.shadow || `
+            0 2px 6px ${theme.colors.shadows.default},
             0 4px 12px rgba(0,0,0,0.2),
             inset -1px -1px 2px rgba(0,0,0,0.3),
             inset 1px 1px 2px rgba(255,255,255,0.6)
           `,
-          border: '1px solid rgba(148, 163, 184, 0.3)',
-          transition: 'background 150ms ease-out',
+          border: `1px solid ${theme.colors.border.default}`,
+          borderRadius: theme.colors.game.peg.borderRadius || '50%',
+          transition: theme.effects?.transitions?.fast || 'background 150ms ease-out',
           zIndex: 10
         }}
         data-testid={`peg-${row}-${col}`}

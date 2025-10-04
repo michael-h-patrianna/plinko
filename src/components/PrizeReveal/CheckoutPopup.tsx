@@ -5,6 +5,8 @@
 
 import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
+import { useTheme } from '../../theme';
+import { ThemedButton } from '../ThemedButton';
 
 interface CheckoutPopupProps {
   isOpen: boolean;
@@ -15,6 +17,7 @@ interface CheckoutPopupProps {
 }
 
 export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }: CheckoutPopupProps) {
+  const { theme } = useTheme();
   const [isPurchasing, setIsPurchasing] = useState(false);
 
   const handlePurchase = () => {
@@ -42,13 +45,9 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
           <motion.div
             className="relative rounded-xl p-6 max-w-sm w-full"
             style={{
-              background: 'linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,1) 100%)',
-              boxShadow: `
-                0 20px 60px rgba(0,0,0,0.9),
-                0 10px 30px rgba(0,0,0,0.7),
-                inset 0 1px 2px rgba(255,255,255,0.1)
-              `,
-              border: '1px solid rgba(148,163,184,0.3)',
+              background: `linear-gradient(135deg, rgba(30,30,48,0.98) 0%, rgba(16,15,29,1) 100%)`,
+              boxShadow: `0 20px 60px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.1)`,
+              border: `1px solid rgba(148,163,184,0.3)`,
             }}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -59,28 +58,34 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 text-slate-400 hover:text-white transition-colors"
-              style={{ fontSize: '24px', lineHeight: 1 }}
+              className="absolute top-4 right-4 transition-colors"
+              style={{
+                color: theme.colors.text.tertiary,
+                fontSize: '24px',
+                lineHeight: 1,
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = theme.colors.text.primary}
+              onMouseLeave={(e) => e.currentTarget.style.color = theme.colors.text.tertiary}
             >
               ×
             </button>
 
             {/* Checkout header */}
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-white mb-2">Checkout</h3>
-              <p className="text-slate-400 text-sm">{offerTitle}</p>
+              <h3 className="text-2xl font-bold mb-2" style={{ color: theme.colors.text.primary }}>Checkout</h3>
+              <p className="text-sm" style={{ color: theme.colors.text.tertiary }}>{offerTitle}</p>
             </div>
 
             {/* Price display */}
             <div
               className="p-4 rounded-lg mb-6 text-center"
               style={{
-                background: 'rgba(16,185,129,0.1)',
-                border: '1px solid rgba(16,185,129,0.3)',
+                background: `${theme.colors.status.success}1a`,
+                border: `1px solid ${theme.colors.status.success}4d`,
               }}
             >
-              <div className="text-slate-400 text-sm mb-1">Total</div>
-              <div className="text-4xl font-bold text-white">{price}</div>
+              <div className="text-sm mb-1" style={{ color: theme.colors.text.tertiary }}>Total</div>
+              <div className="text-4xl font-bold" style={{ color: theme.colors.text.primary }}>{price}</div>
             </div>
 
             {/* Fake payment info */}
@@ -88,23 +93,24 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
               <div
                 className="p-3 rounded-lg flex items-center gap-3"
                 style={{
-                  background: 'rgba(71,85,105,0.2)',
-                  border: '1px solid rgba(148,163,184,0.2)',
+                  background: `${theme.colors.surface.elevated}33`,
+                  border: `1px solid ${theme.colors.border.light}33`,
                 }}
               >
                 <div className="text-2xl">💳</div>
                 <div className="flex-1">
-                  <div className="text-white text-sm font-medium">Card ending in 4242</div>
-                  <div className="text-slate-400 text-xs">Expires 12/25</div>
+                  <div className="text-sm font-medium" style={{ color: theme.colors.text.primary }}>Card ending in 4242</div>
+                  <div className="text-xs" style={{ color: theme.colors.text.tertiary }}>Expires 12/25</div>
                 </div>
               </div>
             </div>
 
             {/* Purchase button */}
-            <motion.button
+            <ThemedButton
               onClick={handlePurchase}
               disabled={isPurchasing}
-              className="w-full btn-primary"
+              delay={0.2}
+              className="w-full"
             >
               {isPurchasing ? (
                 <span className="flex items-center justify-center gap-2">
@@ -118,9 +124,9 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
               ) : (
                 `Purchase for ${price}`
               )}
-            </motion.button>
+            </ThemedButton>
 
-            <p className="text-slate-500 text-xs text-center mt-4">
+            <p className="text-xs text-center mt-4" style={{ color: theme.colors.text.disabled }}>
               This is a demo checkout. No actual payment will be processed.
             </p>
           </motion.div>

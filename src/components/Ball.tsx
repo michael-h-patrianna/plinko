@@ -4,6 +4,7 @@
 
 import type { BallPosition, GameState, TrajectoryPoint } from '../game/types';
 import { useState, useEffect, useMemo } from 'react';
+import { useTheme } from '../theme';
 
 interface BallProps {
   position: BallPosition | null;
@@ -20,6 +21,7 @@ interface TrailPoint {
 
 export function Ball({ position, state, currentFrame, trajectoryPoint }: BallProps) {
   const [trail, setTrail] = useState<TrailPoint[]>([]);
+  const { theme } = useTheme();
 
   // Calculate squash/stretch based on velocity (Disney principle)
   const { scaleX, scaleY } = useMemo(() => {
@@ -96,7 +98,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
 
   return (
     <>
-      {/* Motion trail effect */}
+      {/* Motion trail effect - using linear gradient instead of radial, no animated blur */}
       {trail.map((point, index) => (
         <div
           key={point.id}
@@ -104,10 +106,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           style={{
             width: '16px',
             height: '16px',
-            background: `radial-gradient(circle, rgba(251,191,36,${0.6 - index * 0.08}) 0%, rgba(251,146,60,${0.4 - index * 0.06}) 50%, transparent 70%)`,
+            background: theme.gradients.ballGlow,
             transform: `translate(${point.x - 8}px, ${point.y - 8}px) scale(${1 - index * 0.1})`,
-            filter: 'blur(2px)',
-            opacity: 1 - index * 0.12,
+            opacity: 0.6 - index * 0.08,
             willChange: 'transform, opacity',
             zIndex: 18,
             transition: 'all 50ms linear'
@@ -115,15 +116,15 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
         />
       ))}
 
-      {/* Outer glow (largest) - squashes with ball */}
+      {/* Outer glow (largest) - squashes with ball - linear gradient */}
       <div
         className="absolute pointer-events-none"
         style={{
           width: '36px',
           height: '36px',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(251,146,60,0.15) 30%, transparent 60%)',
+          background: theme.gradients.ballGlow,
           transform: `translate(${position.x - 18}px, ${position.y - 18}px) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
-          filter: 'blur(6px)',
+          opacity: 0.3,
           willChange: 'transform',
           zIndex: 19,
           borderRadius: '50%',
@@ -131,15 +132,15 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
         }}
       />
 
-      {/* Middle glow - squashes with ball */}
+      {/* Middle glow - squashes with ball - linear gradient */}
       <div
         className="absolute pointer-events-none"
         style={{
           width: '24px',
           height: '24px',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 40%, transparent 70%)',
+          background: theme.gradients.ballGlow,
           transform: `translate(${position.x - 12}px, ${position.y - 12}px) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
-          filter: 'blur(3px)',
+          opacity: 0.5,
           willChange: 'transform',
           zIndex: 20,
           borderRadius: '50%',
@@ -153,27 +154,16 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
         style={{
           width: '14px',
           height: '14px',
-          background: `
-            radial-gradient(
-              circle at 28% 25%,
-              #fffbeb 0%,
-              #fef3c7 15%,
-              #fde047 30%,
-              #facc15 45%,
-              #f59e0b 65%,
-              #d97706 80%,
-              #b45309 95%
-            )
-          `,
+          background: theme.gradients.ballMain,
           boxShadow: `
-            0 6px 16px rgba(0,0,0,0.6),
-            0 0 20px rgba(251,191,36,0.7),
-            0 2px 6px rgba(251,191,36,0.9),
-            inset -3px -3px 6px rgba(0,0,0,0.4),
-            inset 2px 2px 4px rgba(255,255,255,0.9),
-            inset -1px -1px 2px rgba(180,83,9,0.8)
+            0 6px 16px ${theme.colors.shadows.default},
+            0 0 20px ${theme.colors.shadows.colored},
+            0 2px 6px ${theme.colors.shadows.colored},
+            inset -3px -3px 6px ${theme.colors.shadows.default}66,
+            inset 2px 2px 4px ${theme.colors.text.inverse}e6,
+            inset -1px -1px 2px ${theme.colors.game.ball.secondary}cc
           `,
-          border: '1px solid rgba(217,119,6,0.9)',
+          border: `1px solid ${theme.colors.game.ball.secondary}`,
           transform: `translate(${position.x - 7}px, ${position.y - 7}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
           willChange: 'transform',
           zIndex: 21,
@@ -186,7 +176,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
         data-frame={currentFrame}
         data-testid="plinko-ball"
       >
-        {/* Glossy highlight overlay */}
+        {/* Glossy highlight overlay - using linear gradient, static blur is OK in React Native */}
         <div
           style={{
             position: 'absolute',
@@ -194,13 +184,14 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             left: '20%',
             width: '45%',
             height: '45%',
-            background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 40%, transparent 70%)',
+            background: theme.gradients.shine,
             borderRadius: '50%',
-            filter: 'blur(2px)'
+            filter: 'blur(2px)', // Static blur is OK
+            opacity: 0.9
           }}
         />
 
-        {/* Subtle texture pattern */}
+        {/* Subtle texture pattern - using simple linear gradient */}
         <div
           style={{
             position: 'absolute',
@@ -208,15 +199,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             left: 0,
             right: 0,
             bottom: 0,
-            background: `
-              repeating-linear-gradient(
-                45deg,
-                transparent,
-                transparent 2px,
-                rgba(0,0,0,0.03) 2px,
-                rgba(0,0,0,0.03) 4px
-              )
-            `,
+            background: `linear-gradient(45deg, transparent 48%, ${theme.colors.shadows.default}03 50%, transparent 52%)`,
             borderRadius: '50%',
             opacity: 0.3
           }}

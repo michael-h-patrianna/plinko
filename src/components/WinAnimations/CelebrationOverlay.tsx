@@ -6,6 +6,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../../game/types';
+import { useTheme } from '../theme';
 
 interface CelebrationOverlayProps {
   prize: PrizeConfig;
@@ -14,6 +15,7 @@ interface CelebrationOverlayProps {
 }
 
 export function CelebrationOverlay({ prize, isVisible, onComplete }: CelebrationOverlayProps) {
+  const { theme } = useTheme();
   return (
     <AnimatePresence>
       {isVisible && (
@@ -24,7 +26,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
           exit={{ opacity: 0 }}
           transition={{ duration: 0.3 }}
           style={{
-            background: 'radial-gradient(circle at 50% 50%, rgba(15,23,42,0.98) 0%, rgba(2,6,23,0.99) 100%)',
+            background: `radial-gradient(circle at 50% 50%, ${theme.colors.background.primary}98 0%, rgba(2,6,23,0.99) 100%)`,
           }}
         >
           {/* Confetti particles from top - FOLLOW THROUGH & OVERLAPPING ACTION */}
@@ -33,7 +35,14 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
             const endX = startX + (Math.random() - 0.5) * 30;
             const delay = Math.random() * 0.5;
             const duration = 2 + Math.random() * 1;
-            const colors = ['#fbbf24', '#fb923c', '#f97316', '#a78bfa', '#60a5fa', '#34d399'];
+            const colors = [
+              theme.colors.game.ball.primary,
+              theme.colors.status.warning,
+              theme.colors.status.success,
+              theme.colors.accent.light,
+              theme.colors.primary.light,
+              theme.colors.prizes.violet.main
+            ];
             const color = colors[Math.floor(Math.random() * colors.length)];
 
             return (
@@ -110,28 +119,28 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
               className="relative rounded-3xl p-12 max-w-sm"
               style={{
                 background: `
-                  linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.99) 100%),
+                  linear-gradient(135deg, ${theme.colors.background.secondary}98 0%, ${theme.colors.background.primary}99 100%),
                   radial-gradient(circle at 50% 0%, ${prize.color}33 0%, transparent 70%)
                 `,
                 boxShadow: `
                   0 0 80px ${prize.color}66,
-                  0 20px 60px rgba(0,0,0,0.8),
-                  0 10px 30px rgba(0,0,0,0.6),
-                  inset 0 2px 4px rgba(255,255,255,0.1),
-                  inset 0 -2px 4px rgba(0,0,0,0.5)
+                  0 20px 60px ${theme.colors.shadows.default}80,
+                  0 10px 30px ${theme.colors.shadows.default}60,
+                  inset 0 2px 4px ${theme.colors.text.inverse}10,
+                  inset 0 -2px 4px ${theme.colors.shadows.default}50
                 `,
                 border: `2px solid ${prize.color}88`,
               }}
             >
               {/* Congratulations text - APPEAL */}
               <motion.h2
-                className="text-4xl font-extrabold text-white mb-6 text-center"
+                className="text-4xl font-extrabold mb-6 text-center"
                 style={{
                   textShadow: `
                     0 0 30px ${prize.color}99,
-                    0 3px 10px rgba(0,0,0,0.9)
+                    0 3px 10px ${theme.colors.shadows.default}90
                   `,
-                  background: `linear-gradient(135deg, #fef3c7 0%, ${prize.color} 50%, ${prize.color}dd 100%)`,
+                  background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${prize.color} 50%, ${prize.color}dd 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -162,26 +171,26 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                   style={{
                     background: `
                       linear-gradient(135deg, ${prize.color} 0%, ${prize.color}dd 100%),
-                      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%)
+                      radial-gradient(circle at 30% 30%, ${theme.colors.text.inverse}30 0%, transparent 60%)
                     `,
                     boxShadow: `
-                      0 10px 40px rgba(0,0,0,0.6),
+                      0 10px 40px ${theme.colors.shadows.default}60,
                       0 5px 20px ${prize.color}66,
-                      inset 0 2px 4px rgba(255,255,255,0.4),
-                      inset 0 -2px 4px rgba(0,0,0,0.4)
+                      inset 0 2px 4px ${theme.colors.text.inverse}40,
+                      inset 0 -2px 4px ${theme.colors.shadows.default}40
                     `,
                     border: `1px solid ${prize.color}cc`,
                   }}
                 >
                   <div
                     className="text-3xl font-bold text-white mb-3 text-center"
-                    style={{ textShadow: '0 3px 10px rgba(0,0,0,0.7)' }}
+                    style={{ textShadow: `0 3px 10px ${theme.colors.shadows.default}70` }}
                   >
                     {prize.label}
                   </div>
                   <div
                     className="text-base text-white/95 text-center"
-                    style={{ textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}
+                    style={{ textShadow: `0 2px 6px ${theme.colors.shadows.default}60` }}
                   >
                     {prize.description}
                   </div>
@@ -207,7 +216,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                       style={{
                         width: '6px',
                         height: '6px',
-                        background: '#ffffff',
+                        background: theme.colors.text.inverse,
                         boxShadow: `0 0 12px ${prize.color}`,
                         top: i % 2 === 0 ? '0' : 'auto',
                         bottom: i % 2 === 1 ? '0' : 'auto',

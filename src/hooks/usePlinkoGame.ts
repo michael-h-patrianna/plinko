@@ -61,6 +61,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
       const { selectedIndex, seedUsed } = selectPrize(prizes, finalSeed);
       const prize = getPrizeByIndex(prizes, selectedIndex);
+      console.log('[usePlinkoGame] Initializing game with prize:', prize, 'at index:', selectedIndex);
 
       const trajectory = generateTrajectory({
         boardWidth,
@@ -75,16 +76,22 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         type: 'INITIALIZE',
         payload: { selectedIndex, trajectory, prize, seed: seedUsed }
       });
+      console.log('[usePlinkoGame] Dispatched INITIALIZE with prize:', prize);
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
     }
   }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes]);
 
-  // Animation loop for dropping state
+  // Track if animation is already running
+  const landingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Animation loop for dropping state - only runs when state changes to 'dropping'
   useEffect(() => {
     if (gameState.state === 'dropping') {
+      console.log('[usePlinkoGame] Starting drop animation, trajectory length:', gameState.context.trajectory.length);
       const FPS = 60;
       const frameInterval = 1000 / FPS;
+      const totalDuration = (gameState.context.trajectory.length / FPS) * 1000;
 
       const animate = (timestamp: number) => {
         if (startTimestampRef.current === null) {
@@ -97,42 +104,47 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
           gameState.context.trajectory.length - 1
         );
 
-        if (currentFrameIndex < gameState.context.trajectory.length - 1) {
-          dispatch({
-            type: 'FRAME_ADVANCED',
-            payload: { frame: currentFrameIndex }
-          });
-          animationFrameRef.current = requestAnimationFrame(animate);
-        } else {
-          // Reached final frame
-          dispatch({
-            type: 'FRAME_ADVANCED',
-            payload: { frame: gameState.context.trajectory.length - 1 }
-          });
+        // Update the frame
+        dispatch({
+          type: 'FRAME_ADVANCED',
+          payload: { frame: currentFrameIndex }
+        });
 
-          // Wait for ball to visually settle before showing prize
-          setTimeout(() => {
-            dispatch({ type: 'LANDING_COMPLETED' });
-          }, 500); // Increased from 100ms to allow ball to settle
+        if (currentFrameIndex < gameState.context.trajectory.length - 1) {
+          // Continue animation
+          animationFrameRef.current = requestAnimationFrame(animate);
         }
       };
 
       animationFrameRef.current = requestAnimationFrame(animate);
+
+      // Set timeout for landing based on total duration
+      console.log('[usePlinkoGame] Setting landing timeout for', totalDuration + 500, 'ms');
+      landingTimeoutRef.current = setTimeout(() => {
+        console.log('[usePlinkoGame] Dispatching LANDING_COMPLETED');
+        dispatch({ type: 'LANDING_COMPLETED' });
+      }, totalDuration + 500);
 
       return () => {
         if (animationFrameRef.current !== null) {
           cancelAnimationFrame(animationFrameRef.current);
           animationFrameRef.current = null;
         }
+        if (landingTimeoutRef.current !== null) {
+          clearTimeout(landingTimeoutRef.current);
+          landingTimeoutRef.current = null;
+        }
         startTimestampRef.current = null;
       };
     }
-  }, [gameState.state, gameState.context.trajectory]);
+  }, [gameState.state, gameState.context.trajectory.length]);
 
   // Auto-reveal prize after landing
   useEffect(() => {
     if (gameState.state === 'landed') {
+      console.log('[usePlinkoGame] Ball landed, prize is:', gameState.context.prize);
       const timer = setTimeout(() => {
+        console.log('[usePlinkoGame] Revealing prize...');
         dispatch({ type: 'REVEAL_CONFIRMED' });
       }, 300);
       return () => clearTimeout(timer);

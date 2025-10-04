@@ -4,6 +4,7 @@
  */
 
 import { motion } from 'framer-motion';
+import { useTheme } from '../theme';
 
 interface BallLauncherProps {
   x: number;
@@ -12,6 +13,7 @@ interface BallLauncherProps {
 }
 
 export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
+  const { theme } = useTheme();
   const BALL_RADIUS = 7; // Match actual ball size (14px diameter)
   const CHAMBER_WIDTH = 24; // Adjusted to fit smaller ball
   const CHAMBER_HEIGHT = 45;
@@ -35,18 +37,18 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
           top: `${-CHAMBER_HEIGHT / 2}px`,
           background: `
             linear-gradient(180deg,
-              rgba(15,23,42,1) 0%,
-              rgba(30,41,59,0.95) 30%,
-              rgba(51,65,85,0.9) 60%,
-              rgba(71,85,105,0.8) 100%
+              ${theme.colors.background.primary}1 0%,
+              ${theme.colors.background.secondary}95 30%,
+              ${theme.colors.surface.secondary}90 60%,
+              ${theme.colors.surface.elevated}80 100%
             )
           `,
           borderRadius: '8px 8px 50% 50%',
-          border: '2px solid rgba(71,85,105,0.6)',
+          border: `2px solid ${theme.colors.surface.elevated}60`,
           boxShadow: `
-            inset 0 4px 12px rgba(0,0,0,0.8),
-            inset 0 -2px 6px rgba(255,255,255,0.1),
-            0 2px 8px rgba(0,0,0,0.5)
+            inset 0 4px 12px ${theme.colors.shadows.default}80,
+            inset 0 -2px 6px ${theme.colors.text.inverse}10,
+            0 2px 8px ${theme.colors.shadows.default}50
           `,
         }}
         initial={{ scaleY: 1, opacity: 1 }}
@@ -63,7 +65,7 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse at 50% 30%, transparent 0%, rgba(0,0,0,0.4) 60%, rgba(0,0,0,0.6) 100%)',
+            background: `radial-gradient(ellipse at 50% 30%, transparent 0%, ${theme.colors.shadows.default}40 60%, ${theme.colors.shadows.default}60 100%)`,
             borderRadius: '8px 8px 50% 50%',
           }}
         />
@@ -73,7 +75,7 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
           className="absolute top-0 left-0 right-0"
           style={{
             height: '3px',
-            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
+            background: `linear-gradient(90deg, transparent 0%, ${theme.colors.text.inverse}20 50%, transparent 100%)`,
             borderRadius: '8px 8px 0 0',
           }}
         />
@@ -90,24 +92,24 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
             top: `${-BALL_RADIUS + 8}px`,
             background: `
               radial-gradient(circle at 28% 25%,
-                #fffbeb 0%,
-                #fef3c7 15%,
-                #fde047 30%,
-                #facc15 45%,
-                #f59e0b 65%,
-                #d97706 80%,
-                #b45309 95%
+                ${theme.colors.game.ball.highlight} 0%,
+                ${theme.colors.text.primary} 15%,
+                ${theme.colors.game.ball.primary} 30%,
+                ${theme.colors.game.ball.primary} 45%,
+                ${theme.colors.game.ball.secondary} 65%,
+                ${theme.colors.game.ball.secondary} 80%,
+                ${theme.colors.game.ball.secondary} 95%
               )
             `,
             boxShadow: `
-              0 4px 12px rgba(251,191,36,0.6),
-              0 0 15px rgba(251,191,36,0.5),
-              0 2px 6px rgba(0,0,0,0.4),
-              inset -2px -2px 4px rgba(0,0,0,0.4),
-              inset 2px 2px 3px rgba(255,255,255,0.9),
-              inset -1px -1px 2px rgba(180,83,9,0.8)
+              0 4px 12px ${theme.colors.game.ball.primary}99,
+              0 0 15px ${theme.colors.game.ball.primary}80,
+              0 2px 6px ${theme.colors.shadows.default}66,
+              inset -2px -2px 4px ${theme.colors.shadows.default}66,
+              inset 2px 2px 3px ${theme.colors.text.inverse}e6,
+              inset -1px -1px 2px ${theme.colors.game.ball.secondary}cc
             `,
-            border: '1px solid rgba(217,119,6,0.9)',
+            border: `1px solid ${theme.colors.game.ball.secondary}e6`,
           }}
           initial={{ y: 0, scale: 1 }}
           animate={{
@@ -128,7 +130,7 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
               left: '20%',
               width: '45%',
               height: '45%',
-              background: 'radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 40%, transparent 70%)',
+              background: `radial-gradient(circle, ${theme.colors.text.inverse}90 0%, ${theme.colors.text.inverse}40 40%, transparent 70%)`,
               borderRadius: '50%',
               filter: 'blur(1px)'
             }}
@@ -144,9 +146,9 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
           height: '4px',
           left: `${-(CHAMBER_WIDTH - 8) / 2}px`,
           top: `${-CHAMBER_HEIGHT / 2 + 8}px`,
-          background: 'linear-gradient(90deg, #64748b 0%, #94a3b8 50%, #64748b 100%)',
+          background: `linear-gradient(90deg, ${theme.colors.game.launcher.base} 0%, ${theme.colors.game.launcher.accent} 50%, ${theme.colors.game.launcher.base} 100%)`,
           borderRadius: '2px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.3)',
+          boxShadow: `0 2px 4px ${theme.colors.shadows.default}50, inset 0 1px 1px ${theme.colors.text.inverse}30`,
         }}
         initial={{ y: 0 }}
         animate={{
@@ -167,7 +169,7 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
             height: '20px',
             left: '-1px',
             top: `${-CHAMBER_HEIGHT / 2 + 12}px`,
-            background: 'repeating-linear-gradient(0deg, #475569 0px, #475569 2px, transparent 2px, transparent 4px)',
+            background: `repeating-linear-gradient(0deg, ${theme.colors.game.launcher.track} 0px, ${theme.colors.game.launcher.track} 2px, transparent 2px, transparent 4px)`,
             opacity: 0.5,
           }}
         />

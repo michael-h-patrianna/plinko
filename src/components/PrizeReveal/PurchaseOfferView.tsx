@@ -3,11 +3,13 @@
  * Similar to free rewards but with ribbon and price button
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Prize } from '../../game/prizeTypes';
 import { RewardItem } from './RewardItem';
 import { CheckoutPopup } from './CheckoutPopup';
+import { useTheme } from '../../theme';
+import { ThemedButton } from '../ThemedButton';
 
 interface PurchaseOfferViewProps {
   prize: Prize;
@@ -16,15 +18,8 @@ interface PurchaseOfferViewProps {
 }
 
 export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferViewProps) {
-  const claimButtonRef = useRef<HTMLButtonElement>(null);
-  const [isPressed, setIsPressed] = useState(false);
+  const { theme } = useTheme();
   const [showCheckout, setShowCheckout] = useState(false);
-
-  useEffect(() => {
-    if (canClaim && claimButtonRef.current) {
-      claimButtonRef.current.focus();
-    }
-  }, [canClaim]);
 
   const offer = prize.purchaseOffer;
   if (!offer) return null;
@@ -71,9 +66,9 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
         <motion.div
           className="relative rounded-2xl p-8 max-w-md w-full overflow-hidden"
           style={{
-            background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            border: '1px solid rgba(71,85,105,0.4)',
+            background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
+            boxShadow: `0 4px 12px ${theme.colors.shadows.default}4d`,
+            border: `1px solid ${theme.colors.surface.elevated}66`,
           }}
           initial={{ scale: 0, rotate: -10, opacity: 0 }}
           animate={{
@@ -82,33 +77,30 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
             opacity: [0, 1, 1],
           }}
           transition={{
-            duration: 0.7,
+            duration: 0.25,
             ease: [0.34, 1.56, 0.64, 1],
           }}
         >
           {/* "200% SPECIAL DEAL" Ribbon */}
           <motion.div
-            className="absolute -top-1 -right-8 font-bold text-white text-sm rotate-45 z-10"
+            className="absolute -top-1 -right-8 font-bold text-sm rotate-45 z-10"
             style={{
-              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
-              boxShadow: `
-                0 4px 12px rgba(185,28,28,0.6),
-                inset 0 1px 2px rgba(255,255,255,0.3),
-                inset 0 -1px 2px rgba(0,0,0,0.3)
-              `,
-              textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+              color: theme.colors.primary.contrast,
+              background: `linear-gradient(135deg, ${theme.colors.status.error} 0%, ${theme.colors.status.error} 100%)`,
+              boxShadow: `0 4px 12px rgba(185,28,28,0.6), inset 0 1px 2px ${theme.colors.text.inverse}4d, inset 0 -1px 2px ${theme.colors.shadows.default}4d`,
+              textShadow: `0 2px 4px ${theme.colors.shadows.default}cc`,
               padding: '8px 48px',
             }}
             initial={{ x: 200, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+            transition={{ duration: 0.35, delay: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
           >
             200% SPECIAL DEAL
           </motion.div>
 
           {/* Sparkles for offer */}
           {Array.from({ length: 4 }).map((_, i) => {
-            const colors = ['#fbbf24', '#f97316', '#dc2626', '#fb923c'];
+            const colors = [theme.colors.game.ball.primary, theme.colors.status.warning, theme.colors.status.error, theme.colors.status.warning];
             const color = colors[i % colors.length];
             const offsetX = [-50, -30, 30, 50][i];
 
@@ -145,20 +137,17 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
           <div role="status" aria-live="polite" className="text-center">
             {/* Special Offer header */}
             <motion.h2
-              className="text-3xl font-extrabold text-white mb-2"
+              className="text-3xl font-extrabold mb-2"
               style={{
-                textShadow: `
-                  0 0 30px rgba(239,68,68,0.8),
-                  0 3px 10px rgba(0,0,0,0.9)
-                `,
-                background: 'linear-gradient(135deg, #fef3c7 0%, #fb923c 50%, #dc2626 100%)',
+                textShadow: `0 0 30px ${theme.colors.status.error}cc, 0 3px 10px ${theme.colors.shadows.default}e6`,
+                background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${theme.colors.status.warning} 50%, ${theme.colors.status.error} 100%)`,
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
               }}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              transition={{ duration: 0.25, delay: 0.3 }}
             >
               ⭐ Special Offer!
             </motion.h2>
@@ -169,7 +158,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                 className="flex flex-wrap gap-3 justify-center my-6"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.4, delay: 0.5 }}
+                transition={{ duration: 0.25, delay: 0.5 }}
               >
                 {rewardItems.map((item, index) => (
                   <RewardItem
@@ -182,30 +171,20 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
             )}
 
             {/* Purchase button with price */}
-            <motion.button
-              ref={claimButtonRef}
+            <ThemedButton
               onClick={handlePurchaseClick}
               disabled={!canClaim}
-              className="w-full btn-primary"
-              initial={{ y: 20, opacity: 0, scale: 0.9 }}
-              animate={{
-                y: 0,
-                opacity: 1,
-                scale: 1,
-              }}
-              transition={{
-                y: { duration: 0.4, delay: 1.2 },
-                opacity: { duration: 0.4, delay: 1.2 },
-              }}
+              delay={0.5}
+              className="w-full"
             >
               {price}
-            </motion.button>
+            </ThemedButton>
 
             <motion.p
               className="text-slate-400 text-xs mt-3"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.4, delay: 1.4 }}
+              transition={{ duration: 0.25, delay: 1.4 }}
             >
               Limited time offer - claim it now!
             </motion.p>

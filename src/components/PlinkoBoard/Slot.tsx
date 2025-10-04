@@ -1,6 +1,7 @@
 /**
  * Prize slot component at bottom of board
  * With collision impact animations
+ * FULLY THEMEABLE - No hard-coded styles
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,6 +9,7 @@ import type { PrizeConfig } from '../../game/types';
 import { calculateBucketHeight } from '../../utils/slotDimensions';
 import { getSlotDisplayText } from '../../game/prizeTypes';
 import { abbreviateNumber } from '../../utils/formatNumber';
+import { useTheme } from '../../theme';
 
 interface SlotProps {
   index: number;
@@ -36,11 +38,13 @@ export function Slot({
   boardWidth = 375,
   comboBadgeNumber
 }: SlotProps) {
+  const { theme } = useTheme();
+
   // Calculate responsive bucket dimensions based on slot width
   // Narrower slots (8 prizes on small screens) need taller buckets to fit text
   const bucketHeight = calculateBucketHeight(width);
   const fontSize = width < 40 ? '9px' : width < 50 ? '10px' : '12px';
-  const borderWidth = width < 45 ? '2px' : '3px';
+  const borderWidth = theme.colors.game.slot.borderWidth || (width < 45 ? '2px' : '3px');
   const paddingBottom = width < 40 ? '6px' : '10px';
 
   // Determine display mode based on width
@@ -72,26 +76,22 @@ export function Slot({
         left: `${x}px`,
         width: `${width}px`,
         height: `${bucketHeight}px`,
-        background: `
+        background: theme.colors.game.slot.background || `
           linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
         `,
-        borderLeft: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
-        borderRight: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
-        borderBottom: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
+        borderLeft: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+        borderRight: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+        borderBottom: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
         borderTop: 'none',
-        borderRadius: '0 0 8px 8px',
+        borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
         boxShadow: isApproaching
-          ? `0 0 25px ${color}80,
-             0 6px 16px rgba(0,0,0,0.5),
-             0 3px 8px rgba(0,0,0,0.3),
+          ? `0 0 25px ${theme.colors.game.slot.glow || color}80,
+             ${theme.effects.shadows.lg},
              inset 0 3px 6px rgba(255,255,255,0.15),
              inset 0 -3px 6px rgba(0,0,0,0.25),
              inset 0 0 20px ${color}33`
-          : `0 6px 16px rgba(0,0,0,0.5),
-             0 3px 8px rgba(0,0,0,0.3),
-             inset 0 3px 6px rgba(255,255,255,0.12),
-             inset 0 -3px 6px rgba(0,0,0,0.25)`,
-        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+          : theme.effects.shadows.md,
+        transition: theme.effects?.transitions?.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
       data-testid={`slot-${index}`}
       data-active={isWinning}
@@ -101,7 +101,7 @@ export function Slot({
         className="absolute top-0 left-0 right-0"
         style={{
           height: '40%',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 100%)',
+          background: `linear-gradient(180deg, ${theme.colors.text.inverse}4d 0%, transparent 100%)`,
           pointerEvents: 'none'
         }}
       />

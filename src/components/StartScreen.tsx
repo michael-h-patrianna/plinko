@@ -1,6 +1,6 @@
 /**
  * Start screen with game title and drop button
- * Staggered entrance animation for polished reveal
+ * FULLY THEMEABLE - No hard-coded styles
  */
 
 import { useState } from 'react';
@@ -8,6 +8,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../game/types';
 import { getSlotDisplayText } from '../game/prizeTypes';
 import { abbreviateNumber } from '../utils/formatNumber';
+import { useTheme } from '../theme';
+import { ThemedButton } from './ThemedButton';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -16,8 +18,8 @@ interface StartScreenProps {
 }
 
 export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
-  const [isPressed, setIsPressed] = useState(false);
   const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
+  const { theme } = useTheme();
 
   return (
     <motion.div
@@ -27,15 +29,16 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Title - first element */}
+      {/* Title - using theme */}
       <motion.h1
         className="text-4xl font-extrabold mb-6 text-center"
         style={{
-          background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
+          background: theme.gradients.titleGradient || theme.gradients.buttonPrimary,
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
-          filter: 'drop-shadow(0 0 20px rgba(59,130,246,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.9))',
+          fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
+          filter: `drop-shadow(0 0 20px ${theme.colors.shadows.colored}) drop-shadow(0 4px 12px ${theme.colors.shadows.default})`,
         }}
         initial={{ scale: 0, rotate: -5 }}
         animate={{
@@ -43,7 +46,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
           rotate: 0,
         }}
         transition={{
-          duration: 0.6,
+          duration: 0.25,
           delay: 0.1,
           ease: [0.34, 1.56, 0.64, 1]
         }}
@@ -51,24 +54,31 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         Plinko Popup
       </motion.h1>
 
-      {/* Prize list - second element with stagger */}
+      {/* Prize list - using theme component styles */}
       <motion.div
-        className="rounded-lg p-4 mb-8 w-full"
+        className="p-4 mb-8 w-full"
         style={{
           maxWidth: 'calc(100% - 40px)',
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          border: '1px solid rgba(71,85,105,0.4)',
+          background: theme.components?.card?.background || theme.colors.surface.primary,
+          boxShadow: theme.components?.card?.shadow || theme.effects.shadows.card,
+          border: theme.components?.card?.border || `1px solid ${theme.colors.border.primary}`,
+          borderRadius: theme.components?.card?.borderRadius || theme.borderRadius.card,
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          duration: 0.4,
+          duration: 0.25,
           delay: 0.2,
           ease: [0.22, 1, 0.36, 1],
         }}
       >
-        <h2 className="text-lg font-semibold text-slate-200 mb-3 text-center">
+        <h2
+          className="text-lg font-semibold mb-3 text-center"
+          style={{
+            color: theme.colors.text.primary,
+            fontFamily: theme.typography.fontFamily.primary,
+          }}
+        >
           Available Prizes
         </h2>
         <div className="space-y-2">
@@ -91,9 +101,9 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
             if (isPurchaseOffer) {
               displayText = '200% Special Offer';
             } else if (isCombo) {
-              displayText = prize.label;
+              displayText = prize.label || '';
             } else {
-              displayText = getSlotDisplayText(prize as any, abbreviateNumber, true) || prize.label;
+              displayText = getSlotDisplayText(prize as any, abbreviateNumber, true) || prize.label || '';
             }
 
             return (
@@ -108,29 +118,42 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                 }}
               >
                 <div
-                  className="flex items-center justify-between text-sm px-2 py-1 rounded"
+                  className="flex items-center justify-between text-sm px-2 py-1"
                   style={{
                     background: `linear-gradient(90deg, ${prize.color}15 0%, transparent 100%)`,
                     borderLeft: `2px solid ${prize.color}`,
+                    borderRadius: theme.borderRadius.sm,
                     cursor: isCombo ? 'pointer' : 'default',
                   }}
                   onClick={() => isCombo && setExpandedPrize(isExpanded ? null : prize.id)}
                 >
-                  <span className="text-slate-200 font-medium flex items-center gap-1">
+                  <span
+                    className="font-medium flex items-center gap-1"
+                    style={{ color: theme.colors.text.primary }}
+                  >
                     {displayText}
-                    {isCombo && <span className="text-xs text-slate-400">{isExpanded ? '▼' : '▶'}</span>}
+                    {isCombo && (
+                      <span style={{ color: theme.colors.text.tertiary }}>
+                        {isExpanded ? '▼' : '▶'}
+                      </span>
+                    )}
                   </span>
-                  <span className="text-amber-400 font-semibold">
+                  <span
+                    className="font-semibold"
+                    style={{ color: theme.colors.accent.main }}
+                  >
                     {(prize.probability * 100).toFixed(0)}%
                   </span>
                 </div>
                 <AnimatePresence initial={false}>
                   {isCombo && isExpanded && (
                     <motion.div
-                      className="text-xs text-slate-300 px-2 py-2 rounded overflow-hidden"
+                      className="text-xs px-2 py-2"
                       style={{
                         background: `${prize.color}08`,
                         marginLeft: '8px',
+                        borderRadius: theme.borderRadius.sm,
+                        color: theme.colors.text.secondary,
                       }}
                       initial={{ opacity: 0, maxHeight: 0, marginTop: 0, paddingTop: 0, paddingBottom: 0 }}
                       animate={{
@@ -148,11 +171,15 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                         paddingBottom: 0,
                       }}
                       transition={{
-                        duration: 0.3,
-                        ease: [0.25, 0.46, 0.45, 0.94],
+                        duration: 0.2,
+                        ease: 'easeInOut'
                       }}
                     >
-                      {getSlotDisplayText(prize as any, abbreviateNumber, true)}
+                      {prizeReward.sc && <div>• Coins: {abbreviateNumber(prizeReward.sc)}</div>}
+                      {prizeReward.gc && <div>• Gold Coins: {abbreviateNumber(prizeReward.gc)}</div>}
+                      {prizeReward.spins && <div>• Free Spins: {prizeReward.spins}</div>}
+                      {prizeReward.xp && <div>• XP Points: {abbreviateNumber(prizeReward.xp)}</div>}
+                      {prizeReward.randomReward && <div>• Mystery Reward</div>}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -162,25 +189,15 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         </div>
       </motion.div>
 
-      {/* Button - final element with slight delay and hover anticipation */}
-      <motion.button
+      {/* Play button */}
+      <ThemedButton
         onClick={onStart}
         disabled={disabled}
-        className="btn-primary"
-        initial={{ opacity: 0, y: 20, scale: 0.95 }}
-        animate={{
-          opacity: 1,
-          y: 0,
-          scale: 1,
-        }}
-        transition={{
-          opacity: { duration: 0.4, delay: 0.6, ease: [0.22, 1, 0.36, 1] },
-          y: { duration: 0.4, delay: 0.6, ease: [0.22, 1, 0.36, 1] },
-        }}
-        data-testid="drop-ball-button"
+        delay={0.3}
+        testId="drop-ball-button"
       >
         Drop Ball
-      </motion.button>
+      </ThemedButton>
     </motion.div>
   );
 }

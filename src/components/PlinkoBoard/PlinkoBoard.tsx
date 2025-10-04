@@ -1,6 +1,7 @@
 /**
  * Main Plinko board with pegs and slots
  * Enhanced with triple-A win animations
+ * FULLY THEMEABLE - No hard-coded styles
  */
 
 import { useMemo, useState, useEffect } from 'react';
@@ -14,6 +15,7 @@ import { BallLauncher } from '../BallLauncher';
 import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
 import { ComboLegend } from './ComboLegend';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
+import { useTheme } from '../../theme';
 
 interface PlinkoBoardProps {
   prizes: PrizeConfig[];
@@ -36,6 +38,7 @@ export function PlinkoBoard({
   ballPosition,
   ballState
 }: PlinkoBoardProps) {
+  const { theme } = useTheme();
   const slotCount = prizes.length;
   const BORDER_WIDTH = 8;
   // Board has box-sizing: border-box, so the 2px CSS border is INSIDE the width
@@ -62,9 +65,6 @@ export function PlinkoBoard({
     }
   }, [ballState, currentTrajectoryPoint]);
 
-  // Responsive sizing: smaller ball/peg for narrow viewports
-  const pegRadius = internalWidth <= 360 ? 6 : 7;
-  const ballRadius = internalWidth <= 360 ? 6 : 7;
 
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
@@ -161,14 +161,15 @@ export function PlinkoBoard({
   return (
     <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
       <motion.div
-        className="relative rounded-xl"
+        className="relative"
         style={{
           width: '100%',
           height: `${boardHeight}px`,
           overflow: 'visible',
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-          border: '1px solid rgba(71,85,105,0.4)',
+          background: theme.colors.game?.board?.background || theme.gradients.backgroundCard,
+          boxShadow: theme.colors.game?.board?.shadow || theme.effects.shadows.card,
+          border: theme.colors.game?.board?.border || `1px solid ${theme.colors.border.default}`,
+          borderRadius: theme.colors.game?.board?.borderRadius || theme.borderRadius.card,
         }}
       initial={{ opacity: 0, scale: 0.92, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -291,8 +292,8 @@ export function PlinkoBoard({
           y={bucketZoneY}
           width={slots[selectedIndex].width}
           height={boardHeight - bucketZoneY}
-          color={slots[selectedIndex].prize.color}
-          label={slots[selectedIndex].prize.label}
+          color={slots[selectedIndex].prize.color || '#64748B'}
+          label={slots[selectedIndex].prize.label || ''}
           isActive={showWinReveal}
         />
       )}

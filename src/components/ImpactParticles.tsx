@@ -3,6 +3,7 @@
  */
 
 import { useEffect, useState } from 'react';
+import { useTheme } from '../theme';
 
 interface Particle {
   id: number;
@@ -22,6 +23,7 @@ interface ImpactParticlesProps {
 }
 
 export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesProps) {
+  const { theme } = useTheme();
   const [particles, setParticles] = useState<Particle[]>([]);
   const [particleIdCounter, setParticleIdCounter] = useState(0);
 
@@ -93,10 +95,10 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
           style={{
             width: `${p.size}px`,
             height: `${p.size}px`,
-            background: `radial-gradient(circle, rgba(251,191,36,${p.life}) 0%, rgba(251,146,60,${p.life * 0.6}) 50%, transparent 100%)`,
+            background: `radial-gradient(circle, ${theme.colors.game.ball.primary}${Math.round(p.life * 255).toString(16).padStart(2, '0')} 0%, ${theme.colors.game.ball.secondary}${Math.round(p.life * 0.6 * 255).toString(16).padStart(2, '0')} 50%, transparent 100%)`,
             transform: `translate(${p.x - p.size / 2}px, ${p.y - p.size / 2}px)`,
             opacity: p.life,
-            boxShadow: `0 0 ${p.size * 2}px rgba(251,191,36,${p.life * 0.8})`,
+            boxShadow: `0 0 ${p.size * 2}px ${theme.colors.game.ball.primary}${Math.round(p.life * 0.8 * 255).toString(16).padStart(2, '0')}`,
             zIndex: 22,
             willChange: 'transform, opacity'
           }}

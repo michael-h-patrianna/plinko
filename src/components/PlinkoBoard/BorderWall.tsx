@@ -3,6 +3,7 @@
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../../theme';
 
 interface BorderWallProps {
   side: 'left' | 'right' | 'top';
@@ -11,10 +12,11 @@ interface BorderWallProps {
 }
 
 export function BorderWall({ side, width, hasImpact }: BorderWallProps) {
+  const { theme } = useTheme();
   const isVertical = side === 'left' || side === 'right';
 
   const baseStyle = {
-    background: 'rgba(71,85,105,0.4)',
+    background: `${theme.colors.surface.elevated}66`,
     borderRadius: side === 'top'
       ? '12px 12px 0 0'
       : side === 'left'
@@ -38,9 +40,9 @@ export function BorderWall({ side, width, hasImpact }: BorderWallProps) {
             className="absolute inset-0 pointer-events-none"
             style={{
               background: isVertical
-                ? `radial-gradient(ellipse at ${side}, rgba(255,255,255,0.8) 0%, rgba(255,200,100,0.6) 30%, transparent 70%)`
-                : 'radial-gradient(ellipse at top, rgba(255,255,255,0.8) 0%, rgba(255,200,100,0.6) 30%, transparent 70%)',
-              boxShadow: '0 0 20px rgba(255,255,255,0.6)',
+                ? `radial-gradient(ellipse at ${side}, ${theme.colors.text.inverse}cc 0%, ${theme.colors.status.warning}99 30%, transparent 70%)`
+                : `radial-gradient(ellipse at top, ${theme.colors.text.inverse}cc 0%, ${theme.colors.status.warning}99 30%, transparent 70%)`,
+              boxShadow: `0 0 20px ${theme.colors.text.inverse}99`,
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: [0, 1, 0] }}
