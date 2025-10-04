@@ -94,8 +94,8 @@ function runSimulation(
   let rotation = 0;
   let frame = 0;
 
-  // Ball falls into bucket (stops near bottom, leaving room for bucket floor)
-  const bottomY = boardHeight - PHYSICS.BALL_RADIUS - 15;
+  // Define bucket floor position
+  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
   const slotWidth = boardWidth / slotCount;
 
   // Track recent collisions to prevent double-hits
@@ -111,8 +111,10 @@ function runSimulation(
     });
   }
 
-  // Main physics loop
-  while (y < bottomY && frame < 600) {
+  // Main physics loop with proper collision detection
+  // Continue until ball settles in bucket
+  let settled = false;
+  while (!settled && frame < 800) {
     // Apply gravity
     vy += PHYSICS.GRAVITY * PHYSICS.DT;
 
@@ -122,47 +124,88 @@ function runSimulation(
     // Air resistance
     vx *= 0.998;
 
-    // Check peg collisions
+    // Store current position and velocity
+    const oldX = x;
+    const oldY = y;
+    const oldVx = vx;
+    const oldVy = vy;
+
+    // Move the ball
+    x += vx * PHYSICS.DT;
+    y += vy * PHYSICS.DT;
+
+    // Check collisions with all pegs
     let hitPeg: Peg | null = null;
 
     for (const peg of pegs) {
-      // Skip distant pegs
-      if (Math.abs(peg.y - y) > 40) continue;
-
-      // Check if we recently hit this peg
-      const pegKey = `${peg.row}-${peg.col}`;
-      if (recentCollisions.has(pegKey)) {
-        const lastHit = recentCollisions.get(pegKey)!;
-        if (frame - lastHit < 15) continue;
-      }
-
-      // Calculate distance to peg
+      // Calculate distance to peg at NEW position
       const dx = x - peg.x;
       const dy = y - peg.y;
       const distSq = dx * dx + dy * dy;
-      const collisionRadiusSq = PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS;
 
-      if (distSq < collisionRadiusSq) {
-        // Collision detected!
+      // Check if we're colliding
+      if (distSq < PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS) {
         const dist = Math.sqrt(distSq);
 
-        if (dist < 0.1) {
-          // Edge case: exactly on peg center
-          x = peg.x + PHYSICS.COLLISION_RADIUS;
-          vx = 50;
-          continue;
+        // Skip if we recently hit this peg
+        const pegKey = `${peg.row}-${peg.col}`;
+        if (recentCollisions.has(pegKey)) {
+          const lastHit = recentCollisions.get(pegKey)!;
+          if (frame - lastHit < 10) continue;
         }
 
-        // Calculate collision normal
-        const nx = dx / dist;
-        const ny = dy / dist;
+        // We have a collision!
+        // Step 1: Move ball back to old position
+        x = oldX;
+        y = oldY;
 
-        // Calculate relative velocity
-        const dot = vx * nx + vy * ny;
+        // Step 2: Find exact collision point using binary search
+        let low = 0;
+        let high = 1;
+        let mid = 0.5;
 
-        // Bounce if overlapping (handle all collision cases including upward bounces)
-        // Check if we're inside collision radius (with 1px tolerance)
-        if (dist < PHYSICS.COLLISION_RADIUS - 1) {
+        for (let i = 0; i < 10; i++) { // 10 iterations for precision
+          const testX = oldX + oldVx * PHYSICS.DT * mid;
+          const testY = oldY + oldVy * PHYSICS.DT * mid;
+          const testDx = testX - peg.x;
+          const testDy = testY - peg.y;
+          const testDist = Math.sqrt(testDx * testDx + testDy * testDy);
+
+          if (testDist < PHYSICS.COLLISION_RADIUS) {
+            high = mid;
+          } else {
+            low = mid;
+          }
+          mid = (low + high) / 2;
+        }
+
+        // Move to exact collision point
+        x = oldX + oldVx * PHYSICS.DT * low;
+        y = oldY + oldVy * PHYSICS.DT * low;
+
+        // Calculate collision normal at collision point
+        const colDx = x - peg.x;
+        const colDy = y - peg.y;
+        const colDist = Math.sqrt(colDx * colDx + colDy * colDy);
+
+        if (colDist < 0.1) {
+          // Edge case: exactly on peg center
+          x = peg.x + PHYSICS.COLLISION_RADIUS + 0.1;
+          y = peg.y;
+          vx = Math.abs(vx) * PHYSICS.RESTITUTION;
+          vy = 0;
+        } else {
+          // Normal collision
+          const nx = colDx / colDist;
+          const ny = colDy / colDist;
+
+          // Position ball exactly at collision boundary with small separation
+          x = peg.x + nx * (PHYSICS.COLLISION_RADIUS + 0.1);
+          y = peg.y + ny * (PHYSICS.COLLISION_RADIUS + 0.1);
+
+          // Calculate relative velocity
+          const dot = vx * nx + vy * ny;
+
           // Reflect velocity
           vx = vx - 2 * dot * nx;
           vy = vy - 2 * dot * ny;
@@ -171,9 +214,8 @@ function runSimulation(
           vx *= PHYSICS.RESTITUTION;
           vy *= PHYSICS.RESTITUTION;
 
-          // Add controlled randomness - pure physics, no bias
+          // Add controlled randomness
           const randomAngle = (rng.next() - 0.5) * params.bounceRandomness;
-
           const cos = Math.cos(randomAngle);
           const sin = Math.sin(randomAngle);
           const newVx = vx * cos - vy * sin;
@@ -181,73 +223,101 @@ function runSimulation(
           vx = newVx;
           vy = newVy;
 
-          // Limit maximum velocity to prevent glitches
+          // Clamp velocities
           const MAX_VELOCITY = 500;
           vx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vx));
           vy = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vy));
 
-          // Ensure minimum bounce velocity
+          // Ensure minimum bounce
           const speed = Math.sqrt(vx * vx + vy * vy);
           if (speed < PHYSICS.MIN_BOUNCE_VELOCITY && speed > 0) {
             const scale = PHYSICS.MIN_BOUNCE_VELOCITY / speed;
             vx *= scale;
             vy *= scale;
           }
+        }
 
-          // CRITICAL: Push ball completely outside collision radius to prevent overlap
-          // Add 1px extra to ensure no visual overlap
-          const separationDistance = PHYSICS.COLLISION_RADIUS + 1;
-          x = peg.x + nx * separationDistance;
-          y = peg.y + ny * separationDistance;
+        // Record collision
+        hitPeg = peg;
+        recentCollisions.set(pegKey, frame);
 
-          // Record collision
-          hitPeg = peg;
-          recentCollisions.set(pegKey, frame);
+        // Clean old collisions
+        if (recentCollisions.size > 10) {
+          const firstKey = recentCollisions.keys().next().value;
+          recentCollisions.delete(firstKey);
+        }
 
-          // Clean old collisions
-          for (const [key, hitFrame] of recentCollisions.entries()) {
-            if (frame - hitFrame > 30) {
-              recentCollisions.delete(key);
-            }
+        break; // Only handle one collision per frame
+      }
+    }
+
+    // Wall collision detection
+    if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
+      x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
+      vx = Math.abs(vx) * PHYSICS.RESTITUTION;
+    } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
+      x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
+      vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
+    }
+
+    // Bucket physics (enhanced)
+    const bucketZoneY = boardHeight - 70;
+    const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
+
+    if (y >= bucketZoneY) {
+      // In bucket zone - check for bucket wall collisions
+      const currentSlot = Math.floor(x / slotWidth);
+      const slotLeftEdge = currentSlot * slotWidth + 3;
+      const slotRightEdge = (currentSlot + 1) * slotWidth - 3;
+
+      // Bucket wall collisions with proper physics
+      if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
+        x = slotLeftEdge + PHYSICS.BALL_RADIUS;
+        vx = Math.abs(vx) * PHYSICS.RESTITUTION * 0.6; // Dampen in bucket
+      } else if (x + PHYSICS.BALL_RADIUS >= slotRightEdge) {
+        x = slotRightEdge - PHYSICS.BALL_RADIUS;
+        vx = -Math.abs(vx) * PHYSICS.RESTITUTION * 0.6;
+      }
+
+      // Bucket floor collision with bouncing
+      if (y >= bucketFloorY) {
+        y = bucketFloorY;
+        if (vy > 0) {
+          vy = -vy * PHYSICS.RESTITUTION * 0.5; // Bounce off floor with damping
+
+          // Add small random horizontal movement on bounce
+          vx += (rng.next() - 0.5) * 20;
+
+          // Stop bouncing if velocity is too small
+          if (Math.abs(vy) < 30) {
+            vy = 0;
+            vx *= 0.9; // Friction on floor
           }
+        }
 
-          break; // Only handle one collision per frame
+        // Check if ball has settled
+        if (Math.abs(vx) < 5 && Math.abs(vy) < 5 && y >= bucketFloorY - 1) {
+          settled = true;
         }
       }
     }
 
-    // Update position
-    x += vx * PHYSICS.DT;
-    y += vy * PHYSICS.DT;
+    // Final safety check: ensure no overlaps before adding frame
+    for (const peg of pegs) {
+      const dx = x - peg.x;
+      const dy = y - peg.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Bucket zone collision detection (70px bucket height)
-    const bucketZoneY = boardHeight - 70;
-    if (y >= bucketZoneY) {
-      // In bucket zone - check for bucket wall collisions
-      const currentSlot = Math.floor(x / slotWidth);
-      const slotLeftEdge = currentSlot * slotWidth + 3; // Account for wall thickness
-      const slotRightEdge = (currentSlot + 1) * slotWidth - 3;
-
-      // Keep ball within bucket walls
-      if (x - PHYSICS.BALL_RADIUS < slotLeftEdge) {
-        x = slotLeftEdge + PHYSICS.BALL_RADIUS;
-        vx = Math.abs(vx) * PHYSICS.RESTITUTION * 0.5; // Dampen more in bucket
-      } else if (x + PHYSICS.BALL_RADIUS > slotRightEdge) {
-        x = slotRightEdge - PHYSICS.BALL_RADIUS;
-        vx = -Math.abs(vx) * PHYSICS.RESTITUTION * 0.5;
-      }
-    } else {
-      // Outside bucket zone - normal wall collisions
-      if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
-        x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
-        vx = Math.abs(vx) * PHYSICS.RESTITUTION;
-      } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
-        x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
-        vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
+      if (dist < PHYSICS.COLLISION_RADIUS) {
+        // Push ball away from peg if still overlapping
+        const nx = dx / dist;
+        const ny = dy / dist;
+        x = peg.x + nx * (PHYSICS.COLLISION_RADIUS + 0.2);
+        y = peg.y + ny * (PHYSICS.COLLISION_RADIUS + 0.2);
       }
     }
 
-    // Update rotation
+    // Update rotation based on horizontal velocity
     rotation += (vx / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60;
 
     // Add frame
@@ -266,26 +336,6 @@ function runSimulation(
     Math.max(0, Math.floor(x / slotWidth)),
     slotCount - 1
   );
-
-  // Add settling frames
-  const settleFrames = 30;
-  const finalX = x;
-  const finalY = bottomY;
-
-  for (let i = 1; i <= settleFrames; i++) {
-    const t = i / settleFrames;
-    const easeT = 1 - Math.pow(1 - t, 3);
-
-    trajectory.push({
-      frame: frame++,
-      x: finalX,
-      y: finalY,
-      vx: vx * (1 - t),
-      vy: vy * (1 - t),
-      rotation: rotation + (vx * (1 - t) / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60 * i,
-      pegHit: false
-    });
-  }
 
   return { trajectory, landedSlot };
 }
