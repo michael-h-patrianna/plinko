@@ -23,6 +23,7 @@ interface ImpactParticlesProps {
 
 export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesProps) {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const [particleIdCounter, setParticleIdCounter] = useState(0);
 
   // Reset particles when requested
   useEffect(() => {
@@ -36,13 +37,14 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
     if (pegHit && pegX !== undefined && pegY !== undefined) {
       const newParticles: Particle[] = [];
       const particleCount = 5; // 5 particles per impact
+      const baseId = particleIdCounter;
 
       for (let i = 0; i < particleCount; i++) {
         const angle = (Math.PI * 2 * i) / particleCount + (Math.random() - 0.5) * 0.5;
         const speed = 50 + Math.random() * 50; // Random speed 50-100
 
         newParticles.push({
-          id: Date.now() + i,
+          id: baseId + i,
           x: pegX,
           y: pegY,
           vx: Math.cos(angle) * speed,
@@ -53,8 +55,9 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
       }
 
       setParticles(prev => [...prev, ...newParticles]);
+      setParticleIdCounter(prev => prev + particleCount);
     }
-  }, [pegHit, pegX, pegY]);
+  }, [pegHit, pegX, pegY, particleIdCounter]);
 
   // Animate particles (physics simulation)
   useEffect(() => {
