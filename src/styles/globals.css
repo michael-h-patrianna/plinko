@@ -38,6 +38,34 @@ body {
   }
 }
 
+/* Peg hit animations */
+@keyframes pegGlowPulse {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+@keyframes pegShake {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translate(-48%, -50%) scale(1.1);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translate(-52%, -50%) scale(1.1);
+  }
+}
+
 /* Focus visible for accessibility */
 :focus-visible {
   outline: 2px solid #3b82f6;

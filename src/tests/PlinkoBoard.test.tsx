@@ -27,8 +27,12 @@ describe('PlinkoBoard Component', () => {
   it('should render correct number of pegs', () => {
     const { container } = render(<PlinkoBoard {...defaultProps} />);
 
-    // With staggered layout: 10 rows × (slotCount + 1) pegs per row
-    const expectedPegs = defaultProps.pegRows * (MOCK_PRIZES.length + 1);
+    // With staggered layout: even rows have slotCount+1 pegs, odd rows have slotCount pegs
+    // With 10 rows (0-9): 5 even rows (0,2,4,6,8) and 5 odd rows (1,3,5,7,9)
+    const slotCount = MOCK_PRIZES.length;
+    const evenRows = Math.ceil(defaultProps.pegRows / 2);
+    const oddRows = Math.floor(defaultProps.pegRows / 2);
+    const expectedPegs = (evenRows * (slotCount + 1)) + (oddRows * slotCount);
     const pegs = container.querySelectorAll('[data-testid^="peg-"]');
     expect(pegs.length).toBe(expectedPegs);
   });

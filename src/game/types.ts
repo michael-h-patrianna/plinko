@@ -16,6 +16,8 @@ export interface TrajectoryPoint {
   y: number;
   rotation: number;
   pegHit?: boolean;
+  pegHitRow?: number;      // Which row peg was hit
+  pegHitCol?: number;      // Which column peg was hit
 }
 
 export type GameState = 'idle' | 'ready' | 'dropping' | 'landed' | 'revealed';
