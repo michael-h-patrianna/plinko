@@ -139,16 +139,20 @@ export function PlinkoBoard({
             currentTrajectoryPoint?.pegHitRow === peg.row &&
             currentTrajectoryPoint?.pegHitCol === peg.col
           }
+          shouldReset={ballState === 'idle'}
         />
       ))}
 
       {/* Slots */}
       {slots.map((slot) => {
         // Check if ball is approaching this slot (in lower 40% of board and horizontally close)
-        const isApproaching = currentTrajectoryPoint
+        const isApproaching = ballState === 'dropping' && currentTrajectoryPoint
           ? currentTrajectoryPoint.y > boardHeight * 0.6 &&
             Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width * 1.5
           : false;
+
+        // Only show winning state during drop and end phase, not when idle
+        const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
 
         return (
           <Slot
@@ -157,7 +161,7 @@ export function PlinkoBoard({
             prize={slot.prize}
             x={slot.x}
             width={slot.width}
-            isWinning={slot.index === selectedIndex}
+            isWinning={isWinning}
             isApproaching={isApproaching}
           />
         );

@@ -10,10 +10,18 @@ interface PegProps {
   x: number;
   y: number;
   isActive?: boolean;
+  shouldReset?: boolean;
 }
 
-export function Peg({ row, col, x, y, isActive = false }: PegProps) {
+export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: PegProps) {
   const [wasHit, setWasHit] = useState(false);
+
+  // Reset when new ball drop starts
+  useEffect(() => {
+    if (shouldReset) {
+      setWasHit(false);
+    }
+  }, [shouldReset]);
 
   // Trigger animation when peg is hit
   useEffect(() => {
