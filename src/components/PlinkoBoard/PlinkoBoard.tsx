@@ -13,6 +13,8 @@ import { Ball } from '../Ball';
 import { BallLauncher } from '../BallLauncher';
 import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
+import { ComboLegend } from './ComboLegend';
+import { calculateBucketZoneY } from '../../utils/slotDimensions';
 
 interface PlinkoBoardProps {
   prizes: PrizeConfig[];
@@ -90,23 +92,26 @@ export function PlinkoBoard({
 
     const verticalSpacing = playableHeight / (pegRows + 1);
 
+    // Use a FIXED optimal peg count (what worked for 6 prizes)
+    // This keeps peg spacing consistent regardless of prize count
+    const OPTIMAL_PEG_COLUMNS = 6;
+
     // The leftmost and rightmost pegs should be minClearance away from the walls
     // Use internalWidth (371px) instead of boardWidth (375px) due to box-sizing: border-box
     const leftEdge = BORDER_WIDTH + minClearance;
     const rightEdge = internalWidth - BORDER_WIDTH - minClearance;
     const pegSpanWidth = rightEdge - leftEdge;
 
-    // Non-offset rows have slotCount + 1 pegs
+    // Non-offset rows have OPTIMAL_PEG_COLUMNS + 1 pegs
     // These pegs should be evenly distributed from leftEdge to rightEdge
-    // So spacing = pegSpanWidth / slotCount (which creates slotCount gaps between slotCount + 1 pegs)
-    const horizontalSpacing = pegSpanWidth / slotCount;
+    const horizontalSpacing = pegSpanWidth / OPTIMAL_PEG_COLUMNS;
 
     for (let row = 0; row < pegRows; row++) {
       const y = verticalSpacing * (row + 1) + BORDER_WIDTH + 20; // Account for top border
 
       // Offset every other row for staggered pattern
       const isOffsetRow = row % 2 === 1;
-      const pegsInRow = isOffsetRow ? slotCount : slotCount + 1;
+      const pegsInRow = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
       for (let col = 0; col < pegsInRow; col++) {
         if (isOffsetRow) {
@@ -122,43 +127,55 @@ export function PlinkoBoard({
     }
 
     return pegList;
-  }, [boardHeight, internalWidth, pegRows, slotCount, BORDER_WIDTH]);
+  }, [boardHeight, internalWidth, pegRows, BORDER_WIDTH]);
 
-  // Generate slot positions - account for border walls
+  // Generate slot positions and assign combo badge numbers
   const slots = useMemo(() => {
     // Use internalWidth due to box-sizing: border-box
     const playableWidth = internalWidth - (BORDER_WIDTH * 2);
     const slotWidth = playableWidth / slotCount;
-    return prizes.map((prize, index) => ({
-      index,
-      prize,
-      x: BORDER_WIDTH + (index * slotWidth),
-      width: slotWidth
-    }));
+    let comboBadgeCounter = 1;
+
+    return prizes.map((prize, index) => {
+      // Check if prize has multiple rewards (combo)
+      const prizeReward = (prize as any).freeReward;
+      const rewardCount = prizeReward ? [
+        prizeReward.sc,
+        prizeReward.gc,
+        prizeReward.spins,
+        prizeReward.xp,
+        prizeReward.randomReward
+      ].filter(Boolean).length : 0;
+
+      const isCombo = rewardCount >= 2;
+      const comboBadgeNumber = isCombo ? comboBadgeCounter++ : undefined;
+
+      return {
+        index,
+        prize,
+        x: BORDER_WIDTH + (index * slotWidth),
+        width: slotWidth,
+        comboBadgeNumber
+      };
+    });
   }, [prizes, slotCount, internalWidth, BORDER_WIDTH]);
 
+  // Calculate bucket zone Y position based on slot width
+  const bucketZoneY = useMemo(() => {
+    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
+    const slotWidth = playableWidth / slotCount;
+    return calculateBucketZoneY(boardHeight, slotWidth);
+  }, [boardHeight, internalWidth, slotCount, BORDER_WIDTH]);
+
   return (
-    <motion.div
-      className="relative"
-      style={{
-        width: '100%',
-        maxWidth: `${boardWidth}px`,
-        height: `${boardHeight}px`,
-        margin: '0 auto', // Center the board when it doesn't fill full width
-        overflow: 'visible',
-        background: `
-          radial-gradient(circle at 50% 30%, rgba(30,41,59,0.9) 0%, rgba(15,23,42,1) 60%),
-          linear-gradient(180deg, #1e293b 0%, #0f172a 50%, #020617 100%)
-        `,
-        borderRadius: '16px',
-        boxShadow: `
-          inset 0 6px 30px rgba(0,0,0,0.7),
-          inset 0 -3px 15px rgba(71,85,105,0.2),
-          0 12px 40px rgba(0,0,0,0.5),
-          0 6px 20px rgba(0,0,0,0.3)
-        `,
-        border: '2px solid rgba(71,85,105,0.3)',
-      }}
+    <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
+      <motion.div
+        className="relative"
+        style={{
+          width: '100%',
+          height: `${boardHeight}px`,
+          overflow: 'visible',
+        }}
       initial={{ opacity: 0, scale: 0.92, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 30 }}
@@ -222,7 +239,6 @@ export function PlinkoBoard({
         const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
 
         // Determine if ball is in this slot (bucket zone)
-        const bucketZoneY = boardHeight - 70;
         const isInThisSlot = currentTrajectoryPoint && currentTrajectoryPoint.y >= bucketZoneY
           ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
           : false;
@@ -242,6 +258,9 @@ export function PlinkoBoard({
             isApproaching={isApproaching}
             wallImpact={wallImpact}
             floorImpact={floorImpact}
+            prizeCount={slotCount}
+            boardWidth={boardWidth}
+            comboBadgeNumber={slot.comboBadgeNumber}
           />
         );
       })}
@@ -285,14 +304,18 @@ export function PlinkoBoard({
       {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && (
         <SlotWinReveal
           x={slots[selectedIndex].x}
-          y={boardHeight - 70}
+          y={bucketZoneY}
           width={slots[selectedIndex].width}
-          height={70}
+          height={boardHeight - bucketZoneY}
           color={slots[selectedIndex].prize.color}
           label={slots[selectedIndex].prize.label}
           isActive={showWinReveal}
         />
       )}
-    </motion.div>
+      </motion.div>
+
+      {/* Combo legend - shows below board */}
+      <ComboLegend slots={slots} />
+    </div>
   );
 }

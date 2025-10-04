@@ -4,8 +4,10 @@
  */
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../game/types';
+import { getSlotDisplayText } from '../game/prizeTypes';
+import { abbreviateNumber } from '../utils/formatNumber';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -15,13 +17,11 @@ interface StartScreenProps {
 
 export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
   const [isPressed, setIsPressed] = useState(false);
+  const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
 
   return (
     <motion.div
       className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6"
-      style={{
-        background: 'radial-gradient(circle at 50% 50%, rgba(15,23,42,0.98) 0%, rgba(2,6,23,0.99) 100%)',
-      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -78,28 +78,93 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
           Available Prizes
         </h2>
         <div className="space-y-2">
-          {prizes.map((prize, index) => (
-            <motion.div
-              key={prize.id}
-              className="flex items-center justify-between text-sm px-2 py-1 rounded"
-              style={{
-                background: `linear-gradient(90deg, ${prize.color}15 0%, transparent 100%)`,
-                borderLeft: `2px solid ${prize.color}`,
-              }}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{
-                duration: 0.3,
-                delay: 0.3 + index * 0.05,
-                ease: [0.22, 1, 0.36, 1],
-              }}
-            >
-              <span className="text-slate-200 font-medium">{prize.label}</span>
-              <span className="text-amber-400 font-semibold">
-                {(prize.probability * 100).toFixed(0)}%
-              </span>
-            </motion.div>
-          ))}
+          {prizes.map((prize, index) => {
+            const prizeType = (prize as any).type;
+            const isPurchaseOffer = prizeType === 'purchase';
+            const prizeReward = (prize as any).freeReward;
+            const rewardCount = prizeReward ? [
+              prizeReward.sc,
+              prizeReward.gc,
+              prizeReward.spins,
+              prizeReward.xp,
+              prizeReward.randomReward
+            ].filter(Boolean).length : 0;
+            const isCombo = rewardCount >= 2 && !isPurchaseOffer;
+            const isExpanded = expandedPrize === prize.id;
+
+            // Display text logic
+            let displayText: string;
+            if (isPurchaseOffer) {
+              displayText = '200% Special Offer';
+            } else if (isCombo) {
+              displayText = prize.label;
+            } else {
+              displayText = getSlotDisplayText(prize as any, abbreviateNumber, true) || prize.label;
+            }
+
+            return (
+              <motion.div
+                key={prize.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{
+                  duration: 0.3,
+                  delay: 0.3 + index * 0.05,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              >
+                <div
+                  className="flex items-center justify-between text-sm px-2 py-1 rounded"
+                  style={{
+                    background: `linear-gradient(90deg, ${prize.color}15 0%, transparent 100%)`,
+                    borderLeft: `2px solid ${prize.color}`,
+                    cursor: isCombo ? 'pointer' : 'default',
+                  }}
+                  onClick={() => isCombo && setExpandedPrize(isExpanded ? null : prize.id)}
+                >
+                  <span className="text-slate-200 font-medium flex items-center gap-1">
+                    {displayText}
+                    {isCombo && <span className="text-xs text-slate-400">{isExpanded ? '▼' : '▶'}</span>}
+                  </span>
+                  <span className="text-amber-400 font-semibold">
+                    {(prize.probability * 100).toFixed(0)}%
+                  </span>
+                </div>
+                <AnimatePresence initial={false}>
+                  {isCombo && isExpanded && (
+                    <motion.div
+                      className="text-xs text-slate-300 px-2 py-2 rounded overflow-hidden"
+                      style={{
+                        background: `${prize.color}08`,
+                        marginLeft: '8px',
+                      }}
+                      initial={{ opacity: 0, maxHeight: 0, marginTop: 0, paddingTop: 0, paddingBottom: 0 }}
+                      animate={{
+                        opacity: 1,
+                        maxHeight: 100,
+                        marginTop: 4,
+                        paddingTop: 8,
+                        paddingBottom: 8,
+                      }}
+                      exit={{
+                        opacity: 0,
+                        maxHeight: 0,
+                        marginTop: 0,
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                      }}
+                      transition={{
+                        duration: 0.3,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                      }}
+                    >
+                      {getSlotDisplayText(prize as any, abbreviateNumber, true)}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            );
+          })}
         </div>
       </motion.div>
 

@@ -2,13 +2,15 @@
  * Core type definitions for the Plinko game
  */
 
-export interface PrizeConfig {
-  id: string;
-  label: string;
-  description: string;
-  probability: number; // 0-1, must sum to 1.0 across all prizes
-  color: string;
-}
+import type { Prize } from './prizeTypes';
+
+// Re-export Prize as PrizeConfig for backward compatibility
+export type PrizeConfig = Prize & {
+  // Legacy fields for backward compatibility
+  label?: string;
+  description?: string;
+  color?: string;
+};
 
 export interface TrajectoryPoint {
   frame: number;

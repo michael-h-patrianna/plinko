@@ -15,9 +15,6 @@ export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
   return (
     <motion.div
       className="absolute inset-0 z-50 flex items-center justify-center p-6"
-      style={{
-        background: 'radial-gradient(circle at 50% 50%, rgba(15,23,42,0.98) 0%, rgba(2,6,23,0.99) 100%)',
-      }}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -30,8 +27,6 @@ export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
           width: '120px',
           height: '120px',
           borderRadius: '50%',
-          background: `radial-gradient(circle, ${prize.color}33 0%, ${prize.color}11 70%, transparent 100%)`,
-          boxShadow: `0 0 60px ${prize.color}44`,
         }}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}

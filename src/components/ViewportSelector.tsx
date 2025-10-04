@@ -17,7 +17,7 @@ const VIEWPORT_SIZES = [
 
 export function ViewportSelector({ selectedWidth, onWidthChange, disabled }: ViewportSelectorProps) {
   return (
-    <div className="mb-6 p-4 bg-slate-800 rounded-lg shadow-lg">
+    <div className="mb-3 p-4 bg-slate-800 rounded-lg shadow-lg">
       <div className="text-white text-sm font-semibold mb-3 text-center">
         Device Viewport Emulator
         {disabled && (

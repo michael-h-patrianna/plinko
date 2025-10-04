@@ -3,12 +3,12 @@
  * Manages state machine, animation loop, and game lifecycle
  */
 
-import { useEffect, useReducer, useRef, useMemo } from 'react';
-import type { GameState, GameContext, BallPosition } from '../game/types';
+import { useEffect, useReducer, useRef, useMemo, useState } from 'react';
+import type { GameState, GameContext, BallPosition, PrizeConfig } from '../game/types';
 import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import { selectPrize } from '../game/rng';
 import { generateTrajectory } from '../game/trajectory';
-import { MOCK_PRIZES, getPrizeByIndex } from '../config/prizeTable';
+import { createValidatedProductionPrizeSet, getPrizeByIndex } from '../config/productionPrizeTable';
 
 interface PlinkoGameState {
   state: GameState;
@@ -35,6 +35,9 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     pegRows = 10
   } = options;
 
+  // Generate random prize set for each game session
+  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => createValidatedProductionPrizeSet());
+
   const [gameState, dispatch] = useReducer(gameReducer, {
     state: 'idle',
     context: initialContext
@@ -56,14 +59,14 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       const urlSeed = urlParams.get('seed');
       const finalSeed = seedOverride ?? (urlSeed ? parseInt(urlSeed, 10) : undefined);
 
-      const { selectedIndex, seedUsed } = selectPrize(MOCK_PRIZES, finalSeed);
-      const prize = getPrizeByIndex(selectedIndex);
+      const { selectedIndex, seedUsed } = selectPrize(prizes, finalSeed);
+      const prize = getPrizeByIndex(prizes, selectedIndex);
 
       const trajectory = generateTrajectory({
         boardWidth,
         boardHeight,
         pegRows,
-        slotCount: MOCK_PRIZES.length,
+        slotCount: prizes.length,
         selectedIndex,
         seed: seedUsed
       });
@@ -75,7 +78,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
     }
-  }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows]);
+  }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes]);
 
   // Animation loop for dropping state
   useEffect(() => {
@@ -168,6 +171,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   };
 
   const resetGame = () => {
+    // Generate new random prize set for next game
+    setPrizes(createValidatedProductionPrizeSet());
     dispatch({ type: 'RESET_REQUESTED' });
   };
 
@@ -183,7 +188,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
   return {
     state: gameState.state,
-    prizes: MOCK_PRIZES,
+    prizes,
     selectedPrize: gameState.context.prize,
     selectedIndex: gameState.context.selectedIndex,
     ballPosition,

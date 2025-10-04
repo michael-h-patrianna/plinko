@@ -12,6 +12,7 @@
 
 import type { TrajectoryPoint } from './types';
 import { createRng } from './rng';
+import { calculateBucketZoneY } from '../utils/slotDimensions';
 
 // Physics constants for realistic simulation
 const PHYSICS = {
@@ -41,26 +42,32 @@ interface SimulationParams {
 
 /**
  * Generate peg layout for the board
+ * Uses a FIXED optimal peg count regardless of prize/slot count
  */
 function generatePegLayout(
   boardWidth: number,
   boardHeight: number,
   pegRows: number,
-  slotCount: number
+  _slotCount: number // Not used - kept for API compatibility
 ): Peg[] {
   const pegs: Peg[] = [];
+
+  // Use a FIXED optimal peg count (what worked for 6 prizes)
+  // This keeps peg spacing consistent regardless of prize count
+  const OPTIMAL_PEG_COLUMNS = 6;
+
   // Add extra padding to ensure pegs don't touch walls - increased from 2px to 10px
   const pegPadding = PHYSICS.PEG_RADIUS + 10; // Peg radius + 10px safety margin
   const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
-  const horizontalSpacing = playableWidth / slotCount;
+  const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
 
   for (let row = 0; row < pegRows; row++) {
     const y = verticalSpacing * (row + 1) + PHYSICS.BORDER_WIDTH + 20;
     const isOffsetRow = row % 2 === 1;
     const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-    const numPegs = isOffsetRow ? slotCount : slotCount + 1;
+    const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
     for (let col = 0; col < numPegs; col++) {
       const x = PHYSICS.BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
@@ -94,11 +101,11 @@ function runSimulation(
   let rotation = 0;
   let frame = 0;
 
-  // Define bucket floor position
-  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
-  // Account for border walls when calculating slot positions
+  // Calculate bucket dimensions based on slot width
   const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
   const slotWidth = playableWidth / slotCount;
+  const bucketZoneY = calculateBucketZoneY(boardHeight, slotWidth);
+  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
 
   // Track recent collisions to prevent double-hits
   const recentCollisions = new Map<string, number>();
@@ -279,8 +286,6 @@ function runSimulation(
     }
 
     // Bucket physics (enhanced)
-    const bucketZoneY = boardHeight - 70;
-    const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
     let bucketWallHit: 'left' | 'right' | undefined = undefined;
     let bucketFloorHit = false;
 
