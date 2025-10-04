@@ -8,9 +8,11 @@ import type { GameState, GameContext, TrajectoryPoint, PrizeConfig } from './typ
 export type GameEvent =
   | { type: 'INITIALIZE'; payload: { selectedIndex: number; trajectory: TrajectoryPoint[]; prize: PrizeConfig; seed: number } }
   | { type: 'DROP_REQUESTED' }
+  | { type: 'COUNTDOWN_COMPLETED' }
   | { type: 'FRAME_ADVANCED'; payload: { frame: number } }
   | { type: 'LANDING_COMPLETED' }
   | { type: 'REVEAL_CONFIRMED' }
+  | { type: 'CLAIM_REQUESTED' }
   | { type: 'RESET_REQUESTED' };
 
 export const initialContext: GameContext = {
@@ -52,7 +54,7 @@ export function transition(
     case 'ready':
       if (event.type === 'DROP_REQUESTED') {
         return {
-          state: 'dropping',
+          state: 'countdown',
           context: { ...context, currentFrame: 0 }
         };
       }
@@ -60,6 +62,15 @@ export function transition(
         return {
           state: 'idle',
           context: initialContext
+        };
+      }
+      throw new Error(`Invalid event ${event.type} for state ${state}`);
+
+    case 'countdown':
+      if (event.type === 'COUNTDOWN_COMPLETED') {
+        return {
+          state: 'dropping',
+          context
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -89,6 +100,15 @@ export function transition(
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'revealed':
+      if (event.type === 'CLAIM_REQUESTED') {
+        return {
+          state: 'claimed',
+          context
+        };
+      }
+      throw new Error(`Invalid event ${event.type} for state ${state}`);
+
+    case 'claimed':
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',

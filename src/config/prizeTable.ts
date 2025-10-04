@@ -12,22 +12,22 @@ import type { PrizeConfig } from '../game/types';
 export const MOCK_PRIZES: PrizeConfig[] = [
   {
     id: 'p1',
-    label: '$500 Bonus',
-    description: 'Instant site credit',
+    label: 'Free SC 500',
+    description: 'Sweeps Coins',
     probability: 0.05,
     color: '#F97316' // orange-500
   },
   {
     id: 'p2',
-    label: '$250 Bonus',
-    description: 'Instant site credit',
+    label: 'Free SC 250',
+    description: 'Sweeps Coins',
     probability: 0.10,
     color: '#FB923C' // orange-400
   },
   {
     id: 'p3',
-    label: '$50 Bonus',
-    description: 'Instant site credit',
+    label: 'Free SC 50',
+    description: 'Sweeps Coins',
     probability: 0.20,
     color: '#FACC15' // yellow-400
   },

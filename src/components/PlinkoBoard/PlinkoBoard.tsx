@@ -1,12 +1,17 @@
 /**
  * Main Plinko board with pegs and slots
+ * Enhanced with triple-A win animations
  */
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import type { PrizeConfig, TrajectoryPoint, BallPosition, GameState } from '../../game/types';
 import { Peg } from './Peg';
 import { Slot } from './Slot';
+import { BorderWall } from './BorderWall';
 import { Ball } from '../Ball';
+import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
+import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
 
 interface PlinkoBoardProps {
   prizes: PrizeConfig[];
@@ -31,6 +36,36 @@ export function PlinkoBoard({
 }: PlinkoBoardProps) {
   const slotCount = prizes.length;
   const BORDER_WIDTH = 8;
+
+  // Animation states
+  const [showAnticipation, setShowAnticipation] = useState(false);
+  const [showWinReveal, setShowWinReveal] = useState(false);
+
+  // Trigger anticipation when ball is approaching (in bottom 30% of board)
+  useEffect(() => {
+    if (ballState === 'dropping' && currentTrajectoryPoint) {
+      const isInLowerThird = currentTrajectoryPoint.y > boardHeight * 0.7;
+      setShowAnticipation(isInLowerThird);
+    } else {
+      setShowAnticipation(false);
+    }
+  }, [ballState, currentTrajectoryPoint, boardHeight]);
+
+  // Trigger win reveal when ball lands
+  useEffect(() => {
+    if (ballState === 'landed' && currentTrajectoryPoint) {
+      // Show win reveal after short delay
+      const revealTimer = setTimeout(() => {
+        setShowWinReveal(true);
+      }, 600);
+
+      return () => {
+        clearTimeout(revealTimer);
+      };
+    } else {
+      setShowWinReveal(false);
+    }
+  }, [ballState, currentTrajectoryPoint]);
 
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
@@ -74,7 +109,7 @@ export function PlinkoBoard({
   }, [prizes, slotCount, boardWidth, BORDER_WIDTH]);
 
   return (
-    <div
+    <motion.div
       className="relative"
       style={{
         width: `${boardWidth}px`,
@@ -91,41 +126,32 @@ export function PlinkoBoard({
           0 12px 40px rgba(0,0,0,0.5),
           0 6px 20px rgba(0,0,0,0.3)
         `,
-        border: '2px solid rgba(71,85,105,0.3)'
+        border: '2px solid rgba(71,85,105,0.3)',
+      }}
+      initial={{ opacity: 0, scale: 0.92, y: 30 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 30 }}
+      transition={{
+        duration: 0.5,
+        ease: [0.22, 1, 0.36, 1],
       }}
       data-testid="plinko-board"
     >
-      {/* Left Border Wall */}
-      <div
-        className="absolute top-0 left-0 bottom-0"
-        style={{
-          width: `${BORDER_WIDTH}px`,
-          background: 'linear-gradient(90deg, #475569 0%, #334155 50%, #1e293b 100%)',
-          boxShadow: 'inset -2px 0 8px rgba(0,0,0,0.5), inset 2px 0 4px rgba(255,255,255,0.1)',
-          borderRadius: '12px 0 0 12px'
-        }}
+      {/* Border Walls with impact animation */}
+      <BorderWall
+        side="left"
+        width={BORDER_WIDTH}
+        hasImpact={currentTrajectoryPoint?.wallHit === 'left'}
       />
-
-      {/* Right Border Wall */}
-      <div
-        className="absolute top-0 right-0 bottom-0"
-        style={{
-          width: `${BORDER_WIDTH}px`,
-          background: 'linear-gradient(270deg, #475569 0%, #334155 50%, #1e293b 100%)',
-          boxShadow: 'inset 2px 0 8px rgba(0,0,0,0.5), inset -2px 0 4px rgba(255,255,255,0.1)',
-          borderRadius: '0 12px 12px 0'
-        }}
+      <BorderWall
+        side="right"
+        width={BORDER_WIDTH}
+        hasImpact={currentTrajectoryPoint?.wallHit === 'right'}
       />
-
-      {/* Top Border Wall */}
-      <div
-        className="absolute top-0 left-0 right-0"
-        style={{
-          height: `${BORDER_WIDTH}px`,
-          background: 'linear-gradient(180deg, #475569 0%, #334155 50%, #1e293b 100%)',
-          boxShadow: 'inset 0 -2px 8px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1)',
-          borderRadius: '12px 12px 0 0'
-        }}
+      <BorderWall
+        side="top"
+        width={BORDER_WIDTH}
+        hasImpact={false}
       />
 
       {/* Pegs */}
@@ -164,6 +190,16 @@ export function PlinkoBoard({
         // Only show winning state during drop and end phase, not when idle
         const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
 
+        // Determine if ball is in this slot (bucket zone)
+        const bucketZoneY = boardHeight - 70;
+        const isInThisSlot = currentTrajectoryPoint && currentTrajectoryPoint.y >= bucketZoneY
+          ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
+          : false;
+
+        // Pass collision data if ball is in this slot
+        const wallImpact = isInThisSlot ? currentTrajectoryPoint?.bucketWallHit : null;
+        const floorImpact = isInThisSlot && currentTrajectoryPoint?.bucketFloorHit;
+
         return (
           <Slot
             key={`slot-${slot.index}`}
@@ -173,6 +209,8 @@ export function PlinkoBoard({
             width={slot.width}
             isWinning={isWinning}
             isApproaching={isApproaching}
+            wallImpact={wallImpact}
+            floorImpact={floorImpact}
           />
         );
       })}
@@ -184,6 +222,28 @@ export function PlinkoBoard({
         currentFrame={currentTrajectoryPoint?.frame ?? 0}
         trajectoryPoint={currentTrajectoryPoint}
       />
-    </div>
+
+      {/* Win Animations */}
+      {showAnticipation && selectedIndex >= 0 && selectedIndex < slots.length && (
+        <SlotAnticipation
+          x={slots[selectedIndex].x}
+          width={slots[selectedIndex].width}
+          color={slots[selectedIndex].prize.color}
+          isActive={showAnticipation}
+        />
+      )}
+
+      {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && (
+        <SlotWinReveal
+          x={slots[selectedIndex].x}
+          y={boardHeight - 70}
+          width={slots[selectedIndex].width}
+          height={70}
+          color={slots[selectedIndex].prize.color}
+          label={slots[selectedIndex].prize.label}
+          isActive={showWinReveal}
+        />
+      )}
+    </motion.div>
   );
 }

@@ -1,12 +1,16 @@
 /**
  * Main Plinko game application
+ * With smooth state transitions using AnimatePresence
  */
 
 import { useState, useEffect } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import { PopupContainer } from './components/PopupContainer';
 import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
 import { StartScreen } from './components/StartScreen';
+import { Countdown } from './components/Countdown';
 import { PrizeReveal } from './components/PrizeReveal';
+import { PrizeClaimed } from './components/PrizeClaimed';
 import { ViewportSelector } from './components/ViewportSelector';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 
@@ -24,6 +28,7 @@ export function App() {
     ballPosition,
     currentTrajectoryPoint,
     startGame,
+    completeCountdown,
     claimPrize,
     resetGame,
     canClaim
@@ -41,16 +46,16 @@ export function App() {
     }
   }, [state, viewportWidth]);
 
-  // Handle viewport width change (only allowed when ready, idle, or revealed)
+  // Handle viewport width change (only allowed when ready, idle, revealed, or claimed)
   const handleViewportChange = (newWidth: number) => {
-    // Allow changes in ready, idle, and revealed states (not during dropping, landed, etc.)
-    const canChange = state === 'idle' || state === 'ready' || state === 'revealed';
+    // Allow changes in ready, idle, revealed, and claimed states (not during countdown, dropping, landed, etc.)
+    const canChange = state === 'idle' || state === 'ready' || state === 'revealed' || state === 'claimed';
 
     if (canChange) {
       setViewportWidth(newWidth);
 
-      // If we're in ready or revealed state, we need to regenerate the game
-      if (state === 'ready' || state === 'revealed') {
+      // If we're in ready, revealed, or claimed state, we need to regenerate the game
+      if (state === 'ready' || state === 'revealed' || state === 'claimed') {
         setLockedBoardWidth(newWidth);
         resetGame();
       } else {
@@ -61,7 +66,7 @@ export function App() {
   };
 
   // Determine if viewport selector should be disabled (only during active gameplay)
-  const isViewportLocked = state === 'dropping' || state === 'landed';
+  const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4">
@@ -80,35 +85,69 @@ export function App() {
         }}
       >
         <PopupContainer>
-          {/* Start screen overlay */}
-          {state === 'ready' && (
-            <StartScreen
-              prizes={prizes}
-              onStart={startGame}
-              disabled={false}
-            />
-          )}
+          {/* Start screen overlay with smooth exit */}
+          <AnimatePresence mode="wait">
+            {state === 'ready' && (
+              <StartScreen
+                key="start-screen"
+                prizes={prizes}
+                onStart={startGame}
+                disabled={false}
+              />
+            )}
+          </AnimatePresence>
 
-          {/* Main game board with ball */}
-          <PlinkoBoard
-            prizes={prizes}
-            selectedIndex={selectedIndex}
-            currentTrajectoryPoint={currentTrajectoryPoint}
-            boardWidth={lockedBoardWidth}
-            boardHeight={500}
-            pegRows={10}
-            ballPosition={ballPosition}
-            ballState={state}
-          />
+          {/* Main game board with ball - animated entrance when countdown starts */}
+          <AnimatePresence>
+            {state !== 'ready' && state !== 'revealed' && state !== 'claimed' && (
+              <PlinkoBoard
+                key="board"
+                prizes={prizes}
+                selectedIndex={selectedIndex}
+                currentTrajectoryPoint={currentTrajectoryPoint}
+                boardWidth={lockedBoardWidth}
+                boardHeight={500}
+                pegRows={10}
+                ballPosition={ballPosition}
+                ballState={state}
+              />
+            )}
+          </AnimatePresence>
 
-          {/* Prize reveal overlay */}
-          {state === 'revealed' && selectedPrize && (
-            <PrizeReveal
-              prize={selectedPrize}
-              onClaim={claimPrize}
-              canClaim={canClaim}
-            />
-          )}
+          {/* Countdown overlay */}
+          <AnimatePresence mode="wait">
+            {state === 'countdown' && (
+              <Countdown
+                key="countdown"
+                onComplete={completeCountdown}
+                boardHeight={500}
+                pegRows={10}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Prize reveal overlay with smooth entrance */}
+          <AnimatePresence mode="wait">
+            {state === 'revealed' && selectedPrize && (
+              <PrizeReveal
+                key="prize-reveal"
+                prize={selectedPrize}
+                onClaim={claimPrize}
+                canClaim={canClaim}
+              />
+            )}
+          </AnimatePresence>
+
+          {/* Prize claimed confirmation with smooth entrance */}
+          <AnimatePresence mode="wait">
+            {state === 'claimed' && selectedPrize && (
+              <PrizeClaimed
+                key="prize-claimed"
+                prize={selectedPrize}
+                onClose={resetGame}
+              />
+            )}
+          </AnimatePresence>
         </PopupContainer>
       </div>
 

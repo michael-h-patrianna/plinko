@@ -39,19 +39,21 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
     if (isActive && !lastActiveRef.current) {
       // Peg was just hit this frame!
       console.log(`🎯 Peg (${row}, ${col}) HIT DETECTED - isActive changed to true`);
+
+      // ALWAYS increment flash key to trigger new animation
       setFlashKey(prev => prev + 1);
       setIsFlashing(true);
 
-      // Clear any existing timeout
+      // Clear any existing timeout to reset the animation duration
       if (activeTimeoutRef.current) {
         clearTimeout(activeTimeoutRef.current);
       }
 
-      // Flash only lasts 200ms (pinball style), then automatically turns off
+      // Flash lasts 300ms (extended to handle rapid successive hits better)
       activeTimeoutRef.current = window.setTimeout(() => {
         setIsFlashing(false);
         activeTimeoutRef.current = null;
-      }, 200);
+      }, 300);
     }
 
     // Update ref for next render
@@ -111,13 +113,13 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
             opacity: 1;
             border-width: 3px;
           }
-          50% {
+          40% {
             transform: translate(-50%, -50%) scale(2);
-            opacity: 0.6;
+            opacity: 0.7;
             border-width: 2px;
           }
           100% {
-            transform: translate(-50%, -50%) scale(3.5);
+            transform: translate(-50%, -50%) scale(4);
             opacity: 0;
             border-width: 1px;
           }

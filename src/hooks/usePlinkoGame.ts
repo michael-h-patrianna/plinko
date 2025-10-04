@@ -174,7 +174,11 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   const claimPrize = () => {
     // In real app, this would call backend API
     // TODO: Integrate with backend prize claiming endpoint
-    resetGame();
+    dispatch({ type: 'CLAIM_REQUESTED' });
+  };
+
+  const completeCountdown = () => {
+    dispatch({ type: 'COUNTDOWN_COMPLETED' });
   };
 
   return {
@@ -185,6 +189,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     ballPosition,
     currentTrajectoryPoint,
     startGame,
+    completeCountdown,
     claimPrize,
     resetGame,
     canClaim: gameState.state === 'revealed'

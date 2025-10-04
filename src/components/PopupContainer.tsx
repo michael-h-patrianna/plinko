@@ -1,7 +1,9 @@
 /**
  * Container component for the popup/modal style
+ * Animated reveal on mount for polished appearance
  */
 
+import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
 
 interface PopupContainerProps {
@@ -10,7 +12,7 @@ interface PopupContainerProps {
 
 export function PopupContainer({ children }: PopupContainerProps) {
   return (
-    <div
+    <motion.div
       className="relative rounded-xl w-full"
       style={{
         minHeight: '650px',
@@ -26,11 +28,17 @@ export function PopupContainer({ children }: PopupContainerProps) {
           inset 0 1px 2px rgba(255,255,255,0.08),
           inset 0 -1px 2px rgba(0,0,0,0.5)
         `,
-        border: '1px solid rgba(71,85,105,0.3)'
+        border: '1px solid rgba(71,85,105,0.3)',
+      }}
+      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1], // Ease-out cubic for smooth, natural entrance
       }}
       data-testid="popup-container"
     >
       {children}
-    </div>
+    </motion.div>
   );
 }

@@ -1,0 +1,292 @@
+/**
+ * Celebration Overlay - Final Win Sequence
+ * Disney Principles: STAGING (sequential reveals), APPEAL (delightful motion)
+ * React Native compatible: transform, opacity, radial/linear gradients
+ */
+
+import { motion, AnimatePresence } from 'framer-motion';
+import type { PrizeConfig } from '../../game/types';
+
+interface CelebrationOverlayProps {
+  prize: PrizeConfig;
+  isVisible: boolean;
+  onComplete?: () => void;
+}
+
+export function CelebrationOverlay({ prize, isVisible, onComplete }: CelebrationOverlayProps) {
+  return (
+    <AnimatePresence>
+      {isVisible && (
+        <motion.div
+          className="absolute inset-0 z-50 flex items-center justify-center overflow-hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(15,23,42,0.98) 0%, rgba(2,6,23,0.99) 100%)',
+          }}
+        >
+          {/* Confetti particles from top - FOLLOW THROUGH & OVERLAPPING ACTION */}
+          {Array.from({ length: 30 }).map((_, i) => {
+            const startX = Math.random() * 100;
+            const endX = startX + (Math.random() - 0.5) * 30;
+            const delay = Math.random() * 0.5;
+            const duration = 2 + Math.random() * 1;
+            const colors = ['#fbbf24', '#fb923c', '#f97316', '#a78bfa', '#60a5fa', '#34d399'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+
+            return (
+              <motion.div
+                key={`confetti-${i}`}
+                className="absolute rounded-sm"
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  background: color,
+                  boxShadow: `0 0 10px ${color}88`,
+                  top: '-20px',
+                  left: `${startX}%`,
+                }}
+                initial={{
+                  y: 0,
+                  x: 0,
+                  opacity: 1,
+                  rotate: 0,
+                  scale: 1,
+                }}
+                animate={{
+                  y: 600,
+                  x: `${endX - startX}%`,
+                  opacity: [1, 1, 0.8, 0],
+                  rotate: Math.random() * 720,
+                  scale: [1, 0.8, 0.6],
+                }}
+                transition={{
+                  duration,
+                  delay,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+              />
+            );
+          })}
+
+          {/* Prize card container - STAGING */}
+          <motion.div
+            className="relative"
+            initial={{ scale: 0, rotate: -20, opacity: 0 }}
+            animate={{
+              scale: [0, 1.1, 1],
+              rotate: [-20, 5, 0],
+              opacity: [0, 1, 1],
+            }}
+            transition={{
+              duration: 0.7,
+              delay: 0.2,
+              ease: [0.34, 1.56, 0.64, 1], // Spring ease
+            }}
+            onAnimationComplete={onComplete}
+          >
+            {/* Pulsing glow background - SQUASH & STRETCH rhythm */}
+            <motion.div
+              className="absolute inset-0 rounded-3xl"
+              style={{
+                background: `radial-gradient(circle at 50% 50%, ${prize.color}66 0%, ${prize.color}22 50%, transparent 100%)`,
+                filter: 'blur(30px)',
+              }}
+              animate={{
+                scale: [1, 1.3, 1],
+                opacity: [0.4, 0.7, 0.4],
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* Main prize card */}
+            <div
+              className="relative rounded-3xl p-12 max-w-sm"
+              style={{
+                background: `
+                  linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,0.99) 100%),
+                  radial-gradient(circle at 50% 0%, ${prize.color}33 0%, transparent 70%)
+                `,
+                boxShadow: `
+                  0 0 80px ${prize.color}66,
+                  0 20px 60px rgba(0,0,0,0.8),
+                  0 10px 30px rgba(0,0,0,0.6),
+                  inset 0 2px 4px rgba(255,255,255,0.1),
+                  inset 0 -2px 4px rgba(0,0,0,0.5)
+                `,
+                border: `2px solid ${prize.color}88`,
+              }}
+            >
+              {/* Congratulations text - APPEAL */}
+              <motion.h2
+                className="text-4xl font-extrabold text-white mb-6 text-center"
+                style={{
+                  textShadow: `
+                    0 0 30px ${prize.color}99,
+                    0 3px 10px rgba(0,0,0,0.9)
+                  `,
+                  background: `linear-gradient(135deg, #fef3c7 0%, ${prize.color} 50%, ${prize.color}dd 100%)`,
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                }}
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              >
+                🎉 You Won! 🎉
+              </motion.h2>
+
+              {/* Prize display - STAGING sequence */}
+              <motion.div
+                className="relative mb-8"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{
+                  scale: [0, 1.2, 1],
+                  opacity: [0, 1, 1],
+                }}
+                transition={{
+                  duration: 0.6,
+                  delay: 0.7,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }}
+              >
+                <div
+                  className="p-8 rounded-2xl"
+                  style={{
+                    background: `
+                      linear-gradient(135deg, ${prize.color} 0%, ${prize.color}dd 100%),
+                      radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 60%)
+                    `,
+                    boxShadow: `
+                      0 10px 40px rgba(0,0,0,0.6),
+                      0 5px 20px ${prize.color}66,
+                      inset 0 2px 4px rgba(255,255,255,0.4),
+                      inset 0 -2px 4px rgba(0,0,0,0.4)
+                    `,
+                    border: `1px solid ${prize.color}cc`,
+                  }}
+                >
+                  <div
+                    className="text-3xl font-bold text-white mb-3 text-center"
+                    style={{ textShadow: '0 3px 10px rgba(0,0,0,0.7)' }}
+                  >
+                    {prize.label}
+                  </div>
+                  <div
+                    className="text-base text-white/95 text-center"
+                    style={{ textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}
+                  >
+                    {prize.description}
+                  </div>
+                </div>
+
+                {/* Rotating sparkle ring - APPEAL */}
+                <motion.div
+                  className="absolute inset-0 rounded-2xl pointer-events-none"
+                  style={{
+                    border: `2px solid ${prize.color}44`,
+                  }}
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 6,
+                    repeat: Infinity,
+                    ease: 'linear',
+                  }}
+                >
+                  {[0, 1, 2, 3].map((i) => (
+                    <motion.div
+                      key={`sparkle-${i}`}
+                      className="absolute rounded-full"
+                      style={{
+                        width: '6px',
+                        height: '6px',
+                        background: '#ffffff',
+                        boxShadow: `0 0 12px ${prize.color}`,
+                        top: i % 2 === 0 ? '0' : 'auto',
+                        bottom: i % 2 === 1 ? '0' : 'auto',
+                        left: i < 2 ? '0' : 'auto',
+                        right: i >= 2 ? '0' : 'auto',
+                      }}
+                      animate={{
+                        scale: [1, 1.5, 1],
+                        opacity: [0.6, 1, 0.6],
+                      }}
+                      transition={{
+                        duration: 1,
+                        delay: i * 0.25,
+                        repeat: Infinity,
+                        ease: 'easeInOut',
+                      }}
+                    />
+                  ))}
+                </motion.div>
+              </motion.div>
+
+              {/* Success message */}
+              <motion.p
+                className="text-slate-300 text-center text-lg mb-6"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4, delay: 1 }}
+              >
+                Congratulations on your amazing win!
+              </motion.p>
+            </div>
+          </motion.div>
+
+          {/* Corner star bursts - APPEAL */}
+          {[
+            { x: '10%', y: '10%' },
+            { x: '90%', y: '10%' },
+            { x: '10%', y: '90%' },
+            { x: '90%', y: '90%' },
+          ].map((pos, i) => (
+            <motion.div
+              key={`starburst-${i}`}
+              className="absolute"
+              style={{
+                left: pos.x,
+                top: pos.y,
+              }}
+              initial={{ scale: 0, opacity: 0, rotate: 0 }}
+              animate={{
+                scale: [0, 1, 0.8],
+                opacity: [0, 1, 0.6],
+                rotate: [0, 180, 360],
+              }}
+              transition={{
+                duration: 1,
+                delay: 0.3 + i * 0.1,
+                ease: [0.34, 1.56, 0.64, 1],
+              }}
+            >
+              {/* 8-pointed star using gradients */}
+              {Array.from({ length: 8 }).map((_, rayIndex) => (
+                <div
+                  key={`ray-${rayIndex}`}
+                  className="absolute"
+                  style={{
+                    width: '3px',
+                    height: '40px',
+                    background: `linear-gradient(to top, ${prize.color} 0%, transparent 100%)`,
+                    transformOrigin: 'bottom center',
+                    transform: `rotate(${(360 / 8) * rayIndex}deg) translate(-50%, 0)`,
+                    left: '50%',
+                    bottom: '50%',
+                  }}
+                />
+              ))}
+            </motion.div>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

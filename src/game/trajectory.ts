@@ -267,17 +267,22 @@ function runSimulation(
     }
 
     // Wall collision detection
+    let wallHit: 'left' | 'right' | undefined = undefined;
     if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
       x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
       vx = Math.abs(vx) * PHYSICS.RESTITUTION;
+      wallHit = 'left';
     } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
       x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
       vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
+      wallHit = 'right';
     }
 
     // Bucket physics (enhanced)
     const bucketZoneY = boardHeight - 70;
     const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
+    let bucketWallHit: 'left' | 'right' | undefined = undefined;
+    let bucketFloorHit = false;
 
     if (y >= bucketZoneY) {
       // In bucket zone - check for bucket wall collisions
@@ -291,9 +296,11 @@ function runSimulation(
       if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
         x = slotLeftEdge + PHYSICS.BALL_RADIUS;
         vx = Math.abs(vx) * PHYSICS.RESTITUTION * 0.6; // Dampen in bucket
+        bucketWallHit = 'left';
       } else if (x + PHYSICS.BALL_RADIUS >= slotRightEdge) {
         x = slotRightEdge - PHYSICS.BALL_RADIUS;
         vx = -Math.abs(vx) * PHYSICS.RESTITUTION * 0.6;
+        bucketWallHit = 'right';
       }
 
       // Bucket floor collision with bouncing
@@ -301,6 +308,7 @@ function runSimulation(
         y = bucketFloorY;
         if (vy > 0) {
           vy = -vy * PHYSICS.RESTITUTION * 0.5; // Bounce off floor with damping
+          bucketFloorHit = true;
 
           // Add small random horizontal movement on bounce
           vx += (rng.next() - 0.5) * 20;
@@ -345,7 +353,10 @@ function runSimulation(
       pegHit: hitPeg !== null,
       pegHitRow: hitPeg?.row,
       pegHitCol: hitPeg?.col,
-      pegsHit: pegsHitThisFrame.length > 0 ? pegsHitThisFrame : undefined
+      pegsHit: pegsHitThisFrame.length > 0 ? pegsHitThisFrame : undefined,
+      wallHit,
+      bucketWallHit,
+      bucketFloorHit: bucketFloorHit || undefined
     });
   }
 

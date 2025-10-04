@@ -21,9 +21,12 @@ export interface TrajectoryPoint {
   pegsHit?: Array<{ row: number; col: number }>; // ALL pegs hit this frame
   vx?: number;             // Horizontal velocity (for squash/stretch and dynamic trail)
   vy?: number;             // Vertical velocity (for squash/stretch and dynamic trail)
+  wallHit?: 'left' | 'right'; // Wall collision this frame
+  bucketWallHit?: 'left' | 'right'; // Bucket wall collision this frame
+  bucketFloorHit?: boolean; // Bucket floor collision this frame
 }
 
-export type GameState = 'idle' | 'ready' | 'dropping' | 'landed' | 'revealed';
+export type GameState = 'idle' | 'ready' | 'countdown' | 'dropping' | 'landed' | 'revealed' | 'claimed';
 
 export interface GameContext {
   selectedIndex: number;
