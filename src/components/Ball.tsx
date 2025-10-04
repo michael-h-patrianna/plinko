@@ -2,13 +2,14 @@
  * Premium animated ball component with AAA-quality materials and trail effect
  */
 
-import type { BallPosition, GameState } from '../game/types';
-import { useState, useEffect } from 'react';
+import type { BallPosition, GameState, TrajectoryPoint } from '../game/types';
+import { useState, useEffect, useMemo } from 'react';
 
 interface BallProps {
   position: BallPosition | null;
   state: GameState;
   currentFrame: number;
+  trajectoryPoint?: TrajectoryPoint | null; // For velocity-based squash/stretch
 }
 
 interface TrailPoint {
@@ -17,21 +18,67 @@ interface TrailPoint {
   id: number;
 }
 
-export function Ball({ position, state, currentFrame }: BallProps) {
+export function Ball({ position, state, currentFrame, trajectoryPoint }: BallProps) {
   const [trail, setTrail] = useState<TrailPoint[]>([]);
+
+  // Calculate squash/stretch based on velocity (Disney principle)
+  const { scaleX, scaleY } = useMemo(() => {
+    if (!trajectoryPoint || !trajectoryPoint.vx || !trajectoryPoint.vy) {
+      return { scaleX: 1, scaleY: 1 };
+    }
+
+    const vx = trajectoryPoint.vx;
+    const vy = trajectoryPoint.vy;
+    const speed = Math.sqrt(vx * vx + vy * vy);
+
+    // Squash on impact (when hitting peg)
+    if (trajectoryPoint.pegHit && speed > 50) {
+      const squashAmount = Math.min(speed / 800, 0.4); // Max 40% squash
+      return {
+        scaleX: 1 + squashAmount * 0.5, // Widen horizontally
+        scaleY: 1 - squashAmount         // Compress vertically
+      };
+    }
+
+    // Stretch when falling fast
+    if (vy > 200 && !trajectoryPoint.pegHit) {
+      const stretchAmount = Math.min(vy / 1000, 0.3); // Max 30% stretch
+      return {
+        scaleX: 1 - stretchAmount * 0.4, // Narrow horizontally
+        scaleY: 1 + stretchAmount         // Elongate vertically
+      };
+    }
+
+    return { scaleX: 1, scaleY: 1 };
+  }, [trajectoryPoint]);
+
+  // Calculate trail length based on speed (Disney principle: follow-through)
+  const trailLength = useMemo(() => {
+    if (!trajectoryPoint || !trajectoryPoint.vx || !trajectoryPoint.vy) {
+      return 4; // Minimum trail
+    }
+    const vx = trajectoryPoint.vx;
+    const vy = trajectoryPoint.vy;
+    const speed = Math.sqrt(vx * vx + vy * vy);
+
+    // Slow: 3-4 points, Medium: 6-8 points, Fast: 10-12 points
+    if (speed < 100) return 4;
+    if (speed < 300) return 8;
+    return 12;
+  }, [trajectoryPoint]);
 
   // Update trail as ball moves
   useEffect(() => {
     if (position && (state === 'dropping' || state === 'landed')) {
       setTrail(prev => {
         const newTrail = [{ x: position.x, y: position.y, id: Date.now() }, ...prev];
-        // Keep only last 8 trail points for performance
-        return newTrail.slice(0, 8);
+        // Keep dynamic trail length based on speed
+        return newTrail.slice(0, trailLength);
       });
     } else if (state === 'idle' || state === 'ready') {
       setTrail([]);
     }
-  }, [position?.x, position?.y, state, currentFrame]);
+  }, [position?.x, position?.y, state, currentFrame, trailLength]);
 
   if (!position || state === 'idle' || state === 'ready') return null;
 
@@ -43,10 +90,10 @@ export function Ball({ position, state, currentFrame }: BallProps) {
           key={point.id}
           className="absolute rounded-full pointer-events-none"
           style={{
-            width: '24px',
-            height: '24px',
+            width: '16px',
+            height: '16px',
             background: `radial-gradient(circle, rgba(251,191,36,${0.6 - index * 0.08}) 0%, rgba(251,146,60,${0.4 - index * 0.06}) 50%, transparent 70%)`,
-            transform: `translate(${point.x - 12}px, ${point.y - 12}px) scale(${1 - index * 0.1})`,
+            transform: `translate(${point.x - 8}px, ${point.y - 8}px) scale(${1 - index * 0.1})`,
             filter: 'blur(2px)',
             opacity: 1 - index * 0.12,
             willChange: 'transform, opacity',
@@ -56,40 +103,44 @@ export function Ball({ position, state, currentFrame }: BallProps) {
         />
       ))}
 
-      {/* Outer glow (largest) */}
+      {/* Outer glow (largest) - squashes with ball */}
       <div
-        className="absolute rounded-full pointer-events-none"
-        style={{
-          width: '50px',
-          height: '50px',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(251,146,60,0.15) 30%, transparent 60%)',
-          transform: `translate(${position.x - 25}px, ${position.y - 25}px)`,
-          filter: 'blur(8px)',
-          willChange: 'transform',
-          zIndex: 19
-        }}
-      />
-
-      {/* Middle glow */}
-      <div
-        className="absolute rounded-full pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
           width: '36px',
           height: '36px',
-          background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 40%, transparent 70%)',
-          transform: `translate(${position.x - 18}px, ${position.y - 18}px)`,
-          filter: 'blur(4px)',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(251,146,60,0.15) 30%, transparent 60%)',
+          transform: `translate(${position.x - 18}px, ${position.y - 18}px) scaleX(${scaleX}) scaleY(${scaleY})`,
+          filter: 'blur(6px)',
           willChange: 'transform',
-          zIndex: 20
+          zIndex: 19,
+          borderRadius: '50%',
+          transition: 'transform 100ms ease-out'
         }}
       />
 
-      {/* Premium golden ball - AAA quality */}
+      {/* Middle glow - squashes with ball */}
       <div
-        className="absolute rounded-full pointer-events-none"
+        className="absolute pointer-events-none"
         style={{
-          width: '26px',
-          height: '26px',
+          width: '24px',
+          height: '24px',
+          background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 40%, transparent 70%)',
+          transform: `translate(${position.x - 12}px, ${position.y - 12}px) scaleX(${scaleX}) scaleY(${scaleY})`,
+          filter: 'blur(3px)',
+          willChange: 'transform',
+          zIndex: 20,
+          borderRadius: '50%',
+          transition: 'transform 100ms ease-out'
+        }}
+      />
+
+      {/* Premium golden ball - AAA quality with SQUASH AND STRETCH - SMALLER SIZE */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          width: '18px',
+          height: '18px',
           background: `
             radial-gradient(
               circle at 28% 25%,
@@ -110,12 +161,14 @@ export function Ball({ position, state, currentFrame }: BallProps) {
             inset 2px 2px 4px rgba(255,255,255,0.9),
             inset -1px -1px 2px rgba(180,83,9,0.8)
           `,
-          border: '1.5px solid rgba(217,119,6,0.9)',
-          transform: `translate(${position.x - 13}px, ${position.y - 13}px) rotate(${position.rotation}deg)`,
+          border: '1px solid rgba(217,119,6,0.9)',
+          transform: `translate(${position.x - 9}px, ${position.y - 9}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY})`,
           willChange: 'transform',
           zIndex: 21,
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          borderRadius: '50%',
+          transition: 'transform 100ms ease-out'
         }}
         data-state={state}
         data-frame={currentFrame}

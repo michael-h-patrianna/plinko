@@ -107,10 +107,10 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
             payload: { frame: gameState.context.trajectory.length - 1 }
           });
 
-          // Transition to landed state immediately
+          // Wait for ball to visually settle before showing prize
           setTimeout(() => {
             dispatch({ type: 'LANDING_COMPLETED' });
-          }, 100);
+          }, 500); // Increased from 100ms to allow ball to settle
         }
       };
 

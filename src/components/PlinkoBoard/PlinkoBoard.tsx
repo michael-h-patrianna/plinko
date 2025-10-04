@@ -7,6 +7,7 @@ import type { PrizeConfig, TrajectoryPoint, BallPosition, GameState } from '../.
 import { Peg } from './Peg';
 import { Slot } from './Slot';
 import { Ball } from '../Ball';
+import { ImpactParticles } from '../ImpactParticles';
 
 interface PlinkoBoardProps {
   prizes: PrizeConfig[];
@@ -142,22 +143,46 @@ export function PlinkoBoard({
       ))}
 
       {/* Slots */}
-      {slots.map((slot) => (
-        <Slot
-          key={`slot-${slot.index}`}
-          index={slot.index}
-          prize={slot.prize}
-          x={slot.x}
-          width={slot.width}
-          isWinning={slot.index === selectedIndex}
-        />
-      ))}
+      {slots.map((slot) => {
+        // Check if ball is approaching this slot (in lower 40% of board and horizontally close)
+        const isApproaching = currentTrajectoryPoint
+          ? currentTrajectoryPoint.y > boardHeight * 0.6 &&
+            Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width * 1.5
+          : false;
+
+        return (
+          <Slot
+            key={`slot-${slot.index}`}
+            index={slot.index}
+            prize={slot.prize}
+            x={slot.x}
+            width={slot.width}
+            isWinning={slot.index === selectedIndex}
+            isApproaching={isApproaching}
+          />
+        );
+      })}
+
+      {/* Impact particles on peg hits */}
+      {currentTrajectoryPoint?.pegHit && currentTrajectoryPoint.pegHitRow !== undefined && currentTrajectoryPoint.pegHitCol !== undefined && (() => {
+        // Find the peg that was hit
+        const hitPeg = pegs.find(p => p.row === currentTrajectoryPoint.pegHitRow && p.col === currentTrajectoryPoint.pegHitCol);
+        return hitPeg ? (
+          <ImpactParticles
+            pegHit={true}
+            pegX={hitPeg.x}
+            pegY={hitPeg.y}
+            reset={ballState === 'idle'}
+          />
+        ) : null;
+      })()}
 
       {/* Ball - positioned within board coordinate system */}
       <Ball
         position={ballPosition}
         state={ballState}
         currentFrame={currentTrajectoryPoint?.frame ?? 0}
+        trajectoryPoint={currentTrajectoryPoint}
       />
     </div>
   );

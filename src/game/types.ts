@@ -18,6 +18,8 @@ export interface TrajectoryPoint {
   pegHit?: boolean;
   pegHitRow?: number;      // Which row peg was hit
   pegHitCol?: number;      // Which column peg was hit
+  vx?: number;             // Horizontal velocity (for squash/stretch and dynamic trail)
+  vy?: number;             // Vertical velocity (for squash/stretch and dynamic trail)
 }
 
 export type GameState = 'idle' | 'ready' | 'dropping' | 'landed' | 'revealed';

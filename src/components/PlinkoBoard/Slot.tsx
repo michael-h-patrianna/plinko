@@ -10,9 +10,10 @@ interface SlotProps {
   x: number;
   width: number;
   isWinning?: boolean;
+  isApproaching?: boolean; // Ball is getting close
 }
 
-export function Slot({ index, prize, x, width, isWinning = false }: SlotProps) {
+export function Slot({ index, prize, x, width, isWinning = false, isApproaching = false }: SlotProps) {
   return (
     <div
       className="absolute bottom-0 flex flex-col items-center justify-center text-center overflow-hidden"
@@ -24,7 +25,7 @@ export function Slot({ index, prize, x, width, isWinning = false }: SlotProps) {
           linear-gradient(180deg, ${prize.color}ee 0%, ${prize.color} 60%, ${prize.color}dd 100%),
           radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.4) 0%, transparent 60%)
         `,
-        border: `3px solid ${isWinning ? '#fbbf24' : 'rgba(148,163,184,0.6)'}`,
+        border: `3px solid ${isWinning ? '#fbbf24' : isApproaching ? `${prize.color}` : 'rgba(148,163,184,0.6)'}`,
         borderRadius: '12px',
         transform: isWinning ? 'scale(1.08)' : 'scale(1)',
         boxShadow: isWinning
@@ -34,11 +35,19 @@ export function Slot({ index, prize, x, width, isWinning = false }: SlotProps) {
              inset 0 3px 10px rgba(255,255,255,0.25),
              inset 0 -3px 10px rgba(0,0,0,0.4),
              inset 0 0 30px ${prize.color}44`
+          : isApproaching
+          ? `0 0 25px ${prize.color}80,
+             0 6px 16px rgba(0,0,0,0.5),
+             0 3px 8px rgba(0,0,0,0.3),
+             inset 0 3px 6px rgba(255,255,255,0.15),
+             inset 0 -3px 6px rgba(0,0,0,0.25),
+             inset 0 0 20px ${prize.color}33`
           : `0 6px 16px rgba(0,0,0,0.5),
              0 3px 8px rgba(0,0,0,0.3),
              inset 0 3px 6px rgba(255,255,255,0.12),
              inset 0 -3px 6px rgba(0,0,0,0.25)`,
-        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)'
+        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        animation: isApproaching && !isWinning ? 'pulse 0.8s ease-in-out infinite' : 'none'
       }}
       data-testid={`slot-${index}`}
       data-active={isWinning}

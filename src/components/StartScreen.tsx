@@ -2,6 +2,7 @@
  * Start screen with game title and drop button
  */
 
+import { useState } from 'react';
 import type { PrizeConfig } from '../game/types';
 
 interface StartScreenProps {
@@ -11,6 +12,7 @@ interface StartScreenProps {
 }
 
 export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
+  const [isPressed, setIsPressed] = useState(false);
   return (
     <div
       className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6"
@@ -75,14 +77,27 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
 
       <button
         onClick={onStart}
+        onMouseDown={() => setIsPressed(true)}
+        onMouseUp={() => setIsPressed(false)}
+        onMouseLeave={() => setIsPressed(false)}
+        onTouchStart={() => setIsPressed(true)}
+        onTouchEnd={() => setIsPressed(false)}
         disabled={disabled}
-        className="px-8 py-4 text-white font-bold text-lg rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        className="px-8 py-4 text-white font-bold text-lg rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
+          transform: isPressed && !disabled ? 'scale(0.95)' : 'scale(1)',
           background: disabled
             ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
             : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
           boxShadow: disabled
             ? '0 4px 12px rgba(0,0,0,0.4)'
+            : isPressed
+            ? `
+              0 4px 15px rgba(251,191,36,0.3),
+              0 2px 8px rgba(251,146,60,0.2),
+              0 2px 6px rgba(0,0,0,0.4),
+              inset 0 2px 4px rgba(0,0,0,0.3)
+            `
             : `
               0 10px 30px rgba(251,191,36,0.4),
               0 6px 20px rgba(251,146,60,0.3),
@@ -93,7 +108,8 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
           border: disabled
             ? '1px solid rgba(71,85,105,0.3)'
             : '1px solid rgba(217,119,6,0.6)',
-          textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+          filter: isPressed && !disabled ? 'brightness(1.1)' : 'brightness(1)'
         }}
         data-testid="drop-ball-button"
       >

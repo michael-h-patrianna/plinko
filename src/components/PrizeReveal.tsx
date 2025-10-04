@@ -2,7 +2,7 @@
  * Prize reveal overlay with confetti and claim button
  */
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { PrizeConfig } from '../game/types';
 
 interface PrizeRevealProps {
@@ -13,6 +13,7 @@ interface PrizeRevealProps {
 
 export function PrizeReveal({ prize, onClaim, canClaim }: PrizeRevealProps) {
   const claimButtonRef = useRef<HTMLButtonElement>(null);
+  const [isPressed, setIsPressed] = useState(false);
 
   // Auto-focus claim button when revealed
   useEffect(() => {
@@ -111,14 +112,27 @@ export function PrizeReveal({ prize, onClaim, canClaim }: PrizeRevealProps) {
           <button
             ref={claimButtonRef}
             onClick={onClaim}
+            onMouseDown={() => setIsPressed(true)}
+            onMouseUp={() => setIsPressed(false)}
+            onMouseLeave={() => setIsPressed(false)}
+            onTouchStart={() => setIsPressed(true)}
+            onTouchEnd={() => setIsPressed(false)}
             disabled={!canClaim}
-            className="w-full px-6 py-3 text-white font-bold rounded-lg active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-6 py-3 text-white font-bold rounded-lg transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
             style={{
+              transform: isPressed && canClaim ? 'scale(0.95)' : 'scale(1)',
               background: !canClaim
                 ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
                 : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
               boxShadow: !canClaim
                 ? '0 4px 12px rgba(0,0,0,0.4)'
+                : isPressed
+                ? `
+                  0 3px 12px rgba(16,185,129,0.25),
+                  0 2px 8px rgba(59,130,246,0.25),
+                  0 2px 6px rgba(0,0,0,0.4),
+                  inset 0 2px 4px rgba(0,0,0,0.3)
+                `
                 : `
                   0 8px 24px rgba(16,185,129,0.3),
                   0 4px 16px rgba(59,130,246,0.3),
@@ -129,7 +143,8 @@ export function PrizeReveal({ prize, onClaim, canClaim }: PrizeRevealProps) {
               border: !canClaim
                 ? '1px solid rgba(71,85,105,0.3)'
                 : '1px solid rgba(16,185,129,0.5)',
-              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+              filter: isPressed && canClaim ? 'brightness(1.1)' : 'brightness(1)'
             }}
             data-testid="claim-prize-button"
           >
