@@ -140,7 +140,44 @@ const { selectedIndex, seedUsed } = selectPrize(MOCK_PRIZES, seed);
 const prize = getPrizeByIndex(selectedIndex);
 ```
 
-### 2. Trajectory Generation
+### 2. Realistic Physics Simulation
+
+The ball trajectory uses accurate physics while steering toward the predetermined target slot:
+
+```typescript
+// Physics constants (tuned for visual realism)
+const GRAVITY = 2000;           // pixels/s² - downward acceleration
+const RESTITUTION = 0.65;       // 65% energy retention on bounce
+const FRICTION_AIR = 0.015;     // air resistance
+const STEERING_FORCE = 40;      // subtle horizontal force toward target
+
+// Each frame updates velocity and position
+vy += GRAVITY * dt;                              // Apply gravity
+vx += (targetSlotX - x) * STEERING_FORCE * dt;   // Gentle steering
+vx *= (1 - FRICTION_AIR);                        // Air resistance
+x += vx * dt;                                    // Update position
+y += vy * dt;
+
+// Collision detection with all pegs
+for (const peg of pegs) {
+  if (distance(ball, peg) < PEG_RADIUS + BALL_RADIUS) {
+    // Reflect velocity with restitution
+    velocity = reflect(velocity, normal) * RESTITUTION;
+    // Add random impulse for natural variation
+    vx += (random() - 0.5) * BOUNCE_IMPULSE;
+  }
+}
+```
+
+**Key Features:**
+- **Natural Bouncing**: Each collision uses proper physics reflection
+- **Invisible Steering**: Constant gentle force keeps ball on track without visible jumps
+- **Random Variation**: Small random impulses on each bounce for organic movement
+- **Anti-Stall Logic**: Prevents ball from getting stuck between pegs
+- **Accuracy**: 83% of trajectories land within target slot (5/6 slots tested)
+- **Visual Realism**: Maximum frame-to-frame movement <4px (imperceptible jumps)
+
+### 3. Trajectory Generation
 
 ```typescript
 // Generate path that guarantees landing in target slot
@@ -152,9 +189,10 @@ const trajectory = generateTrajectory({
   selectedIndex, // Predetermined
   seed: seedUsed
 });
+// Returns array of {x, y, rotation, pegHit} for each frame
 ```
 
-### 3. Animation Loop
+### 4. Animation Loop
 
 ```typescript
 // Render frames at 60 FPS using requestAnimationFrame
@@ -233,6 +271,22 @@ export const MOCK_PRIZES: PrizeConfig[] = [
 - 375px fixed width (responsive height)
 - Predetermined outcome (by design)
 
+## Development Tools
+
+### Video Recording
+Record gameplay for visual verification:
+```bash
+node record-video.js
+```
+Videos saved to `videos/` directory (requires dev server running).
+
+### Trajectory Analysis
+Analyze end-phase physics accuracy:
+```bash
+npm test endPhase
+```
+Shows landing accuracy and movement smoothness for all 6 prize slots.
+
 ## Future Enhancements
 
 - [ ] Sound effects for collisions and wins
@@ -240,6 +294,7 @@ export const MOCK_PRIZES: PrizeConfig[] = [
 - [ ] Multiple theme variants
 - [ ] Variable board sizes
 - [ ] Multi-ball mode
+- [ ] Improve slot accuracy from 83% to 100%
 
 ## License
 
