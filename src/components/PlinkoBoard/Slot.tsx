@@ -75,19 +75,12 @@ export function Slot({
         background: `
           linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
         `,
-        borderLeft: `${borderWidth} solid ${isWinning ? '#fbbf24' : isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
-        borderRight: `${borderWidth} solid ${isWinning ? '#fbbf24' : isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
-        borderBottom: `${borderWidth} solid ${isWinning ? '#fbbf24' : isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
+        borderLeft: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
+        borderRight: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
+        borderBottom: `${borderWidth} solid ${isApproaching ? color : 'rgba(148,163,184,0.8)'}`,
         borderTop: 'none',
         borderRadius: '0 0 8px 8px',
-        boxShadow: isWinning
-          ? `0 0 35px rgba(251,191,36,0.9),
-             0 0 20px ${color}cc,
-             0 8px 20px rgba(0,0,0,0.6),
-             inset 0 3px 10px rgba(255,255,255,0.25),
-             inset 0 -3px 10px rgba(0,0,0,0.4),
-             inset 0 0 30px ${color}44`
-          : isApproaching
+        boxShadow: isApproaching
           ? `0 0 25px ${color}80,
              0 6px 16px rgba(0,0,0,0.5),
              0 3px 8px rgba(0,0,0,0.3),
@@ -267,6 +260,28 @@ export function Slot({
         >
           {comboBadgeNumber}
         </div>
+      )}
+
+      {/* Winning slot red badge - positioned at bottom center */}
+      {isWinning && (
+        <div
+          className="absolute"
+          style={{
+            bottom: '-6px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: '12px',
+            height: '12px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            boxShadow: `
+              0 0 12px rgba(239,68,68,0.8),
+              0 2px 6px rgba(0,0,0,0.5),
+              0 0 0 2px rgba(255,255,255,0.3)
+            `,
+            zIndex: 10,
+          }}
+        />
       )}
     </motion.div>
   );

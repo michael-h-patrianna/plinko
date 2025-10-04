@@ -52,8 +52,9 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
       <motion.div
         className="relative rounded-2xl p-8 max-w-md w-full"
         style={{
-          background: 'linear-gradient(135deg, rgba(30,41,59,0.95) 0%, rgba(15,23,42,0.98) 100%)',
-          border: `2px solid ${prize.slotColor}88`,
+          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          border: '1px solid rgba(71,85,105,0.4)',
         }}
         initial={{ scale: 0, rotate: -10, opacity: 0 }}
         animate={{

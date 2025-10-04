@@ -58,12 +58,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         style={{
           maxWidth: 'calc(100% - 40px)',
           background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          boxShadow: `
-            0 8px 32px rgba(0,0,0,0.6),
-            0 4px 16px rgba(0,0,0,0.4),
-            inset 0 1px 2px rgba(255,255,255,0.08),
-            inset 0 -1px 2px rgba(0,0,0,0.5)
-          `,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           border: '1px solid rgba(71,85,105,0.4)',
         }}
         initial={{ opacity: 0, y: 20 }}

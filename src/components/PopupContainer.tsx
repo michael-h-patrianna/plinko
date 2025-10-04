@@ -17,7 +17,7 @@ export function PopupContainer({ children, isMobileOverlay = false }: PopupConta
       className="relative w-full"
       style={{
         minHeight: isMobileOverlay ? '100vh' : '650px',
-        overflow: 'hidden',
+        overflow: isMobileOverlay ? 'hidden' : 'visible',
       }}
       initial={{ opacity: 0, scale: 0.95, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}

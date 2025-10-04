@@ -21,183 +21,33 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
 
   return (
     <div className="absolute pointer-events-none" style={{ left: 0, top: 0, zIndex: 25 }}>
-      {/* Radial light rays expanding from slot - STAGING */}
-      {Array.from({ length: 12 }).map((_, i) => {
-        const angle = (360 / 12) * i;
-
-        return (
-          <motion.div
-            key={`ray-${i}`}
-            className="absolute origin-bottom"
-            style={{
-              left: `${x + width / 2}px`,
-              top: `${y + height}px`,
-              width: '3px',
-              height: '120px',
-              background: `linear-gradient(to top, ${color}dd 0%, ${color}66 50%, transparent 100%)`,
-              transformOrigin: 'bottom center',
-              rotate: angle,
-              boxShadow: `0 0 8px ${color}`,
-            }}
-            initial={{
-              scaleY: 0,
-              opacity: 0,
-            }}
-            animate={{
-              scaleY: [0, 1.2, 1],
-              opacity: [0, 0.9, 0.7],
-            }}
-            transition={{
-              duration: 0.6,
-              delay: i * 0.03,
-              ease: [0.34, 1.56, 0.64, 1], // Spring ease
-            }}
-          />
-        );
-      })}
-
-      {/* Rotating aura rings - FOLLOW THROUGH */}
-      {[0, 1].map((i) => (
-        <motion.div
-          key={`aura-${i}`}
-          className="absolute"
-          style={{
-            left: `${x + width / 2}px`,
-            top: `${y + height / 2}px`,
-            width: `${width * 1.4}px`,
-            height: `${width * 1.4}px`,
-            borderRadius: '50%',
-            border: `2px solid ${color}${i === 0 ? '66' : '44'}`,
-            transform: 'translate(-50%, -50%)',
-            boxShadow: `0 0 20px ${color}66`,
-          }}
-          animate={{
-            rotate: i === 0 ? 360 : -360,
-            scale: [1, 1.15, 1],
-          }}
-          transition={{
-            rotate: {
-              duration: 4,
-              repeat: Infinity,
-              ease: 'linear',
-            },
-            scale: {
-              duration: 1.5,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            },
-          }}
-        />
-      ))}
-
-      {/* Prize label scale-up - SQUASH & STRETCH */}
+      {/* Red circular badge at center bottom of slot */}
       <motion.div
         className="absolute"
         style={{
           left: `${x + width / 2}px`,
-          top: `${y + height / 2}px`,
+          top: `${y + height}px`,
           transform: 'translate(-50%, -50%)',
-          zIndex: 26,
+          width: '12px',
+          height: '12px',
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+          boxShadow: `
+            0 0 12px rgba(239,68,68,0.8),
+            0 2px 6px rgba(0,0,0,0.5),
+            0 0 0 2px rgba(255,255,255,0.3)
+          `,
         }}
-        initial={{ scale: 0, opacity: 0, rotate: -10 }}
+        initial={{ scale: 0, opacity: 0 }}
         animate={{
-          scale: [0, 1.3, 1],
+          scale: [0, 1.2, 1],
           opacity: [0, 1, 1],
-          rotate: [10, -5, 0],
         }}
         transition={{
-          duration: 0.7,
-          delay: 0.3,
+          duration: 0.4,
           ease: [0.34, 1.56, 0.64, 1],
         }}
-      >
-        <div
-          className="px-4 py-2 rounded-lg font-bold text-white text-sm whitespace-nowrap"
-          style={{
-            background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-            boxShadow: `
-              0 8px 24px ${color}66,
-              0 4px 12px rgba(0,0,0,0.5),
-              inset 0 1px 2px rgba(255,255,255,0.3),
-              inset 0 -1px 2px rgba(0,0,0,0.3)
-            `,
-            border: `1px solid ${color}88`,
-            textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-          }}
-        >
-          {label}
-        </div>
-      </motion.div>
-
-      {/* Shimmer sweep across slot - APPEAL */}
-      <motion.div
-        className="absolute overflow-hidden"
-        style={{
-          left: `${x}px`,
-          top: `${y}px`,
-          width: `${width}px`,
-          height: `${height}px`,
-          borderRadius: '0 0 8px 8px',
-        }}
-      >
-        <motion.div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: '-100%',
-            width: '100%',
-            height: '100%',
-            background: `linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)`,
-          }}
-          animate={{
-            left: ['100%', '-100%'],
-          }}
-          transition={{
-            duration: 1.5,
-            delay: 0.5,
-            repeat: Infinity,
-            repeatDelay: 2,
-            ease: 'easeInOut',
-          }}
-        />
-      </motion.div>
-
-      {/* Floating sparkles - APPEAL */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const offsetX = (Math.random() - 0.5) * width;
-        const offsetY = Math.random() * height;
-
-        return (
-          <motion.div
-            key={`sparkle-${i}`}
-            className="absolute rounded-full"
-            style={{
-              left: `${x + width / 2 + offsetX}px`,
-              top: `${y + offsetY}px`,
-              width: '4px',
-              height: '4px',
-              background: `radial-gradient(circle, #ffffff 0%, ${color} 70%, transparent 100%)`,
-              boxShadow: `0 0 8px ${color}`,
-            }}
-            initial={{
-              scale: 0,
-              opacity: 0,
-            }}
-            animate={{
-              scale: [0, 1.5, 0],
-              opacity: [0, 1, 0],
-              y: [0, -30],
-            }}
-            transition={{
-              duration: 1.5,
-              delay: 0.4 + i * 0.1,
-              repeat: Infinity,
-              repeatDelay: 0.5,
-              ease: [0.22, 1, 0.36, 1],
-            }}
-          />
-        );
-      })}
+      />
     </div>
   );
 }

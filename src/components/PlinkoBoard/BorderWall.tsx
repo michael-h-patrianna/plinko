@@ -14,16 +14,7 @@ export function BorderWall({ side, width, hasImpact }: BorderWallProps) {
   const isVertical = side === 'left' || side === 'right';
 
   const baseStyle = {
-    background: side === 'top'
-      ? 'linear-gradient(180deg, #475569 0%, #334155 50%, #1e293b 100%)'
-      : side === 'left'
-      ? 'linear-gradient(90deg, #475569 0%, #334155 50%, #1e293b 100%)'
-      : 'linear-gradient(270deg, #475569 0%, #334155 50%, #1e293b 100%)',
-    boxShadow: side === 'top'
-      ? 'inset 0 -2px 8px rgba(0,0,0,0.5), inset 0 2px 4px rgba(255,255,255,0.1)'
-      : side === 'left'
-      ? 'inset -2px 0 8px rgba(0,0,0,0.5), inset 2px 0 4px rgba(255,255,255,0.1)'
-      : 'inset 2px 0 8px rgba(0,0,0,0.5), inset -2px 0 4px rgba(255,255,255,0.1)',
+    background: 'rgba(71,85,105,0.4)',
     borderRadius: side === 'top'
       ? '12px 12px 0 0'
       : side === 'left'

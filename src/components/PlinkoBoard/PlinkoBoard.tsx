@@ -48,11 +48,11 @@ export function PlinkoBoard({
   const [showAnticipation, setShowAnticipation] = useState(false);
   const [showWinReveal, setShowWinReveal] = useState(false);
 
-  // Trigger anticipation when ball is approaching (in bottom 30% of board)
+  // Trigger anticipation when ball is approaching (start earlier - bottom 50% of board)
   useEffect(() => {
     if (ballState === 'dropping' && currentTrajectoryPoint) {
-      const isInLowerThird = currentTrajectoryPoint.y > boardHeight * 0.7;
-      setShowAnticipation(isInLowerThird);
+      const isInLowerHalf = currentTrajectoryPoint.y > boardHeight * 0.5;
+      setShowAnticipation(isInLowerHalf);
     } else {
       setShowAnticipation(false);
     }
@@ -138,6 +138,9 @@ export function PlinkoBoard({
 
     return prizes.map((prize, index) => {
       // Check if prize has multiple rewards (combo)
+      // Only free rewards with multiple prizes get badges, not purchase offers
+      const prizeType = (prize as any).type;
+      const isPurchaseOffer = prizeType === 'purchase';
       const prizeReward = (prize as any).freeReward;
       const rewardCount = prizeReward ? [
         prizeReward.sc,
@@ -147,7 +150,7 @@ export function PlinkoBoard({
         prizeReward.randomReward
       ].filter(Boolean).length : 0;
 
-      const isCombo = rewardCount >= 2;
+      const isCombo = rewardCount >= 2 && !isPurchaseOffer;
       const comboBadgeNumber = isCombo ? comboBadgeCounter++ : undefined;
 
       return {
@@ -170,11 +173,14 @@ export function PlinkoBoard({
   return (
     <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
       <motion.div
-        className="relative"
+        className="relative rounded-xl"
         style={{
           width: '100%',
           height: `${boardHeight}px`,
           overflow: 'visible',
+          background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          border: '1px solid rgba(71,85,105,0.4)',
         }}
       initial={{ opacity: 0, scale: 0.92, y: 30 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -314,8 +320,15 @@ export function PlinkoBoard({
       )}
       </motion.div>
 
-      {/* Combo legend - shows below board */}
-      <ComboLegend slots={slots} />
+      {/* Combo legend - shows below board, part of board so it animates with it */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <ComboLegend slots={slots} />
+      </motion.div>
     </div>
   );
 }

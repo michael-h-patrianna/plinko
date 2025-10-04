@@ -36,7 +36,8 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
         className="relative rounded-2xl p-8 max-w-sm w-full"
         style={{
           background: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
-          border: '1px solid rgba(148,163,184,0.3)',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          border: '1px solid rgba(71,85,105,0.4)',
         }}
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{

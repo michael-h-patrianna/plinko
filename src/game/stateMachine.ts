@@ -73,6 +73,12 @@ export function transition(
           context
         };
       }
+      if (event.type === 'RESET_REQUESTED') {
+        return {
+          state: 'idle',
+          context: initialContext
+        };
+      }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'dropping':
@@ -88,6 +94,12 @@ export function transition(
           context
         };
       }
+      if (event.type === 'RESET_REQUESTED') {
+        return {
+          state: 'idle',
+          context: initialContext
+        };
+      }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'landed':
@@ -97,6 +109,12 @@ export function transition(
           context
         };
       }
+      if (event.type === 'RESET_REQUESTED') {
+        return {
+          state: 'idle',
+          context: initialContext
+        };
+      }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'revealed':
@@ -104,6 +122,12 @@ export function transition(
         return {
           state: 'claimed',
           context
+        };
+      }
+      if (event.type === 'RESET_REQUESTED') {
+        return {
+          state: 'idle',
+          context: initialContext
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);

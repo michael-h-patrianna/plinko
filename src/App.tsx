@@ -141,7 +141,7 @@ export function App() {
           </AnimatePresence>
 
           {/* Main game board with ball - animated entrance when countdown starts */}
-          <AnimatePresence>
+          <AnimatePresence mode="wait">
             {state !== 'ready' && state !== 'revealed' && state !== 'claimed' && (
               <PlinkoBoard
                 key="board"
