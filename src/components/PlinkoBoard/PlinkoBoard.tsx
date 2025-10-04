@@ -31,13 +31,15 @@ export function PlinkoBoard({
   ballState
 }: PlinkoBoardProps) {
   const slotCount = prizes.length;
-  const BORDER_WIDTH = 12;
+  const BORDER_WIDTH = 8;
 
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
     const pegList: { row: number; col: number; x: number; y: number }[] = [];
-    // Account for border walls in calculations
-    const playableWidth = boardWidth - (BORDER_WIDTH * 2);
+    // Account for border walls and peg padding to prevent overlap
+    const PEG_RADIUS = 7;
+    const pegPadding = PEG_RADIUS + 10; // Peg radius + 10px safety margin (increased from 2px)
+    const playableWidth = boardWidth - (BORDER_WIDTH * 2) - (pegPadding * 2);
     const playableHeight = boardHeight * 0.65;
 
     const verticalSpacing = playableHeight / (pegRows + 1);
@@ -52,7 +54,7 @@ export function PlinkoBoard({
       const pegsInRow = isOffsetRow ? slotCount : slotCount + 1;
 
       for (let col = 0; col < pegsInRow; col++) {
-        const x = BORDER_WIDTH + horizontalSpacing * col + offset;
+        const x = BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
         pegList.push({ row, col, x, y });
       }
     }

@@ -139,8 +139,8 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
       <div
         className="absolute pointer-events-none"
         style={{
-          width: '18px',
-          height: '18px',
+          width: '14px',
+          height: '14px',
           background: `
             radial-gradient(
               circle at 28% 25%,
@@ -162,7 +162,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             inset -1px -1px 2px rgba(180,83,9,0.8)
           `,
           border: '1px solid rgba(217,119,6,0.9)',
-          transform: `translate(${position.x - 9}px, ${position.y - 9}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY})`,
+          transform: `translate(${position.x - 7}px, ${position.y - 7}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY})`,
           willChange: 'transform',
           zIndex: 21,
           position: 'relative',

@@ -58,8 +58,8 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
         style={{
           left: `${x}px`,
           top: `${y}px`,
-          width: '16px',
-          height: '16px',
+          width: '14px',
+          height: '14px',
           transform: wasHit
             ? 'translate(-50%, -50%) scale(1.1)'
             : 'translate(-50%, -50%)',

@@ -1,31 +1,29 @@
 /**
- * Predetermined trajectory generation for Plinko ball
+ * Deterministic Trajectory Generation for Plinko
  *
- * IMPLEMENTATION: Constrained Random Walk from PRD
+ * This implementation:
+ * 1. Uses deterministic physics simulation (same inputs = same output)
+ * 2. Tries different initial conditions until finding a trajectory that lands in target slot
+ * 3. Returns that predetermined trajectory for replay
  *
- * This implementation pre-calculates the complete trajectory before animation:
- * 1. Plans the path through pegs using constrained random walk
- * 2. Simulates realistic physics for the predetermined path
- * 3. Stores all frames for deterministic replay
- * 4. No real-time corrections or guidance forces
- * 5. 100% deterministic and repeatable
+ * The ball movement is completely realistic - no guidance forces or manipulation.
+ * We simply find the right starting conditions that naturally lead to the desired outcome.
  */
 
 import type { TrajectoryPoint } from './types';
 import { createRng } from './rng';
 
-// Physics constants from PRD
+// Physics constants for realistic simulation
 const PHYSICS = {
   GRAVITY: 980,           // px/s² (9.8 m/s² at 100px = 1m)
   RESTITUTION: 0.75,      // Energy retained on bounce (75%)
-  BALL_RADIUS: 9,
+  BALL_RADIUS: 7,         // Smaller ball (was 9)
   PEG_RADIUS: 7,
-  COLLISION_RADIUS: 16,   // Ball + Peg radius
-  DT: 1/60,              // 60 FPS
-  TERMINAL_VELOCITY: 600, // px/s
-  BORDER_WIDTH: 12,
-  FRICTION: 0.01,        // Low friction for smooth rolling
-  AIR_RESISTANCE: 0.001  // Minimal air resistance
+  COLLISION_RADIUS: 14,   // Ball + Peg radius (7 + 7)
+  DT: 1/60,              // 60 FPS timestep
+  TERMINAL_VELOCITY: 600, // px/s max fall speed
+  BORDER_WIDTH: 8,        // Thinner walls
+  MIN_BOUNCE_VELOCITY: 30, // Minimum velocity after collision
 };
 
 interface Peg {
@@ -35,22 +33,14 @@ interface Peg {
   y: number;
 }
 
-interface CollisionEvent {
-  frame: number;
-  pegRow: number;
-  pegCol: number;
-  pegX: number;
-  pegY: number;
-  beforeVx: number;
-  beforeVy: number;
-  afterVx: number;
-  afterVy: number;
+interface SimulationParams {
+  startX: number;
+  startVx: number;
+  bounceRandomness: number;
 }
 
-// PrecomputedTrajectory interface removed - not used
-
 /**
- * Generate peg layout matching the board
+ * Generate peg layout for the board
  */
 function generatePegLayout(
   boardWidth: number,
@@ -59,7 +49,9 @@ function generatePegLayout(
   slotCount: number
 ): Peg[] {
   const pegs: Peg[] = [];
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
+  // Add extra padding to ensure pegs don't touch walls - increased from 2px to 10px
+  const pegPadding = PHYSICS.PEG_RADIUS + 10; // Peg radius + 10px safety margin
+  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
   const horizontalSpacing = playableWidth / slotCount;
@@ -71,7 +63,7 @@ function generatePegLayout(
     const numPegs = isOffsetRow ? slotCount : slotCount + 1;
 
     for (let col = 0; col < numPegs; col++) {
-      const x = PHYSICS.BORDER_WIDTH + horizontalSpacing * col + offset;
+      const x = PHYSICS.BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
       pegs.push({ row, col, x, y });
     }
   }
@@ -80,239 +72,147 @@ function generatePegLayout(
 }
 
 /**
- * Plan collision path using Constrained Random Walk (from PRD line 273-308)
- * Works backwards from target slot to ensure ball reaches destination
+ * Run a deterministic physics simulation with given parameters
+ * Returns the trajectory and which slot it landed in
  */
-function planCollisionPath(
-  startX: number,
-  targetSlot: number,
-  pegs: Peg[],
-  boardWidth: number,
-  slotCount: number,
-  rng: ReturnType<typeof createRng>
-): CollisionEvent[] {
-  const collisions: CollisionEvent[] = [];
-
-  // Group pegs by row for easier access
-  const pegsByRow = new Map<number, Peg[]>();
-  for (const peg of pegs) {
-    if (!pegsByRow.has(peg.row)) {
-      pegsByRow.set(peg.row, []);
-    }
-    pegsByRow.get(peg.row)!.push(peg);
-  }
-
-  // Calculate target position
-  const slotWidth = boardWidth / slotCount;
-  const targetX = targetSlot * slotWidth + slotWidth / 2;
-
-  // Work through each row, planning collisions
-  let currentX = startX;
-  const totalRows = Math.max(...pegs.map(p => p.row)) + 1;
-
-  for (let row = 0; row < totalRows; row++) {
-    const rowPegs = pegsByRow.get(row) || [];
-    if (rowPegs.length === 0) continue;
-
-    // Calculate desired position for this depth
-    // Use exponential interpolation to guide toward target
-    const progress = (row + 1) / totalRows;
-    const progressCurve = Math.pow(progress, 1.5); // Accelerate guidance as we go deeper
-    const desiredX = currentX + (targetX - currentX) * progressCurve * 0.6;
-
-    // Find pegs that could guide us toward target
-    const candidates = rowPegs.filter(peg => {
-      const dist = Math.abs(peg.x - currentX);
-      return dist < 100; // Reachable pegs
-    });
-
-    if (candidates.length > 0) {
-      // Score each peg based on how well it guides to target
-      const scoredPegs = candidates.map(peg => {
-        const toTarget = Math.abs(peg.x - desiredX);
-        const fromCurrent = Math.abs(peg.x - currentX);
-        const randomFactor = rng.next() * 30;
-        return {
-          peg,
-          score: toTarget + fromCurrent * 0.3 + randomFactor
-        };
-      }).sort((a, b) => a.score - b.score);
-
-      // Choose from top candidates with some randomness
-      const topCount = Math.min(3, scoredPegs.length);
-      const chosenCandidate = scoredPegs[Math.floor(rng.next() * topCount)];
-      const chosen = chosenCandidate?.peg;
-      if (!chosen) continue;
-
-      // Pre-calculate collision velocities (will be refined during simulation)
-      collisions.push({
-        frame: 0, // Will be set during simulation
-        pegRow: chosen.row,
-        pegCol: chosen.col,
-        pegX: chosen.x,
-        pegY: chosen.y,
-        beforeVx: 0,
-        beforeVy: 0,
-        afterVx: 0,
-        afterVy: 0
-      });
-
-      // Update current position (with some variance)
-      currentX = chosen.x + (targetX - chosen.x) * 0.2 + (rng.next() - 0.5) * 20;
-    }
-  }
-
-  return collisions;
-}
-
-/**
- * Simulate physics for the predetermined path
- * This creates smooth, realistic motion with actual peg collision detection
- */
-function simulatePhysics(
+function runSimulation(
+  params: SimulationParams,
   boardWidth: number,
   boardHeight: number,
-  plannedCollisions: CollisionEvent[],
-  targetSlot: number,
+  pegs: Peg[],
   slotCount: number,
-  rng: ReturnType<typeof createRng>
-): TrajectoryPoint[] {
-  const frames: TrajectoryPoint[] = [];
+  rngSeed: number
+): { trajectory: TrajectoryPoint[], landedSlot: number } {
+  const trajectory: TrajectoryPoint[] = [];
+  const rng = createRng(rngSeed);
 
-  // Generate ALL pegs for collision detection
-  const pegs = generatePegLayout(boardWidth, boardHeight, 10, slotCount);
-
-  // Starting position
-  let x = boardWidth / 2;
+  // Initialize state
+  let x = params.startX;
   let y = PHYSICS.BORDER_WIDTH + 10;
-  let vx = 0;
+  let vx = params.startVx;
   let vy = 0;
   let rotation = 0;
-  let frameNum = 0;
+  let frame = 0;
 
-  // Target position
+  // Ball falls into bucket (stops near bottom, leaving room for bucket floor)
+  const bottomY = boardHeight - PHYSICS.BALL_RADIUS - 15;
   const slotWidth = boardWidth / slotCount;
-  const targetX = targetSlot * slotWidth + slotWidth / 2;
-  const bottomY = boardHeight - PHYSICS.BALL_RADIUS - 5;
-  const bucketZoneY = boardHeight * 0.7;
+
+  // Track recent collisions to prevent double-hits
+  const recentCollisions = new Map<string, number>();
 
   // Add initial rest frames
   for (let i = 0; i < 15; i++) {
-    frames.push({
-      frame: frameNum++,
+    trajectory.push({
+      frame: frame++,
       x, y, vx: 0, vy: 0,
       rotation: 0,
       pegHit: false
     });
   }
 
-  let nextCollisionIdx = 0;
-  const maxFrames = 500;
-  const recentlyHitPegs = new Set<string>();
-
   // Main physics loop
-  while (y < bottomY && frameNum < maxFrames) {
+  while (y < bottomY && frame < 600) {
     // Apply gravity
     vy += PHYSICS.GRAVITY * PHYSICS.DT;
 
-    // Apply air resistance
-    vx *= (1 - PHYSICS.AIR_RESISTANCE);
+    // Terminal velocity
     vy = Math.min(vy, PHYSICS.TERMINAL_VELOCITY);
 
-    // Progressive guidance toward target throughout descent
-    const depthProgress = y / boardHeight;
+    // Air resistance
+    vx *= 0.998;
 
-    // Start guidance early and increase aggressively
-    if (depthProgress > 0.3) {
-      const distToTarget = targetX - x;
-      // Exponential increase in guidance strength
-      const guidanceStrength = Math.pow((depthProgress - 0.3) * 2, 2) * 20;
-      vx += distToTarget * guidanceStrength * PHYSICS.DT;
-
-      // Apply damping to prevent overshooting
-      vx *= (1 - depthProgress * 0.2);
-    }
-
-    // Steer toward planned collisions to guide path
-    const nextPlanned = plannedCollisions[nextCollisionIdx];
-    if (nextPlanned && Math.abs(y - nextPlanned.pegY) < 50) {
-      const steerX = (nextPlanned.pegX - x) * 0.08;
-      vx += steerX;
-      if (Math.abs(x - nextPlanned.pegX) < PHYSICS.COLLISION_RADIUS &&
-          Math.abs(y - nextPlanned.pegY) < PHYSICS.COLLISION_RADIUS) {
-        nextCollisionIdx++;
-      }
-    }
-
-    // Check for actual collisions with ALL pegs
+    // Check peg collisions
     let hitPeg: Peg | null = null;
+
     for (const peg of pegs) {
-      // Skip pegs we just hit
+      // Skip distant pegs
+      if (Math.abs(peg.y - y) > 40) continue;
+
+      // Check if we recently hit this peg
       const pegKey = `${peg.row}-${peg.col}`;
-      if (recentlyHitPegs.has(pegKey)) continue;
+      if (recentCollisions.has(pegKey)) {
+        const lastHit = recentCollisions.get(pegKey)!;
+        if (frame - lastHit < 15) continue;
+      }
 
-      // Skip pegs that are too far away
-      if (peg.y > y + 50 || peg.y < y - 30) continue;
-
+      // Calculate distance to peg
       const dx = x - peg.x;
       const dy = y - peg.y;
       const distSq = dx * dx + dy * dy;
-      const collisionDistSq = PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS;
+      const collisionRadiusSq = PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS;
 
-      if (distSq < collisionDistSq) {
+      if (distSq < collisionRadiusSq) {
         // Collision detected!
-        const dist = Math.sqrt(distSq) || 1;
+        const dist = Math.sqrt(distSq);
+
+        if (dist < 0.1) {
+          // Edge case: exactly on peg center
+          x = peg.x + PHYSICS.COLLISION_RADIUS;
+          vx = 50;
+          continue;
+        }
+
+        // Calculate collision normal
         const nx = dx / dist;
         const ny = dy / dist;
 
-        // Reflect velocity
+        // Calculate relative velocity
         const dot = vx * nx + vy * ny;
-        vx = (vx - 2 * dot * nx) * PHYSICS.RESTITUTION;
-        vy = (vy - 2 * dot * ny) * PHYSICS.RESTITUTION;
 
-        // Add slight randomness
-        vx += (rng.next() - 0.5) * 50;
+        // Bounce if overlapping (handle all collision cases including upward bounces)
+        // Check if we're inside collision radius (with 1px tolerance)
+        if (dist < PHYSICS.COLLISION_RADIUS - 1) {
+          // Reflect velocity
+          vx = vx - 2 * dot * nx;
+          vy = vy - 2 * dot * ny;
 
-        // Position ball outside collision
-        x = peg.x + nx * (PHYSICS.COLLISION_RADIUS + 1);
-        y = peg.y + ny * (PHYSICS.COLLISION_RADIUS + 1);
+          // Apply restitution
+          vx *= PHYSICS.RESTITUTION;
+          vy *= PHYSICS.RESTITUTION;
 
-        hitPeg = peg;
-        recentlyHitPegs.add(pegKey);
+          // Add controlled randomness - pure physics, no bias
+          const randomAngle = (rng.next() - 0.5) * params.bounceRandomness;
 
-        // Clear old collision memory
-        if (recentlyHitPegs.size > 5) {
-          const oldest = recentlyHitPegs.values().next().value;
-          recentlyHitPegs.delete(oldest);
+          const cos = Math.cos(randomAngle);
+          const sin = Math.sin(randomAngle);
+          const newVx = vx * cos - vy * sin;
+          const newVy = vx * sin + vy * cos;
+          vx = newVx;
+          vy = newVy;
+
+          // Limit maximum velocity to prevent glitches
+          const MAX_VELOCITY = 500;
+          vx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vx));
+          vy = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vy));
+
+          // Ensure minimum bounce velocity
+          const speed = Math.sqrt(vx * vx + vy * vy);
+          if (speed < PHYSICS.MIN_BOUNCE_VELOCITY && speed > 0) {
+            const scale = PHYSICS.MIN_BOUNCE_VELOCITY / speed;
+            vx *= scale;
+            vy *= scale;
+          }
+
+          // CRITICAL: Push ball completely outside collision radius to prevent overlap
+          // Add 1px extra to ensure no visual overlap
+          const separationDistance = PHYSICS.COLLISION_RADIUS + 1;
+          x = peg.x + nx * separationDistance;
+          y = peg.y + ny * separationDistance;
+
+          // Record collision
+          hitPeg = peg;
+          recentCollisions.set(pegKey, frame);
+
+          // Clean old collisions
+          for (const [key, hitFrame] of recentCollisions.entries()) {
+            if (frame - hitFrame > 30) {
+              recentCollisions.delete(key);
+            }
+          }
+
+          break; // Only handle one collision per frame
         }
-        break;
-      }
-    }
-
-    // In bucket zone, ensure ball reaches target slot
-    if (y >= bucketZoneY) {
-      const slotWidth = boardWidth / slotCount;
-      const distToTarget = targetX - x;
-
-      // Calculate which slot we're heading to
-      const currentSlot = Math.floor(x / slotWidth);
-      const slotError = currentSlot !== targetSlot;
-
-      // If in wrong slot, apply strong correction
-      if (slotError && Math.abs(distToTarget) > slotWidth / 4) {
-        vx = Math.sign(distToTarget) * Math.min(400, Math.abs(distToTarget) * 8);
-      } else {
-        // Gentle guidance when close
-        vx += distToTarget * 2 * PHYSICS.DT;
-      }
-
-      // Strong damping
-      vx *= 0.8;
-
-      // Final approach - directly interpolate
-      if (y > bottomY - 10) {
-        x = targetX * 0.5 + x * 0.5;
-        vx = distToTarget;
       }
     }
 
@@ -320,21 +220,39 @@ function simulatePhysics(
     x += vx * PHYSICS.DT;
     y += vy * PHYSICS.DT;
 
-    // Boundary collisions
-    if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
-      x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
-      vx = Math.abs(vx) * PHYSICS.RESTITUTION;
-    } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
-      x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
-      vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
+    // Bucket zone collision detection (70px bucket height)
+    const bucketZoneY = boardHeight - 70;
+    if (y >= bucketZoneY) {
+      // In bucket zone - check for bucket wall collisions
+      const currentSlot = Math.floor(x / slotWidth);
+      const slotLeftEdge = currentSlot * slotWidth + 3; // Account for wall thickness
+      const slotRightEdge = (currentSlot + 1) * slotWidth - 3;
+
+      // Keep ball within bucket walls
+      if (x - PHYSICS.BALL_RADIUS < slotLeftEdge) {
+        x = slotLeftEdge + PHYSICS.BALL_RADIUS;
+        vx = Math.abs(vx) * PHYSICS.RESTITUTION * 0.5; // Dampen more in bucket
+      } else if (x + PHYSICS.BALL_RADIUS > slotRightEdge) {
+        x = slotRightEdge - PHYSICS.BALL_RADIUS;
+        vx = -Math.abs(vx) * PHYSICS.RESTITUTION * 0.5;
+      }
+    } else {
+      // Outside bucket zone - normal wall collisions
+      if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
+        x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
+        vx = Math.abs(vx) * PHYSICS.RESTITUTION;
+      } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
+        x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
+        vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
+      }
     }
 
     // Update rotation
     rotation += (vx / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60;
 
-    // Add frame with collision info if we hit a peg
-    frames.push({
-      frame: frameNum++,
+    // Add frame
+    trajectory.push({
+      frame: frame++,
       x, y, vx, vy,
       rotation,
       pegHit: hitPeg !== null,
@@ -343,42 +261,38 @@ function simulatePhysics(
     });
   }
 
-  // Settling frames - GUARANTEE final position in target slot
-  const lastFrame = frames[frames.length - 1];
-  if (!lastFrame) return frames; // Safety check
-  const settleFrames = 30;
+  // Determine which slot the ball landed in
+  const landedSlot = Math.min(
+    Math.max(0, Math.floor(x / slotWidth)),
+    slotCount - 1
+  );
 
-  // Force final position to be exactly in the center of target slot
+  // Add settling frames
+  const settleFrames = 30;
+  const finalX = x;
+  const finalY = bottomY;
+
   for (let i = 1; i <= settleFrames; i++) {
     const t = i / settleFrames;
-    const easeT = 1 - Math.pow(1 - t, 3); // Ease out cubic
+    const easeT = 1 - Math.pow(1 - t, 3);
 
-    // Interpolate directly to target position
-    const settleX = lastFrame.x + (targetX - lastFrame.x) * easeT;
-    const settleY = lastFrame.y + (bottomY - lastFrame.y) * easeT;
-    const settleVx = (lastFrame.vx || 0) * (1 - t);
-    const settleVy = (lastFrame.vy || 0) * (1 - t);
-
-    // On final frame, snap exactly to target
-    const finalX = i === settleFrames ? targetX : settleX;
-
-    frames.push({
-      frame: frameNum++,
+    trajectory.push({
+      frame: frame++,
       x: finalX,
-      y: settleY,
-      vx: settleVx,
-      vy: settleVy,
-      rotation: rotation + (settleVx / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60 * i,
+      y: finalY,
+      vx: vx * (1 - t),
+      vy: vy * (1 - t),
+      rotation: rotation + (vx * (1 - t) / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60 * i,
       pegHit: false
     });
   }
 
-  return frames;
+  return { trajectory, landedSlot };
 }
 
 /**
  * Main trajectory generation function
- * Pre-calculates complete trajectory using Constrained Random Walk
+ * Tries different initial conditions until finding one that lands in the target slot
  */
 export function generateTrajectory(params: {
   boardWidth: number;
@@ -397,40 +311,69 @@ export function generateTrajectory(params: {
     seed = Date.now()
   } = params;
 
-  // Validate inputs
   if (selectedIndex < 0 || selectedIndex >= slotCount) {
     throw new Error(`Invalid slot index: ${selectedIndex}`);
   }
 
-  const rng = createRng(seed);
-
-  // Generate board layout
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
+  const slotWidth = boardWidth / slotCount;
+  const targetX = selectedIndex * slotWidth + slotWidth / 2;
 
-  // Plan collision path using Constrained Random Walk
-  const startX = boardWidth / 2;
-  const plannedCollisions = planCollisionPath(
-    startX,
-    selectedIndex,
-    pegs,
-    boardWidth,
-    slotCount,
-    rng
-  );
+  // Try different initial parameters with better strategies
+  // We try many subtle variations to find a natural path to target
+  const maxAttempts = 50000; // 50k attempts should be sufficient
 
-  // Simulate physics for the planned path
-  const trajectory = simulatePhysics(
-    boardWidth,
-    boardHeight,
-    plannedCollisions,
-    selectedIndex,
-    slotCount,
-    rng
-  );
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Ball ALWAYS starts near center with ZERO velocity - realistic drop
+    const centerX = boardWidth / 2;
 
-  // Store target slot in each frame for validation
-  return trajectory.map(frame => ({
-    ...frame,
-    targetSlot: selectedIndex
-  }));
+    // Microscopic variations that are imperceptible but change entire trajectory
+    // Use different patterns to explore the space efficiently
+    const pattern = attempt % 7;
+    let microOffset: number;
+    if (pattern === 0) microOffset = 0; // Dead center
+    else if (pattern === 1) microOffset = 1.5; // Slightly right
+    else if (pattern === 2) microOffset = -1.5; // Slightly left
+    else if (pattern === 3) microOffset = 2.5;
+    else if (pattern === 4) microOffset = -2.5;
+    else if (pattern === 5) microOffset = (Math.sin(attempt * 0.618) * 2); // Sine wave pattern
+    else microOffset = (Math.cos(attempt * 1.414) * 2); // Cosine wave pattern
+
+    const startX = centerX + microOffset;
+    const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
+
+    // Vary bounce randomness systematically
+    const bounceRandomness = 0.2 + (attempt % 100) / 100 * 0.6; // 0.2 to 0.8 range
+
+    const params: SimulationParams = {
+      startX,
+      startVx,
+      bounceRandomness
+    };
+
+    // Run deterministic simulation
+    const simulationSeed = seed * 65537 + attempt * 31337;
+    const { trajectory, landedSlot } = runSimulation(
+      params,
+      boardWidth,
+      boardHeight,
+      pegs,
+      slotCount,
+      simulationSeed
+    );
+
+    // Check if it landed in the target slot
+    if (landedSlot === selectedIndex) {
+      // Success! Return this natural trajectory
+      return trajectory.map(point => ({
+        ...point,
+        targetSlot: selectedIndex
+      }));
+    }
+  }
+
+  // This should never happen with proper parameter generation
+  console.error(`Failed to find natural trajectory for slot ${selectedIndex} after ${maxAttempts} attempts`);
+  throw new Error(`Could not generate natural trajectory for slot ${selectedIndex}`);
 }
+

@@ -16,17 +16,20 @@ interface SlotProps {
 export function Slot({ index, prize, x, width, isWinning = false, isApproaching = false }: SlotProps) {
   return (
     <div
-      className="absolute bottom-0 flex flex-col items-center justify-center text-center overflow-hidden"
+      className="absolute bottom-0 flex flex-col items-center justify-end text-center"
       style={{
         left: `${x}px`,
         width: `${width}px`,
-        height: '90px',
+        height: '70px',
+        // Hollow bucket with walls - transparent center with visible borders
         background: `
-          linear-gradient(180deg, ${prize.color}ee 0%, ${prize.color} 60%, ${prize.color}dd 100%),
-          radial-gradient(ellipse at 50% 120%, rgba(0,0,0,0.4) 0%, transparent 60%)
+          linear-gradient(180deg, transparent 0%, transparent 40%, ${prize.color}33 70%, ${prize.color}66 100%)
         `,
-        border: `3px solid ${isWinning ? '#fbbf24' : isApproaching ? `${prize.color}` : 'rgba(148,163,184,0.6)'}`,
-        borderRadius: '12px',
+        borderLeft: `3px solid ${isWinning ? '#fbbf24' : isApproaching ? prize.color : 'rgba(148,163,184,0.8)'}`,
+        borderRight: `3px solid ${isWinning ? '#fbbf24' : isApproaching ? prize.color : 'rgba(148,163,184,0.8)'}`,
+        borderBottom: `3px solid ${isWinning ? '#fbbf24' : isApproaching ? prize.color : 'rgba(148,163,184,0.8)'}`,
+        borderTop: 'none',
+        borderRadius: '0 0 8px 8px',
         transform: isWinning ? 'scale(1.08)' : 'scale(1)',
         boxShadow: isWinning
           ? `0 0 35px rgba(251,191,36,0.9),
@@ -62,7 +65,7 @@ export function Slot({ index, prize, x, width, isWinning = false, isApproaching 
         }}
       />
 
-      <div className="text-white font-bold text-xs px-1 leading-tight drop-shadow-lg relative z-10">
+      <div className="text-white font-bold text-xs px-1 pb-2 leading-tight drop-shadow-lg relative z-10">
         {prize.label}
       </div>
     </div>
