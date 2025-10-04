@@ -37,6 +37,10 @@ export function PlinkoBoard({
 }: PlinkoBoardProps) {
   const slotCount = prizes.length;
   const BORDER_WIDTH = 8;
+  // Board has box-sizing: border-box, so the 2px CSS border is INSIDE the width
+  const CSS_BORDER = 2;
+  // Internal content width = declared width - CSS borders on both sides
+  const internalWidth = boardWidth - (CSS_BORDER * 2);
 
   // Animation states
   const [showAnticipation, setShowAnticipation] = useState(false);
@@ -68,21 +72,28 @@ export function PlinkoBoard({
     }
   }, [ballState, currentTrajectoryPoint]);
 
+  // Responsive sizing: smaller ball/peg for narrow viewports
+  const pegRadius = internalWidth <= 360 ? 6 : 7;
+  const ballRadius = internalWidth <= 360 ? 6 : 7;
+
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
     const pegList: { row: number; col: number; x: number; y: number }[] = [];
-    // Account for border walls and peg padding to prevent ball getting stuck
-    const PEG_RADIUS = 7;
-    const BALL_RADIUS = 7;
-    // Need: peg radius + ball radius + clearance to prevent ball getting stuck between peg and wall
-    const minClearance = PEG_RADIUS + BALL_RADIUS + 10; // 7 + 7 + 10 = 24px minimum clearance
+
+    // Responsive sizing: smaller ball/peg for narrow viewports
+    const PEG_RADIUS = internalWidth <= 360 ? 6 : 7;
+    const BALL_RADIUS = internalWidth <= 360 ? 6 : 7;
+    // Reduce clearance on smaller viewports for better spacing
+    const extraClearance = internalWidth <= 360 ? 8 : 10;
+    const minClearance = PEG_RADIUS + BALL_RADIUS + extraClearance;
     const playableHeight = boardHeight * 0.65;
 
     const verticalSpacing = playableHeight / (pegRows + 1);
 
     // The leftmost and rightmost pegs should be minClearance away from the walls
+    // Use internalWidth (371px) instead of boardWidth (375px) due to box-sizing: border-box
     const leftEdge = BORDER_WIDTH + minClearance;
-    const rightEdge = boardWidth - BORDER_WIDTH - minClearance;
+    const rightEdge = internalWidth - BORDER_WIDTH - minClearance;
     const pegSpanWidth = rightEdge - leftEdge;
 
     // Non-offset rows have slotCount + 1 pegs
@@ -111,11 +122,12 @@ export function PlinkoBoard({
     }
 
     return pegList;
-  }, [boardHeight, boardWidth, pegRows, slotCount, BORDER_WIDTH]);
+  }, [boardHeight, internalWidth, pegRows, slotCount, BORDER_WIDTH]);
 
   // Generate slot positions - account for border walls
   const slots = useMemo(() => {
-    const playableWidth = boardWidth - (BORDER_WIDTH * 2);
+    // Use internalWidth due to box-sizing: border-box
+    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
     const slotWidth = playableWidth / slotCount;
     return prizes.map((prize, index) => ({
       index,
@@ -123,14 +135,16 @@ export function PlinkoBoard({
       x: BORDER_WIDTH + (index * slotWidth),
       width: slotWidth
     }));
-  }, [prizes, slotCount, boardWidth, BORDER_WIDTH]);
+  }, [prizes, slotCount, internalWidth, BORDER_WIDTH]);
 
   return (
     <motion.div
       className="relative"
       style={{
-        width: `${boardWidth}px`,
+        width: '100%',
+        maxWidth: `${boardWidth}px`,
         height: `${boardHeight}px`,
+        margin: '0 auto', // Center the board when it doesn't fill full width
         overflow: 'visible',
         background: `
           radial-gradient(circle at 50% 30%, rgba(30,41,59,0.9) 0%, rgba(15,23,42,1) 60%),

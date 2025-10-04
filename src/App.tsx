@@ -14,11 +14,42 @@ import { PrizeClaimed } from './components/PrizeClaimed';
 import { ViewportSelector } from './components/ViewportSelector';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 
+// Detect if user is on actual mobile device
+const isMobileDevice = () => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
+};
+
 export function App() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile on mount
+  useEffect(() => {
+    setIsMobile(isMobileDevice());
+  }, []);
+
   // Viewport width state - can only change when game is idle or revealed
+  // On mobile: use actual viewport width (max 414px), on desktop: user-selectable
   const [viewportWidth, setViewportWidth] = useState(375);
   // Locked board width during active game
   const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
+
+  // Update viewport width based on actual screen size on mobile
+  useEffect(() => {
+    if (isMobile) {
+      const updateMobileWidth = () => {
+        const width = Math.min(window.innerWidth, 414);
+        setViewportWidth(width);
+        setLockedBoardWidth(width);
+      };
+
+      updateMobileWidth();
+      window.addEventListener('resize', updateMobileWidth);
+      return () => window.removeEventListener('resize', updateMobileWidth);
+    }
+  }, [isMobile]);
 
   const {
     state,
@@ -69,22 +100,34 @@ export function App() {
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4">
-      {/* Viewport selector above the game */}
-      <ViewportSelector
-        selectedWidth={viewportWidth}
-        onWidthChange={handleViewportChange}
-        disabled={isViewportLocked}
-      />
+    <div
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center"
+      style={{
+        padding: isMobile ? '0' : '1rem'
+      }}
+    >
+      {/* Viewport selector - hidden on actual mobile devices */}
+      {!isMobile && (
+        <ViewportSelector
+          selectedWidth={viewportWidth}
+          onWidthChange={handleViewportChange}
+          disabled={isViewportLocked}
+        />
+      )}
 
-      {/* Game container with dynamic width */}
+      {/* Game container */}
       <div
         style={{
-          width: `${lockedBoardWidth}px`,
+          width: isMobile ? '100%' : `${lockedBoardWidth}px`,
+          maxWidth: isMobile ? '414px' : undefined,
+          height: isMobile ? '100vh' : undefined,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: isMobile ? 'center' : undefined,
           transition: isViewportLocked ? 'none' : 'width 0.3s ease-in-out'
         }}
       >
-        <PopupContainer>
+        <PopupContainer isMobileOverlay={isMobile}>
           {/* Start screen overlay with smooth exit */}
           <AnimatePresence mode="wait">
             {state === 'ready' && (
@@ -151,11 +194,13 @@ export function App() {
         </PopupContainer>
       </div>
 
-      {/* Info text */}
-      <div className="mt-4 text-slate-400 text-xs text-center max-w-md">
-        Select a viewport size to test different mobile devices.
-        The viewport is locked during gameplay to ensure physics accuracy.
-      </div>
+      {/* Info text - only show on desktop */}
+      {!isMobile && (
+        <div className="mt-4 text-slate-400 text-xs text-center max-w-md">
+          Select a viewport size to test different mobile devices.
+          The viewport is locked during gameplay to ensure physics accuracy.
+        </div>
+      )}
     </div>
   );
 }

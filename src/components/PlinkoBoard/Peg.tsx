@@ -11,9 +11,11 @@ interface PegProps {
   y: number;
   isActive?: boolean;
   shouldReset?: boolean;
+  radius?: number;
 }
 
-export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: PegProps) {
+export function Peg({ row, col, x, y, isActive = false, shouldReset = false, radius = 7 }: PegProps) {
+  const pegSize = radius * 2; // diameter
   const [isFlashing, setIsFlashing] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
   const lastActiveRef = useRef(false);
