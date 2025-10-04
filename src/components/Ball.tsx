@@ -67,6 +67,17 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
     return 12;
   }, [trajectoryPoint]);
 
+  // Track if we just launched (for launch animation)
+  const [isLaunching, setIsLaunching] = useState(false);
+
+  useEffect(() => {
+    if (state === 'dropping' && currentFrame === 0) {
+      setIsLaunching(true);
+      const timer = setTimeout(() => setIsLaunching(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [state, currentFrame]);
+
   // Update trail as ball moves
   useEffect(() => {
     if (position && (state === 'dropping' || state === 'landed')) {
@@ -75,12 +86,13 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
         // Keep dynamic trail length based on speed
         return newTrail.slice(0, trailLength);
       });
-    } else if (state === 'idle' || state === 'ready') {
+    } else if (state === 'idle' || state === 'ready' || state === 'countdown') {
       setTrail([]);
     }
   }, [position?.x, position?.y, state, currentFrame, trailLength]);
 
-  if (!position || state === 'idle' || state === 'ready') return null;
+  // Hide ball during countdown - it's shown in the launcher
+  if (!position || state === 'idle' || state === 'ready' || state === 'countdown') return null;
 
   return (
     <>
@@ -110,12 +122,12 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           width: '36px',
           height: '36px',
           background: 'radial-gradient(circle, rgba(251,191,36,0.3) 0%, rgba(251,146,60,0.15) 30%, transparent 60%)',
-          transform: `translate(${position.x - 18}px, ${position.y - 18}px) scaleX(${scaleX}) scaleY(${scaleY})`,
+          transform: `translate(${position.x - 18}px, ${position.y - 18}px) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
           filter: 'blur(6px)',
           willChange: 'transform',
           zIndex: 19,
           borderRadius: '50%',
-          transition: 'transform 100ms ease-out'
+          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
         }}
       />
 
@@ -126,12 +138,12 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           width: '24px',
           height: '24px',
           background: 'radial-gradient(circle, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 40%, transparent 70%)',
-          transform: `translate(${position.x - 12}px, ${position.y - 12}px) scaleX(${scaleX}) scaleY(${scaleY})`,
+          transform: `translate(${position.x - 12}px, ${position.y - 12}px) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
           filter: 'blur(3px)',
           willChange: 'transform',
           zIndex: 20,
           borderRadius: '50%',
-          transition: 'transform 100ms ease-out'
+          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
         }}
       />
 
@@ -162,13 +174,13 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             inset -1px -1px 2px rgba(180,83,9,0.8)
           `,
           border: '1px solid rgba(217,119,6,0.9)',
-          transform: `translate(${position.x - 7}px, ${position.y - 7}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY})`,
+          transform: `translate(${position.x - 7}px, ${position.y - 7}px) rotate(${position.rotation}deg) scaleX(${scaleX}) scaleY(${scaleY}) scale(${isLaunching ? 0.7 : 1})`,
           willChange: 'transform',
           zIndex: 21,
           position: 'relative',
           overflow: 'hidden',
           borderRadius: '50%',
-          transition: 'transform 100ms ease-out'
+          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
         }}
         data-state={state}
         data-frame={currentFrame}

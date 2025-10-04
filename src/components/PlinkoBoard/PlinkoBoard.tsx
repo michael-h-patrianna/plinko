@@ -10,6 +10,7 @@ import { Peg } from './Peg';
 import { Slot } from './Slot';
 import { BorderWall } from './BorderWall';
 import { Ball } from '../Ball';
+import { BallLauncher } from '../BallLauncher';
 import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
 
@@ -70,26 +71,42 @@ export function PlinkoBoard({
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
     const pegList: { row: number; col: number; x: number; y: number }[] = [];
-    // Account for border walls and peg padding to prevent overlap
+    // Account for border walls and peg padding to prevent ball getting stuck
     const PEG_RADIUS = 7;
-    const pegPadding = PEG_RADIUS + 10; // Peg radius + 10px safety margin (increased from 2px)
-    const playableWidth = boardWidth - (BORDER_WIDTH * 2) - (pegPadding * 2);
+    const BALL_RADIUS = 7;
+    // Need: peg radius + ball radius + clearance to prevent ball getting stuck between peg and wall
+    const minClearance = PEG_RADIUS + BALL_RADIUS + 10; // 7 + 7 + 10 = 24px minimum clearance
     const playableHeight = boardHeight * 0.65;
 
     const verticalSpacing = playableHeight / (pegRows + 1);
-    const horizontalSpacing = playableWidth / slotCount;
+
+    // The leftmost and rightmost pegs should be minClearance away from the walls
+    const leftEdge = BORDER_WIDTH + minClearance;
+    const rightEdge = boardWidth - BORDER_WIDTH - minClearance;
+    const pegSpanWidth = rightEdge - leftEdge;
+
+    // Non-offset rows have slotCount + 1 pegs
+    // These pegs should be evenly distributed from leftEdge to rightEdge
+    // So spacing = pegSpanWidth / slotCount (which creates slotCount gaps between slotCount + 1 pegs)
+    const horizontalSpacing = pegSpanWidth / slotCount;
 
     for (let row = 0; row < pegRows; row++) {
       const y = verticalSpacing * (row + 1) + BORDER_WIDTH + 20; // Account for top border
 
       // Offset every other row for staggered pattern
       const isOffsetRow = row % 2 === 1;
-      const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
       const pegsInRow = isOffsetRow ? slotCount : slotCount + 1;
 
       for (let col = 0; col < pegsInRow; col++) {
-        const x = BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
-        pegList.push({ row, col, x, y });
+        if (isOffsetRow) {
+          // Offset rows: center pegs between the non-offset pegs
+          const x = leftEdge + horizontalSpacing * (col + 0.5);
+          pegList.push({ row, col, x, y });
+        } else {
+          // Non-offset rows: first peg at leftEdge, last peg at rightEdge
+          const x = leftEdge + horizontalSpacing * col;
+          pegList.push({ row, col, x, y });
+        }
       }
     }
 
@@ -214,6 +231,24 @@ export function PlinkoBoard({
           />
         );
       })}
+
+      {/* Ball launcher - visible during countdown */}
+      {ballState === 'countdown' && ballPosition && (
+        <BallLauncher
+          x={ballPosition.x}
+          y={ballPosition.y}
+          isLaunching={false}
+        />
+      )}
+
+      {/* Ball launcher launching animation - brief moment when dropping starts */}
+      {ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition && (
+        <BallLauncher
+          x={ballPosition.x}
+          y={ballPosition.y}
+          isLaunching={true}
+        />
+      )}
 
       {/* Ball - positioned within board coordinate system */}
       <Ball
