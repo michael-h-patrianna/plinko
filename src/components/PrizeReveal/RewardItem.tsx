@@ -34,7 +34,7 @@ const REWARD_CONFIG = {
   },
   randomReward: {
     icon: randomRewardIcon,
-    label: 'Random Reward',
+    label: 'Bronze Wheel',
     color: '#F472B6', // pink-400
   },
 };

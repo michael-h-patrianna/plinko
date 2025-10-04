@@ -29,24 +29,23 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
     >
       {/* Title - first element */}
       <motion.h1
-        className="text-4xl font-extrabold text-white mb-6 text-center"
+        className="text-4xl font-extrabold mb-6 text-center"
         style={{
-          textShadow: `
-            0 0 30px rgba(251,191,36,0.5),
-            0 2px 10px rgba(0,0,0,0.8),
-            0 4px 20px rgba(0,0,0,0.6)
-          `,
-          background: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%)',
+          background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
           backgroundClip: 'text',
+          filter: 'drop-shadow(0 0 20px rgba(59,130,246,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.9))',
         }}
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ scale: 0, rotate: -5 }}
+        animate={{
+          scale: 1,
+          rotate: 0,
+        }}
         transition={{
-          duration: 0.4,
+          duration: 0.6,
           delay: 0.1,
-          ease: [0.22, 1, 0.36, 1],
+          ease: [0.34, 1.56, 0.64, 1]
         }}
       >
         Plinko Popup
@@ -166,60 +165,17 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
       {/* Button - final element with slight delay and hover anticipation */}
       <motion.button
         onClick={onStart}
-        onMouseDown={() => setIsPressed(true)}
-        onMouseUp={() => setIsPressed(false)}
-        onMouseLeave={() => setIsPressed(false)}
-        onTouchStart={() => setIsPressed(true)}
-        onTouchEnd={() => setIsPressed(false)}
         disabled={disabled}
-        className="px-8 py-4 text-white font-bold text-lg rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-        style={{
-          background: disabled
-            ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
-            : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 50%, #d97706 100%)',
-          boxShadow: disabled
-            ? '0 4px 12px rgba(0,0,0,0.4)'
-            : isPressed
-            ? `
-              0 4px 15px rgba(251,191,36,0.3),
-              0 2px 8px rgba(251,146,60,0.2),
-              0 2px 6px rgba(0,0,0,0.4),
-              inset 0 2px 4px rgba(0,0,0,0.3)
-            `
-            : `
-              0 10px 30px rgba(251,191,36,0.4),
-              0 6px 20px rgba(251,146,60,0.3),
-              0 4px 12px rgba(0,0,0,0.5),
-              inset 0 1px 2px rgba(255,255,255,0.3),
-              inset 0 -1px 2px rgba(0,0,0,0.3)
-            `,
-          border: disabled
-            ? '1px solid rgba(71,85,105,0.3)'
-            : '1px solid rgba(217,119,6,0.6)',
-          textShadow: '0 2px 4px rgba(0,0,0,0.5)',
-        }}
+        className="btn-primary"
         initial={{ opacity: 0, y: 20, scale: 0.95 }}
         animate={{
           opacity: 1,
           y: 0,
-          scale: isPressed && !disabled ? 0.95 : 1,
+          scale: 1,
         }}
-        whileHover={
-          !disabled
-            ? {
-                scale: 1.05,
-                boxShadow: `
-                  0 12px 35px rgba(251,191,36,0.5),
-                  0 8px 25px rgba(251,146,60,0.4),
-                  0 6px 15px rgba(0,0,0,0.6)
-                `,
-              }
-            : {}
-        }
         transition={{
           opacity: { duration: 0.4, delay: 0.6, ease: [0.22, 1, 0.36, 1] },
           y: { duration: 0.4, delay: 0.6, ease: [0.22, 1, 0.36, 1] },
-          scale: { duration: 0.15, ease: [0.34, 1.56, 0.64, 1] },
         }}
         data-testid="drop-ball-button"
       >

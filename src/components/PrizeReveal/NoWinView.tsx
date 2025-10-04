@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { Prize } from '../../game/prizeTypes';
+import noWinImage from '../../assets/nowin.png';
 
 interface NoWinViewProps {
   prize: Prize;
@@ -50,15 +51,15 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
         }}
       >
         <div role="status" aria-live="polite" className="text-center">
-          {/* No celebration header - encouraging instead */}
-          <motion.div
-            className="text-6xl mb-4"
+          {/* No win image */}
+          <motion.img
+            src={noWinImage}
+            alt="No Win"
+            className="w-24 h-24 mx-auto mb-4"
             initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 0.6 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            😔
-          </motion.div>
+            animate={{ scale: 1, opacity: 0.8 }}
+            transition={{ duration: 0.4, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+          />
 
           <motion.h2
             className="text-2xl font-bold text-slate-300 mb-4"
@@ -91,58 +92,21 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             </p>
           </motion.div>
 
-          {/* Try again button - different color scheme */}
+          {/* Try again button */}
           <motion.button
             ref={claimButtonRef}
             onClick={onClaim}
-            onMouseDown={() => setIsPressed(true)}
-            onMouseUp={() => setIsPressed(false)}
-            onMouseLeave={() => setIsPressed(false)}
-            onTouchStart={() => setIsPressed(true)}
-            onTouchEnd={() => setIsPressed(false)}
             disabled={!canClaim}
-            className="w-full px-6 py-4 text-white font-bold text-lg rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: !canClaim
-                ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
-                : 'linear-gradient(135deg, #64748b 0%, #475569 100%)',
-              boxShadow: !canClaim
-                ? '0 4px 12px rgba(0,0,0,0.4)'
-                : isPressed
-                ? `
-                  0 2px 8px rgba(0,0,0,0.4),
-                  inset 0 2px 4px rgba(0,0,0,0.3)
-                `
-                : `
-                  0 8px 20px rgba(0,0,0,0.5),
-                  0 4px 12px rgba(0,0,0,0.4),
-                  inset 0 1px 2px rgba(255,255,255,0.1),
-                  inset 0 -1px 2px rgba(0,0,0,0.3)
-                `,
-              border: '1px solid rgba(148,163,184,0.3)',
-              textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-            }}
+            className="w-full btn-primary"
             initial={{ y: 20, opacity: 0, scale: 0.9 }}
             animate={{
               y: 0,
               opacity: 1,
-              scale: isPressed && canClaim ? 0.95 : 1,
+              scale: 1,
             }}
-            whileHover={
-              canClaim
-                ? {
-                    scale: 1.02,
-                    boxShadow: `
-                      0 10px 25px rgba(0,0,0,0.6),
-                      0 5px 15px rgba(0,0,0,0.5)
-                    `,
-                  }
-                : {}
-            }
             transition={{
               y: { duration: 0.4, delay: 0.6 },
               opacity: { duration: 0.4, delay: 0.6 },
-              scale: { duration: 0.15 },
             }}
           >
             Try Again

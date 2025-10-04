@@ -3,8 +3,8 @@
  * Simulates checkout flow
  */
 
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 interface CheckoutPopupProps {
   isOpen: boolean;
@@ -32,9 +32,7 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
       {isOpen && (
         <motion.div
           className="absolute inset-0 z-50 flex items-center justify-center p-6"
-          style={{
-            background: 'rgba(0,0,0,0.8)',
-          }}
+
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -106,23 +104,7 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
             <motion.button
               onClick={handlePurchase}
               disabled={isPurchasing}
-              className="w-full px-6 py-4 text-white font-bold text-lg rounded-lg disabled:opacity-50"
-              style={{
-                background: isPurchasing
-                  ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
-                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                boxShadow: isPurchasing
-                  ? '0 4px 12px rgba(0,0,0,0.4)'
-                  : `
-                    0 10px 30px rgba(16,185,129,0.4),
-                    0 5px 20px rgba(5,150,105,0.4),
-                    inset 0 1px 2px rgba(255,255,255,0.2)
-                  `,
-                border: '1px solid rgba(16,185,129,0.5)',
-                textShadow: '0 2px 4px rgba(0,0,0,0.6)',
-              }}
-              whileHover={!isPurchasing ? { scale: 1.02 } : {}}
-              whileTap={!isPurchasing ? { scale: 0.98 } : {}}
+              className="w-full btn-primary"
             >
               {isPurchasing ? (
                 <span className="flex items-center justify-center gap-2">

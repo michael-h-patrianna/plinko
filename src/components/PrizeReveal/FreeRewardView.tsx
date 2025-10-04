@@ -3,8 +3,8 @@
  * Celebratory with grid-based reward display
  */
 
-import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
 import type { Prize } from '../../game/prizeTypes';
 import { RewardItem } from './RewardItem';
 
@@ -68,36 +68,31 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
         }}
       >
         <div role="status" aria-live="polite" className="text-center">
-          {/* Congratulations header */}
+          {/* Congratulations header with gradient and glow */}
           <motion.h2
-            className="text-3xl font-extrabold text-white mb-4"
+            className="text-4xl font-extrabold mb-4 relative inline-block"
             style={{
-              textShadow: `
-                0 0 30px ${prize.slotColor}99,
-                0 3px 10px rgba(0,0,0,0.9)
-              `,
-              background: `linear-gradient(135deg, #fef3c7 0%, ${prize.slotColor} 50%, ${prize.slotColor}dd 100%)`,
+              background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 20px rgba(59,130,246,0.6)) drop-shadow(0 4px 12px rgba(0,0,0,0.9))',
             }}
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            initial={{ scale: 0, rotate: -5 }}
+            animate={{
+              scale: 1,
+              rotate: 0,
+            }}
+            transition={{
+              duration: 0.6,
+              delay: 0.3,
+              ease: [0.34, 1.56, 0.64, 1]
+            }}
           >
-            🎉 Congratulations!
+            You won!
           </motion.h2>
 
-          {/* Prize title */}
-          <motion.div
-            className="text-xl font-bold text-white mb-6"
-            style={{ textShadow: '0 2px 6px rgba(0,0,0,0.7)' }}
-            initial={{ y: 10, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-          >
-            {prize.title}
-          </motion.div>
+
 
           {/* Reward grid */}
           <motion.div
@@ -131,60 +126,17 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           <motion.button
             ref={claimButtonRef}
             onClick={onClaim}
-            onMouseDown={() => setIsPressed(true)}
-            onMouseUp={() => setIsPressed(false)}
-            onMouseLeave={() => setIsPressed(false)}
-            onTouchStart={() => setIsPressed(true)}
-            onTouchEnd={() => setIsPressed(false)}
             disabled={!canClaim}
-            className="w-full px-6 py-4 text-white font-bold text-lg rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: !canClaim
-                ? 'linear-gradient(135deg, #475569 0%, #334155 100%)'
-                : 'linear-gradient(135deg, #10b981 0%, #3b82f6 100%)',
-              boxShadow: !canClaim
-                ? '0 4px 12px rgba(0,0,0,0.4)'
-                : isPressed
-                ? `
-                  0 3px 12px rgba(16,185,129,0.25),
-                  0 2px 8px rgba(59,130,246,0.25),
-                  0 2px 6px rgba(0,0,0,0.4),
-                  inset 0 2px 4px rgba(0,0,0,0.3)
-                `
-                : `
-                  0 10px 30px rgba(16,185,129,0.4),
-                  0 5px 20px rgba(59,130,246,0.4),
-                  0 4px 12px rgba(0,0,0,0.5),
-                  inset 0 2px 4px rgba(255,255,255,0.2),
-                  inset 0 -2px 4px rgba(0,0,0,0.3)
-                `,
-              border: !canClaim
-                ? '1px solid rgba(71,85,105,0.3)'
-                : '1px solid rgba(16,185,129,0.6)',
-              textShadow: '0 2px 6px rgba(0,0,0,0.6)',
-            }}
+            className="w-full btn-primary"
             initial={{ y: 20, opacity: 0, scale: 0.9 }}
             animate={{
               y: 0,
               opacity: 1,
-              scale: isPressed && canClaim ? 0.95 : 1,
+              scale: 1,
             }}
-            whileHover={
-              canClaim
-                ? {
-                    scale: 1.05,
-                    boxShadow: `
-                      0 12px 35px rgba(16,185,129,0.5),
-                      0 6px 24px rgba(59,130,246,0.5),
-                      0 5px 15px rgba(0,0,0,0.6)
-                    `,
-                  }
-                : {}
-            }
             transition={{
               y: { duration: 0.4, delay: 1.2 },
               opacity: { duration: 0.4, delay: 1.2 },
-              scale: { duration: 0.15, ease: [0.34, 1.56, 0.64, 1] },
             }}
           >
             Claim Prize

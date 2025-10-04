@@ -11,7 +11,6 @@ import { Slot } from './Slot';
 import { BorderWall } from './BorderWall';
 import { Ball } from '../Ball';
 import { BallLauncher } from '../BallLauncher';
-import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
 import { ComboLegend } from './ComboLegend';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
@@ -44,19 +43,8 @@ export function PlinkoBoard({
   // Internal content width = declared width - CSS borders on both sides
   const internalWidth = boardWidth - (CSS_BORDER * 2);
 
-  // Animation states
-  const [showAnticipation, setShowAnticipation] = useState(false);
+  // Animation state for win reveal
   const [showWinReveal, setShowWinReveal] = useState(false);
-
-  // Trigger anticipation when ball is approaching (start earlier - bottom 50% of board)
-  useEffect(() => {
-    if (ballState === 'dropping' && currentTrajectoryPoint) {
-      const isInLowerHalf = currentTrajectoryPoint.y > boardHeight * 0.5;
-      setShowAnticipation(isInLowerHalf);
-    } else {
-      setShowAnticipation(false);
-    }
-  }, [ballState, currentTrajectoryPoint, boardHeight]);
 
   // Trigger win reveal when ball lands
   useEffect(() => {
@@ -235,10 +223,9 @@ export function PlinkoBoard({
 
       {/* Slots */}
       {slots.map((slot) => {
-        // Check if ball is approaching this slot (in lower 40% of board and horizontally close)
+        // Check if ball is directly above this slot (tighter detection for snappy lighting)
         const isApproaching = ballState === 'dropping' && currentTrajectoryPoint
-          ? currentTrajectoryPoint.y > boardHeight * 0.6 &&
-            Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width * 1.5
+          ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
           : false;
 
         // Only show winning state during drop and end phase, not when idle
@@ -297,16 +284,7 @@ export function PlinkoBoard({
         trajectoryPoint={currentTrajectoryPoint}
       />
 
-      {/* Win Animations */}
-      {showAnticipation && selectedIndex >= 0 && selectedIndex < slots.length && (
-        <SlotAnticipation
-          x={slots[selectedIndex].x}
-          width={slots[selectedIndex].width}
-          color={slots[selectedIndex].prize.color}
-          isActive={showAnticipation}
-        />
-      )}
-
+      {/* Win Reveal Animation */}
       {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && (
         <SlotWinReveal
           x={slots[selectedIndex].x}

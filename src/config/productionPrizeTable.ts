@@ -141,7 +141,7 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotIcon: randomRewardIcon,
     slotColor: '#F472B6', // pink-400
     title: 'Bronze Wheel',
-    description: 'Spin the Bronze Wheel for a random prize!',
+    description: '',
     freeReward: {
       randomReward: {
         config: {

@@ -91,7 +91,7 @@ export function Slot({
              0 3px 8px rgba(0,0,0,0.3),
              inset 0 3px 6px rgba(255,255,255,0.12),
              inset 0 -3px 6px rgba(0,0,0,0.25)`,
-        transition: 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transition: 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
       data-testid={`slot-${index}`}
       data-active={isWinning}
