@@ -46,6 +46,13 @@ export function PlinkoBoard({
   // Internal content width = declared width - CSS borders on both sides
   const internalWidth = boardWidth - (CSS_BORDER * 2);
 
+  // Consolidated dimension calculations - single source of truth
+  const dimensions = useMemo(() => {
+    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
+    const slotWidth = playableWidth / slotCount;
+    return { playableWidth, slotWidth };
+  }, [internalWidth, slotCount, BORDER_WIDTH]);
+
   // Animation state for win reveal
   const [showWinReveal, setShowWinReveal] = useState(false);
 
@@ -119,9 +126,7 @@ export function PlinkoBoard({
 
   // Generate slot positions and assign combo badge numbers
   const slots = useMemo(() => {
-    // Use internalWidth due to box-sizing: border-box
-    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
-    const slotWidth = playableWidth / slotCount;
+    const { slotWidth } = dimensions;
     let comboBadgeCounter = 1;
 
     return prizes.map((prize, index) => {
@@ -149,14 +154,12 @@ export function PlinkoBoard({
         comboBadgeNumber
       };
     });
-  }, [prizes, slotCount, internalWidth, BORDER_WIDTH]);
+  }, [prizes, slotCount, dimensions, BORDER_WIDTH]);
 
   // Calculate bucket zone Y position based on slot width
   const bucketZoneY = useMemo(() => {
-    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
-    const slotWidth = playableWidth / slotCount;
-    return calculateBucketZoneY(boardHeight, slotWidth);
-  }, [boardHeight, internalWidth, slotCount, BORDER_WIDTH]);
+    return calculateBucketZoneY(boardHeight, dimensions.slotWidth);
+  }, [boardHeight, dimensions.slotWidth]);
 
   return (
     <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
@@ -203,11 +206,6 @@ export function PlinkoBoard({
         const isActive = currentTrajectoryPoint?.pegsHit?.some(
           hit => hit.row === peg.row && hit.col === peg.col
         ) ?? false;
-
-        // Log when we detect a peg hit in trajectory data
-        if (isActive) {
-          console.log(`📍 PlinkoBoard: Peg (${peg.row}, ${peg.col}) should be active (frame ${currentTrajectoryPoint?.frame})`);
-        }
 
         return (
           <Peg

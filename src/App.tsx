@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect } from 'react';
+import type { GameState } from './game/types';
 import { AnimatePresence } from 'framer-motion';
 import { PopupContainer } from './components/PopupContainer';
 import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
@@ -16,44 +17,13 @@ import { ThemeSelector } from './components/ThemeSelector';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
 
-// Detect if user is on actual mobile device
-const isMobileDevice = () => {
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-  const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
-};
-
 function AppContent() {
-  const [isMobile, setIsMobile] = useState(false);
   const { theme } = useTheme();
-
-  // Detect mobile on mount
-  useEffect(() => {
-    setIsMobile(isMobileDevice());
-  }, []);
-
-  // Viewport width state - can only change when game is idle or revealed
-  // On mobile: use actual viewport width (max 414px), on desktop: user-selectable
+  const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(375);
-  // Locked board width during active game
   const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
 
-  // Update viewport width based on actual screen size on mobile
-  useEffect(() => {
-    if (isMobile) {
-      const updateMobileWidth = () => {
-        const width = Math.min(window.innerWidth, 414);
-        setViewportWidth(width);
-        setLockedBoardWidth(width);
-      };
-
-      updateMobileWidth();
-      window.addEventListener('resize', updateMobileWidth);
-      return () => window.removeEventListener('resize', updateMobileWidth);
-    }
-  }, [isMobile]);
-
+  // Use game hook with the locked board width
   const {
     state,
     prizes,
@@ -72,35 +42,50 @@ function AppContent() {
     pegRows: 10
   });
 
-  // Lock viewport when ball starts dropping (not during ready or revealed states)
+  // Inline viewport management instead of broken hook
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+      return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
+    };
+    setIsMobile(checkMobile());
+  }, []);
+
+  useEffect(() => {
+    if (isMobile) {
+      const updateMobileWidth = () => {
+        const width = Math.min(window.innerWidth, 414);
+        setViewportWidth(width);
+        setLockedBoardWidth(width);
+      };
+      updateMobileWidth();
+      window.addEventListener('resize', updateMobileWidth);
+      return () => window.removeEventListener('resize', updateMobileWidth);
+    }
+  }, [isMobile]);
+
   useEffect(() => {
     if (state === 'dropping') {
-      // Lock the board size when ball starts dropping
       setLockedBoardWidth(viewportWidth);
     }
   }, [state, viewportWidth]);
 
-  // Handle viewport width change (only allowed when ready, idle, revealed, or claimed)
-  const handleViewportChange = (newWidth: number) => {
-    // Allow changes in ready, idle, revealed, and claimed states (not during countdown, dropping, landed, etc.)
-    const canChange = state === 'idle' || state === 'ready' || state === 'revealed' || state === 'claimed';
+  const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
+  const handleViewportChange = (newWidth: number) => {
+    const canChange = state === 'idle' || state === 'ready' || state === 'revealed' || state === 'claimed';
     if (canChange) {
       setViewportWidth(newWidth);
-
-      // If we're in ready, revealed, or claimed state, we need to regenerate the game
       if (state === 'ready' || state === 'revealed' || state === 'claimed') {
         setLockedBoardWidth(newWidth);
         resetGame();
       } else {
-        // In idle state, just update directly
         setLockedBoardWidth(newWidth);
       }
     }
   };
-
-  // Determine if viewport selector should be disabled (only during active gameplay)
-  const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
   return (
     <div
@@ -178,7 +163,6 @@ function AppContent() {
 
           {/* Prize reveal overlay with smooth entrance */}
           <AnimatePresence mode="wait">
-            {(console.log('[App] State:', state, 'SelectedPrize:', selectedPrize), false)}
             {state === 'revealed' && selectedPrize && (
               <PrizeReveal
                 key="prize-reveal"

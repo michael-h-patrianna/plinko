@@ -61,7 +61,6 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
       const { selectedIndex, seedUsed } = selectPrize(prizes, finalSeed);
       const prize = getPrizeByIndex(prizes, selectedIndex);
-      console.log('[usePlinkoGame] Initializing game with prize:', prize, 'at index:', selectedIndex);
 
       const trajectory = generateTrajectory({
         boardWidth,
@@ -76,7 +75,6 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         type: 'INITIALIZE',
         payload: { selectedIndex, trajectory, prize, seed: seedUsed }
       });
-      console.log('[usePlinkoGame] Dispatched INITIALIZE with prize:', prize);
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
     }
@@ -88,7 +86,6 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   // Animation loop for dropping state - only runs when state changes to 'dropping'
   useEffect(() => {
     if (gameState.state === 'dropping') {
-      console.log('[usePlinkoGame] Starting drop animation, trajectory length:', gameState.context.trajectory.length);
       const FPS = 60;
       const frameInterval = 1000 / FPS;
       const totalDuration = (gameState.context.trajectory.length / FPS) * 1000;
@@ -119,9 +116,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       animationFrameRef.current = requestAnimationFrame(animate);
 
       // Set timeout for landing based on total duration
-      console.log('[usePlinkoGame] Setting landing timeout for', totalDuration + 500, 'ms');
       landingTimeoutRef.current = setTimeout(() => {
-        console.log('[usePlinkoGame] Dispatching LANDING_COMPLETED');
         dispatch({ type: 'LANDING_COMPLETED' });
       }, totalDuration + 500);
 
@@ -142,9 +137,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   // Auto-reveal prize after landing
   useEffect(() => {
     if (gameState.state === 'landed') {
-      console.log('[usePlinkoGame] Ball landed, prize is:', gameState.context.prize);
       const timer = setTimeout(() => {
-        console.log('[usePlinkoGame] Revealing prize...');
         dispatch({ type: 'REVEAL_CONFIRMED' });
       }, 300);
       return () => clearTimeout(timer);

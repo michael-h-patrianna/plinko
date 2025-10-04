@@ -3,6 +3,7 @@
  */
 
 import type { Prize } from '../game/prizeTypes';
+import { validatePrizeSet, getPrizeByIndex as getPrizeByIndexUtil, normalizeProbabilities } from '../utils/prizeUtils';
 import scIcon from '../assets/sc.png';
 import gcIcon from '../assets/gc.png';
 import gcscIcon from '../assets/gcsc.png';
@@ -236,34 +237,9 @@ export function generateProductionPrizeSet(count?: number): Prize[] {
   const shuffled = [...PRODUCTION_PRIZE_POOL].sort(() => Math.random() - 0.5);
   const selected = shuffled.slice(0, prizeCount);
 
-  // Normalize probabilities and add backward-compatible fields
-  const totalProb = selected.reduce((sum, p) => sum + p.probability, 0);
-  const normalized = selected.map(prize => addBackwardCompatFields({
-    ...prize,
-    probability: prize.probability / totalProb
-  }));
-
-  return normalized;
-}
-
-/**
- * Validates prize set
- */
-function validatePrizeSet(prizes: Prize[]): void {
-  const sum = prizes.reduce((acc, p) => acc + p.probability, 0);
-  const tolerance = 1e-6;
-
-  if (Math.abs(sum - 1.0) > tolerance) {
-    throw new Error(
-      `Prize probabilities must sum to 1.0, got ${sum.toFixed(6)}`
-    );
-  }
-
-  if (prizes.length < 3 || prizes.length > 8) {
-    throw new Error(
-      `Prize set must contain 3-8 prizes, got ${prizes.length}`
-    );
-  }
+  // Normalize probabilities using shared utility and add backward-compatible fields
+  const normalized = normalizeProbabilities(selected);
+  return normalized.map(prize => addBackwardCompatFields(prize));
 }
 
 /**
@@ -277,13 +253,6 @@ export function createValidatedProductionPrizeSet(count?: number): Prize[] {
 
 /**
  * Get prize by index with bounds checking
+ * Re-export from shared utilities for backward compatibility
  */
-export function getPrizeByIndex(prizes: Prize[], index: number): Prize {
-  if (index < 0 || index >= prizes.length) {
-    throw new Error(
-      `Prize index ${index} out of range [0, ${prizes.length - 1}]`
-    );
-  }
-
-  return prizes[index]!;
-}
+export const getPrizeByIndex = getPrizeByIndexUtil;

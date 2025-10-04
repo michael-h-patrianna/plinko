@@ -77,7 +77,24 @@ export const useThemeValue = <K extends keyof Theme>(key: K): Theme[K] => {
   return theme[key];
 };
 
-// Helper function to create CSS variables from theme
+/**
+ * Helper function to create CSS variables from theme
+ *
+ * This utility converts a Theme object into CSS custom properties (variables).
+ * Useful for:
+ * - Server-side rendering (SSR) where you need to inject theme CSS into HTML
+ * - CSS-in-JS frameworks that support CSS variables
+ * - Dynamic theme switching via style tags
+ *
+ * @example
+ * ```tsx
+ * const cssVars = createCSSVariables(theme);
+ * const styleTag = `<style>:root { ${cssVars} }</style>`;
+ * ```
+ *
+ * @param theme - Theme object to convert
+ * @returns CSS variable declarations as a string
+ */
 export const createCSSVariables = (theme: Theme): string => {
   const cssVars: string[] = [];
 

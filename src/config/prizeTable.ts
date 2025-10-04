@@ -4,6 +4,56 @@
  */
 
 import type { PrizeConfig } from '../game/types';
+import { validatePrizeSet, getPrizeByIndex as getPrizeByIndexUtil, normalizeProbabilities } from '../utils/prizeUtils';
+
+/**
+ * Mock prizes for testing
+ * 6 prizes with equal probability (16.67% each)
+ */
+export const MOCK_PRIZES: PrizeConfig[] = [
+  {
+    id: 'test1',
+    label: 'Prize 1',
+    description: 'Test Prize 1',
+    probability: 1/6,
+    color: '#F97316'
+  },
+  {
+    id: 'test2',
+    label: 'Prize 2',
+    description: 'Test Prize 2',
+    probability: 1/6,
+    color: '#FB923C'
+  },
+  {
+    id: 'test3',
+    label: 'Prize 3',
+    description: 'Test Prize 3',
+    probability: 1/6,
+    color: '#FBBF24'
+  },
+  {
+    id: 'test4',
+    label: 'Prize 4',
+    description: 'Test Prize 4',
+    probability: 1/6,
+    color: '#FACC15'
+  },
+  {
+    id: 'test5',
+    label: 'Prize 5',
+    description: 'Test Prize 5',
+    probability: 1/6,
+    color: '#34D399'
+  },
+  {
+    id: 'test6',
+    label: 'Prize 6',
+    description: 'Test Prize 6',
+    probability: 1/6,
+    color: '#60A5FA'
+  }
+];
 
 /**
  * Full prize pool with 8 prizes
@@ -80,56 +130,21 @@ export function generateRandomPrizeSet(): PrizeConfig[] {
   const shuffled = [...PRIZE_POOL].sort(() => Math.random() - 0.5);
   const selected = shuffled.slice(0, prizeCount);
 
-  // Normalize probabilities to sum to 1.0
-  const totalProb = selected.reduce((sum, p) => sum + p.probability, 0);
-  const normalized = selected.map(prize => ({
-    ...prize,
-    probability: prize.probability / totalProb
-  }));
-
-  return normalized;
-}
-
-/**
- * Validates prize configuration
- */
-function validatePrizeTable(prizes: PrizeConfig[]): void {
-  const sum = prizes.reduce((acc, p) => acc + p.probability, 0);
-  const tolerance = 1e-6;
-
-  if (Math.abs(sum - 1.0) > tolerance) {
-    throw new Error(
-      `Prize probabilities must sum to 1.0, got ${sum.toFixed(6)}`
-    );
-  }
-
-  if (prizes.length < 3 || prizes.length > 8) {
-    throw new Error(
-      `Prize set must contain 3-8 prizes, got ${prizes.length}`
-    );
-  }
+  // Normalize probabilities using shared utility
+  return normalizeProbabilities(selected);
 }
 
 /**
  * Gets prize by index with bounds checking
- * @param prizes - Prize configuration array
- * @param index - Prize index (0-based)
+ * Re-export from shared utilities for backward compatibility
  */
-export function getPrizeByIndex(prizes: PrizeConfig[], index: number): PrizeConfig {
-  if (index < 0 || index >= prizes.length) {
-    throw new Error(
-      `Prize index ${index} out of range [0, ${prizes.length - 1}]`
-    );
-  }
-
-  return prizes[index]!;
-}
+export const getPrizeByIndex = getPrizeByIndexUtil;
 
 /**
  * Creates a prize set and validates it
  */
 export function createValidatedPrizeSet(): PrizeConfig[] {
   const prizes = generateRandomPrizeSet();
-  validatePrizeTable(prizes);
+  validatePrizeSet(prizes);
   return prizes;
 }
