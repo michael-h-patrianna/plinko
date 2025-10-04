@@ -1,5 +1,5 @@
 /**
- * Individual peg component with AAA-quality hit animations
+ * Individual peg component - pinball machine style brief flash
  */
 
 import { useEffect, useState } from 'react';
@@ -14,45 +14,57 @@ interface PegProps {
 }
 
 export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: PegProps) {
-  const [wasHit, setWasHit] = useState(false);
+  const [isFlashing, setIsFlashing] = useState(false);
+  const [flashKey, setFlashKey] = useState(0);
 
   // Reset when new ball drop starts
   useEffect(() => {
     if (shouldReset) {
-      setWasHit(false);
+      setIsFlashing(false);
+      setFlashKey(0);
     }
   }, [shouldReset]);
 
-  // Trigger animation when peg is hit
+  // Trigger brief flash animation when peg is hit
+  // isActive is only true for ONE frame, so we capture it and run a 200ms animation
   useEffect(() => {
-    if (isActive && !wasHit) {
-      setWasHit(true);
-      // Reset after animation completes
-      const timer = setTimeout(() => setWasHit(false), 300);
-      return () => clearTimeout(timer);
+    if (isActive) {
+      // Peg was just hit this frame!
+      console.log(`Peg ${row}-${col} hit! Setting isFlashing=true`);
+      setIsFlashing(true);
+      setFlashKey(prev => prev + 1);
+
+      // Flash only lasts 200ms (pinball style), then automatically turns off
+      setTimeout(() => {
+        console.log(`Peg ${row}-${col} timeout fired! Setting isFlashing=false`);
+        setIsFlashing(false);
+      }, 200);
+
+      // No cleanup function - let the timeout complete even if isActive changes
     }
-  }, [isActive, wasHit]);
+  }, [isActive, row, col]); // Only depend on isActive - when it's true, trigger animation
 
   return (
     <>
-      {/* Glow effect when hit */}
-      {wasHit && (
+      {/* Expanding pulse ring when hit - no blur, React Native compatible */}
+      {isFlashing && (
         <div
+          key={flashKey}
           className="absolute rounded-full pointer-events-none"
           style={{
             left: `${x}px`,
             top: `${y}px`,
-            width: '32px',
-            height: '32px',
+            width: '14px',
+            height: '14px',
             transform: 'translate(-50%, -50%)',
-            background: 'radial-gradient(circle, rgba(251,191,36,0.8) 0%, rgba(251,191,36,0.4) 40%, transparent 70%)',
-            animation: 'pegGlowPulse 300ms ease-out',
+            border: '2px solid rgba(251,191,36,0.9)',
+            animation: 'pulseRing 300ms ease-out',
             zIndex: 15
           }}
         />
       )}
 
-      {/* Peg itself */}
+      {/* Peg itself - lights up briefly then smoothly turns off */}
       <div
         className="absolute rounded-full"
         style={{
@@ -60,31 +72,18 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
           top: `${y}px`,
           width: '14px',
           height: '14px',
-          transform: wasHit
-            ? 'translate(-50%, -50%) scale(1.1)'
-            : 'translate(-50%, -50%)',
-          background: wasHit
-            ? 'radial-gradient(circle at 35% 35%, #fef3c7, #fde047, #facc15, #eab308)'
-            : 'radial-gradient(circle at 35% 35%, #f1f5f9, #cbd5e1, #94a3b8, #64748b)',
-          boxShadow: wasHit
-            ? `
-              0 0 15px rgba(251,191,36,0.8),
-              0 3px 8px rgba(0,0,0,0.5),
-              0 5px 15px rgba(0,0,0,0.3),
-              inset -1px -1px 3px rgba(0,0,0,0.4),
-              inset 1px 1px 3px rgba(255,255,255,0.8)
-            `
-            : `
-              0 2px 6px rgba(0,0,0,0.4),
-              0 4px 12px rgba(0,0,0,0.2),
-              inset -1px -1px 2px rgba(0,0,0,0.3),
-              inset 1px 1px 2px rgba(255,255,255,0.6)
-            `,
-          border: wasHit
-            ? '1.5px solid rgba(251,191,36,0.6)'
-            : '1px solid rgba(148, 163, 184, 0.3)',
-          transition: 'all 100ms ease-out',
-          animation: wasHit ? 'pegShake 300ms ease-out' : 'none',
+          transform: 'translate(-50%, -50%)',
+          background: isFlashing
+            ? 'radial-gradient(circle at 35% 35%, #fef3c7, #fde047, #facc15, #eab308)' // YELLOW
+            : 'radial-gradient(circle at 35% 35%, #f1f5f9, #cbd5e1, #94a3b8, #64748b)', // GRAY
+          boxShadow: `
+            0 2px 6px rgba(0,0,0,0.4),
+            0 4px 12px rgba(0,0,0,0.2),
+            inset -1px -1px 2px rgba(0,0,0,0.3),
+            inset 1px 1px 2px rgba(255,255,255,0.6)
+          `,
+          border: '1px solid rgba(148, 163, 184, 0.3)',
+          transition: 'background 150ms ease-out',
           zIndex: 10
         }}
         data-testid={`peg-${row}-${col}`}
@@ -92,30 +91,21 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
       />
 
       <style>{`
-        @keyframes pegGlowPulse {
+        @keyframes pulseRing {
           0% {
-            opacity: 0;
-            transform: translate(-50%, -50%) scale(0.5);
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            border-width: 3px;
           }
           50% {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.2);
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0.6;
+            border-width: 2px;
           }
           100% {
+            transform: translate(-50%, -50%) scale(3.5);
             opacity: 0;
-            transform: translate(-50%, -50%) scale(1.5);
-          }
-        }
-
-        @keyframes pegShake {
-          0%, 100% {
-            transform: translate(-50%, -50%) scale(1);
-          }
-          10%, 30%, 50%, 70%, 90% {
-            transform: translate(-48%, -50%) scale(1.1);
-          }
-          20%, 40%, 60%, 80% {
-            transform: translate(-52%, -50%) scale(1.1);
+            border-width: 1px;
           }
         }
       `}</style>
