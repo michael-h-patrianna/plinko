@@ -16,8 +16,9 @@ export interface TrajectoryPoint {
   y: number;
   rotation: number;
   pegHit?: boolean;
-  pegHitRow?: number;      // Which row peg was hit
-  pegHitCol?: number;      // Which column peg was hit
+  pegHitRow?: number;      // Which row peg was hit (primary hit)
+  pegHitCol?: number;      // Which column peg was hit (primary hit)
+  pegsHit?: Array<{ row: number; col: number }>; // ALL pegs hit this frame
   vx?: number;             // Horizontal velocity (for squash/stretch and dynamic trail)
   vy?: number;             // Vertical velocity (for squash/stretch and dynamic trail)
 }

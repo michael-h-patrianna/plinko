@@ -96,7 +96,9 @@ function runSimulation(
 
   // Define bucket floor position
   const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
-  const slotWidth = boardWidth / slotCount;
+  // Account for border walls when calculating slot positions
+  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
+  const slotWidth = playableWidth / slotCount;
 
   // Track recent collisions to prevent double-hits
   const recentCollisions = new Map<string, number>();
@@ -136,6 +138,7 @@ function runSimulation(
 
     // Check collisions with all pegs
     let hitPeg: Peg | null = null;
+    const pegsHitThisFrame: Array<{ row: number; col: number }> = [];
 
     for (const peg of pegs) {
       // Calculate distance to peg at NEW position
@@ -247,7 +250,19 @@ function runSimulation(
           recentCollisions.delete(firstKey);
         }
 
-        break; // Only handle one collision per frame
+        break; // Only handle one collision per frame FOR PHYSICS
+      }
+    }
+
+    // After physics collision, detect ALL pegs the ball is near for visual feedback
+    for (const peg of pegs) {
+      const dx = x - peg.x;
+      const dy = y - peg.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // If ball is touching or very close to peg (within collision radius + small margin)
+      if (dist <= PHYSICS.COLLISION_RADIUS + 2) {
+        pegsHitThisFrame.push({ row: peg.row, col: peg.col });
       }
     }
 
@@ -266,9 +281,11 @@ function runSimulation(
 
     if (y >= bucketZoneY) {
       // In bucket zone - check for bucket wall collisions
-      const currentSlot = Math.floor(x / slotWidth);
-      const slotLeftEdge = currentSlot * slotWidth + 3;
-      const slotRightEdge = (currentSlot + 1) * slotWidth - 3;
+      // Adjust x position relative to playable area
+      const xRelative = x - PHYSICS.BORDER_WIDTH;
+      const currentSlot = Math.floor(xRelative / slotWidth);
+      const slotLeftEdge = PHYSICS.BORDER_WIDTH + currentSlot * slotWidth + 3;
+      const slotRightEdge = PHYSICS.BORDER_WIDTH + (currentSlot + 1) * slotWidth - 3;
 
       // Bucket wall collisions with proper physics
       if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
@@ -327,13 +344,16 @@ function runSimulation(
       rotation,
       pegHit: hitPeg !== null,
       pegHitRow: hitPeg?.row,
-      pegHitCol: hitPeg?.col
+      pegHitCol: hitPeg?.col,
+      pegsHit: pegsHitThisFrame.length > 0 ? pegsHitThisFrame : undefined
     });
   }
 
   // Determine which slot the ball landed in
+  // Adjust x position relative to playable area
+  const xRelative = x - PHYSICS.BORDER_WIDTH;
   const landedSlot = Math.min(
-    Math.max(0, Math.floor(x / slotWidth)),
+    Math.max(0, Math.floor(xRelative / slotWidth)),
     slotCount - 1
   );
 
@@ -366,8 +386,10 @@ export function generateTrajectory(params: {
   }
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
-  const slotWidth = boardWidth / slotCount;
-  const targetX = selectedIndex * slotWidth + slotWidth / 2;
+  // Account for border walls when calculating slot positions
+  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
+  const slotWidth = playableWidth / slotCount;
+  const targetX = PHYSICS.BORDER_WIDTH + selectedIndex * slotWidth + slotWidth / 2;
 
   // Try different initial parameters with better strategies
   // We try many subtle variations to find a natural path to target

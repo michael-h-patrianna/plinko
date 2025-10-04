@@ -159,7 +159,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   const currentTrajectoryPoint = useMemo(() => {
     if (gameState.state === 'idle') return null;
     return gameState.context.trajectory[gameState.context.currentFrame] ?? null;
-  }, [gameState]);
+  }, [gameState.state, gameState.context.currentFrame, gameState.context.trajectory]);
 
   const startGame = () => {
     if (gameState.state === 'ready') {

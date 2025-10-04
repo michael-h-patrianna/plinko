@@ -2,7 +2,7 @@
  * Individual peg component - pinball machine style brief flash
  */
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 interface PegProps {
   row: number;
@@ -16,33 +16,47 @@ interface PegProps {
 export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: PegProps) {
   const [isFlashing, setIsFlashing] = useState(false);
   const [flashKey, setFlashKey] = useState(0);
+  const lastActiveRef = useRef(false);
+  const activeTimeoutRef = useRef<number | null>(null);
 
   // Reset when new ball drop starts
   useEffect(() => {
     if (shouldReset) {
       setIsFlashing(false);
       setFlashKey(0);
+      lastActiveRef.current = false;
+      if (activeTimeoutRef.current) {
+        clearTimeout(activeTimeoutRef.current);
+        activeTimeoutRef.current = null;
+      }
     }
   }, [shouldReset]);
 
   // Trigger brief flash animation when peg is hit
-  // isActive is only true for ONE frame, so we capture it and run a 200ms animation
+  // Use useEffect with a ref to catch EVERY transition from false->true
   useEffect(() => {
-    if (isActive) {
+    // Detect rising edge: was false, now true
+    if (isActive && !lastActiveRef.current) {
       // Peg was just hit this frame!
-      console.log(`Peg ${row}-${col} hit! Setting isFlashing=true`);
-      setIsFlashing(true);
+      console.log(`🎯 Peg (${row}, ${col}) HIT DETECTED - isActive changed to true`);
       setFlashKey(prev => prev + 1);
+      setIsFlashing(true);
+
+      // Clear any existing timeout
+      if (activeTimeoutRef.current) {
+        clearTimeout(activeTimeoutRef.current);
+      }
 
       // Flash only lasts 200ms (pinball style), then automatically turns off
-      setTimeout(() => {
-        console.log(`Peg ${row}-${col} timeout fired! Setting isFlashing=false`);
+      activeTimeoutRef.current = window.setTimeout(() => {
         setIsFlashing(false);
+        activeTimeoutRef.current = null;
       }, 200);
-
-      // No cleanup function - let the timeout complete even if isActive changes
     }
-  }, [isActive, row, col]); // Only depend on isActive - when it's true, trigger animation
+
+    // Update ref for next render
+    lastActiveRef.current = isActive;
+  }); // Run on EVERY render to catch all transitions
 
   return (
     <>

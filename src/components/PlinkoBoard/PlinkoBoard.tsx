@@ -61,16 +61,17 @@ export function PlinkoBoard({
     return pegList;
   }, [boardHeight, boardWidth, pegRows, slotCount, BORDER_WIDTH]);
 
-  // Generate slot positions
+  // Generate slot positions - account for border walls
   const slots = useMemo(() => {
-    const slotWidth = boardWidth / slotCount;
+    const playableWidth = boardWidth - (BORDER_WIDTH * 2);
+    const slotWidth = playableWidth / slotCount;
     return prizes.map((prize, index) => ({
       index,
       prize,
-      x: index * slotWidth,
+      x: BORDER_WIDTH + (index * slotWidth),
       width: slotWidth
     }));
-  }, [prizes, slotCount, boardWidth]);
+  }, [prizes, slotCount, boardWidth, BORDER_WIDTH]);
 
   return (
     <div
@@ -128,21 +129,29 @@ export function PlinkoBoard({
       />
 
       {/* Pegs */}
-      {pegs.map((peg) => (
-        <Peg
-          key={`peg-${peg.row}-${peg.col}`}
-          row={peg.row}
-          col={peg.col}
-          x={peg.x}
-          y={peg.y}
-          isActive={
-            currentTrajectoryPoint?.pegHit === true &&
-            currentTrajectoryPoint?.pegHitRow === peg.row &&
-            currentTrajectoryPoint?.pegHitCol === peg.col
-          }
-          shouldReset={ballState === 'idle'}
-        />
-      ))}
+      {pegs.map((peg) => {
+        // Check if this peg is in the pegsHit array
+        const isActive = currentTrajectoryPoint?.pegsHit?.some(
+          hit => hit.row === peg.row && hit.col === peg.col
+        ) ?? false;
+
+        // Log when we detect a peg hit in trajectory data
+        if (isActive) {
+          console.log(`📍 PlinkoBoard: Peg (${peg.row}, ${peg.col}) should be active (frame ${currentTrajectoryPoint?.frame})`);
+        }
+
+        return (
+          <Peg
+            key={`peg-${peg.row}-${peg.col}`}
+            row={peg.row}
+            col={peg.col}
+            x={peg.x}
+            y={peg.y}
+            isActive={isActive}
+            shouldReset={ballState === 'idle'}
+          />
+        );
+      })}
 
       {/* Slots */}
       {slots.map((slot) => {
