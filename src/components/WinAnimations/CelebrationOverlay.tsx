@@ -10,6 +10,7 @@ import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../../game/types';
 import { useTheme } from '../../theme';
+import { getPrizeThemeColor } from '../../theme/prizeColorMapper';
 
 interface CelebrationOverlayProps {
   prize: PrizeConfig;
@@ -19,6 +20,27 @@ interface CelebrationOverlayProps {
 
 export function CelebrationOverlay({ prize, isVisible, onComplete }: CelebrationOverlayProps) {
   const { theme } = useTheme();
+
+  // Get theme-aware prize color
+  const prizeColor = getPrizeThemeColor(prize, theme);
+
+  // Helper to convert color to rgba
+  const hexToRgba = (hex: string, alpha: number): string => {
+    if (hex.startsWith('#')) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    // Already rgba/rgb
+    if (hex.startsWith('rgba')) {
+      return hex.replace(/[\d.]+\)$/g, `${alpha})`);
+    }
+    if (hex.startsWith('rgb')) {
+      return hex.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+    }
+    return hex;
+  };
 
   // Memoize confetti particle configurations to avoid Math.random() on every render
   const confettiParticles = useMemo(() => {
@@ -114,7 +136,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
             <motion.div
               className="absolute inset-0 rounded-3xl"
               style={{
-                background: `radial-gradient(circle at 50% 50%, ${prize.color}66 0%, ${prize.color}22 50%, transparent 100%)`,
+                background: `radial-gradient(circle at 50% 50%, ${hexToRgba(prizeColor, 0.66)} 0%, ${hexToRgba(prizeColor, 0.22)} 50%, transparent 100%)`,
                 filter: 'blur(30px)',
               }}
               animate={{
@@ -133,17 +155,17 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
               className="relative rounded-3xl p-12 max-w-sm"
               style={{
                 background: `
-                  linear-gradient(135deg, ${theme.colors.background.secondary}98 0%, ${theme.colors.background.primary}99 100%),
-                  radial-gradient(circle at 50% 0%, ${prize.color}33 0%, transparent 70%)
+                  linear-gradient(135deg, ${hexToRgba(theme.colors.background.secondary, 0.98)} 0%, ${hexToRgba(theme.colors.background.primary, 0.99)} 100%),
+                  radial-gradient(circle at 50% 0%, ${hexToRgba(prizeColor, 0.33)} 0%, transparent 70%)
                 `,
                 boxShadow: `
-                  0 0 80px ${prize.color}66,
-                  0 20px 60px ${theme.colors.shadows.default}80,
-                  0 10px 30px ${theme.colors.shadows.default}60,
-                  inset 0 2px 4px ${theme.colors.text.inverse}10,
-                  inset 0 -2px 4px ${theme.colors.shadows.default}50
+                  0 0 80px ${hexToRgba(prizeColor, 0.66)},
+                  0 20px 60px ${hexToRgba(theme.colors.shadows.default, 0.8)},
+                  0 10px 30px ${hexToRgba(theme.colors.shadows.default, 0.6)},
+                  inset 0 2px 4px ${hexToRgba(theme.colors.text.inverse, 0.1)},
+                  inset 0 -2px 4px ${hexToRgba(theme.colors.shadows.default, 0.5)}
                 `,
-                border: `2px solid ${prize.color}88`,
+                border: `2px solid ${hexToRgba(prizeColor, 0.88)}`,
               }}
             >
               {/* Congratulations text - APPEAL */}
@@ -151,10 +173,10 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                 className="text-4xl font-extrabold mb-6 text-center"
                 style={{
                   textShadow: `
-                    0 0 30px ${prize.color}99,
-                    0 3px 10px ${theme.colors.shadows.default}90
+                    0 0 30px ${hexToRgba(prizeColor, 0.99)},
+                    0 3px 10px ${hexToRgba(theme.colors.shadows.default, 0.9)}
                   `,
-                  background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${prize.color} 50%, ${prize.color}dd 100%)`,
+                  background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${prizeColor} 50%, ${hexToRgba(prizeColor, 0.87)} 100%)`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                   backgroundClip: 'text',
@@ -184,27 +206,27 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                   className="p-8 rounded-2xl"
                   style={{
                     background: `
-                      linear-gradient(135deg, ${prize.color} 0%, ${prize.color}dd 100%),
-                      radial-gradient(circle at 30% 30%, ${theme.colors.text.inverse}30 0%, transparent 60%)
+                      linear-gradient(135deg, ${prizeColor} 0%, ${hexToRgba(prizeColor, 0.87)} 100%),
+                      radial-gradient(circle at 30% 30%, ${hexToRgba(theme.colors.text.inverse, 0.3)} 0%, transparent 60%)
                     `,
                     boxShadow: `
-                      0 10px 40px ${theme.colors.shadows.default}60,
-                      0 5px 20px ${prize.color}66,
-                      inset 0 2px 4px ${theme.colors.text.inverse}40,
-                      inset 0 -2px 4px ${theme.colors.shadows.default}40
+                      0 10px 40px ${hexToRgba(theme.colors.shadows.default, 0.6)},
+                      0 5px 20px ${hexToRgba(prizeColor, 0.66)},
+                      inset 0 2px 4px ${hexToRgba(theme.colors.text.inverse, 0.4)},
+                      inset 0 -2px 4px ${hexToRgba(theme.colors.shadows.default, 0.4)}
                     `,
-                    border: `1px solid ${prize.color}cc`,
+                    border: `1px solid ${hexToRgba(prizeColor, 0.8)}`,
                   }}
                 >
                   <div
                     className="text-3xl font-bold text-white mb-3 text-center"
-                    style={{ textShadow: `0 3px 10px ${theme.colors.shadows.default}70` }}
+                    style={{ textShadow: `0 3px 10px ${hexToRgba(theme.colors.shadows.default, 0.7)}` }}
                   >
                     {prize.label}
                   </div>
                   <div
                     className="text-base text-white/95 text-center"
-                    style={{ textShadow: `0 2px 6px ${theme.colors.shadows.default}60` }}
+                    style={{ textShadow: `0 2px 6px ${hexToRgba(theme.colors.shadows.default, 0.6)}` }}
                   >
                     {prize.description}
                   </div>
@@ -214,7 +236,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                 <motion.div
                   className="absolute inset-0 rounded-2xl pointer-events-none"
                   style={{
-                    border: `2px solid ${prize.color}44`,
+                    border: `2px solid ${hexToRgba(prizeColor, 0.44)}`,
                   }}
                   animate={{ rotate: 360 }}
                   transition={{
@@ -231,7 +253,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                         width: '6px',
                         height: '6px',
                         background: theme.colors.text.inverse,
-                        boxShadow: `0 0 12px ${prize.color}`,
+                        boxShadow: `0 0 12px ${prizeColor}`,
                         top: i % 2 === 0 ? '0' : 'auto',
                         bottom: i % 2 === 1 ? '0' : 'auto',
                         left: i < 2 ? '0' : 'auto',
@@ -298,7 +320,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                   style={{
                     width: '3px',
                     height: '40px',
-                    background: `linear-gradient(to top, ${prize.color} 0%, transparent 100%)`,
+                    background: `linear-gradient(to top, ${prizeColor} 0%, transparent 100%)`,
                     transformOrigin: 'bottom center',
                     transform: `rotate(${(360 / 8) * rayIndex}deg) translate(-50%, 0)`,
                     left: '50%',

@@ -92,8 +92,8 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
             style={{
               color: theme.colors.primary.contrast,
               background: `linear-gradient(135deg, ${theme.colors.status.error} 0%, ${theme.colors.status.error} 100%)`,
-              boxShadow: `0 4px 12px rgba(185,28,28,0.6), inset 0 1px 2px ${theme.colors.text.inverse}4d, inset 0 -1px 2px ${theme.colors.shadows.default}4d`,
-              textShadow: `0 2px 4px ${theme.colors.shadows.default}cc`,
+              boxShadow: theme.effects.shadows.buttonHover || `0 4px 12px ${theme.colors.status.error}99`,
+              textShadow: `0 2px 4px ${theme.colors.shadows.default}`,
               padding: '8px 48px',
             }}
             initial={{ x: 200, opacity: 0 }}
@@ -192,9 +192,6 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
             height: '56px',
             fontSize: '18px',
             fontWeight: 700,
-            background: `linear-gradient(135deg, ${theme.colors.game.ball.primary} 0%, ${theme.colors.game.ball.secondary} 100%)`,
-            border: `2px solid ${theme.colors.game.ball.highlight}80`,
-            boxShadow: `0 4px 12px ${theme.colors.game.ball.primary}80, 0 0 30px ${theme.colors.game.ball.primary}50`,
           }}
             >
               {price}

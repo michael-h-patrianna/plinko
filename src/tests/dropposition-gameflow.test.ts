@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { transition, initialContext } from '../game/stateMachine';
+import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import type { GameContext, GameState, DropZone } from '../game/types';
 import { generateTrajectory } from '../game/trajectory';
 
@@ -179,18 +179,16 @@ describe('Drop Position Game Flow Integration', () => {
 
   describe('Error handling', () => {
     it('should throw error if invalid event sent to selecting-position state', () => {
+      // COUNTDOWN_COMPLETED is a valid event type but invalid for selecting-position state
       expect(() => {
-        transition('selecting-position', mockContext, {
-          type: 'COUNTDOWN_COMPLETED',
-        } as any);
+        transition('selecting-position', mockContext, { type: 'COUNTDOWN_COMPLETED' } as Extract<GameEvent, { type: 'COUNTDOWN_COMPLETED' }>);
       }).toThrow();
     });
 
     it('should throw error if invalid event sent to ready state', () => {
+      // LANDING_COMPLETED is a valid event type but invalid for ready state
       expect(() => {
-        transition('ready', mockContext, {
-          type: 'LANDING_COMPLETED',
-        } as any);
+        transition('ready', mockContext, { type: 'LANDING_COMPLETED' } as Extract<GameEvent, { type: 'LANDING_COMPLETED' }>);
       }).toThrow();
     });
   });

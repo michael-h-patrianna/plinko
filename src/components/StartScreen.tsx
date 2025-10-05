@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { getSlotDisplayText } from '../game/prizeTypes';
 import type { PrizeConfig } from '../game/types';
 import { useTheme } from '../theme';
+import { getPrizeThemeColor, getPrizeThemeColorWithOpacity } from '../theme/prizeColorMapper';
 import { abbreviateNumber } from '../utils/formatNumber';
 import { ThemedButton } from './ThemedButton';
 
@@ -24,6 +25,10 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
   const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
   const { theme } = useTheme();
 
+  // Determine if title should use gradient text or solid color
+  const titleGradient = theme.gradients.titleGradient || theme.gradients.buttonPrimary;
+  const isGradient = titleGradient.includes('gradient');
+
   return (
     <motion.div
       className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6"
@@ -34,14 +39,21 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
     >
       {/* Title - using theme */}
       <motion.h1
+        key={titleGradient}
         className="text-4xl font-extrabold mb-6 text-center"
         style={{
-          background: theme.gradients.titleGradient || theme.gradients.buttonPrimary,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
+          ...(isGradient
+            ? {
+                background: titleGradient,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+                WebkitTextFillColor: 'transparent',
+              }
+            : {
+                color: titleGradient,
+              }),
           fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
-
         }}
         initial={{ scale: 0, rotate: -5 }}
         animate={{
@@ -132,8 +144,8 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                 <div
                   className="flex items-center justify-between text-sm px-2 py-1"
                   style={{
-                    background: `linear-gradient(90deg, ${prize.color}15 0%, transparent 100%)`,
-                    borderLeft: `2px solid ${prize.color}`,
+                    background: `linear-gradient(90deg, ${getPrizeThemeColorWithOpacity(prize, theme, 0.15)} 0%, transparent 100%)`,
+                    borderLeft: `2px solid ${getPrizeThemeColor(prize, theme)}`,
                     borderRadius: theme.borderRadius.sm,
                     cursor: isCombo ? 'pointer' : 'default',
                   }}
@@ -159,7 +171,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                     <motion.div
                       className="text-xs px-2 py-2"
                       style={{
-                        background: `${prize.color}08`,
+                        background: getPrizeThemeColorWithOpacity(prize, theme, 0.08),
                         marginLeft: '8px',
                         borderRadius: theme.borderRadius.sm,
                         color: theme.colors.text.secondary,

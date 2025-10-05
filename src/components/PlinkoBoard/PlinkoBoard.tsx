@@ -16,6 +16,7 @@ import { motion } from 'framer-motion';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import type { GameState, PrizeConfig, TrajectoryPoint } from '../../game/types';
 import { useTheme } from '../../theme';
+import { getPrizeThemeColor } from '../../theme/prizeColorMapper';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
 import { Ball } from '../Ball';
 import { BallLauncher } from '../BallLauncher';
@@ -380,7 +381,7 @@ export function PlinkoBoard({
             <BallLandingImpact
               x={ballPosition.x}
               y={ballPosition.y}
-              color={slots[selectedIndex].prize.color || '#64748B'}
+              color={getPrizeThemeColor(slots[selectedIndex].prize, theme)}
               trigger={showLandingImpact}
             />
           )}
@@ -393,7 +394,7 @@ export function PlinkoBoard({
             <SlotAnticipation
               x={slots[selectedIndex].x}
               width={slots[selectedIndex].width}
-              color={slots[selectedIndex].prize.color || '#64748B'}
+              color={getPrizeThemeColor(slots[selectedIndex].prize, theme)}
               isActive={showAnticipation}
             />
           )}
@@ -408,7 +409,7 @@ export function PlinkoBoard({
               y={bucketZoneY}
               width={slots[selectedIndex].width}
               height={boardHeight - bucketZoneY}
-              color={slots[selectedIndex].prize.color || '#64748B'}
+              color={getPrizeThemeColor(slots[selectedIndex].prize, theme)}
               label={slots[selectedIndex].prize.label || ''}
               isActive={showWinReveal}
             />

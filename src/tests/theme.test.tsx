@@ -15,6 +15,7 @@ import type { Theme } from '../theme/types';
 import { defaultTheme } from '../theme/themes/defaultTheme';
 import { playFameTheme } from '../theme/themes/playFameTheme';
 import { darkBlueTheme } from '../theme/themes/darkBlueTheme';
+import { brutalistTheme } from '../theme/themes/brutalistTheme';
 import { ThemeSelector } from '../dev-tools';
 
 // Mock localStorage
@@ -319,6 +320,7 @@ describe('Theme System', () => {
       { name: 'Default', theme: defaultTheme },
       { name: 'PlayFame', theme: playFameTheme },
       { name: 'Dark Blue', theme: darkBlueTheme },
+      { name: 'Brutalist', theme: brutalistTheme },
     ];
 
     themes.forEach(({ name, theme }) => {
@@ -565,6 +567,8 @@ describe('Theme System', () => {
       'buttons.success.colorHover',
       'buttons.success.shadowHover',
       'buttons.success.outline',
+      // Brutalist theme has optional per-slot styles
+      'colors.game.slot.slotStyles',
     ];
 
     it('Default theme should have no undefined/null required values', () => {
@@ -579,6 +583,11 @@ describe('Theme System', () => {
 
     it('Dark Blue theme should have no undefined/null required values', () => {
       const errors = validateObject(darkBlueTheme as any, '', optionalPaths);
+      expect(errors).toEqual([]);
+    });
+
+    it('Brutalist theme should have no undefined/null required values', () => {
+      const errors = validateObject(brutalistTheme as any, '', optionalPaths);
       expect(errors).toEqual([]);
     });
   });

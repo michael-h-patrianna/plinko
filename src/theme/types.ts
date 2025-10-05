@@ -194,6 +194,13 @@ export interface ThemeColors {
       borderRadius: string | number;
       glow: string;
       background: string;
+      // Optional per-slot style overrides for themes with limited colors (like brutalist)
+      // Index-based array where slotStyles[0] applies to first slot, etc.
+      slotStyles?: Array<{
+        border?: string;
+        borderWidth?: string;
+        background?: string;
+      }>;
     };
     launcher: {
       base: string;

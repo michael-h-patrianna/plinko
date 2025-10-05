@@ -114,12 +114,14 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
             top: '-25px',
             background:
               count === 0
-                ? theme.gradients.glow
-                    .replace('rgba(255,255,255,0.3)', `${theme.colors.status.success}66`)
-                    .replace('transparent', 'transparent') ||
-                  `radial-gradient(circle, ${theme.colors.status.success}66 0%, ${theme.colors.status.success}33 40%, transparent 70%)`
-                : theme.gradients.ballGlow ||
-                  `radial-gradient(circle, ${theme.colors.game.ball.primary}66 0%, ${theme.colors.game.ball.primary}33 40%, transparent 70%)`,
+                ? theme.gradients.glow.includes('gradient')
+                  ? theme.gradients.glow
+                      .replace('rgba(255,255,255,0.3)', `${theme.colors.status.success}66`)
+                      .replace(/transparent/g, 'transparent')
+                  : `radial-gradient(circle, ${theme.colors.status.success}66 0%, ${theme.colors.status.success}33 40%, transparent 70%)`
+                : theme.gradients.ballGlow.includes('gradient')
+                  ? theme.gradients.ballGlow
+                  : `radial-gradient(circle, ${theme.colors.game.ball.primary}66 0%, ${theme.colors.game.ball.primary}33 40%, transparent 70%)`,
           }}
           animate={{
             scale: [1, 1.3, 1],

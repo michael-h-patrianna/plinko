@@ -94,13 +94,28 @@ export function RewardItem({
   const initialX = arcFromLeft ? -100 : 100;
   const initialY = -60;
 
+  // Create gradient-aware background and border
+  const hexToRgba = (hex: string, alpha: number): string => {
+    if (hex.startsWith('#')) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    return hex;
+  };
+
+  const lightColor = hexToRgba(color, 0.22);
+  const lighterColor = hexToRgba(color, 0.11);
+  const borderColor = hexToRgba(color, 0.44);
+
   return (
     <motion.div
       className="flex flex-col items-center justify-center p-3 rounded-lg min-w-[80px]"
       style={{
-        background: `linear-gradient(135deg, ${color}22 0%, ${color}11 100%)`,
-        boxShadow: `0 2px 8px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)`,
-        border: `1px solid ${color}44`,
+        background: `linear-gradient(135deg, ${lightColor} 0%, ${lighterColor} 100%)`,
+        boxShadow: `0 2px 8px ${hexToRgba(theme.colors.shadows.default, 0.2)}, inset 0 1px 2px ${hexToRgba(theme.colors.text.inverse, 0.1)}`,
+        border: `1px solid ${borderColor}`,
       }}
       initial={{ scale: 0, opacity: 0, x: initialX, y: initialY, rotate: arcFromLeft ? -20 : 20 }}
       animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }}
@@ -133,8 +148,8 @@ export function RewardItem({
       <div
         className="text-center font-bold text-sm leading-tight"
         style={{
-          color: theme.colors.text.primary,
-          textShadow: `0 2px 4px ${theme.colors.shadows.default}b3`,
+          color: color,
+          textShadow: `0 2px 4px ${hexToRgba(theme.colors.shadows.default, 0.7)}`,
         }}
       >
         {displayText}

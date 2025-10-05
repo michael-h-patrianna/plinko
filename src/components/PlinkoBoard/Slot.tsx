@@ -21,6 +21,7 @@ import { calculateBucketHeight } from '../../utils/slotDimensions';
 import { getSlotDisplayText } from '../../game/prizeTypes';
 import { abbreviateNumber } from '../../utils/formatNumber';
 import { useTheme } from '../../theme';
+import { getPrizeThemeColor } from '../../theme/prizeColorMapper';
 
 interface SlotProps {
   index: number;
@@ -51,11 +52,33 @@ export function Slot({
 }: SlotProps) {
   const { theme } = useTheme();
 
+  // Helper to convert hex to rgba
+  const hexToRgba = (hex: string, alpha: number): string => {
+    if (hex.startsWith('#')) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+    if (hex.startsWith('rgba')) {
+      return hex.replace(/[\d.]+\)$/g, `${alpha})`);
+    }
+    if (hex.startsWith('rgb')) {
+      return hex.replace('rgb', 'rgba').replace(')', `, ${alpha})`);
+    }
+    return hex;
+  };
+
   // Calculate responsive bucket dimensions based on slot width
   // Narrower slots (8 prizes on small screens) need taller buckets to fit text
   const bucketHeight = calculateBucketHeight(width);
   const fontSize = width < 40 ? '9px' : width < 50 ? '10px' : '12px';
-  const borderWidth = theme.colors.game.slot.borderWidth || (width < 45 ? '2px' : '3px');
+
+  // Check if theme has per-slot styles (for limited color palette themes like brutalist)
+  const slotStyles = theme.colors.game.slot.slotStyles;
+  const slotStyle = slotStyles && slotStyles[index] ? slotStyles[index] : null;
+
+  const borderWidth = slotStyle?.borderWidth || theme.colors.game.slot.borderWidth || (width < 45 ? '2px' : '3px');
   const paddingBottom = width < 40 ? '6px' : '10px';
 
   // Determine display mode based on width
@@ -96,21 +119,30 @@ export function Slot({
         width: `${width}px`,
         height: `${bucketHeight}px`,
         background:
+          slotStyle?.background ||
           theme.colors.game.slot.background ||
           `
           linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
         `,
-        borderLeft: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
-        borderRight: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
-        borderBottom: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
-        borderTop: 'none',
+        // Use per-slot border if available, otherwise use theme default or approaching color
+        ...(slotStyle?.border
+          ? {
+              border: slotStyle.border,
+              borderTop: 'none',
+            }
+          : {
+              borderLeft: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+              borderRight: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+              borderBottom: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+              borderTop: 'none',
+            }),
         borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
         boxShadow: isApproaching
-          ? `0 0 25px ${theme.colors.game.slot.glow || color}80,
+          ? `0 0 25px ${hexToRgba(theme.colors.game.slot.glow || color, 0.5)},
              ${theme.effects.shadows.lg},
-             inset 0 3px 6px rgba(255,255,255,0.15),
-             inset 0 -3px 6px rgba(0,0,0,0.25),
-             inset 0 0 20px ${color}33`
+             inset 0 3px 6px ${hexToRgba(theme.colors.text.inverse, 0.15)},
+             inset 0 -3px 6px ${hexToRgba(theme.colors.shadows.default, 0.25)},
+             inset 0 0 20px ${hexToRgba(color, 0.2)}`
           : theme.effects.shadows.md,
         transition: theme.effects.transitions.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
@@ -122,7 +154,7 @@ export function Slot({
         className="absolute top-0 left-0 right-0"
         style={{
           height: '40%',
-          background: `linear-gradient(180deg, ${theme.colors.text.inverse}4d 0%, transparent 100%)`,
+          background: `linear-gradient(180deg, ${hexToRgba(theme.colors.text.inverse, 0.3)} 0%, transparent 100%)`,
           pointerEvents: 'none',
         }}
       />
@@ -209,9 +241,10 @@ export function Slot({
         {/* Fallback text if no icon available */}
         {(isVeryNarrow || forceIconMode) && !prize.slotIcon && (
           <div
-            className="text-white font-bold leading-tight drop-shadow-lg text-center opacity-70"
+            className="font-bold leading-tight drop-shadow-lg text-center opacity-70"
             style={{
               fontSize: '10px',
+              color: theme.colors.text.primary,
             }}
           >
             {label}
@@ -221,11 +254,12 @@ export function Slot({
         {/* Text display - show label for wider slots (only if not forcing icon mode) */}
         {!isVeryNarrow && !forceIconMode && (
           <div
-            className="text-white font-bold px-1 leading-tight drop-shadow-lg text-center"
+            className="font-bold px-1 leading-tight drop-shadow-lg text-center"
             style={{
               fontSize,
               wordBreak: width < 45 ? 'break-word' : 'normal',
               hyphens: width < 45 ? 'auto' : 'none',
+              color: theme.colors.text.primary,
             }}
           >
             {displayText || label}
@@ -262,26 +296,29 @@ export function Slot({
       </div>
 
       {/* Combo badge - positioned in top-right corner */}
-      {comboBadgeNumber !== undefined && (
-        <div
-          className="absolute font-bold text-white text-xs leading-none"
-          style={{
-            top: '-6px',
-            right: '-6px',
-            width: '20px',
-            height: '20px',
-            borderRadius: '50%',
-            background: `linear-gradient(135deg, ${color} 0%, ${color}dd 100%)`,
-            boxShadow: `0 2px 8px rgba(0,0,0,0.4), 0 0 0 2px rgba(255,255,255,0.3)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 10,
-          }}
-        >
-          {comboBadgeNumber}
-        </div>
-      )}
+      {comboBadgeNumber !== undefined && (() => {
+        const badgeColor = getPrizeThemeColor(prize, theme);
+        return (
+          <div
+            className="absolute font-bold text-white text-xs leading-none"
+            style={{
+              top: '-6px',
+              right: '-6px',
+              width: '20px',
+              height: '20px',
+              borderRadius: '50%',
+              background: `linear-gradient(135deg, ${badgeColor} 0%, ${hexToRgba(badgeColor, 0.87)} 100%)`,
+              boxShadow: `0 2px 8px ${hexToRgba(theme.colors.shadows.default, 0.4)}, 0 0 0 2px ${hexToRgba(theme.colors.text.inverse, 0.3)}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 10,
+            }}
+          >
+            {comboBadgeNumber}
+          </div>
+        );
+      })()}
 
       {/* Winning slot red badge - positioned at bottom center */}
       {isWinning && (
@@ -294,11 +331,11 @@ export function Slot({
             width: '12px',
             height: '12px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            background: theme.gradients.buttonDanger || `linear-gradient(135deg, ${theme.colors.status.error} 0%, ${theme.colors.status.error} 100%)`,
             boxShadow: `
-              0 0 12px rgba(239,68,68,0.8),
-              0 2px 6px rgba(0,0,0,0.5),
-              0 0 0 2px rgba(255,255,255,0.3)
+              0 0 12px ${hexToRgba(theme.colors.status.error, 0.8)},
+              0 2px 6px ${hexToRgba(theme.colors.shadows.default, 0.5)},
+              0 0 0 2px ${hexToRgba(theme.colors.text.inverse, 0.3)}
             `,
             zIndex: 10,
           }}

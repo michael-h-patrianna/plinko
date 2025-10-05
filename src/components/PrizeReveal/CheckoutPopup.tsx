@@ -55,9 +55,10 @@ export function CheckoutPopup({
           <motion.div
             className="relative rounded-xl p-6 max-w-sm w-full"
             style={{
-              background: `linear-gradient(135deg, rgba(30,30,48,0.98) 0%, rgba(16,15,29,1) 100%)`,
-              boxShadow: `0 20px 60px rgba(0,0,0,0.9), 0 10px 30px rgba(0,0,0,0.7), inset 0 1px 2px rgba(255,255,255,0.1)`,
-              border: `1px solid rgba(148,163,184,0.3)`,
+              background: theme.gradients.backgroundCard || theme.components.modal.background,
+              boxShadow: theme.components.modal.shadow || theme.effects.shadows.modal,
+              border: `1px solid ${theme.colors.border.default}`,
+              borderRadius: theme.components.modal.borderRadius,
             }}
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -137,9 +138,6 @@ export function CheckoutPopup({
             height: '56px',
             fontSize: '18px',
             fontWeight: 700,
-            background: `linear-gradient(135deg, ${theme.colors.game.ball.primary} 0%, ${theme.colors.game.ball.secondary} 100%)`,
-            border: `2px solid ${theme.colors.game.ball.highlight}80`,
-            boxShadow: `0 4px 12px ${theme.colors.game.ball.primary}80, 0 0 30px ${theme.colors.game.ball.primary}50`,
           }}
             >
               {isPurchasing ? (
