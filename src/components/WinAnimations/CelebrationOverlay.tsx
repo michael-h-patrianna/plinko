@@ -32,7 +32,8 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
           }}
         >
           {/* Confetti particles from top - FOLLOW THROUGH & OVERLAPPING ACTION */}
-          {Array.from({ length: 30 }).map((_, i) => {
+          {/* Reduced to 12 particles for mobile performance */}
+          {Array.from({ length: 12 }).map((_, i) => {
             const startX = Math.random() * 100;
             const endX = startX + (Math.random() - 0.5) * 30;
             const delay = Math.random() * 0.5;

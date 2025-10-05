@@ -116,6 +116,15 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                 key={prize.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                whileHover={{
+                  scale: 1.02,
+                  x: 4,
+                  transition: {
+                    type: 'spring',
+                    stiffness: 400,
+                    damping: 17,
+                  },
+                }}
                 transition={{
                   duration: 0.3,
                   delay: 0.3 + index * 0.05,

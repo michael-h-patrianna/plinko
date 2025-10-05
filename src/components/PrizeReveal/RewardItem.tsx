@@ -20,6 +20,8 @@ interface RewardItemProps {
   amount?: number;
   xpConfig?: { icon: string; name: string };
   delay?: number;
+  index?: number;
+  totalCount?: number;
 }
 
 // Moved inside component to access theme
@@ -52,7 +54,14 @@ const getRewardConfig = (): Record<string, RewardConfigItem> => ({
   },
 });
 
-export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProps) {
+export function RewardItem({
+  type,
+  amount,
+  xpConfig,
+  delay = 0,
+  index = 0,
+  totalCount: _totalCount = 1,
+}: RewardItemProps) {
   const { theme } = useTheme();
   const rewardConfig = getRewardConfig();
   const config =
@@ -79,6 +88,12 @@ export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProp
           ? `${displayAmount} ${config.label}`
           : `${config.label} ${displayAmount.toLocaleString()}`;
 
+  // Arc in from alternating corners - creates dynamic entrance
+  // Even indices from top-left, odd indices from top-right
+  const arcFromLeft = index % 2 === 0;
+  const initialX = arcFromLeft ? -100 : 100;
+  const initialY = -60;
+
   return (
     <motion.div
       className="flex flex-col items-center justify-center p-3 rounded-lg min-w-[80px]"
@@ -87,10 +102,10 @@ export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProp
         boxShadow: `0 2px 8px rgba(0,0,0,0.2), inset 0 1px 2px rgba(255,255,255,0.1)`,
         border: `1px solid ${color}44`,
       }}
-      initial={{ scale: 0, opacity: 0, y: 20 }}
-      animate={{ scale: 1, opacity: 1, y: 0 }}
+      initial={{ scale: 0, opacity: 0, x: initialX, y: initialY, rotate: arcFromLeft ? -20 : 20 }}
+      animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }}
       transition={{
-        duration: 0.25,
+        duration: 0.4,
         delay,
         ease: [0.34, 1.56, 0.64, 1],
       }}

@@ -46,7 +46,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
       exit={{ opacity: 0 }}
       transition={{ duration: 0.2 }}
     >
-      {/* Main card */}
+      {/* Main card with anticipation */}
       <motion.div
         className="relative rounded-2xl p-8 max-w-md w-full"
         style={{
@@ -54,14 +54,15 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           boxShadow: `0 4px 12px ${theme.colors.shadows.default}4d`,
           border: `1px solid ${theme.colors.surface.elevated}66`,
         }}
-        initial={{ scale: 0, rotate: -10, opacity: 0 }}
+        initial={{ scale: 0, rotate: 0, opacity: 0 }}
         animate={{
-          scale: [0, 1.1, 1],
-          rotate: [-10, 5, 0],
-          opacity: [0, 1, 1],
+          scale: [0, 0.9, 1.15, 1],
+          rotate: [0, -3, 3, 0],
+          opacity: [0, 1, 1, 1],
         }}
         transition={{
-          duration: 0.25,
+          duration: 0.5,
+          times: [0, 0.3, 0.7, 1],
           ease: [0.34, 1.56, 0.64, 1],
         }}
       >
@@ -70,11 +71,12 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           <motion.h2
             className="text-4xl font-extrabold mb-4 relative inline-block"
             style={{
-              background: `linear-gradient(135deg, ${theme.colors.primary.light} 0%, ${theme.colors.primary.main} 50%, ${theme.colors.primary.dark} 100%)`,
+              background: theme.gradients.titleGradient || theme.gradients.buttonPrimary,
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: `drop-shadow(0 0 20px ${theme.colors.primary.main}99) drop-shadow(0 4px 12px ${theme.colors.shadows.default}90)`,
+              fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
+              filter: `drop-shadow(0 0 20px ${theme.colors.shadows.colored}) drop-shadow(0 4px 12px ${theme.colors.shadows.default})`,
             }}
             initial={{ scale: 0, rotate: -5 }}
             animate={{
@@ -98,7 +100,13 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             transition={{ duration: 0.25, delay: 0.6 }}
           >
             {rewardItems.map((item, index) => (
-              <RewardItem key={`${item.type}-${index}`} {...item} delay={0.7 + index * 0.1} />
+              <RewardItem
+                key={`${item.type}-${index}`}
+                {...item}
+                delay={0.7 + index * 0.1}
+                index={index}
+                totalCount={rewardItems.length}
+              />
             ))}
           </motion.div>
 

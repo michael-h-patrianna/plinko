@@ -56,10 +56,26 @@ export function ThemedButton({
           ? {
               scale: 1.05,
               boxShadow: theme.buttons.primary.shadowHover,
+              transition: {
+                type: 'spring',
+                stiffness: 400,
+                damping: 17,
+              },
             }
           : {}
       }
-      whileTap={!disabled ? { scale: 0.95 } : {}}
+      whileTap={
+        !disabled
+          ? {
+              scale: 0.92,
+              transition: {
+                type: 'spring',
+                stiffness: 600,
+                damping: 20,
+              },
+            }
+          : {}
+      }
       initial={{ scale: 0, rotate: -5, opacity: 0 }}
       animate={{ scale: 1, rotate: 0, opacity: 1 }}
       transition={{

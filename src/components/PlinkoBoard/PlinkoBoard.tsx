@@ -21,6 +21,8 @@ import { BorderWall } from './BorderWall';
 import { Ball } from '../Ball';
 import { BallLauncher } from '../BallLauncher';
 import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
+import { BallLandingImpact } from '../WinAnimations/BallLandingImpact';
+import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
 import { ComboLegend } from './ComboLegend';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
 import { useTheme } from '../../theme';
@@ -61,15 +63,22 @@ export function PlinkoBoard({
     return { playableWidth, slotWidth };
   }, [internalWidth, slotCount, BORDER_WIDTH]);
 
-  // Animation state for win reveal
+  // Animation state for win reveal and landing effects
   const [showWinReveal, setShowWinReveal] = useState(false);
+  const [showLandingImpact, setShowLandingImpact] = useState(false);
+  const [showAnticipation, setShowAnticipation] = useState(false);
 
-  // Trigger win reveal when ball lands
+  // Trigger landing impact and anticipation, then win reveal when ball lands
   useEffect(() => {
     if (ballState === 'landed' && currentTrajectoryPoint) {
-      // Show win reveal after short delay
+      // Immediately show landing impact and anticipation
+      setShowLandingImpact(true);
+      setShowAnticipation(true);
+
+      // Show win reveal after short delay (to let anticipation build)
       const revealTimer = setTimeout(() => {
         setShowWinReveal(true);
+        setShowAnticipation(false); // Stop anticipation when reveal starts
       }, 600);
 
       return () => {
@@ -77,6 +86,8 @@ export function PlinkoBoard({
       };
     } else {
       setShowWinReveal(false);
+      setShowLandingImpact(false);
+      setShowAnticipation(false);
     }
   }, [ballState, currentTrajectoryPoint]);
 
@@ -282,6 +293,33 @@ export function PlinkoBoard({
           currentFrame={currentTrajectoryPoint?.frame ?? 0}
           trajectoryPoint={currentTrajectoryPoint}
         />
+
+        {/* Ball Landing Impact - triggers when ball lands */}
+        {showLandingImpact &&
+          ballPosition &&
+          selectedIndex >= 0 &&
+          selectedIndex < slots.length &&
+          slots[selectedIndex] && (
+            <BallLandingImpact
+              x={ballPosition.x}
+              y={ballPosition.y}
+              color={slots[selectedIndex].prize.color || '#64748B'}
+              trigger={showLandingImpact}
+            />
+          )}
+
+        {/* Slot Anticipation - rising particles during landed state */}
+        {showAnticipation &&
+          selectedIndex >= 0 &&
+          selectedIndex < slots.length &&
+          slots[selectedIndex] && (
+            <SlotAnticipation
+              x={slots[selectedIndex].x}
+              width={slots[selectedIndex].width}
+              color={slots[selectedIndex].prize.color || '#64748B'}
+              isActive={showAnticipation}
+            />
+          )}
 
         {/* Win Reveal Animation */}
         {showWinReveal &&

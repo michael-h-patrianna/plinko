@@ -171,7 +171,13 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                 transition={{ duration: 0.25, delay: 0.5 }}
               >
                 {rewardItems.map((item, index) => (
-                  <RewardItem key={`${item.type}-${index}`} {...item} delay={0.6 + index * 0.1} />
+                  <RewardItem
+                    key={`${item.type}-${index}`}
+                    {...item}
+                    delay={0.6 + index * 0.1}
+                    index={index}
+                    totalCount={rewardItems.length}
+                  />
                 ))}
               </motion.div>
             )}
