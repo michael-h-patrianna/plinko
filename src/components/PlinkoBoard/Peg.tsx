@@ -1,6 +1,13 @@
 /**
- * Individual peg component - pinball machine style brief flash
- * FULLY THEMEABLE - No hard-coded styles
+ * Individual peg component with pinball-style collision animation
+ * Flashes briefly when ball collides, with expanding pulse ring effect
+ * @param row - Row position in peg grid
+ * @param col - Column position in peg grid
+ * @param x - X coordinate in pixels
+ * @param y - Y coordinate in pixels
+ * @param isActive - Whether the peg is currently being hit by the ball
+ * @param shouldReset - Signal to reset peg state (e.g., new game)
+ * @param radius - Optional peg radius (not currently used)
  */
 
 import { useEffect, useState, useRef } from 'react';
@@ -45,7 +52,7 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
       console.log(`🎯 Peg (${row}, ${col}) HIT DETECTED - isActive changed to true`);
 
       // ALWAYS increment flash key to trigger new animation
-      setFlashKey(prev => prev + 1);
+      setFlashKey((prev) => prev + 1);
       setIsFlashing(true);
 
       // Clear any existing timeout to reset the animation duration
@@ -62,7 +69,7 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
 
     // Update ref for next render
     lastActiveRef.current = isActive;
-  }); // Run on EVERY render to catch all transitions
+  }, [isActive, row, col]); // Dependencies for effect
 
   return (
     <>
@@ -79,7 +86,7 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
             transform: 'translate(-50%, -50%)',
             border: `2px solid ${theme.colors.game.peg.highlight}`,
             animation: 'pulseRing 300ms ease-out',
-            zIndex: 15
+            zIndex: 15,
           }}
         />
       )}
@@ -94,9 +101,11 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
           height: '14px',
           transform: 'translate(-50%, -50%)',
           background: isFlashing
-            ? theme.gradients.pegActive  // Active/hit state gradient
+            ? theme.gradients.pegActive // Active/hit state gradient
             : theme.gradients.pegDefault, // Default state gradient
-          boxShadow: theme.colors.game.peg.shadow || `
+          boxShadow:
+            theme.colors.game.peg.shadow ||
+            `
             0 2px 6px ${theme.colors.shadows.default},
             0 4px 12px rgba(0,0,0,0.2),
             inset -1px -1px 2px rgba(0,0,0,0.3),
@@ -104,8 +113,8 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
           `,
           border: `1px solid ${theme.colors.border.default}`,
           borderRadius: theme.colors.game.peg.borderRadius || '50%',
-          transition: theme.effects?.transitions?.fast || 'background 150ms ease-out',
-          zIndex: 10
+          transition: theme.effects.transitions.fast || 'background 150ms ease-out',
+          zIndex: 10,
         }}
         data-testid={`peg-${row}-${col}`}
         data-peg-hit={isActive}

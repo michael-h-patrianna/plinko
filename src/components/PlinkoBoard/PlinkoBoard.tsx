@@ -1,7 +1,15 @@
 /**
- * Main Plinko board with pegs and slots
- * Enhanced with triple-A win animations
- * FULLY THEMEABLE - No hard-coded styles
+ * Main Plinko board component that orchestrates the game layout and physics
+ * Renders pegs in staggered pattern, prize slots, border walls, and ball with animations
+ * Fully themeable with responsive dimensions based on viewport
+ * @param prizes - Array of prize configurations for slots
+ * @param selectedIndex - Index of the winning slot
+ * @param currentTrajectoryPoint - Current point in ball's trajectory with physics data
+ * @param boardWidth - Width of the board in pixels (default: 375)
+ * @param boardHeight - Height of the board in pixels (default: 500)
+ * @param pegRows - Number of peg rows (default: 10)
+ * @param ballPosition - Current ball position {x, y, rotation}
+ * @param ballState - Current game state (idle, countdown, dropping, landed, etc.)
  */
 
 import { useMemo, useState, useEffect } from 'react';
@@ -36,7 +44,7 @@ export function PlinkoBoard({
   boardHeight = 500,
   pegRows = 10,
   ballPosition,
-  ballState
+  ballState,
 }: PlinkoBoardProps) {
   const { theme } = useTheme();
   const slotCount = prizes.length;
@@ -44,11 +52,11 @@ export function PlinkoBoard({
   // Board has box-sizing: border-box, so the 2px CSS border is INSIDE the width
   const CSS_BORDER = 2;
   // Internal content width = declared width - CSS borders on both sides
-  const internalWidth = boardWidth - (CSS_BORDER * 2);
+  const internalWidth = boardWidth - CSS_BORDER * 2;
 
   // Consolidated dimension calculations - single source of truth
   const dimensions = useMemo(() => {
-    const playableWidth = internalWidth - (BORDER_WIDTH * 2);
+    const playableWidth = internalWidth - BORDER_WIDTH * 2;
     const slotWidth = playableWidth / slotCount;
     return { playableWidth, slotWidth };
   }, [internalWidth, slotCount, BORDER_WIDTH]);
@@ -71,7 +79,6 @@ export function PlinkoBoard({
       setShowWinReveal(false);
     }
   }, [ballState, currentTrajectoryPoint]);
-
 
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
@@ -132,16 +139,18 @@ export function PlinkoBoard({
     return prizes.map((prize, index) => {
       // Check if prize has multiple rewards (combo)
       // Only free rewards with multiple prizes get badges, not purchase offers
-      const prizeType = (prize as any).type;
+      const prizeType = prize.type;
       const isPurchaseOffer = prizeType === 'purchase';
-      const prizeReward = (prize as any).freeReward;
-      const rewardCount = prizeReward ? [
-        prizeReward.sc,
-        prizeReward.gc,
-        prizeReward.spins,
-        prizeReward.xp,
-        prizeReward.randomReward
-      ].filter(Boolean).length : 0;
+      const prizeReward = prize.freeReward;
+      const rewardCount = prizeReward
+        ? [
+            prizeReward.sc,
+            prizeReward.gc,
+            prizeReward.spins,
+            prizeReward.xp,
+            prizeReward.randomReward,
+          ].filter(Boolean).length
+        : 0;
 
       const isCombo = rewardCount >= 2 && !isPurchaseOffer;
       const comboBadgeNumber = isCombo ? comboBadgeCounter++ : undefined;
@@ -149,12 +158,12 @@ export function PlinkoBoard({
       return {
         index,
         prize,
-        x: BORDER_WIDTH + (index * slotWidth),
+        x: BORDER_WIDTH + index * slotWidth,
         width: slotWidth,
-        comboBadgeNumber
+        comboBadgeNumber,
       };
     });
-  }, [prizes, slotCount, dimensions, BORDER_WIDTH]);
+  }, [prizes, dimensions, BORDER_WIDTH]);
 
   // Calculate bucket zone Y position based on slot width
   const bucketZoneY = useMemo(() => {
@@ -169,132 +178,126 @@ export function PlinkoBoard({
           width: '100%',
           height: `${boardHeight}px`,
           overflow: 'visible',
-          background: theme.colors.game?.board?.background || theme.gradients.backgroundCard,
-          boxShadow: theme.colors.game?.board?.shadow || theme.effects.shadows.card,
-          border: theme.colors.game?.board?.border || `1px solid ${theme.colors.border.default}`,
-          borderRadius: theme.colors.game?.board?.borderRadius || theme.borderRadius.card,
+          background: theme.colors.game.board.background || theme.gradients.backgroundCard,
+          boxShadow: theme.colors.game.board.shadow || theme.effects.shadows.card,
+          border: theme.colors.game.board.border || `1px solid ${theme.colors.border.default}`,
+          borderRadius: theme.colors.game.board.borderRadius || theme.borderRadius.card,
         }}
-      initial={{ opacity: 0, scale: 0.92, y: 30 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.92, y: 30 }}
-      transition={{
-        duration: 0.5,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      data-testid="plinko-board"
-    >
-      {/* Border Walls with impact animation */}
-      <BorderWall
-        side="left"
-        width={BORDER_WIDTH}
-        hasImpact={currentTrajectoryPoint?.wallHit === 'left'}
-      />
-      <BorderWall
-        side="right"
-        width={BORDER_WIDTH}
-        hasImpact={currentTrajectoryPoint?.wallHit === 'right'}
-      />
-      <BorderWall
-        side="top"
-        width={BORDER_WIDTH}
-        hasImpact={false}
-      />
-
-      {/* Pegs */}
-      {pegs.map((peg) => {
-        // Check if this peg is in the pegsHit array
-        const isActive = currentTrajectoryPoint?.pegsHit?.some(
-          hit => hit.row === peg.row && hit.col === peg.col
-        ) ?? false;
-
-        return (
-          <Peg
-            key={`peg-${peg.row}-${peg.col}`}
-            row={peg.row}
-            col={peg.col}
-            x={peg.x}
-            y={peg.y}
-            isActive={isActive}
-            shouldReset={ballState === 'idle'}
-          />
-        );
-      })}
-
-      {/* Slots */}
-      {slots.map((slot) => {
-        // Check if ball is directly above this slot (tighter detection for snappy lighting)
-        const isApproaching = ballState === 'dropping' && currentTrajectoryPoint
-          ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
-          : false;
-
-        // Only show winning state during drop and end phase, not when idle
-        const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
-
-        // Determine if ball is in this slot (bucket zone)
-        const isInThisSlot = currentTrajectoryPoint && currentTrajectoryPoint.y >= bucketZoneY
-          ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
-          : false;
-
-        // Pass collision data if ball is in this slot
-        const wallImpact = isInThisSlot ? currentTrajectoryPoint?.bucketWallHit : null;
-        const floorImpact = isInThisSlot && currentTrajectoryPoint?.bucketFloorHit;
-
-        return (
-          <Slot
-            key={`slot-${slot.index}`}
-            index={slot.index}
-            prize={slot.prize}
-            x={slot.x}
-            width={slot.width}
-            isWinning={isWinning}
-            isApproaching={isApproaching}
-            wallImpact={wallImpact}
-            floorImpact={floorImpact}
-            prizeCount={slotCount}
-            boardWidth={boardWidth}
-            comboBadgeNumber={slot.comboBadgeNumber}
-          />
-        );
-      })}
-
-      {/* Ball launcher - visible during countdown */}
-      {ballState === 'countdown' && ballPosition && (
-        <BallLauncher
-          x={ballPosition.x}
-          y={ballPosition.y}
-          isLaunching={false}
+        initial={{ opacity: 0, scale: 0.92, y: 30 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 30 }}
+        transition={{
+          duration: 0.5,
+          ease: [0.22, 1, 0.36, 1],
+        }}
+        data-testid="plinko-board"
+      >
+        {/* Border Walls with impact animation */}
+        <BorderWall
+          side="left"
+          width={BORDER_WIDTH}
+          hasImpact={currentTrajectoryPoint?.wallHit === 'left'}
         />
-      )}
-
-      {/* Ball launcher launching animation - brief moment when dropping starts */}
-      {ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition && (
-        <BallLauncher
-          x={ballPosition.x}
-          y={ballPosition.y}
-          isLaunching={true}
+        <BorderWall
+          side="right"
+          width={BORDER_WIDTH}
+          hasImpact={currentTrajectoryPoint?.wallHit === 'right'}
         />
-      )}
+        <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} />
 
-      {/* Ball - positioned within board coordinate system */}
-      <Ball
-        position={ballPosition}
-        state={ballState}
-        currentFrame={currentTrajectoryPoint?.frame ?? 0}
-        trajectoryPoint={currentTrajectoryPoint}
-      />
+        {/* Pegs */}
+        {pegs.map((peg) => {
+          // Check if this peg is in the pegsHit array
+          const isActive =
+            currentTrajectoryPoint?.pegsHit?.some(
+              (hit) => hit.row === peg.row && hit.col === peg.col
+            ) ?? false;
 
-      {/* Win Reveal Animation */}
-      {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && slots[selectedIndex] && (
-        <SlotWinReveal
-          x={slots[selectedIndex]!.x}
-          y={bucketZoneY}
-          width={slots[selectedIndex]!.width}
-          height={boardHeight - bucketZoneY}
-          color={slots[selectedIndex]!.prize.color || '#64748B'}
-          label={slots[selectedIndex]!.prize.label || ''}
-          isActive={showWinReveal}
+          return (
+            <Peg
+              key={`peg-${peg.row}-${peg.col}`}
+              row={peg.row}
+              col={peg.col}
+              x={peg.x}
+              y={peg.y}
+              isActive={isActive}
+              shouldReset={ballState === 'idle'}
+            />
+          );
+        })}
+
+        {/* Slots */}
+        {slots.map((slot) => {
+          // Check if ball is directly above this slot (tighter detection for snappy lighting)
+          const isApproaching =
+            ballState === 'dropping' && currentTrajectoryPoint
+              ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
+              : false;
+
+          // Only show winning state during drop and end phase, not when idle
+          const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
+
+          // Determine if ball is in this slot (bucket zone)
+          const isInThisSlot =
+            currentTrajectoryPoint && currentTrajectoryPoint.y >= bucketZoneY
+              ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
+              : false;
+
+          // Pass collision data if ball is in this slot
+          const wallImpact = isInThisSlot ? currentTrajectoryPoint?.bucketWallHit : null;
+          const floorImpact = isInThisSlot && currentTrajectoryPoint?.bucketFloorHit;
+
+          return (
+            <Slot
+              key={`slot-${slot.index}`}
+              index={slot.index}
+              prize={slot.prize}
+              x={slot.x}
+              width={slot.width}
+              isWinning={isWinning}
+              isApproaching={isApproaching}
+              wallImpact={wallImpact}
+              floorImpact={floorImpact}
+              prizeCount={slotCount}
+              boardWidth={boardWidth}
+              comboBadgeNumber={slot.comboBadgeNumber}
+            />
+          );
+        })}
+
+        {/* Ball launcher - visible during countdown */}
+        {ballState === 'countdown' && ballPosition && (
+          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={false} />
+        )}
+
+        {/* Ball launcher launching animation - brief moment when dropping starts */}
+        {ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition && (
+          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={true} />
+        )}
+
+        {/* Ball - positioned within board coordinate system */}
+        <Ball
+          position={ballPosition}
+          state={ballState}
+          currentFrame={currentTrajectoryPoint?.frame ?? 0}
+          trajectoryPoint={currentTrajectoryPoint}
         />
-      )}
+
+        {/* Win Reveal Animation */}
+        {showWinReveal &&
+          selectedIndex >= 0 &&
+          selectedIndex < slots.length &&
+          slots[selectedIndex] && (
+            <SlotWinReveal
+              x={slots[selectedIndex].x}
+              y={bucketZoneY}
+              width={slots[selectedIndex].width}
+              height={boardHeight - bucketZoneY}
+              color={slots[selectedIndex].prize.color || '#64748B'}
+              label={slots[selectedIndex].prize.label || ''}
+              isActive={showWinReveal}
+            />
+          )}
       </motion.div>
 
       {/* Combo legend - shows below board, part of board so it animates with it */}

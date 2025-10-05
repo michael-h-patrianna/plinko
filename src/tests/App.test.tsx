@@ -20,9 +20,9 @@ beforeEach(() => {
       port: location.port,
       pathname: location.pathname,
       search: '?seed=99999',
-      hash: location.hash
+      hash: location.hash,
     },
-    writable: true
+    writable: true,
   });
 });
 
@@ -66,16 +66,22 @@ describe('App Integration', () => {
     await user.click(dropButton);
 
     // Start screen should disappear
-    await waitFor(() => {
-      expect(screen.queryByText('Plinko Popup')).not.toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        expect(screen.queryByText('Plinko Popup')).not.toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
 
     // Ball should appear during countdown or dropping phase
-    await waitFor(() => {
-      // Ball may be in launcher during countdown, so check for board or ball
-      const board = screen.queryByTestId('plinko-board');
-      expect(board).toBeInTheDocument();
-    }, { timeout: 5000 });
+    await waitFor(
+      () => {
+        // Ball may be in launcher during countdown, so check for board or ball
+        const board = screen.queryByTestId('plinko-board');
+        expect(board).toBeInTheDocument();
+      },
+      { timeout: 5000 }
+    );
   });
 
   // Note: Full animation tests are in Playwright E2E tests

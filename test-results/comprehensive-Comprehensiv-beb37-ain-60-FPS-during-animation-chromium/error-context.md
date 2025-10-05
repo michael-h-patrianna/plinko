@@ -1,0 +1,38 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e6]:
+    - generic [ref=e7]: "Theme:"
+    - generic [ref=e8]:
+      - button "Default" [ref=e9] [cursor=pointer]
+      - button "Dark Blue" [ref=e10] [cursor=pointer]
+      - button "PlayFame" [ref=e11] [cursor=pointer]
+  - generic [ref=e13]:
+    - button "iPhone SE 320px" [disabled] [ref=e14]:
+      - generic [ref=e15]: iPhone SE
+      - generic [ref=e16]: 320px
+    - button "Galaxy S8 360px" [disabled] [ref=e17]:
+      - generic [ref=e18]: Galaxy S8
+      - generic [ref=e19]: 360px
+    - button "iPhone 12 375px" [disabled] [ref=e20]:
+      - generic [ref=e21]: iPhone 12
+      - generic [ref=e22]: 375px
+    - button "iPhone 14 Pro Max 414px" [disabled] [ref=e23]:
+      - generic [ref=e24]: iPhone 14 Pro Max
+      - generic [ref=e25]: 414px
+  - generic [ref=e27]:
+    - generic [ref=e29]:
+      - generic [ref=e100]: SC 500
+      - generic [ref=e103]: SC 250
+      - generic [ref=e106]: 500 Stars
+      - img "Bronze Wheel" [ref=e109]
+      - generic [ref=e112]: GC 5k
+      - generic [ref=e115]: 25 Spins
+      - img "No Win" [ref=e119]
+      - generic [ref=e122]: 10 Spins
+    - generic:
+      - generic:
+        - generic: "1"
+  - generic [ref=e123]: Select a viewport size to test different mobile devices. The viewport is locked during gameplay to ensure physics accuracy.
+```

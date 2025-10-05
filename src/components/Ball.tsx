@@ -1,5 +1,10 @@
 /**
  * Premium animated ball component with AAA-quality materials and trail effect
+ * Implements Disney animation principles: squash/stretch based on velocity and follow-through with trail
+ * @param position - Current ball position {x, y, rotation}
+ * @param state - Current game state
+ * @param currentFrame - Current animation frame number
+ * @param trajectoryPoint - Full trajectory data including velocity for squash/stretch effect
  */
 
 import type { BallPosition, GameState, TrajectoryPoint } from '../game/types';
@@ -38,7 +43,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
       const squashAmount = Math.min(speed / 800, 0.4); // Max 40% squash
       return {
         scaleX: 1 + squashAmount * 0.5, // Widen horizontally
-        scaleY: 1 - squashAmount         // Compress vertically
+        scaleY: 1 - squashAmount, // Compress vertically
       };
     }
 
@@ -47,7 +52,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
       const stretchAmount = Math.min(vy / 1000, 0.3); // Max 30% stretch
       return {
         scaleX: 1 - stretchAmount * 0.4, // Narrow horizontally
-        scaleY: 1 + stretchAmount         // Elongate vertically
+        scaleY: 1 + stretchAmount, // Elongate vertically
       };
     }
 
@@ -83,7 +88,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
   // Update trail as ball moves
   useEffect(() => {
     if (position && (state === 'dropping' || state === 'landed')) {
-      setTrail(prev => {
+      setTrail((prev) => {
         const newTrail = [{ x: position.x, y: position.y, id: Date.now() }, ...prev];
         // Keep dynamic trail length based on speed
         return newTrail.slice(0, trailLength);
@@ -91,7 +96,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
     } else if (state === 'idle' || state === 'ready' || state === 'countdown') {
       setTrail([]);
     }
-  }, [position?.x, position?.y, state, currentFrame, trailLength]);
+  }, [position, state, currentFrame, trailLength]);
 
   // Hide ball during countdown - it's shown in the launcher
   if (!position || state === 'idle' || state === 'ready' || state === 'countdown') return null;
@@ -111,7 +116,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             opacity: 0.6 - index * 0.08,
             willChange: 'transform, opacity',
             zIndex: 18,
-            transition: 'all 50ms linear'
+            transition: 'all 50ms linear',
           }}
         />
       ))}
@@ -128,7 +133,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           willChange: 'transform',
           zIndex: 19,
           borderRadius: '50%',
-          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
+          transition: isLaunching
+            ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+            : 'transform 100ms ease-out',
         }}
       />
 
@@ -144,7 +151,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           willChange: 'transform',
           zIndex: 20,
           borderRadius: '50%',
-          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
+          transition: isLaunching
+            ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+            : 'transform 100ms ease-out',
         }}
       />
 
@@ -170,7 +179,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           position: 'relative',
           overflow: 'hidden',
           borderRadius: '50%',
-          transition: isLaunching ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)' : 'transform 100ms ease-out'
+          transition: isLaunching
+            ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
+            : 'transform 100ms ease-out',
         }}
         data-state={state}
         data-frame={currentFrame}
@@ -187,7 +198,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             background: theme.gradients.shine,
             borderRadius: '50%',
             filter: 'blur(2px)', // Static blur is OK
-            opacity: 0.9
+            opacity: 0.9,
           }}
         />
 
@@ -201,7 +212,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
             bottom: 0,
             background: `linear-gradient(45deg, transparent 48%, ${theme.colors.shadows.default}03 50%, transparent 52%)`,
             borderRadius: '50%',
-            opacity: 0.3
+            opacity: 0.3,
           }}
         />
       </div>

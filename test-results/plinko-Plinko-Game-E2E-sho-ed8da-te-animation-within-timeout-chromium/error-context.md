@@ -9,24 +9,39 @@
       - button "Dark Blue" [ref=e10] [cursor=pointer]
       - button "PlayFame" [ref=e11] [cursor=pointer]
   - generic [ref=e13]:
-    - button "iPhone SE 320px" [disabled] [ref=e14]:
-      - generic [ref=e15]: iPhone SE
-      - generic [ref=e16]: 320px
-    - button "Galaxy S8 360px" [disabled] [ref=e17]:
-      - generic [ref=e18]: Galaxy S8
-      - generic [ref=e19]: 360px
-    - button "iPhone 12 375px" [disabled] [ref=e20]:
-      - generic [ref=e21]: iPhone 12
-      - generic [ref=e22]: 375px
-    - button "iPhone 14 Pro Max 414px" [disabled] [ref=e23]:
-      - generic [ref=e24]: iPhone 14 Pro Max
-      - generic [ref=e25]: 414px
-  - generic [ref=e29]:
-    - generic [ref=e100]: SC 100
-    - generic [ref=e103]: GC 5k
-    - generic [ref=e106]: 10 Spins
-    - img "No Win" [ref=e109]
-    - generic [ref=e112]: 500 Stars
-    - generic [ref=e115]: SC 500
-  - generic [ref=e117]: Select a viewport size to test different mobile devices. The viewport is locked during gameplay to ensure physics accuracy.
+    - button "iPhone SE 320px" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15] [cursor=pointer]: iPhone SE
+      - generic [ref=e16] [cursor=pointer]: 320px
+    - button "Galaxy S8 360px" [ref=e17] [cursor=pointer]:
+      - generic [ref=e18] [cursor=pointer]: Galaxy S8
+      - generic [ref=e19] [cursor=pointer]: 360px
+    - button "iPhone 12 375px" [ref=e20] [cursor=pointer]:
+      - generic [ref=e21] [cursor=pointer]: iPhone 12
+      - generic [ref=e22] [cursor=pointer]: 375px
+    - button "iPhone 14 Pro Max 414px" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24] [cursor=pointer]: iPhone 14 Pro Max
+      - generic [ref=e25] [cursor=pointer]: 414px
+  - generic [ref=e27]:
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - img "No Win" [ref=e100]
+        - generic [ref=e101]:
+          - generic [ref=e103]: SC 50
+          - generic [ref=e104]: "1"
+        - generic [ref=e107]: SC 250
+        - generic:
+          - generic:
+            - generic: 250 Free SC
+      - generic [ref=e111]:
+        - generic [ref=e112]: "1"
+        - generic [ref=e113]: SC 50 + GC 5k
+    - status [ref=e116]:
+      - heading "You won!" [level=2] [ref=e117]
+      - generic [ref=e118]:
+        - generic:
+          - img "SC"
+          - generic: SC 250
+      - button "Claim Prize":
+        - generic: Claim Prize
+  - generic [ref=e119]: Select a viewport size to test different mobile devices. The viewport is locked during gameplay to ensure physics accuracy.
 ```

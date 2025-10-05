@@ -9,7 +9,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../game/trajectory';
-import { MOCK_PRIZES } from '../config/prizeTable';
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;
@@ -31,7 +30,7 @@ function generatePegLayout() {
 
   const OPTIMAL_PEG_COLUMNS = 6;
   const pegPadding = PEG_RADIUS + 10; // Peg radius + 10px safety margin
-  const playableWidth = BOARD_WIDTH - (BORDER_WIDTH * 2) - (pegPadding * 2);
+  const playableWidth = BOARD_WIDTH - BORDER_WIDTH * 2 - pegPadding * 2;
   const playableHeight = BOARD_HEIGHT * 0.65;
   const verticalSpacing = playableHeight / (PEG_ROWS + 1);
   const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -52,7 +51,6 @@ function generatePegLayout() {
 }
 
 describe('Physics Violations Detection', () => {
-
   describe('Peg Collision Detection', () => {
     it('should never allow ball to pass through pegs without collision', () => {
       const pegs = generatePegLayout();
@@ -65,7 +63,7 @@ describe('Physics Violations Detection', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 1000
+          seed: seed * 1000,
         });
 
         // Check each frame for peg violations
@@ -80,33 +78,35 @@ describe('Physics Violations Detection', () => {
 
             // Calculate distance from ball center to peg center
             const distToPeg = Math.sqrt(
-              Math.pow(currFrame.x - peg.x, 2) +
-              Math.pow(currFrame.y - peg.y, 2)
+              Math.pow(currFrame.x - peg.x, 2) + Math.pow(currFrame.y - peg.y, 2)
             );
 
             // If ball is overlapping with peg
             if (distToPeg < COLLISION_RADIUS) {
               // Check if ball moved through peg without proper collision
               const prevDistToPeg = Math.sqrt(
-                Math.pow(prevFrame.x - peg.x, 2) +
-                Math.pow(prevFrame.y - peg.y, 2)
+                Math.pow(prevFrame.x - peg.x, 2) + Math.pow(prevFrame.y - peg.y, 2)
               );
 
               // If ball was outside collision radius and now inside without a collision marker
               if (prevDistToPeg >= COLLISION_RADIUS && !currFrame.pegHit) {
                 // Check if ball path crossed through peg
                 const pathCrossesPeg = doesPathCrossPeg(
-                  prevFrame.x, prevFrame.y,
-                  currFrame.x, currFrame.y,
-                  peg.x, peg.y,
+                  prevFrame.x,
+                  prevFrame.y,
+                  currFrame.x,
+                  currFrame.y,
+                  peg.x,
+                  peg.y,
                   COLLISION_RADIUS
                 );
 
-                expect(pathCrossesPeg).toBe(false,
+                expect(pathCrossesPeg).toBe(
+                  false,
                   `Ball passed through peg at (${peg.x}, ${peg.y}) without collision ` +
-                  `between frames ${i-1} and ${i}. ` +
-                  `Ball moved from (${prevFrame.x.toFixed(1)}, ${prevFrame.y.toFixed(1)}) ` +
-                  `to (${currFrame.x.toFixed(1)}, ${currFrame.y.toFixed(1)})`
+                    `between frames ${i - 1} and ${i}. ` +
+                    `Ball moved from (${prevFrame.x.toFixed(1)}, ${prevFrame.y.toFixed(1)}) ` +
+                    `to (${currFrame.x.toFixed(1)}, ${currFrame.y.toFixed(1)})`
                 );
               }
             }
@@ -126,7 +126,7 @@ describe('Physics Violations Detection', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: targetSlot,
-          seed: targetSlot * 12345
+          seed: targetSlot * 12345,
         });
 
         const slotWidth = BOARD_WIDTH / SLOT_COUNT;
@@ -150,9 +150,10 @@ describe('Physics Violations Detection', () => {
               Math.abs(currFrame.x - (targetSlot + 1) * slotWidth)
             );
 
-            expect(distToTargetSlot).toBeLessThanOrEqual(BALL_RADIUS,
+            expect(distToTargetSlot).toBeLessThanOrEqual(
+              BALL_RADIUS,
               `Ball center at x=${currFrame.x.toFixed(1)} is in slot ${ballSlot} ` +
-              `but should be in slot ${targetSlot}. Frame ${i}, y=${currFrame.y.toFixed(1)}`
+                `but should be in slot ${targetSlot}. Frame ${i}, y=${currFrame.y.toFixed(1)}`
             );
           }
 
@@ -163,9 +164,10 @@ describe('Physics Violations Detection', () => {
 
             // If ball jumped slots, it passed through a wall
             if (Math.abs(prevSlot - ballSlot) > 1) {
-              expect(Math.abs(prevSlot - ballSlot)).toBeLessThanOrEqual(1,
+              expect(Math.abs(prevSlot - ballSlot)).toBeLessThanOrEqual(
+                1,
                 `Ball jumped from slot ${prevSlot} to slot ${ballSlot} in one frame, ` +
-                `passing through wall(s). Frame ${i}`
+                  `passing through wall(s). Frame ${i}`
               );
             }
           }
@@ -182,10 +184,10 @@ describe('Physics Violations Detection', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 2,
-        seed: 99999
+        seed: 99999,
       });
 
-      const dt = 1/60; // 60 FPS
+      const dt = 1 / 60; // 60 FPS
       const maxRealisticAcceleration = GRAVITY * 1.5; // Allow 50% over gravity for guidance
       const bucketZoneY = BOARD_HEIGHT * 0.7;
 
@@ -204,7 +206,13 @@ describe('Physics Violations Detection', () => {
         const currFrame = trajectory[i];
 
         // Skip collision frames as they have instant velocity changes
-        if (currFrame.pegHit || currFrame.bucketFloorHit || currFrame.wallHit || currFrame.bucketWallHit) continue;
+        if (
+          currFrame.pegHit ||
+          currFrame.bucketFloorHit ||
+          currFrame.wallHit ||
+          currFrame.bucketWallHit
+        )
+          continue;
 
         // Calculate acceleration
         const ax = (currFrame.vx - prevFrame.vx) / dt;
@@ -215,22 +223,25 @@ describe('Physics Violations Detection', () => {
         if (currFrame.y > bucketZoneY && prevFrame.y > bucketZoneY) {
           // In bucket zone - should be mostly free fall with minimal horizontal guidance
           // Allow 50% tolerance for damping/air resistance effects
-          expect(Math.abs(ay - GRAVITY)).toBeLessThan(GRAVITY * 0.5,
+          expect(Math.abs(ay - GRAVITY)).toBeLessThan(
+            GRAVITY * 0.5,
             `Unnatural vertical acceleration in bucket zone: ${ay.toFixed(0)} px/s² ` +
-            `(expected ~${GRAVITY} px/s²) at frame ${i}, y=${currFrame.y.toFixed(1)}`
+              `(expected ~${GRAVITY} px/s²) at frame ${i}, y=${currFrame.y.toFixed(1)}`
           );
 
           // Horizontal acceleration should be minimal (just gentle guidance)
-          expect(Math.abs(ax)).toBeLessThan(500,
+          expect(Math.abs(ax)).toBeLessThan(
+            500,
             `Excessive horizontal acceleration in bucket zone: ${ax.toFixed(0)} px/s² ` +
-            `at frame ${i}, y=${currFrame.y.toFixed(1)}`
+              `at frame ${i}, y=${currFrame.y.toFixed(1)}`
           );
         }
 
         // Overall acceleration should never be too extreme
-        expect(totalAccel).toBeLessThan(maxRealisticAcceleration * 2,
+        expect(totalAccel).toBeLessThan(
+          maxRealisticAcceleration * 2,
           `Unrealistic total acceleration: ${totalAccel.toFixed(0)} px/s² ` +
-          `at frame ${i}, y=${currFrame.y.toFixed(1)}`
+            `at frame ${i}, y=${currFrame.y.toFixed(1)}`
         );
       }
     });
@@ -242,7 +253,7 @@ describe('Physics Violations Detection', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 3,
-        seed: 77777
+        seed: 77777,
       });
 
       // Find last peg hit
@@ -263,7 +274,8 @@ describe('Physics Violations Detection', () => {
       let increasingVyCount = 0;
       let totalFrames = 0;
 
-      for (let i = 1; i < framesAfterLastPeg.length - 30; i++) { // Skip settling frames
+      for (let i = 1; i < framesAfterLastPeg.length - 30; i++) {
+        // Skip settling frames
         const prevFrame = framesAfterLastPeg[i - 1];
         const currFrame = framesAfterLastPeg[i];
 
@@ -275,9 +287,10 @@ describe('Physics Violations Detection', () => {
 
       // At least 70% of frames should show increasing vertical velocity (falling)
       const increasingRatio = increasingVyCount / totalFrames;
-      expect(increasingRatio).toBeGreaterThan(0.7,
+      expect(increasingRatio).toBeGreaterThan(
+        0.7,
         `Only ${(increasingRatio * 100).toFixed(1)}% of frames show increasing vertical velocity ` +
-        `after last peg. Expected natural free fall.`
+          `after last peg. Expected natural free fall.`
       );
     });
   });
@@ -287,9 +300,12 @@ describe('Physics Violations Detection', () => {
  * Helper function to check if a path crosses through a peg
  */
 function doesPathCrossPeg(
-  x1: number, y1: number,
-  x2: number, y2: number,
-  pegX: number, pegY: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  pegX: number,
+  pegY: number,
   radius: number
 ): boolean {
   // Vector from start to end
@@ -305,7 +321,7 @@ function doesPathCrossPeg(
   if (a === 0) return false; // Start and end are same point
 
   const b = 2 * (fx * dx + fy * dy);
-  const c = (fx * fx + fy * fy) - radius * radius;
+  const c = fx * fx + fy * fy - radius * radius;
 
   // Check discriminant
   const discriminant = b * b - 4 * a * c;

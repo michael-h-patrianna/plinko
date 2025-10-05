@@ -1,7 +1,9 @@
 /**
- * 3-2-1 Countdown animation overlay
- * Mobile game style countdown before ball drop
- * FULLY THEMEABLE - No hard-coded styles
+ * Animated 3-2-1 countdown overlay before ball drop
+ * Each number displays with explosive spring animation and particle burst
+ * @param onComplete - Callback when countdown finishes
+ * @param boardHeight - Height of the board for vertical positioning
+ * @param pegRows - Number of peg rows for calculating center position
  */
 
 import { motion } from 'framer-motion';
@@ -82,12 +84,14 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
         <motion.div
           className="absolute inset-0 rounded-full pointer-events-none"
           style={{
-            border: count === 0
-              ? `6px solid ${theme.colors.status.success}`
-              : `6px solid ${theme.colors.game.ball.primary}`,
-            boxShadow: count === 0
-              ? `0 0 40px ${theme.colors.status.success}cc, inset 0 0 40px ${theme.colors.status.success}4d`
-              : `0 0 40px ${theme.colors.game.ball.primary}cc, inset 0 0 40px ${theme.colors.game.ball.primary}4d`,
+            border:
+              count === 0
+                ? `6px solid ${theme.colors.status.success}`
+                : `6px solid ${theme.colors.game.ball.primary}`,
+            boxShadow:
+              count === 0
+                ? `0 0 40px ${theme.colors.status.success}cc, inset 0 0 40px ${theme.colors.status.success}4d`
+                : `0 0 40px ${theme.colors.game.ball.primary}cc, inset 0 0 40px ${theme.colors.game.ball.primary}4d`,
           }}
           initial={{ scale: 0, opacity: 0 }}
           animate={{
@@ -108,12 +112,14 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
             height: '250px',
             left: '-25px',
             top: '-25px',
-            background: count === 0
-              ? theme.gradients.glow?.replace('rgba(255,255,255,0.3)', `${theme.colors.status.success}66`)
-                  .replace('transparent', 'transparent') ||
-                `radial-gradient(circle, ${theme.colors.status.success}66 0%, ${theme.colors.status.success}33 40%, transparent 70%)`
-              : theme.gradients.ballGlow ||
-                `radial-gradient(circle, ${theme.colors.game.ball.primary}66 0%, ${theme.colors.game.ball.primary}33 40%, transparent 70%)`,
+            background:
+              count === 0
+                ? theme.gradients.glow
+                    .replace('rgba(255,255,255,0.3)', `${theme.colors.status.success}66`)
+                    .replace('transparent', 'transparent') ||
+                  `radial-gradient(circle, ${theme.colors.status.success}66 0%, ${theme.colors.status.success}33 40%, transparent 70%)`
+                : theme.gradients.ballGlow ||
+                  `radial-gradient(circle, ${theme.colors.game.ball.primary}66 0%, ${theme.colors.game.ball.primary}33 40%, transparent 70%)`,
           }}
           animate={{
             scale: [1, 1.3, 1],
@@ -130,24 +136,25 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
         <motion.div
           className="text-9xl font-black relative z-10"
           style={{
-            textShadow: count === 0
-              ? `
+            textShadow:
+              count === 0
+                ? `
                 0 0 40px ${theme.colors.status.success},
                 0 0 20px ${theme.colors.status.success}cc,
                 0 8px 30px ${theme.colors.shadows.default}e6,
                 0 4px 15px ${theme.colors.shadows.default}99
               `
-              : `
+                : `
                 0 0 40px ${theme.colors.game.ball.primary},
                 0 0 20px ${theme.colors.game.ball.primary}cc,
                 0 8px 30px ${theme.colors.shadows.default}e6,
                 0 4px 15px ${theme.colors.shadows.default}99
               `,
-            background: count === 0
-              ? theme.gradients.buttonSuccess ||
-                `linear-gradient(135deg, ${theme.colors.status.success} 0%, ${theme.colors.status.success} 100%)`
-              : theme.gradients.prizeYellow ||
-                theme.gradients.ballMain,
+            background:
+              count === 0
+                ? theme.gradients.buttonSuccess ||
+                  `linear-gradient(135deg, ${theme.colors.status.success} 0%, ${theme.colors.status.success} 100%)`
+                : theme.gradients.prizeYellow || theme.gradients.ballMain,
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -160,7 +167,7 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
         </motion.div>
 
         {/* Particle burst */}
-        {[...Array(8)].map((_, i) => {
+        {Array.from({ length: 8 }).map((_, i) => {
           const angle = (360 / 8) * i;
           const radian = (angle * Math.PI) / 180;
           const distance = 80;
@@ -176,12 +183,14 @@ export function Countdown({ onComplete, boardHeight = 500, pegRows = 10 }: Count
                 height: '12px',
                 left: '94px',
                 top: '94px',
-                background: count === 0
-                  ? `radial-gradient(circle, ${theme.colors.status.success} 0%, transparent 70%)`
-                  : `radial-gradient(circle, ${theme.colors.game.ball.primary} 0%, transparent 70%)`,
-                boxShadow: count === 0
-                  ? `0 0 20px ${theme.colors.status.success}cc`
-                  : `0 0 20px ${theme.colors.game.ball.primary}cc`,
+                background:
+                  count === 0
+                    ? `radial-gradient(circle, ${theme.colors.status.success} 0%, transparent 70%)`
+                    : `radial-gradient(circle, ${theme.colors.game.ball.primary} 0%, transparent 70%)`,
+                boxShadow:
+                  count === 0
+                    ? `0 0 20px ${theme.colors.status.success}cc`
+                    : `0 0 20px ${theme.colors.game.ball.primary}cc`,
               }}
               initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
               animate={{

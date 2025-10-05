@@ -1,7 +1,18 @@
 /**
- * Prize slot component at bottom of board
- * With collision impact animations
- * FULLY THEMEABLE - No hard-coded styles
+ * Prize slot component at bottom of board with bucket physics visualization
+ * Shows prize information and animates when ball approaches or impacts walls/floor
+ * Adapts display mode based on slot width (icon-only, text, or icon+text)
+ * @param index - Slot index (0-based)
+ * @param prize - Prize configuration with rewards and display settings
+ * @param x - X position in pixels
+ * @param width - Width of slot in pixels
+ * @param isWinning - Whether this is the winning slot
+ * @param isApproaching - Whether ball is approaching this slot
+ * @param wallImpact - Which bucket wall was hit ('left', 'right', or null)
+ * @param floorImpact - Whether ball hit the bucket floor
+ * @param prizeCount - Total number of prize slots (for responsive sizing)
+ * @param boardWidth - Board width in pixels (for compact mode determination)
+ * @param comboBadgeNumber - Badge number for combo rewards
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,7 +47,7 @@ export function Slot({
   floorImpact = false,
   prizeCount = 5,
   boardWidth = 375,
-  comboBadgeNumber
+  comboBadgeNumber,
 }: SlotProps) {
   const { theme } = useTheme();
 
@@ -52,14 +63,19 @@ export function Slot({
   const isNarrow = width < 55;
 
   // Use slotColor and title from new format, fallback to legacy fields
-  const color = (prize as any).slotColor || prize.color || '#64748B';
-  const label = (prize as any).title || prize.label || 'Prize';
+  const color = prize.slotColor || prize.color || '#64748B';
+  const label = prize.title || prize.label || 'Prize';
 
   // Check if this prize should always use icon mode
-  const prizeType = (prize as any).type;
-  const freeReward = (prize as any).freeReward;
-  const isRandomRewardOnly = prizeType === 'free' && freeReward?.randomReward &&
-    !freeReward.sc && !freeReward.gc && !freeReward.spins && !freeReward.xp;
+  const prizeType = prize.type;
+  const freeReward = prize.freeReward;
+  const isRandomRewardOnly =
+    prizeType === 'free' &&
+    freeReward?.randomReward &&
+    !freeReward.sc &&
+    !freeReward.gc &&
+    !freeReward.spins &&
+    !freeReward.xp;
   const forceIconMode = prizeType === 'no_win' || isRandomRewardOnly;
 
   // Compact mode: use "Spins" instead of "Free Spins" when:
@@ -67,7 +83,9 @@ export function Slot({
   const compactMode = prizeCount > 5 || boardWidth < 375;
 
   // Get display text (always show reward details, even for narrow slots)
-  const displayText = forceIconMode ? '' : getSlotDisplayText(prize as any, abbreviateNumber, false, compactMode);
+  const displayText = forceIconMode
+    ? ''
+    : getSlotDisplayText(prize, abbreviateNumber, false, compactMode);
 
   return (
     <motion.div
@@ -76,7 +94,9 @@ export function Slot({
         left: `${x}px`,
         width: `${width}px`,
         height: `${bucketHeight}px`,
-        background: theme.colors.game.slot.background || `
+        background:
+          theme.colors.game.slot.background ||
+          `
           linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
         `,
         borderLeft: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
@@ -91,7 +111,7 @@ export function Slot({
              inset 0 -3px 6px rgba(0,0,0,0.25),
              inset 0 0 20px ${color}33`
           : theme.effects.shadows.md,
-        transition: theme.effects?.transitions?.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+        transition: theme.effects.transitions.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
       }}
       data-testid={`slot-${index}`}
       data-active={isWinning}
@@ -102,7 +122,7 @@ export function Slot({
         style={{
           height: '40%',
           background: `linear-gradient(180deg, ${theme.colors.text.inverse}4d 0%, transparent 100%)`,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
         }}
       />
 
@@ -172,9 +192,9 @@ export function Slot({
         }}
       >
         {/* Icon-only mode (very narrow slots, or forced for no-win/purchase/random-only) */}
-        {(isVeryNarrow || forceIconMode) && (prize as any).slotIcon && (
+        {(isVeryNarrow || forceIconMode) && prize.slotIcon && (
           <img
-            src={(prize as any).slotIcon}
+            src={prize.slotIcon}
             alt={label}
             className="drop-shadow-lg"
             style={{
@@ -186,7 +206,7 @@ export function Slot({
         )}
 
         {/* Fallback text if no icon available */}
-        {(isVeryNarrow || forceIconMode) && !(prize as any).slotIcon && (
+        {(isVeryNarrow || forceIconMode) && !prize.slotIcon && (
           <div
             className="text-white font-bold leading-tight drop-shadow-lg text-center opacity-70"
             style={{
@@ -212,9 +232,9 @@ export function Slot({
         )}
 
         {/* Icon + text for narrow-but-not-very-narrow slots (only if not forcing icon mode) */}
-        {isNarrow && !isVeryNarrow && !forceIconMode && (prize as any).slotIcon && displayText && (
+        {isNarrow && !isVeryNarrow && !forceIconMode && prize.slotIcon && displayText && (
           <img
-            src={(prize as any).slotIcon}
+            src={prize.slotIcon}
             alt=""
             className="drop-shadow-sm mt-0.5"
             style={{
@@ -226,9 +246,9 @@ export function Slot({
         )}
 
         {/* For wider slots with icons, show icon above text (only if not forcing icon mode) */}
-        {!isNarrow && !forceIconMode && (prize as any).slotIcon && (
+        {!isNarrow && !forceIconMode && prize.slotIcon && (
           <img
-            src={(prize as any).slotIcon}
+            src={prize.slotIcon}
             alt=""
             className="drop-shadow-sm mb-1"
             style={{

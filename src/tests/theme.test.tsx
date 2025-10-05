@@ -7,12 +7,12 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from './testUtils';
 import { renderHook, act } from '@testing-library/react';
 import { ReactNode } from 'react';
-import { ThemeProvider, useTheme, useThemeValue } from '../theme/ThemeContext';
+import { ThemeProvider, useTheme, useThemeValue, type ThemeContextType } from '../theme';
+import type { Theme } from '../theme/types';
 import { defaultTheme } from '../theme/themes/defaultTheme';
 import { playFameTheme } from '../theme/themes/playFameTheme';
 import { darkBlueTheme } from '../theme/themes/darkBlueTheme';
 import { ThemeSelector } from '../components/ThemeSelector';
-import { Theme } from '../theme/types';
 
 // Mock localStorage
 const localStorageMock = (() => {
@@ -21,10 +21,11 @@ const localStorageMock = (() => {
   return {
     getItem: (key: string) => store[key] || null,
     setItem: (key: string, value: string) => {
-      store[key] = value.toString();
+      store[key] = value;
     },
     removeItem: (key: string) => {
-      delete store[key];
+      const entries = Object.entries(store).filter(([k]) => k !== key);
+      store = Object.fromEntries(entries);
     },
     clear: () => {
       store = {};
@@ -101,7 +102,9 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), {
+        wrapper,
+      });
 
       expect(result.current.theme).toEqual(defaultTheme);
       expect(result.current.themeName).toBe('Default');
@@ -115,7 +118,9 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), {
+        wrapper,
+      });
 
       expect(result.current.availableThemes).toHaveLength(3);
       expect(result.current.availableThemes).toEqual(allThemes);
@@ -142,7 +147,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -162,7 +167,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -182,7 +187,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -204,7 +209,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       act(() => {
         result.current.switchTheme('PlayFame');
@@ -224,7 +229,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       // Wait for useEffect to run and load from localStorage
       await waitFor(() => {
@@ -240,7 +245,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('PlayFame');
     });
@@ -255,7 +260,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       // Should remain as initial theme
       await waitFor(() => {
@@ -272,7 +277,9 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useThemeValue('colors'), { wrapper });
+      const { result } = renderHook<Theme['colors'], unknown>(() => useThemeValue('colors'), {
+        wrapper,
+      });
 
       expect(result.current).toEqual(defaultTheme.colors);
     });
@@ -285,11 +292,14 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => {
-        const theme = useTheme();
-        const name = useThemeValue('name');
-        return { theme, name };
-      }, { wrapper });
+      const { result } = renderHook<{ theme: ThemeContextType; name: string }, unknown>(
+        () => {
+          const theme = useTheme();
+          const name = useThemeValue('name');
+          return { theme, name };
+        },
+        { wrapper }
+      );
 
       expect(result.current.name).toBe('Default');
 
@@ -575,12 +585,16 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
       // Initial state
       expect(result.current.theme.colors.primary.main).toBe(defaultTheme.colors.primary.main);
-      expect(result.current.theme.gradients.buttonPrimary).toBe(defaultTheme.gradients.buttonPrimary);
-      expect(result.current.theme.typography.fontFamily.primary).toBe(defaultTheme.typography.fontFamily.primary);
+      expect(result.current.theme.gradients.buttonPrimary).toBe(
+        defaultTheme.gradients.buttonPrimary
+      );
+      expect(result.current.theme.typography.fontFamily.primary).toBe(
+        defaultTheme.typography.fontFamily.primary
+      );
 
       // Switch theme
       act(() => {
@@ -589,8 +603,12 @@ describe('Theme System', () => {
 
       // All properties should update
       expect(result.current.theme.colors.primary.main).toBe(playFameTheme.colors.primary.main);
-      expect(result.current.theme.gradients.buttonPrimary).toBe(playFameTheme.gradients.buttonPrimary);
-      expect(result.current.theme.typography.fontFamily.primary).toBe(playFameTheme.typography.fontFamily.primary);
+      expect(result.current.theme.gradients.buttonPrimary).toBe(
+        playFameTheme.gradients.buttonPrimary
+      );
+      expect(result.current.theme.typography.fontFamily.primary).toBe(
+        playFameTheme.typography.fontFamily.primary
+      );
       expect(result.current.theme.name).toBe('PlayFame');
     });
 
@@ -602,15 +620,19 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook(() => useTheme(), { wrapper });
+      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
 
-      expect(result.current.theme.colors.game.ball.primary).toBe(defaultTheme.colors.game.ball.primary);
+      expect(result.current.theme.colors.game.ball.primary).toBe(
+        defaultTheme.colors.game.ball.primary
+      );
 
       act(() => {
         result.current.switchTheme('Dark Blue');
       });
 
-      expect(result.current.theme.colors.game.ball.primary).toBe(darkBlueTheme.colors.game.ball.primary);
+      expect(result.current.theme.colors.game.ball.primary).toBe(
+        darkBlueTheme.colors.game.ball.primary
+      );
     });
   });
 
@@ -675,7 +697,7 @@ describe('Theme System', () => {
 
       const playFameButton = screen.getByText('PlayFame');
 
-      await act(async () => {
+      act(() => {
         playFameButton.click();
       });
 
@@ -695,7 +717,7 @@ describe('Theme System', () => {
 
       const darkBlueButton = screen.getByText('Dark Blue');
 
-      await act(async () => {
+      act(() => {
         darkBlueButton.click();
       });
 

@@ -8,7 +8,7 @@ import { generateTrajectory } from '../game/trajectory';
 const VIEWPORT_SIZES = [320, 360, 375, 414];
 
 describe('Trajectory Peg Hit Recording', () => {
-  VIEWPORT_SIZES.forEach(boardWidth => {
+  VIEWPORT_SIZES.forEach((boardWidth) => {
     describe(`Viewport ${boardWidth}px`, () => {
       it('should record peg hits in trajectory data', () => {
         const trajectory = generateTrajectory({
@@ -17,14 +17,14 @@ describe('Trajectory Peg Hit Recording', () => {
           pegRows: 10,
           slotCount: 7,
           selectedIndex: 3,
-          seed: 12345
+          seed: 12345,
         });
 
         // Count frames with peg hits
-        const framesWithPegHits = trajectory.filter(point => point.pegHit === true);
+        const framesWithPegHits = trajectory.filter((point) => point.pegHit === true);
         const uniquePegsHit = new Set<string>();
 
-        framesWithPegHits.forEach(point => {
+        framesWithPegHits.forEach((point) => {
           if (point.pegHitRow !== undefined && point.pegHitCol !== undefined) {
             const pegKey = `${point.pegHitRow}-${point.pegHitCol}`;
             uniquePegsHit.add(pegKey);
@@ -35,14 +35,16 @@ describe('Trajectory Peg Hit Recording', () => {
         console.log(`  Total frames: ${trajectory.length}`);
         console.log(`  Frames with peg hits: ${framesWithPegHits.length}`);
         console.log(`  Unique pegs hit: ${uniquePegsHit.size}`);
-        console.log(`  Peg hit rate: ${(framesWithPegHits.length / trajectory.length * 100).toFixed(1)}%`);
+        console.log(
+          `  Peg hit rate: ${((framesWithPegHits.length / trajectory.length) * 100).toFixed(1)}%`
+        );
 
         // Should have hit some pegs
         expect(uniquePegsHit.size).toBeGreaterThan(0);
         expect(framesWithPegHits.length).toBeGreaterThan(0);
 
         // Every frame with pegHit=true should have row and col defined
-        framesWithPegHits.forEach((point, index) => {
+        framesWithPegHits.forEach((point) => {
           expect(point.pegHitRow).toBeDefined();
           expect(point.pegHitCol).toBeDefined();
           expect(typeof point.pegHitRow).toBe('number');
@@ -57,11 +59,11 @@ describe('Trajectory Peg Hit Recording', () => {
           pegRows: 10,
           slotCount: 7,
           selectedIndex: 3,
-          seed: 99999
+          seed: 99999,
         });
 
         // Check each frame has the required fields
-        trajectory.forEach((point, index) => {
+        trajectory.forEach((point) => {
           expect(point).toHaveProperty('pegHit');
           expect(typeof point.pegHit).toBe('boolean');
 
@@ -86,7 +88,7 @@ describe('Trajectory Peg Hit Recording', () => {
           pegRows: 10,
           slotCount: 7,
           selectedIndex: 3,
-          seed: 54321
+          seed: 54321,
         });
 
         let consecutiveHits = 0;
@@ -121,11 +123,11 @@ describe('Trajectory Peg Hit Recording', () => {
           pegRows: 10,
           slotCount: 7,
           selectedIndex: 3,
-          seed: 77777
+          seed: 77777,
         });
 
         // Each frame should only hit ONE peg (or none)
-        trajectory.forEach((point, frameIndex) => {
+        trajectory.forEach((point) => {
           if (point.pegHit === true) {
             // Should have exactly one peg defined
             expect(point.pegHitRow).toBeDefined();
@@ -153,23 +155,27 @@ describe('Trajectory Peg Hit Recording', () => {
           pegRows: 10,
           slotCount: 7,
           selectedIndex: 3,
-          seed: 11111
+          seed: 11111,
         });
 
         const pegHits: Array<{ frame: number; row: number; col: number }> = [];
 
         trajectory.forEach((point, frameIndex) => {
-          if (point.pegHit === true && point.pegHitRow !== undefined && point.pegHitCol !== undefined) {
+          if (
+            point.pegHit === true &&
+            point.pegHitRow !== undefined &&
+            point.pegHitCol !== undefined
+          ) {
             pegHits.push({
               frame: frameIndex,
               row: point.pegHitRow,
-              col: point.pegHitCol
+              col: point.pegHitCol,
             });
           }
         });
 
         console.log(`\n${boardWidth}px - Detailed peg hits:`);
-        pegHits.slice(0, 10).forEach(hit => {
+        pegHits.slice(0, 10).forEach((hit) => {
           console.log(`  Frame ${hit.frame}: Peg (${hit.row}, ${hit.col})`);
         });
         if (pegHits.length > 10) {

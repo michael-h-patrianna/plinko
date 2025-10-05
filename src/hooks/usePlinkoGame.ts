@@ -28,19 +28,14 @@ interface UsePlinkoGameOptions {
 }
 
 export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
-  const {
-    seedOverride,
-    boardWidth = 375,
-    boardHeight = 500,
-    pegRows = 10
-  } = options;
+  const { seedOverride, boardWidth = 375, boardHeight = 500, pegRows = 10 } = options;
 
   // Generate random prize set for each game session
   const [prizes, setPrizes] = useState<PrizeConfig[]>(() => createValidatedProductionPrizeSet());
 
   const [gameState, dispatch] = useReducer(gameReducer, {
     state: 'idle',
-    context: initialContext
+    context: initialContext,
   });
 
   const animationFrameRef = useRef<number | null>(null);
@@ -68,12 +63,12 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         pegRows,
         slotCount: prizes.length,
         selectedIndex,
-        seed: seedUsed
+        seed: seedUsed,
       });
 
       dispatch({
         type: 'INITIALIZE',
-        payload: { selectedIndex, trajectory, prize, seed: seedUsed }
+        payload: { selectedIndex, trajectory, prize, seed: seedUsed },
       });
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
@@ -104,7 +99,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         // Update the frame
         dispatch({
           type: 'FRAME_ADVANCED',
-          payload: { frame: currentFrameIndex }
+          payload: { frame: currentFrameIndex },
         });
 
         if (currentFrameIndex < gameState.context.trajectory.length - 1) {
@@ -159,7 +154,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     return {
       x: point.x,
       y: point.y,
-      rotation: point.rotation
+      rotation: point.rotation,
     };
   }, [gameState]);
 
@@ -202,6 +197,6 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     completeCountdown,
     claimPrize,
     resetGame,
-    canClaim: gameState.state === 'revealed'
+    canClaim: gameState.state === 'revealed',
   };
 }

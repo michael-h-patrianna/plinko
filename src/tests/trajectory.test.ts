@@ -12,7 +12,7 @@ describe('Trajectory Generation', () => {
     pegRows: 10,
     slotCount: 6,
     selectedIndex: 3,
-    seed: 42
+    seed: 42,
   };
 
   it('should generate trajectory with correct number of frames', () => {
@@ -50,7 +50,7 @@ describe('Trajectory Generation', () => {
   it('should include peg hit markers', () => {
     const trajectory = generateTrajectory(defaultParams);
 
-    const pegHits = trajectory.filter(p => p.pegHit === true);
+    const pegHits = trajectory.filter((p) => p.pegHit === true);
     expect(pegHits.length).toBeGreaterThan(0);
   });
 
@@ -58,14 +58,14 @@ describe('Trajectory Generation', () => {
     expect(() =>
       generateTrajectory({
         ...defaultParams,
-        selectedIndex: -1
+        selectedIndex: -1,
       })
     ).toThrow(/Invalid slot index/);
 
     expect(() =>
       generateTrajectory({
         ...defaultParams,
-        selectedIndex: defaultParams.slotCount
+        selectedIndex: defaultParams.slotCount,
       })
     ).toThrow(/Invalid slot index/);
   });
@@ -88,7 +88,6 @@ describe('Trajectory Generation', () => {
 
     // Rotation should change during drop (can be positive or negative due to spin)
     const firstRotation = trajectory[0]!.rotation;
-    const midRotation = trajectory[Math.floor(trajectory.length / 2)]!.rotation;
     const lastRotation = trajectory[trajectory.length - 1]!.rotation;
 
     // Check that rotation has changed
@@ -113,7 +112,11 @@ describe('Trajectory Generation', () => {
 
     // Final position should be at target slot (most important!)
     const slotWidth = defaultParams.boardWidth / defaultParams.slotCount;
-    const targetX = getSlotCenterX(defaultParams.selectedIndex, defaultParams.slotCount, defaultParams.boardWidth);
+    const targetX = getSlotCenterX(
+      defaultParams.selectedIndex,
+      defaultParams.slotCount,
+      defaultParams.boardWidth
+    );
     // Ball MUST land within slot boundaries
     expect(Math.abs(finalX - targetX)).toBeLessThan(slotWidth / 2);
 
@@ -123,10 +126,10 @@ describe('Trajectory Generation', () => {
     expect(finalY).toBeLessThanOrEqual(defaultParams.boardHeight);
   });
 
-function getSlotCenterX(slotIndex: number, slotCount: number, boardWidth: number): number {
-  const slotWidth = boardWidth / slotCount;
-  return (slotIndex + 0.5) * slotWidth;
-}
+  function getSlotCenterX(slotIndex: number, slotCount: number, boardWidth: number): number {
+    const slotWidth = boardWidth / slotCount;
+    return (slotIndex + 0.5) * slotWidth;
+  }
 
   it('should throw error if final position deviates too much', () => {
     // This test verifies the internal validation logic

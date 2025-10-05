@@ -1,6 +1,9 @@
 /**
  * Ball launcher chamber - shows the mechanism that releases the ball
- * Adds physical realism to the ball drop
+ * Animates a pusher mechanism and spring coil to add physical realism to the ball drop
+ * @param x - X position of launcher
+ * @param y - Y position of launcher
+ * @param isLaunching - Whether the ball is currently being launched
  */
 
 import { motion } from 'framer-motion';
@@ -132,7 +135,7 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
               height: '45%',
               background: `radial-gradient(circle, ${theme.colors.text.inverse}90 0%, ${theme.colors.text.inverse}40 40%, transparent 70%)`,
               borderRadius: '50%',
-              filter: 'blur(1px)'
+              filter: 'blur(1px)',
             }}
           />
         </motion.div>

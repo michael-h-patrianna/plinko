@@ -1,6 +1,9 @@
 /**
- * Free reward reveal view
- * Celebratory with grid-based reward display
+ * Free reward reveal view with celebratory animations
+ * Displays grid of reward items with staggered entrance animations
+ * @param prize - Prize configuration with free rewards
+ * @param onClaim - Callback when user claims the prize
+ * @param canClaim - Whether the claim button should be enabled
  */
 
 import { motion } from 'framer-motion';
@@ -31,7 +34,8 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
   if (rewards.sc) rewardItems.push({ type: 'sc', amount: rewards.sc });
   if (rewards.gc) rewardItems.push({ type: 'gc', amount: rewards.gc });
   if (rewards.spins) rewardItems.push({ type: 'spins', amount: rewards.spins });
-  if (rewards.xp) rewardItems.push({ type: 'xp', amount: rewards.xp.amount, xpConfig: rewards.xp.config });
+  if (rewards.xp)
+    rewardItems.push({ type: 'xp', amount: rewards.xp.amount, xpConfig: rewards.xp.config });
   if (rewards.randomReward) rewardItems.push({ type: 'randomReward' });
 
   return (
@@ -80,13 +84,11 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             transition={{
               duration: 0.35,
               delay: 0.3,
-              ease: [0.34, 1.56, 0.64, 1]
+              ease: [0.34, 1.56, 0.64, 1],
             }}
           >
             You won!
           </motion.h2>
-
-
 
           {/* Reward grid */}
           <motion.div
@@ -96,11 +98,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             transition={{ duration: 0.25, delay: 0.6 }}
           >
             {rewardItems.map((item, index) => (
-              <RewardItem
-                key={`${item.type}-${index}`}
-                {...item}
-                delay={0.7 + index * 0.1}
-              />
+              <RewardItem key={`${item.type}-${index}`} {...item} delay={0.7 + index * 0.1} />
             ))}
           </motion.div>
 
@@ -118,12 +116,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
           )}
 
           {/* Claim button */}
-          <ThemedButton
-            onClick={onClaim}
-            disabled={!canClaim}
-            delay={0.5}
-            className="w-full"
-          >
+          <ThemedButton onClick={onClaim} disabled={!canClaim} delay={0.5} className="w-full">
             Claim Prize
           </ThemedButton>
         </div>

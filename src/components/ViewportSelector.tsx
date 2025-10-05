@@ -1,5 +1,9 @@
 /**
- * Viewport size selector for testing different mobile device sizes
+ * Viewport size selector for testing different mobile device screen sizes
+ * Provides preset widths for common mobile devices
+ * @param selectedWidth - Currently selected viewport width
+ * @param onWidthChange - Callback when a different width is selected
+ * @param disabled - Whether the selector should be disabled (e.g., during gameplay)
  */
 
 import { useTheme } from '../theme';
@@ -14,10 +18,14 @@ const VIEWPORT_SIZES = [
   { width: 320, label: 'iPhone SE', colorKey: 'info' as const },
   { width: 360, label: 'Galaxy S8', colorKey: 'success' as const },
   { width: 375, label: 'iPhone 12', colorKey: 'accent' as const },
-  { width: 414, label: 'iPhone 14 Pro Max', colorKey: 'warning' as const }
+  { width: 414, label: 'iPhone 14 Pro Max', colorKey: 'warning' as const },
 ];
 
-export function ViewportSelector({ selectedWidth, onWidthChange, disabled }: ViewportSelectorProps) {
+export function ViewportSelector({
+  selectedWidth,
+  onWidthChange,
+  disabled,
+}: ViewportSelectorProps) {
   const { theme } = useTheme();
 
   return (
@@ -30,9 +38,8 @@ export function ViewportSelector({ selectedWidth, onWidthChange, disabled }: Vie
       <div className="flex gap-2 justify-center flex-wrap">
         {VIEWPORT_SIZES.map(({ width, label, colorKey }) => {
           const isSelected = selectedWidth === width;
-          const color = colorKey === 'accent'
-            ? theme.colors.accent.main
-            : theme.colors.status[colorKey];
+          const color =
+            colorKey === 'accent' ? theme.colors.accent.main : theme.colors.status[colorKey];
 
           return (
             <button
@@ -61,7 +68,9 @@ export function ViewportSelector({ selectedWidth, onWidthChange, disabled }: Vie
                 }
               }}
             >
-              <div className="text-xs" style={{ opacity: 0.8 }}>{label}</div>
+              <div className="text-xs" style={{ opacity: 0.8 }}>
+                {label}
+              </div>
               <div className="font-bold">{width}px</div>
             </button>
           );

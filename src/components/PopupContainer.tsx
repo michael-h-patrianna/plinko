@@ -1,6 +1,8 @@
 /**
- * Container component for the popup/modal style
- * Animated reveal on mount for polished appearance
+ * Container wrapper for the popup/modal layout
+ * Provides entrance animation and responsive sizing for mobile overlay mode
+ * @param children - Child elements to render inside the container
+ * @param isMobileOverlay - Whether to use full-height mobile overlay layout
  */
 
 import { motion } from 'framer-motion';

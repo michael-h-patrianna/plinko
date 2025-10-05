@@ -4,21 +4,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import {
-  validatePrizeSet,
-  getPrizeByIndex,
-  normalizeProbabilities,
-} from '../utils/prizeUtils';
+import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '../utils/prizeUtils';
 import {
   isMobileDevice,
   getMaxMobileWidth,
   getResponsiveViewportWidth,
 } from '../utils/deviceDetection';
 import { abbreviateNumber } from '../utils/formatNumber';
-import {
-  calculateBucketHeight,
-  calculateBucketZoneY,
-} from '../utils/slotDimensions';
+import { calculateBucketHeight, calculateBucketZoneY } from '../utils/slotDimensions';
 import type { PrizeConfig } from '../game/types';
 
 describe('prizeUtils', () => {
@@ -171,9 +164,7 @@ describe('prizeUtils', () => {
         },
       ];
 
-      expect(() => validatePrizeSet(prizes)).toThrow(
-        /Prize set must contain 3-8 prizes, got 2/
-      );
+      expect(() => validatePrizeSet(prizes)).toThrow(/Prize set must contain 3-8 prizes, got 2/);
     });
 
     it('should throw error when prize count is more than 8', () => {
@@ -186,9 +177,7 @@ describe('prizeUtils', () => {
         slotColor: '#000',
       }));
 
-      expect(() => validatePrizeSet(prizes)).toThrow(
-        /Prize set must contain 3-8 prizes, got 9/
-      );
+      expect(() => validatePrizeSet(prizes)).toThrow(/Prize set must contain 3-8 prizes, got 9/);
     });
 
     it('should validate exactly 3 prizes', () => {
@@ -392,21 +381,15 @@ describe('prizeUtils', () => {
     });
 
     it('should throw error for negative index', () => {
-      expect(() => getPrizeByIndex(prizes, -1)).toThrow(
-        /Prize index -1 out of range \[0, 2\]/
-      );
+      expect(() => getPrizeByIndex(prizes, -1)).toThrow(/Prize index -1 out of range \[0, 2\]/);
     });
 
     it('should throw error for index equal to length', () => {
-      expect(() => getPrizeByIndex(prizes, 3)).toThrow(
-        /Prize index 3 out of range \[0, 2\]/
-      );
+      expect(() => getPrizeByIndex(prizes, 3)).toThrow(/Prize index 3 out of range \[0, 2\]/);
     });
 
     it('should throw error for index greater than length', () => {
-      expect(() => getPrizeByIndex(prizes, 10)).toThrow(
-        /Prize index 10 out of range \[0, 2\]/
-      );
+      expect(() => getPrizeByIndex(prizes, 10)).toThrow(/Prize index 10 out of range \[0, 2\]/);
     });
 
     it('should throw error for very large index', () => {
@@ -416,17 +399,13 @@ describe('prizeUtils', () => {
     });
 
     it('should handle empty array', () => {
-      expect(() => getPrizeByIndex([], 0)).toThrow(
-        /Prize index 0 out of range \[0, -1\]/
-      );
+      expect(() => getPrizeByIndex([], 0)).toThrow(/Prize index 0 out of range \[0, -1\]/);
     });
 
     it('should handle single element array', () => {
       const singlePrize = [prizes[0]];
       expect(getPrizeByIndex(singlePrize, 0)).toBe(prizes[0]);
-      expect(() => getPrizeByIndex(singlePrize, 1)).toThrow(
-        /Prize index 1 out of range \[0, 0\]/
-      );
+      expect(() => getPrizeByIndex(singlePrize, 1)).toThrow(/Prize index 1 out of range \[0, 0\]/);
     });
 
     it('should preserve type information', () => {
@@ -483,9 +462,7 @@ describe('prizeUtils', () => {
       expect(normalized[0].probability).toBe(0.5);
       expect(normalized[1].probability).toBe(0.25);
       expect(normalized[2].probability).toBe(0.25);
-      expect(
-        normalized.reduce((sum, p) => sum + p.probability, 0)
-      ).toBeCloseTo(1.0);
+      expect(normalized.reduce((sum, p) => sum + p.probability, 0)).toBeCloseTo(1.0);
     });
 
     it('should normalize probabilities that sum to 0.5', () => {
@@ -521,9 +498,7 @@ describe('prizeUtils', () => {
       expect(normalized[0].probability).toBe(0.2);
       expect(normalized[1].probability).toBe(0.4);
       expect(normalized[2].probability).toBe(0.4);
-      expect(
-        normalized.reduce((sum, p) => sum + p.probability, 0)
-      ).toBeCloseTo(1.0);
+      expect(normalized.reduce((sum, p) => sum + p.probability, 0)).toBeCloseTo(1.0);
     });
 
     it('should not modify probabilities already summing to 1.0', () => {
@@ -589,9 +564,7 @@ describe('prizeUtils', () => {
         },
       ];
 
-      expect(() => normalizeProbabilities(prizes)).toThrow(
-        /Total probability cannot be zero/
-      );
+      expect(() => normalizeProbabilities(prizes)).toThrow(/Total probability cannot be zero/);
     });
 
     it('should handle negative and positive probabilities that cancel out', () => {
@@ -623,9 +596,7 @@ describe('prizeUtils', () => {
       ];
 
       // This actually sums to 0, which throws an error
-      expect(() => normalizeProbabilities(prizes)).toThrow(
-        /Total probability cannot be zero/
-      );
+      expect(() => normalizeProbabilities(prizes)).toThrow(/Total probability cannot be zero/);
     });
 
     it('should preserve other prize properties', () => {
@@ -704,9 +675,7 @@ describe('prizeUtils', () => {
 
     it('should handle empty array', () => {
       const prizes: PrizeConfig[] = [];
-      expect(() => normalizeProbabilities(prizes)).toThrow(
-        /Total probability cannot be zero/
-      );
+      expect(() => normalizeProbabilities(prizes)).toThrow(/Total probability cannot be zero/);
     });
 
     it('should handle very small probabilities', () => {
@@ -882,8 +851,7 @@ describe('deviceDetection', () => {
 
     it('should return false for desktop user agent', () => {
       Object.defineProperty(global.navigator, 'userAgent', {
-        value:
-          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         configurable: true,
       });
 
@@ -1278,9 +1246,7 @@ describe('slotDimensions', () => {
       const slotWidth = 35;
       const expectedHeight = 105;
 
-      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(
-        boardHeight - expectedHeight
-      );
+      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(boardHeight - expectedHeight);
       expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(495);
     });
 
@@ -1289,9 +1255,7 @@ describe('slotDimensions', () => {
       const slotWidth = 45;
       const expectedHeight = 95;
 
-      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(
-        boardHeight - expectedHeight
-      );
+      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(boardHeight - expectedHeight);
       expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(505);
     });
 
@@ -1300,9 +1264,7 @@ describe('slotDimensions', () => {
       const slotWidth = 60;
       const expectedHeight = 90;
 
-      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(
-        boardHeight - expectedHeight
-      );
+      expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(boardHeight - expectedHeight);
       expect(calculateBucketZoneY(boardHeight, slotWidth)).toBe(510);
     });
 

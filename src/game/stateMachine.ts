@@ -6,7 +6,15 @@
 import type { GameState, GameContext, TrajectoryPoint, PrizeConfig } from './types';
 
 export type GameEvent =
-  | { type: 'INITIALIZE'; payload: { selectedIndex: number; trajectory: TrajectoryPoint[]; prize: PrizeConfig; seed: number } }
+  | {
+      type: 'INITIALIZE';
+      payload: {
+        selectedIndex: number;
+        trajectory: TrajectoryPoint[];
+        prize: PrizeConfig;
+        seed: number;
+      };
+    }
   | { type: 'DROP_REQUESTED' }
   | { type: 'COUNTDOWN_COMPLETED' }
   | { type: 'FRAME_ADVANCED'; payload: { frame: number } }
@@ -20,7 +28,7 @@ export const initialContext: GameContext = {
   trajectory: [],
   currentFrame: 0,
   prize: null,
-  seed: 0
+  seed: 0,
 };
 
 /**
@@ -45,8 +53,8 @@ export function transition(
             trajectory: event.payload.trajectory,
             currentFrame: 0,
             prize: event.payload.prize,
-            seed: event.payload.seed
-          }
+            seed: event.payload.seed,
+          },
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -55,13 +63,13 @@ export function transition(
       if (event.type === 'DROP_REQUESTED') {
         return {
           state: 'countdown',
-          context: { ...context, currentFrame: 0 }
+          context: { ...context, currentFrame: 0 },
         };
       }
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -70,13 +78,13 @@ export function transition(
       if (event.type === 'COUNTDOWN_COMPLETED') {
         return {
           state: 'dropping',
-          context
+          context,
         };
       }
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -85,19 +93,19 @@ export function transition(
       if (event.type === 'FRAME_ADVANCED') {
         return {
           state: 'dropping',
-          context: { ...context, currentFrame: event.payload.frame }
+          context: { ...context, currentFrame: event.payload.frame },
         };
       }
       if (event.type === 'LANDING_COMPLETED') {
         return {
           state: 'landed',
-          context
+          context,
         };
       }
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -106,13 +114,13 @@ export function transition(
       if (event.type === 'REVEAL_CONFIRMED') {
         return {
           state: 'revealed',
-          context
+          context,
         };
       }
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -121,13 +129,13 @@ export function transition(
       if (event.type === 'CLAIM_REQUESTED') {
         return {
           state: 'claimed',
-          context
+          context,
         };
       }
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
@@ -136,7 +144,7 @@ export function transition(
       if (event.type === 'RESET_REQUESTED') {
         return {
           state: 'idle',
-          context: initialContext
+          context: initialContext,
         };
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);

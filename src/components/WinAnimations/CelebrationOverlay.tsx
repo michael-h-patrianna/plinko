@@ -1,7 +1,9 @@
 /**
- * Celebration Overlay - Final Win Sequence
- * Disney Principles: STAGING (sequential reveals), APPEAL (delightful motion)
- * React Native compatible: transform, opacity, radial/linear gradients
+ * Full-screen celebration overlay with confetti, prize card, and star bursts
+ * Implements Disney staging and appeal principles for final win sequence
+ * @param prize - Prize configuration with color and label
+ * @param isVisible - Whether the overlay should be shown
+ * @param onComplete - Callback when animation completes
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,7 +43,7 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
               theme.colors.status.success,
               theme.colors.accent.light,
               theme.colors.primary.light,
-              theme.colors.prizes.violet.main
+              theme.colors.prizes.violet.main,
             ];
             const color = colors[Math.floor(Math.random() * colors.length)];
 

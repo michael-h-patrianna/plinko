@@ -11,7 +11,7 @@ import {
   ThemeZIndex,
   ThemeBorderRadius,
   ThemeEffects,
-  ButtonStyle
+  ButtonStyle,
 } from './types';
 
 // Default spacing values (in rem/px)
@@ -181,51 +181,26 @@ export const defaultButtons: ThemeButtons = {
       shadowHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
     }
   ),
-  secondary: createButtonStyle(
-    '#475569',
-    '#ffffff',
-    'transparent',
-    {
-      backgroundHover: '#64748b',
-    }
-  ),
-  outline: createButtonStyle(
-    'transparent',
-    '#3b82f6',
-    '#3b82f6',
-    {
-      backgroundHover: 'rgba(59, 130, 246, 0.1)',
-      outline: true,
-      shadow: 'none',
-      shadowHover: '0 4px 12px rgba(59, 130, 246, 0.2)',
-    }
-  ),
-  ghost: createButtonStyle(
-    'transparent',
-    '#64748b',
-    'transparent',
-    {
-      backgroundHover: 'rgba(100, 116, 139, 0.1)',
-      shadow: 'none',
-      shadowHover: 'none',
-    }
-  ),
-  danger: createButtonStyle(
-    '#ef4444',
-    '#ffffff',
-    'transparent',
-    {
-      backgroundHover: '#dc2626',
-    }
-  ),
-  success: createButtonStyle(
-    '#22c55e',
-    '#ffffff',
-    'transparent',
-    {
-      backgroundHover: '#16a34a',
-    }
-  ),
+  secondary: createButtonStyle('#475569', '#ffffff', 'transparent', {
+    backgroundHover: '#64748b',
+  }),
+  outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
+    backgroundHover: 'rgba(59, 130, 246, 0.1)',
+    outline: true,
+    shadow: 'none',
+    shadowHover: '0 4px 12px rgba(59, 130, 246, 0.2)',
+  }),
+  ghost: createButtonStyle('transparent', '#64748b', 'transparent', {
+    backgroundHover: 'rgba(100, 116, 139, 0.1)',
+    shadow: 'none',
+    shadowHover: 'none',
+  }),
+  danger: createButtonStyle('#ef4444', '#ffffff', 'transparent', {
+    backgroundHover: '#dc2626',
+  }),
+  success: createButtonStyle('#22c55e', '#ffffff', 'transparent', {
+    backgroundHover: '#16a34a',
+  }),
   sizes: {
     sm: { padding: { x: '1rem', y: '0.5rem' }, fontSize: '0.875rem' },
     md: { padding: { x: '1.5rem', y: '0.75rem' }, fontSize: '1rem' },
@@ -260,32 +235,22 @@ export const playFameButtons: ThemeButtons = {
       fontWeight: 700,
     }
   ),
-  outline: createButtonStyle(
-    'transparent',
-    '#52d5ff',
-    '#52d5ff',
-    {
-      backgroundHover: 'rgba(82, 213, 255, 0.1)',
-      borderRadius: '9999px',
-      borderWidth: '2px',
-      outline: true,
-      shadow: 'none',
-      shadowHover: '0 0 20px rgba(82, 213, 255, 0.4)',
-      padding: { x: '2rem', y: '0.875rem' },
-      fontWeight: 700,
-    }
-  ),
-  ghost: createButtonStyle(
-    'transparent',
-    '#c1aff0',
-    'transparent',
-    {
-      backgroundHover: 'rgba(193, 175, 240, 0.1)',
-      borderRadius: '9999px',
-      shadow: 'none',
-      padding: { x: '2rem', y: '0.875rem' },
-    }
-  ),
+  outline: createButtonStyle('transparent', '#52d5ff', '#52d5ff', {
+    backgroundHover: 'rgba(82, 213, 255, 0.1)',
+    borderRadius: '9999px',
+    borderWidth: '2px',
+    outline: true,
+    shadow: 'none',
+    shadowHover: '0 0 20px rgba(82, 213, 255, 0.4)',
+    padding: { x: '2rem', y: '0.875rem' },
+    fontWeight: 700,
+  }),
+  ghost: createButtonStyle('transparent', '#c1aff0', 'transparent', {
+    backgroundHover: 'rgba(193, 175, 240, 0.1)',
+    borderRadius: '9999px',
+    shadow: 'none',
+    padding: { x: '2rem', y: '0.875rem' },
+  }),
   danger: createButtonStyle(
     'linear-gradient(180deg, #ff0048 0%, #ae143e 100%)',
     '#ffffff',

@@ -11,7 +11,7 @@ describe('State Machine', () => {
     selectedIndex: 2,
     trajectory: [
       { frame: 0, x: 100, y: 0, rotation: 0 },
-      { frame: 1, x: 110, y: 10, rotation: 5 }
+      { frame: 1, x: 110, y: 10, rotation: 5 },
     ],
     currentFrame: 0,
     prize: {
@@ -23,9 +23,9 @@ describe('State Machine', () => {
       probability: 1.0,
       color: '#000',
       slotIcon: '',
-      slotColor: '#000'
+      slotColor: '#000',
     },
-    seed: 12345
+    seed: 12345,
   };
 
   describe('idle -> ready transition', () => {
@@ -36,8 +36,8 @@ describe('State Machine', () => {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
           prize: mockContext.prize!,
-          seed: mockContext.seed
-        }
+          seed: mockContext.seed,
+        },
       });
 
       expect(result.state).toBe('ready');
@@ -46,16 +46,16 @@ describe('State Machine', () => {
     });
 
     it('should reject other events from idle', () => {
-      expect(() =>
-        transition('idle', initialContext, { type: 'DROP_REQUESTED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('idle', initialContext, { type: 'DROP_REQUESTED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
   describe('ready -> countdown transition', () => {
     it('should transition to countdown on DROP_REQUESTED', () => {
       const result = transition('ready', mockContext, {
-        type: 'DROP_REQUESTED'
+        type: 'DROP_REQUESTED',
       });
 
       expect(result.state).toBe('countdown');
@@ -64,7 +64,7 @@ describe('State Machine', () => {
 
     it('should transition to idle on RESET_REQUESTED', () => {
       const result = transition('ready', mockContext, {
-        type: 'RESET_REQUESTED'
+        type: 'RESET_REQUESTED',
       });
 
       expect(result.state).toBe('idle');
@@ -72,16 +72,16 @@ describe('State Machine', () => {
     });
 
     it('should reject invalid events from ready', () => {
-      expect(() =>
-        transition('ready', mockContext, { type: 'LANDING_COMPLETED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('ready', mockContext, { type: 'LANDING_COMPLETED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
   describe('countdown state transitions', () => {
     it('should transition to dropping on COUNTDOWN_COMPLETED', () => {
       const result = transition('countdown', mockContext, {
-        type: 'COUNTDOWN_COMPLETED'
+        type: 'COUNTDOWN_COMPLETED',
       });
 
       expect(result.state).toBe('dropping');
@@ -89,16 +89,16 @@ describe('State Machine', () => {
 
     it('should transition to idle on RESET_REQUESTED', () => {
       const result = transition('countdown', mockContext, {
-        type: 'RESET_REQUESTED'
+        type: 'RESET_REQUESTED',
       });
 
       expect(result.state).toBe('idle');
     });
 
     it('should reject invalid events from countdown', () => {
-      expect(() =>
-        transition('countdown', mockContext, { type: 'LANDING_COMPLETED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('countdown', mockContext, { type: 'LANDING_COMPLETED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
@@ -106,7 +106,7 @@ describe('State Machine', () => {
     it('should update frame on FRAME_ADVANCED', () => {
       const result = transition('dropping', mockContext, {
         type: 'FRAME_ADVANCED',
-        payload: { frame: 5 }
+        payload: { frame: 5 },
       });
 
       expect(result.state).toBe('dropping');
@@ -115,23 +115,23 @@ describe('State Machine', () => {
 
     it('should transition to landed on LANDING_COMPLETED', () => {
       const result = transition('dropping', mockContext, {
-        type: 'LANDING_COMPLETED'
+        type: 'LANDING_COMPLETED',
       });
 
       expect(result.state).toBe('landed');
     });
 
     it('should reject invalid events from dropping', () => {
-      expect(() =>
-        transition('dropping', mockContext, { type: 'DROP_REQUESTED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('dropping', mockContext, { type: 'DROP_REQUESTED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
   describe('landed -> revealed transition', () => {
     it('should transition to revealed on REVEAL_CONFIRMED', () => {
       const result = transition('landed', mockContext, {
-        type: 'REVEAL_CONFIRMED'
+        type: 'REVEAL_CONFIRMED',
       });
 
       expect(result.state).toBe('revealed');
@@ -139,23 +139,23 @@ describe('State Machine', () => {
 
     it('should transition to idle on RESET_REQUESTED', () => {
       const result = transition('landed', mockContext, {
-        type: 'RESET_REQUESTED'
+        type: 'RESET_REQUESTED',
       });
 
       expect(result.state).toBe('idle');
     });
 
     it('should reject invalid events from landed', () => {
-      expect(() =>
-        transition('landed', mockContext, { type: 'DROP_REQUESTED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('landed', mockContext, { type: 'DROP_REQUESTED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
   describe('revealed state transitions', () => {
     it('should transition to idle on RESET_REQUESTED', () => {
       const result = transition('revealed', mockContext, {
-        type: 'RESET_REQUESTED'
+        type: 'RESET_REQUESTED',
       });
 
       expect(result.state).toBe('idle');
@@ -163,9 +163,9 @@ describe('State Machine', () => {
     });
 
     it('should reject invalid events from revealed', () => {
-      expect(() =>
-        transition('revealed', mockContext, { type: 'DROP_REQUESTED' })
-      ).toThrow(/Invalid event/);
+      expect(() => transition('revealed', mockContext, { type: 'DROP_REQUESTED' })).toThrow(
+        /Invalid event/
+      );
     });
   });
 
@@ -181,8 +181,8 @@ describe('State Machine', () => {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
           prize: mockContext.prize!,
-          seed: mockContext.seed
-        }
+          seed: mockContext.seed,
+        },
       });
       state = result.state;
       context = result.context;

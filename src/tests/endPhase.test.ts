@@ -20,14 +20,14 @@ describe('End Phase Trajectory Analysis', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: targetSlot,
-        seed
+        seed,
       });
 
       // Last peg row is at approximately 70% of board height
       const lastPegRowY = BOARD_HEIGHT * 0.65;
 
       // Find frames after last peg row
-      const endPhaseFrames = trajectory.filter(p => p.y >= lastPegRowY);
+      const endPhaseFrames = trajectory.filter((p) => p.y >= lastPegRowY);
       const afterLastPeg = endPhaseFrames[0];
       const finalFrame = trajectory[trajectory.length - 1];
 
@@ -40,14 +40,20 @@ describe('End Phase Trajectory Analysis', () => {
       if (afterLastPeg) {
         console.log(`  After last peg (y=${lastPegRowY}px):`);
         console.log(`    - Position: x=${afterLastPeg.x.toFixed(1)}px`);
-        console.log(`    - Distance from target: ${Math.abs(afterLastPeg.x - targetSlotX).toFixed(1)}px`);
+        console.log(
+          `    - Distance from target: ${Math.abs(afterLastPeg.x - targetSlotX).toFixed(1)}px`
+        );
       } else {
         console.log(`  After last peg (y=${lastPegRowY}px): No frames (ball stopped early)`);
       }
       console.log(`  Final landing:`);
       console.log(`    - Position: x=${finalFrame.x.toFixed(1)}px, y=${finalFrame.y.toFixed(1)}px`);
-      console.log(`    - Distance from target: ${Math.abs(finalFrame.x - targetSlotX).toFixed(1)}px`);
-      console.log(`    - Landed in correct slot: ${Math.abs(finalFrame.x - targetSlotX) < slotWidth / 2 ? '✅ YES' : '❌ NO'}`);
+      console.log(
+        `    - Distance from target: ${Math.abs(finalFrame.x - targetSlotX).toFixed(1)}px`
+      );
+      console.log(
+        `    - Landed in correct slot: ${Math.abs(finalFrame.x - targetSlotX) < slotWidth / 2 ? '✅ YES' : '❌ NO'}`
+      );
 
       // Analyze movement in end phase
       if (endPhaseFrames.length > 1) {
@@ -59,14 +65,17 @@ describe('End Phase Trajectory Analysis', () => {
           endPhaseMovement.push({ dx, dy, speed });
         }
 
-        const avgSpeed = endPhaseMovement.reduce((sum, m) => sum + m.speed, 0) / endPhaseMovement.length;
-        const maxXJump = Math.max(...endPhaseMovement.map(m => Math.abs(m.dx)));
+        const avgSpeed =
+          endPhaseMovement.reduce((sum, m) => sum + m.speed, 0) / endPhaseMovement.length;
+        const maxXJump = Math.max(...endPhaseMovement.map((m) => Math.abs(m.dx)));
 
         console.log(`  End phase motion:`);
         console.log(`    - Frames after last peg: ${endPhaseFrames.length}`);
         console.log(`    - Average speed: ${avgSpeed.toFixed(2)}px/frame`);
         console.log(`    - Max horizontal jump: ${maxXJump.toFixed(2)}px/frame`);
-        console.log(`    - Suspicious jump: ${maxXJump > 5 ? '⚠️  YES - may be teleporting' : '✅ No - looks natural'}`);
+        console.log(
+          `    - Suspicious jump: ${maxXJump > 5 ? '⚠️  YES - may be teleporting' : '✅ No - looks natural'}`
+        );
 
         // Assertions - allow slightly wider tolerance for realistic physics
         expect(Math.abs(finalFrame.x - targetSlotX)).toBeLessThan(slotWidth / 2 + 5);

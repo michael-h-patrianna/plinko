@@ -15,15 +15,11 @@ export function validatePrizeSet(prizes: PrizeConfig[]): void {
   const tolerance = 1e-6;
 
   if (Math.abs(sum - 1.0) > tolerance) {
-    throw new Error(
-      `Prize probabilities must sum to 1.0, got ${sum.toFixed(6)}`
-    );
+    throw new Error(`Prize probabilities must sum to 1.0, got ${sum.toFixed(6)}`);
   }
 
   if (prizes.length < 3 || prizes.length > 8) {
-    throw new Error(
-      `Prize set must contain 3-8 prizes, got ${prizes.length}`
-    );
+    throw new Error(`Prize set must contain 3-8 prizes, got ${prizes.length}`);
   }
 }
 
@@ -36,9 +32,7 @@ export function validatePrizeSet(prizes: PrizeConfig[]): void {
  */
 export function getPrizeByIndex<T extends PrizeConfig>(prizes: T[], index: number): T {
   if (index < 0 || index >= prizes.length) {
-    throw new Error(
-      `Prize index ${index} out of range [0, ${prizes.length - 1}]`
-    );
+    throw new Error(`Prize index ${index} out of range [0, ${prizes.length - 1}]`);
   }
 
   return prizes[index]!;
@@ -56,8 +50,8 @@ export function normalizeProbabilities<T extends PrizeConfig>(prizes: T[]): T[] 
     throw new Error('Total probability cannot be zero');
   }
 
-  return prizes.map(prize => ({
+  return prizes.map((prize) => ({
     ...prize,
-    probability: prize.probability / totalProb
+    probability: prize.probability / totalProb,
   }));
 }

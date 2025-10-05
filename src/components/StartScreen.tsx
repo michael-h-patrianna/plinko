@@ -1,6 +1,9 @@
 /**
- * Start screen with game title and drop button
- * FULLY THEMEABLE - No hard-coded styles
+ * Initial start screen displaying game title, prize list, and play button
+ * Prize list shows probabilities and supports expandable combo rewards
+ * @param prizes - Array of available prizes with probabilities
+ * @param onStart - Callback to start the game
+ * @param disabled - Whether the start button should be disabled
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -48,7 +51,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         transition={{
           duration: 0.25,
           delay: 0.1,
-          ease: [0.34, 1.56, 0.64, 1]
+          ease: [0.34, 1.56, 0.64, 1],
         }}
       >
         Plinko Popup
@@ -59,10 +62,10 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         className="p-4 mb-8 w-full"
         style={{
           maxWidth: 'calc(100% - 40px)',
-          background: theme.components?.card?.background || theme.colors.surface.primary,
-          boxShadow: theme.components?.card?.shadow || theme.effects.shadows.card,
-          border: theme.components?.card?.border || `1px solid ${theme.colors.border.default}`,
-          borderRadius: theme.components?.card?.borderRadius || theme.borderRadius.card,
+          background: theme.components.card.background || theme.colors.surface.primary,
+          boxShadow: theme.components.card.shadow || theme.effects.shadows.card,
+          border: theme.components.card.border || `1px solid ${theme.colors.border.default}`,
+          borderRadius: theme.components.card.borderRadius || theme.borderRadius.card,
         }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -83,16 +86,18 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
         </h2>
         <div className="space-y-2">
           {prizes.map((prize, index) => {
-            const prizeType = (prize as any).type;
+            const prizeType = prize.type;
             const isPurchaseOffer = prizeType === 'purchase';
-            const prizeReward = (prize as any).freeReward;
-            const rewardCount = prizeReward ? [
-              prizeReward.sc,
-              prizeReward.gc,
-              prizeReward.spins,
-              prizeReward.xp,
-              prizeReward.randomReward
-            ].filter(Boolean).length : 0;
+            const prizeReward = prize.freeReward;
+            const rewardCount = prizeReward
+              ? [
+                  prizeReward.sc,
+                  prizeReward.gc,
+                  prizeReward.spins,
+                  prizeReward.xp,
+                  prizeReward.randomReward,
+                ].filter(Boolean).length
+              : 0;
             const isCombo = rewardCount >= 2 && !isPurchaseOffer;
             const isExpanded = expandedPrize === prize.id;
 
@@ -103,7 +108,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
             } else if (isCombo) {
               displayText = prize.label || '';
             } else {
-              displayText = getSlotDisplayText(prize as any, abbreviateNumber, true) || prize.label || '';
+              displayText = getSlotDisplayText(prize, abbreviateNumber, true) || prize.label || '';
             }
 
             return (
@@ -138,10 +143,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                       </span>
                     )}
                   </span>
-                  <span
-                    className="font-semibold"
-                    style={{ color: theme.colors.accent.main }}
-                  >
+                  <span className="font-semibold" style={{ color: theme.colors.accent.main }}>
                     {(prize.probability * 100).toFixed(0)}%
                   </span>
                 </div>
@@ -155,7 +157,13 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                         borderRadius: theme.borderRadius.sm,
                         color: theme.colors.text.secondary,
                       }}
-                      initial={{ opacity: 0, maxHeight: 0, marginTop: 0, paddingTop: 0, paddingBottom: 0 }}
+                      initial={{
+                        opacity: 0,
+                        maxHeight: 0,
+                        marginTop: 0,
+                        paddingTop: 0,
+                        paddingBottom: 0,
+                      }}
                       animate={{
                         opacity: 1,
                         maxHeight: 100,
@@ -172,13 +180,17 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                       }}
                       transition={{
                         duration: 0.2,
-                        ease: 'easeInOut'
+                        ease: 'easeInOut',
                       }}
                     >
                       {prizeReward.sc && <div>• Free SC: {abbreviateNumber(prizeReward.sc)}</div>}
                       {prizeReward.gc && <div>• GC: {abbreviateNumber(prizeReward.gc)}</div>}
                       {prizeReward.spins && <div>• Free Spins: {prizeReward.spins}</div>}
-                      {prizeReward.xp && <div>• XP Points: {abbreviateNumber(prizeReward.xp)}</div>}
+                      {prizeReward.xp && (
+                        <div>
+                          • {prizeReward.xp.config.name}: {abbreviateNumber(prizeReward.xp.amount)}
+                        </div>
+                      )}
                       {prizeReward.randomReward && <div>• Bronze Wheel</div>}
                     </motion.div>
                   )}
@@ -190,12 +202,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
       </motion.div>
 
       {/* Play button */}
-      <ThemedButton
-        onClick={onStart}
-        disabled={disabled}
-        delay={0.3}
-        testId="drop-ball-button"
-      >
+      <ThemedButton onClick={onStart} disabled={disabled} delay={0.3} testId="drop-ball-button">
         Drop Ball
       </ThemedButton>
     </motion.div>

@@ -1,7 +1,13 @@
 /**
- * Slot Win Reveal Animation
- * Disney Principles: STAGING (visual hierarchy), ANTICIPATION (build-up)
- * React Native compatible: transform (scale, rotate), opacity, linear gradients
+ * Slot win reveal animation with radial light rays and sparkles
+ * Implements Disney animation principles: staging and anticipation
+ * @param x - X position of the winning slot
+ * @param y - Y position of the winning slot
+ * @param width - Width of the slot
+ * @param height - Height of the slot
+ * @param color - Color theme for the animation effects
+ * @param label - Prize label to display
+ * @param isActive - Whether the animation should be shown
  */
 
 import { motion } from 'framer-motion';

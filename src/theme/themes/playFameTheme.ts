@@ -11,7 +11,7 @@ import {
   defaultZIndex,
   defaultBorderRadius,
   playFameButtons,
-  playFameComponents
+  playFameComponents,
 } from '../themeDefaults';
 
 export const playFameTheme: Theme = {
@@ -20,37 +20,37 @@ export const playFameTheme: Theme = {
 
   colors: {
     background: {
-      primary: '#1a1038',      // PlayFame main dark purple background
-      secondary: '#231845',    // Darker sections
-      tertiary: '#2a124c',     // Card backgrounds
+      primary: '#1a1038', // PlayFame main dark purple background
+      secondary: '#231845', // Darker sections
+      tertiary: '#2a124c', // Card backgrounds
       overlay: 'rgba(26, 16, 56, 0.95)',
       overlayDark: 'rgba(26, 16, 56, 0.98)',
     },
 
     surface: {
-      primary: '#311d58',      // Card surface
-      secondary: '#3a1f58',    // Elevated cards
-      elevated: '#451668',     // Buttons/interactive elements
+      primary: '#311d58', // Card surface
+      secondary: '#3a1f58', // Elevated cards
+      elevated: '#451668', // Buttons/interactive elements
     },
 
     primary: {
-      main: '#8b5cf6',        // PlayFame signature purple (buttons)
-      light: '#a852ff',       // Hover state
-      dark: '#6e54b0',        // Active state
+      main: '#8b5cf6', // PlayFame signature purple (buttons)
+      light: '#a852ff', // Hover state
+      dark: '#6e54b0', // Active state
       contrast: '#ffffff',
     },
 
     accent: {
-      main: '#1bee02',        // Green accent (wins/success)
-      light: '#47d631',       // Light green
-      dark: '#00ad45',        // Dark green
+      main: '#1bee02', // Green accent (wins/success)
+      light: '#47d631', // Light green
+      dark: '#00ad45', // Dark green
       contrast: '#000000',
     },
 
     text: {
-      primary: '#ffffff',      // Main text
-      secondary: '#c1aff0',    // Muted text
-      tertiary: '#90A4E3',     // Subtle text
+      primary: '#ffffff', // Main text
+      secondary: '#c1aff0', // Muted text
+      tertiary: '#90A4E3', // Subtle text
       disabled: '#7a468e',
       inverse: '#17002b',
       link: '#52d5ff',
@@ -58,35 +58,35 @@ export const playFameTheme: Theme = {
     },
 
     status: {
-      success: '#1bee02',      // PlayFame green
-      warning: '#ffa500',      // Orange warning
-      error: '#ff0048',        // Red error
-      info: '#52d5ff',         // Cyan info
+      success: '#1bee02', // PlayFame green
+      warning: '#ffa500', // Orange warning
+      error: '#ff0048', // Red error
+      info: '#52d5ff', // Cyan info
     },
 
     prizes: {
       orange: {
-        main: '#ff7700',        // Bright orange
+        main: '#ff7700', // Bright orange
         light: '#ffa500',
         dark: '#e56000',
       },
       yellow: {
-        main: '#ffd700',        // Gold
+        main: '#ffd700', // Gold
         light: '#ffed4e',
         dark: '#ffc700',
       },
       emerald: {
-        main: '#1bee02',        // PlayFame green
+        main: '#1bee02', // PlayFame green
         light: '#5af25d',
         dark: '#00ad45',
       },
       blue: {
-        main: '#52d5ff',        // Cyan blue
+        main: '#52d5ff', // Cyan blue
         light: '#70b5f9',
         dark: '#3492f0',
       },
       violet: {
-        main: '#a852ff',        // PlayFame purple
+        main: '#a852ff', // PlayFame purple
         light: '#c47ae5',
         dark: '#8b5cf6',
       },
@@ -94,15 +94,15 @@ export const playFameTheme: Theme = {
 
     game: {
       ball: {
-        primary: '#ffd700',     // Gold ball
-        secondary: '#ffa500',   // Orange glow
+        primary: '#ffd700', // Gold ball
+        secondary: '#ffa500', // Orange glow
         highlight: '#ffffff',
         shadow: 'rgba(0, 0, 0, 0.8)',
         borderRadius: '50%',
       },
       peg: {
-        default: '#6e54b0',     // Purple pegs
-        active: '#1bee02',      // Green when hit
+        default: '#6e54b0', // Purple pegs
+        active: '#1bee02', // Green when hit
         highlight: '#47d631',
         borderRadius: '50%',
         shadow: '0 2px 6px rgba(0,0,0,0.4)',
@@ -112,7 +112,8 @@ export const playFameTheme: Theme = {
         borderWidth: '3px',
         borderRadius: '0 0 8px 8px',
         glow: 'rgba(139, 92, 246, 0.5)',
-        background: 'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(139,92,246,0.3) 70%, rgba(139,92,246,0.5) 100%)',
+        background:
+          'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(139,92,246,0.3) 70%, rgba(139,92,246,0.5) 100%)',
       },
       launcher: {
         base: '#7a468e',
@@ -169,14 +170,16 @@ export const playFameTheme: Theme = {
 
     // Ball gradients - golden with purple hints
     ballMain: 'linear-gradient(135deg, #ffed4e 0%, #ffd700 30%, #ffa500 70%, #ff7700 100%)',
-    ballGlow: 'linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,165,0,0.3) 50%, transparent 100%)',
+    ballGlow:
+      'linear-gradient(135deg, rgba(255,215,0,0.6) 0%, rgba(255,165,0,0.3) 50%, transparent 100%)',
 
     // Peg gradients - purple theme
     pegDefault: 'linear-gradient(135deg, #7a468e 0%, #6e54b0 30%, #561d86 70%, #451668 100%)',
     pegActive: 'linear-gradient(135deg, #5af25d 0%, #47d631 30%, #1bee02 70%, #00ad45 100%)',
 
     // Slot gradients - purple glow
-    slotBackground: 'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(139,92,246,0.3) 70%, rgba(139,92,246,0.5) 100%)',
+    slotBackground:
+      'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(139,92,246,0.3) 70%, rgba(139,92,246,0.5) 100%)',
     slotHighlight: 'linear-gradient(135deg, rgba(168,82,255,0.4) 0%, transparent 100%)',
     slotWin: 'linear-gradient(135deg, #ffed4e 0%, #ffd700 50%, #ffa500 100%)',
 

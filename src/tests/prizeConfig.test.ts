@@ -7,17 +7,17 @@ import {
   MOCK_PRIZES,
   generateRandomPrizeSet,
   getPrizeByIndex,
-  createValidatedPrizeSet
+  createValidatedPrizeSet,
 } from '../config/prizeTable';
 import {
   generateProductionPrizeSet,
   createValidatedProductionPrizeSet,
-  getPrizeByIndex as getProductionPrizeByIndex
+  getPrizeByIndex as getProductionPrizeByIndex,
 } from '../config/productionPrizeTable';
 import {
   validatePrizeSet,
   normalizeProbabilities,
-  getPrizeByIndex as getPrizeByIndexUtil
+  getPrizeByIndex as getPrizeByIndexUtil,
 } from '../utils/prizeUtils';
 import type { PrizeConfig } from '../game/types';
 
@@ -53,7 +53,7 @@ describe('MOCK_PRIZES Configuration', () => {
   });
 
   it('should have unique IDs', () => {
-    const ids = MOCK_PRIZES.map(p => p.id);
+    const ids = MOCK_PRIZES.map((p) => p.id);
     const uniqueIds = new Set(ids);
     expect(uniqueIds.size).toBe(MOCK_PRIZES.length);
   });
@@ -100,8 +100,7 @@ describe('Prize Set Generation', () => {
 
       // Highly likely to have different counts or IDs
       const hasDifference =
-        set1.length !== set2.length ||
-        set1.some((p, i) => p.id !== set2[i]?.id);
+        set1.length !== set2.length || set1.some((p, i) => p.id !== set2[i]?.id);
 
       // With 8 prizes to choose from, very likely to be different
       // (though theoretically could be same)
@@ -132,7 +131,7 @@ describe('Prize Set Generation', () => {
 
     it('should generate exact count when specified', () => {
       const counts = [3, 4, 5, 6, 7, 8];
-      counts.forEach(count => {
+      counts.forEach((count) => {
         const prizes = generateProductionPrizeSet(count);
         expect(prizes.length).toBe(count);
       });
@@ -162,7 +161,7 @@ describe('Prize Set Generation', () => {
       // Generate many sets to see variety
       for (let i = 0; i < 50; i++) {
         const prizes = generateProductionPrizeSet();
-        prizes.forEach(p => prizeTypes.add(p.type));
+        prizes.forEach((p) => prizeTypes.add(p.type));
       }
 
       // Should have at least free and possibly purchase/no_win
@@ -186,7 +185,7 @@ describe('Prize Set Validation', () => {
       const invalidPrizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 0.3 },
         { ...MOCK_PRIZES[1]!, probability: 0.3 },
-        { ...MOCK_PRIZES[2]!, probability: 0.3 }
+        { ...MOCK_PRIZES[2]!, probability: 0.3 },
       ];
 
       expect(() => validatePrizeSet(invalidPrizes)).toThrow(/must sum to 1\.0/);
@@ -195,18 +194,20 @@ describe('Prize Set Validation', () => {
     it('should throw when less than 3 prizes', () => {
       const tooFewPrizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 0.5 },
-        { ...MOCK_PRIZES[1]!, probability: 0.5 }
+        { ...MOCK_PRIZES[1]!, probability: 0.5 },
       ];
 
       expect(() => validatePrizeSet(tooFewPrizes)).toThrow(/must contain 3-8 prizes/);
     });
 
     it('should throw when more than 8 prizes', () => {
-      const tooManyPrizes: PrizeConfig[] = Array(9).fill(null).map((_, i) => ({
-        ...MOCK_PRIZES[0]!,
-        id: `p${i}`,
-        probability: 1/9
-      }));
+      const tooManyPrizes: PrizeConfig[] = Array(9)
+        .fill(null)
+        .map((_, i) => ({
+          ...MOCK_PRIZES[0]!,
+          id: `p${i}`,
+          probability: 1 / 9,
+        }));
 
       expect(() => validatePrizeSet(tooManyPrizes)).toThrow(/must contain 3-8 prizes/);
     });
@@ -215,7 +216,7 @@ describe('Prize Set Validation', () => {
       const prizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 0.1 },
         { ...MOCK_PRIZES[1]!, probability: 0.2 },
-        { ...MOCK_PRIZES[2]!, probability: 0.7 }
+        { ...MOCK_PRIZES[2]!, probability: 0.7 },
       ];
 
       // Should pass despite potential floating point issues
@@ -266,7 +267,7 @@ describe('Probability Normalization', () => {
       const prizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 1 },
         { ...MOCK_PRIZES[1]!, probability: 2 },
-        { ...MOCK_PRIZES[2]!, probability: 3 }
+        { ...MOCK_PRIZES[2]!, probability: 3 },
       ];
 
       const normalized = normalizeProbabilities(prizes);
@@ -279,14 +280,14 @@ describe('Probability Normalization', () => {
       const prizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 1 },
         { ...MOCK_PRIZES[1]!, probability: 2 },
-        { ...MOCK_PRIZES[2]!, probability: 3 }
+        { ...MOCK_PRIZES[2]!, probability: 3 },
       ];
 
       const normalized = normalizeProbabilities(prizes);
 
-      expect(normalized[0]!.probability).toBeCloseTo(1/6, 6);
-      expect(normalized[1]!.probability).toBeCloseTo(2/6, 6);
-      expect(normalized[2]!.probability).toBeCloseTo(3/6, 6);
+      expect(normalized[0]!.probability).toBeCloseTo(1 / 6, 6);
+      expect(normalized[1]!.probability).toBeCloseTo(2 / 6, 6);
+      expect(normalized[2]!.probability).toBeCloseTo(3 / 6, 6);
     });
 
     it('should handle already normalized probabilities', () => {
@@ -299,7 +300,7 @@ describe('Probability Normalization', () => {
     it('should throw on zero total probability', () => {
       const prizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 0 },
-        { ...MOCK_PRIZES[1]!, probability: 0 }
+        { ...MOCK_PRIZES[1]!, probability: 0 },
       ];
 
       expect(() => normalizeProbabilities(prizes)).toThrow(/cannot be zero/);
@@ -308,7 +309,7 @@ describe('Probability Normalization', () => {
     it('should preserve all other prize properties', () => {
       const prizes: PrizeConfig[] = [
         { ...MOCK_PRIZES[0]!, probability: 1 },
-        { ...MOCK_PRIZES[1]!, probability: 2 }
+        { ...MOCK_PRIZES[1]!, probability: 2 },
       ];
 
       const normalized = normalizeProbabilities(prizes);
@@ -393,7 +394,7 @@ describe('Prize Configuration Edge Cases', () => {
     const prizes: PrizeConfig[] = [
       { ...MOCK_PRIZES[0]!, probability: 0.001 },
       { ...MOCK_PRIZES[1]!, probability: 0.001 },
-      { ...MOCK_PRIZES[2]!, probability: 0.998 }
+      { ...MOCK_PRIZES[2]!, probability: 0.998 },
     ];
 
     const normalized = normalizeProbabilities(prizes);
@@ -403,11 +404,13 @@ describe('Prize Configuration Edge Cases', () => {
 
   it('should handle equal probabilities', () => {
     const count = 7;
-    const prizes: PrizeConfig[] = Array(count).fill(null).map((_, i) => ({
-      ...MOCK_PRIZES[0]!,
-      id: `p${i}`,
-      probability: 1/count
-    }));
+    const prizes: PrizeConfig[] = Array(count)
+      .fill(null)
+      .map((_, i) => ({
+        ...MOCK_PRIZES[0]!,
+        id: `p${i}`,
+        probability: 1 / count,
+      }));
 
     expect(() => validatePrizeSet(prizes)).not.toThrow();
   });
@@ -415,7 +418,7 @@ describe('Prize Configuration Edge Cases', () => {
 
 describe('Prize Types Coverage', () => {
   it('should support free prize type', () => {
-    const freePrizes = MOCK_PRIZES.filter(p => p.type === 'free');
+    const freePrizes = MOCK_PRIZES.filter((p) => p.type === 'free');
     expect(freePrizes.length).toBe(6);
   });
 
@@ -423,7 +426,7 @@ describe('Prize Types Coverage', () => {
     const validTypes = ['free', 'purchase', 'no_win'];
     const prizes = generateProductionPrizeSet(8);
 
-    prizes.forEach(prize => {
+    prizes.forEach((prize) => {
       expect(validTypes).toContain(prize.type);
     });
   });

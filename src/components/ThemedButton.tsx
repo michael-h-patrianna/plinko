@@ -1,5 +1,12 @@
 /**
- * Reusable themed button with consistent animation
+ * Reusable themed button component with entrance animation and shine effect
+ * Automatically styled based on current theme
+ * @param onClick - Click handler
+ * @param disabled - Whether the button should be disabled
+ * @param className - Additional CSS classes
+ * @param delay - Animation delay in seconds
+ * @param children - Button content
+ * @param testId - Test ID for testing
  */
 
 import { motion } from 'framer-motion';
@@ -20,7 +27,7 @@ export function ThemedButton({
   className = '',
   delay = 0,
   children,
-  testId
+  testId,
 }: ThemedButtonProps) {
   const { theme } = useTheme();
 
@@ -44,17 +51,21 @@ export function ThemedButton({
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
       }}
-      whileHover={!disabled ? {
-        scale: 1.05,
-        boxShadow: theme.buttons.primary.shadowHover,
-      } : {}}
+      whileHover={
+        !disabled
+          ? {
+              scale: 1.05,
+              boxShadow: theme.buttons.primary.shadowHover,
+            }
+          : {}
+      }
       whileTap={!disabled ? { scale: 0.95 } : {}}
       initial={{ scale: 0, rotate: -5, opacity: 0 }}
       animate={{ scale: 1, rotate: 0, opacity: 1 }}
       transition={{
         duration: 0.2,
         delay,
-        ease: [0.34, 1.56, 0.64, 1]
+        ease: [0.34, 1.56, 0.64, 1],
       }}
       data-testid={testId}
     >

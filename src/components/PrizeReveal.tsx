@@ -1,5 +1,9 @@
 /**
- * Prize reveal overlay - routes to appropriate view based on prize type
+ * Prize reveal overlay router that displays appropriate view based on prize type
+ * Routes to FreeRewardView, NoWinView, or PurchaseOfferView
+ * @param prize - Prize configuration determining which view to show
+ * @param onClaim - Callback when user claims/dismisses the prize
+ * @param canClaim - Whether the claim button should be enabled
  */
 
 import type { PrizeConfig } from '../game/types';

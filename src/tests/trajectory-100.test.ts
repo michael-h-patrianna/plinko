@@ -9,14 +9,19 @@ const PHYSICS = {
   BALL_RADIUS: 9,
   PEG_RADIUS: 7,
   COLLISION_RADIUS: 16, // Ball + Peg (9 + 7)
-  BORDER_WIDTH: 12
+  BORDER_WIDTH: 12,
 };
 
-function generatePegLayout(boardWidth: number, boardHeight: number, pegRows: number, _slotCount: number) {
-  const pegs: Array<{x: number, y: number, row: number, col: number}> = [];
+function generatePegLayout(
+  boardWidth: number,
+  boardHeight: number,
+  pegRows: number,
+  _slotCount: number
+) {
+  const pegs: Array<{ x: number; y: number; row: number; col: number }> = [];
   const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
   const pegPadding = PHYSICS.PEG_RADIUS + 10;
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
+  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2 - pegPadding * 2;
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
   const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -63,7 +68,7 @@ describe('100 Trajectory Physics Test', () => {
           pegRows,
           slotCount,
           selectedIndex,
-          seed
+          seed,
         });
 
         let hasOverlap = false;
@@ -81,7 +86,8 @@ describe('100 Trajectory Physics Test', () => {
             const distance = Math.sqrt(dx * dx + dy * dy);
             const overlap = PHYSICS.COLLISION_RADIUS - distance;
 
-            if (overlap > 0.1) { // Allow 0.1px tolerance for numerical precision
+            if (overlap > 0.1) {
+              // Allow 0.1px tolerance for numerical precision
               hasOverlap = true;
               runOverlaps++;
               overlapViolations++;
@@ -105,14 +111,15 @@ describe('100 Trajectory Physics Test', () => {
           } else {
             failures++;
             if (run < 5) {
-              console.log(`  Run ${run}: Failed - landed in slot ${landedSlot} (target: ${selectedIndex}), overlaps: ${runOverlaps}`);
+              console.log(
+                `  Run ${run}: Failed - landed in slot ${landedSlot} (target: ${selectedIndex}), overlaps: ${runOverlaps}`
+              );
             }
           }
         }
-
       } catch (error) {
         failures++;
-        console.log(`  Run ${run}: Error - ${error}`);
+        console.log(`  Run ${run}: Error - ${error instanceof Error ? error.message : String(error)}`);
       }
 
       if ((run + 1) % 20 === 0) {

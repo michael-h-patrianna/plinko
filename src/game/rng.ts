@@ -10,11 +10,11 @@ import type { PrizeConfig } from './types';
  * @param seed - 32-bit unsigned integer seed
  */
 function mulberry32(seed: number): () => number {
-  return function() {
-    let t = seed += 0x6D2B79F5;
-    t = Math.imul(t ^ t >>> 15, t | 1);
-    t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
 
@@ -47,7 +47,7 @@ function validateProbabilities(prizes: PrizeConfig[]): void {
   if (Math.abs(sum - 1.0) > tolerance) {
     throw new Error(
       `Prize probabilities must sum to 1.0, got ${sum.toFixed(6)}. ` +
-      `Difference: ${(sum - 1.0).toFixed(6)}`
+        `Difference: ${(sum - 1.0).toFixed(6)}`
     );
   }
 }
@@ -68,9 +68,7 @@ export function selectPrize(
 } {
   // Validation
   if (prizes.length < 3 || prizes.length > 8) {
-    throw new Error(
-      `Prize table must contain 3-8 prizes, got ${prizes.length}`
-    );
+    throw new Error(`Prize table must contain 3-8 prizes, got ${prizes.length}`);
   }
 
   validateProbabilities(prizes);
@@ -100,6 +98,6 @@ export function selectPrize(
   return {
     selectedIndex,
     seedUsed: seed,
-    cumulativeWeights
+    cumulativeWeights,
   };
 }

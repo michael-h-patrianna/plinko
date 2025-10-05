@@ -1,6 +1,8 @@
 /**
- * Prize claimed confirmation screen
- * Shows success message with Close button to reset game
+ * Prize claimed confirmation screen with success animation
+ * Displays checkmark animation and allows user to close/reset game
+ * @param prize - Prize configuration (not currently used in display)
+ * @param onClose - Callback to close and reset the game
  */
 
 import { motion } from 'framer-motion';
@@ -66,7 +68,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
           transition={{
             duration: 0.35,
             delay: 0.2,
-            ease: [0.34, 1.56, 0.64, 1]
+            ease: [0.34, 1.56, 0.64, 1],
           }}
         >
           Prize Claimed!
@@ -84,11 +86,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         </motion.p>
 
         {/* Close button */}
-        <ThemedButton
-          onClick={onClose}
-          delay={0.3}
-          testId="close-button"
-        >
+        <ThemedButton onClick={onClose} delay={0.3} testId="close-button">
           Close
         </ThemedButton>
       </div>

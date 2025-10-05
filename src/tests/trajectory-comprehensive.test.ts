@@ -9,14 +9,19 @@ const PHYSICS = {
   BALL_RADIUS: 9,
   PEG_RADIUS: 7,
   COLLISION_RADIUS: 16, // Ball + Peg (9 + 7)
-  BORDER_WIDTH: 12
+  BORDER_WIDTH: 12,
 };
 
-function generatePegLayout(boardWidth: number, boardHeight: number, pegRows: number, _slotCount: number) {
-  const pegs: Array<{x: number, y: number, row: number, col: number}> = [];
+function generatePegLayout(
+  boardWidth: number,
+  boardHeight: number,
+  pegRows: number,
+  _slotCount: number
+) {
+  const pegs: Array<{ x: number; y: number; row: number; col: number }> = [];
   const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
   const pegPadding = PHYSICS.PEG_RADIUS + 10;
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
+  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2 - pegPadding * 2;
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
   const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -66,7 +71,7 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
           pegRows,
           slotCount,
           selectedIndex,
-          seed
+          seed,
         });
 
         // Validate trajectory
@@ -87,13 +92,17 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
 
             // Check if ball overlaps peg (NO TOLERANCE - must be completely separate)
             const overlap = PHYSICS.COLLISION_RADIUS - distance;
-            if (overlap > 0.5) { // Allow only 0.5px tolerance for numerical precision
+            if (overlap > 0.5) {
+              // Allow only 0.5px tolerance for numerical precision
               hasOverlap = true;
               overlapViolations++;
               maxOverlapDetected = Math.max(maxOverlapDetected, overlap);
 
-              if (run < 10) { // Log first 10 violations for debugging
-                console.log(`  Run ${run}: Overlap at frame ${i} - Ball at (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) overlaps peg at (${peg.x}, ${peg.y}) by ${overlap.toFixed(2)}px`);
+              if (run < 10) {
+                // Log first 10 violations for debugging
+                console.log(
+                  `  Run ${run}: Overlap at frame ${i} - Ball at (${point.x.toFixed(1)}, ${point.y.toFixed(1)}) overlaps peg at (${peg.x}, ${peg.y}) by ${overlap.toFixed(2)}px`
+                );
               }
             }
           }
@@ -115,7 +124,9 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
                 unnaturalMovements++;
 
                 if (run < 10) {
-                  console.log(`  Run ${run}: Unnatural movement at frame ${i} - Moved ${frameDistance.toFixed(1)}px in one frame`);
+                  console.log(
+                    `  Run ${run}: Unnatural movement at frame ${i} - Moved ${frameDistance.toFixed(1)}px in one frame`
+                  );
                 }
               }
             }
@@ -131,7 +142,9 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
           if (landedSlot !== selectedIndex) {
             trajectoryValid = false;
             if (run < 10) {
-              console.log(`  Run ${run}: Ball landed in slot ${landedSlot} instead of target ${selectedIndex}`);
+              console.log(
+                `  Run ${run}: Ball landed in slot ${landedSlot} instead of target ${selectedIndex}`
+              );
             }
           }
         }
@@ -146,10 +159,11 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
         if ((run + 1) % 1000 === 0) {
           console.log(`Progress: ${run + 1}/${totalRuns} completed...`);
         }
-
       } catch (error) {
         failures++;
-        console.log(`  Run ${run}: Error generating trajectory for slot ${selectedIndex}: ${error}`);
+        console.log(
+          `  Run ${run}: Error generating trajectory for slot ${selectedIndex}: ${error instanceof Error ? error.message : String(error)}`
+        );
       }
     }
 
@@ -187,7 +201,7 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
           pegRows,
           slotCount,
           selectedIndex: slot,
-          seed: Date.now() + run * 1000 + slot
+          seed: Date.now() + run * 1000 + slot,
         });
 
         // Check every single frame
@@ -212,7 +226,7 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
       pegRows: 10,
       slotCount: 7,
       selectedIndex: 3,
-      seed: 12345
+      seed: 12345,
     });
 
     // Check frame-to-frame continuity

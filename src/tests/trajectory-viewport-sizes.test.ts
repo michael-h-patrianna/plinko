@@ -10,7 +10,7 @@ const VIEWPORT_SIZES = [
   { width: 320, label: 'iPhone SE' },
   { width: 360, label: 'Galaxy S8' },
   { width: 375, label: 'iPhone 12' },
-  { width: 414, label: 'iPhone 14 Pro Max' }
+  { width: 414, label: 'iPhone 14 Pro Max' },
 ];
 
 const BOARD_HEIGHT = 500;
@@ -34,13 +34,13 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
             pegRows: PEG_ROWS,
             slotCount: SLOT_COUNT,
             selectedIndex: targetSlot,
-            seed: 12345 + targetSlot
+            seed: 12345 + targetSlot,
           });
 
           results.push({
             slot: targetSlot,
             success: trajectory.length > 0,
-            frames: trajectory.length
+            frames: trajectory.length,
           });
 
           // Basic validations
@@ -49,7 +49,7 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         }
 
         // All slots should be reachable
-        const allSuccess = results.every(r => r.success);
+        const allSuccess = results.every((r) => r.success);
         expect(allSuccess).toBe(true);
       });
 
@@ -61,14 +61,14 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: targetSlot,
-          seed: 99999
+          seed: 99999,
         });
 
         // Generate peg layout (same logic as trajectory.ts)
         const pegs: { x: number; y: number }[] = [];
         const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
         const pegPadding = PEG_RADIUS + 10;
-        const playableWidth = width - (BORDER_WIDTH * 2) - (pegPadding * 2);
+        const playableWidth = width - BORDER_WIDTH * 2 - pegPadding * 2;
         const playableHeight = BOARD_HEIGHT * 0.65;
         const verticalSpacing = playableHeight / (PEG_ROWS + 1);
         const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -96,7 +96,8 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
             const distance = Math.sqrt(dx * dx + dy * dy);
             const overlap = COLLISION_RADIUS - distance;
 
-            if (overlap > 0.1) { // Allow 0.1px numerical tolerance
+            if (overlap > 0.1) {
+              // Allow 0.1px numerical tolerance
               overlapCount++;
               maxOverlap = Math.max(maxOverlap, overlap);
             }
@@ -115,7 +116,7 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: targetSlot,
-          seed: 54321
+          seed: 54321,
         });
 
         let maxFrameDistance = 0;
@@ -149,21 +150,22 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: targetSlot,
-          seed: 11111
+          seed: 11111,
         });
 
         let outOfBoundsCount = 0;
 
         for (const point of trajectory) {
           // Check X boundaries (with ball radius)
-          if (point.x - BALL_RADIUS < BORDER_WIDTH ||
-              point.x + BALL_RADIUS > width - BORDER_WIDTH) {
+          if (
+            point.x - BALL_RADIUS < BORDER_WIDTH ||
+            point.x + BALL_RADIUS > width - BORDER_WIDTH
+          ) {
             outOfBoundsCount++;
           }
 
           // Check Y boundaries
-          if (point.y - BALL_RADIUS < 0 ||
-              point.y + BALL_RADIUS > BOARD_HEIGHT) {
+          if (point.y - BALL_RADIUS < 0 || point.y + BALL_RADIUS > BOARD_HEIGHT) {
             outOfBoundsCount++;
           }
         }
@@ -180,13 +182,13 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
             pegRows: PEG_ROWS,
             slotCount: SLOT_COUNT,
             selectedIndex: targetSlot,
-            seed: 22222 + targetSlot
+            seed: 22222 + targetSlot,
           });
 
           const finalPoint = trajectory[trajectory.length - 1];
 
           // Calculate which slot the ball landed in
-          const playableWidth = width - (BORDER_WIDTH * 2);
+          const playableWidth = width - BORDER_WIDTH * 2;
           const slotWidth = playableWidth / SLOT_COUNT;
           const xRelative = finalPoint.x - BORDER_WIDTH;
           const landedSlot = Math.min(
@@ -208,7 +210,7 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 3,
-        seed: 77777 // Same seed for comparison
+        seed: 77777, // Same seed for comparison
       })
     );
 

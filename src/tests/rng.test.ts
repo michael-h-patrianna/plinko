@@ -104,9 +104,9 @@ describe('RNG System', () => {
     });
 
     it('should throw error if probabilities do not sum to 1.0', () => {
-      const invalidPrizes = MOCK_PRIZES.map(p => ({
+      const invalidPrizes = MOCK_PRIZES.map((p) => ({
         ...p,
-        probability: p.probability * 0.5 // Sum will be 0.5
+        probability: p.probability * 0.5, // Sum will be 0.5
       }));
 
       expect(() => selectPrize(invalidPrizes)).toThrow(/sum to 1.0/);

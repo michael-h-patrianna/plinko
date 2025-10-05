@@ -7,23 +7,25 @@ export type PrizeType = 'no_win' | 'free' | 'purchase';
 
 export interface CollectibleConfig {
   icon: string;
-  name: string;  // e.g., "Stars", "Bats", "Pumpkins"
+  name: string; // e.g., "Stars", "Bats", "Pumpkins"
 }
 
 export interface RandomRewardConfig {
   icon: string;
-  name: string;  // e.g., "Bronze Wheel", "Silver Wheel", "Gold Wheel"
+  name: string; // e.g., "Bronze Wheel", "Silver Wheel", "Gold Wheel"
 }
 
 export interface FreeReward {
-  gc?: number;           // Gold Coins
-  sc?: number;           // Sweeps Coins
-  spins?: number;        // Free Spins
-  xp?: {                 // Collectible reward (Stars, Bats, Pumpkins, etc.)
+  gc?: number; // Gold Coins
+  sc?: number; // Sweeps Coins
+  spins?: number; // Free Spins
+  xp?: {
+    // Collectible reward (Stars, Bats, Pumpkins, etc.)
     amount: number;
     config: CollectibleConfig;
   };
-  randomReward?: {       // Random reward (configurable wheel)
+  randomReward?: {
+    // Random reward (configurable wheel)
     config: RandomRewardConfig;
   };
 }
@@ -40,8 +42,8 @@ export interface Prize {
   probability: number;
 
   // Display in slots (compact)
-  slotIcon: string;      // Path to icon for slot display
-  slotColor: string;     // Color for slot highlighting
+  slotIcon: string; // Path to icon for slot display
+  slotColor: string; // Color for slot highlighting
 
   // Full details (for reveal modal)
   title: string;
@@ -75,19 +77,17 @@ export function getSlotDisplayText(
     if (prize.freeReward.spins) parts.push(`${abbreviate(prize.freeReward.spins)} ${spinsLabel}`);
     if (prize.freeReward.gc) parts.push(`GC ${abbreviate(prize.freeReward.gc)}`);
     if (prize.freeReward.randomReward) {
-      // Support both new config format and legacy boolean format
-      const rewardName = typeof prize.freeReward.randomReward === 'object' && prize.freeReward.randomReward.config
-        ? prize.freeReward.randomReward.config.name
-        : 'Random Reward';
+      const rewardName = prize.freeReward.randomReward.config.name;
       parts.push(rewardName);
     }
-    if (prize.freeReward.xp) parts.push(`${abbreviate(prize.freeReward.xp.amount)} ${prize.freeReward.xp.config.name}`);
+    if (prize.freeReward.xp)
+      parts.push(`${abbreviate(prize.freeReward.xp.amount)} ${prize.freeReward.xp.config.name}`);
 
     if (parts.length === 0) return '';
 
     // For slots: show only first reward from priority list
     // For prize table: show all with " + " separator
-    return fullCombo ? parts.join(' + ') : (parts[0] || '');
+    return fullCombo ? parts.join(' + ') : parts[0] || '';
   }
 
   return '';
@@ -121,10 +121,7 @@ export function getFullRewardDescription(prize: Prize): string[] {
       parts.push(`${prize.freeReward.xp.amount} ${prize.freeReward.xp.config.name}`);
     }
     if (prize.freeReward.randomReward) {
-      // Support both new config format and legacy boolean format
-      const rewardName = typeof prize.freeReward.randomReward === 'object' && prize.freeReward.randomReward.config
-        ? prize.freeReward.randomReward.config.name
-        : 'Random Reward';
+      const rewardName = prize.freeReward.randomReward.config.name;
       parts.push(`1 ${rewardName}`);
     }
   }

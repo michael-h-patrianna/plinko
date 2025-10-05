@@ -16,14 +16,14 @@ import { calculateBucketZoneY } from '../utils/slotDimensions';
 
 // Physics constants for realistic simulation
 const PHYSICS = {
-  GRAVITY: 980,           // px/s² (9.8 m/s² at 100px = 1m)
-  RESTITUTION: 0.75,      // Energy retained on bounce (75%)
-  BALL_RADIUS: 9,         // Ball radius in pixels
+  GRAVITY: 980, // px/s² (9.8 m/s² at 100px = 1m)
+  RESTITUTION: 0.75, // Energy retained on bounce (75%)
+  BALL_RADIUS: 9, // Ball radius in pixels
   PEG_RADIUS: 7,
-  COLLISION_RADIUS: 16,   // Ball + Peg radius (9 + 7)
-  DT: 1/60,              // 60 FPS timestep
+  COLLISION_RADIUS: 16, // Ball + Peg radius (9 + 7)
+  DT: 1 / 60, // 60 FPS timestep
   TERMINAL_VELOCITY: 600, // px/s max fall speed
-  BORDER_WIDTH: 12,       // Wall thickness
+  BORDER_WIDTH: 12, // Wall thickness
   MIN_BOUNCE_VELOCITY: 30, // Minimum velocity after collision
 };
 
@@ -58,7 +58,7 @@ function generatePegLayout(
 
   // Add extra padding to ensure pegs don't touch walls - increased from 2px to 10px
   const pegPadding = PHYSICS.PEG_RADIUS + 10; // Peg radius + 10px safety margin
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
+  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2 - pegPadding * 2;
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
   const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -89,7 +89,7 @@ function runSimulation(
   pegs: Peg[],
   slotCount: number,
   rngSeed: number
-): { trajectory: TrajectoryPoint[], landedSlot: number } {
+): { trajectory: TrajectoryPoint[]; landedSlot: number } {
   const trajectory: TrajectoryPoint[] = [];
   const rng = createRng(rngSeed);
 
@@ -102,7 +102,7 @@ function runSimulation(
   let frame = 0;
 
   // Calculate bucket dimensions based on slot width
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
+  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2;
   const slotWidth = playableWidth / slotCount;
   const bucketZoneY = calculateBucketZoneY(boardHeight, slotWidth);
   const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
@@ -118,9 +118,12 @@ function runSimulation(
   for (let i = 0; i < 15; i++) {
     trajectory.push({
       frame: frame++,
-      x, y, vx: 0, vy: 0,
+      x,
+      y,
+      vx: 0,
+      vy: 0,
       rotation: 0,
-      pegHit: false
+      pegHit: false,
     });
   }
 
@@ -193,7 +196,8 @@ function runSimulation(
         let high = 1;
         let mid = 0.5;
 
-        for (let i = 0; i < 10; i++) { // 10 iterations for precision
+        for (let i = 0; i < 10; i++) {
+          // 10 iterations for precision
           const testX = oldX + oldVx * PHYSICS.DT * mid;
           const testY = oldY + oldVy * PHYSICS.DT * mid;
           const testDx = testX - peg.x;
@@ -281,7 +285,7 @@ function runSimulation(
 
         // Clean old collisions
         if (recentCollisions.size > 10) {
-          const firstKey = recentCollisions.keys().next().value as string | undefined;
+          const firstKey = recentCollisions.keys().next().value;
           if (firstKey) {
             recentCollisions.delete(firstKey);
           }
@@ -431,7 +435,10 @@ function runSimulation(
     // Add frame
     trajectory.push({
       frame: frame++,
-      x, y, vx, vy,
+      x,
+      y,
+      vx,
+      vy,
       rotation,
       pegHit: hitPeg !== null,
       pegHitRow: hitPeg?.row,
@@ -439,7 +446,7 @@ function runSimulation(
       pegsHit: pegsHitThisFrame.length > 0 ? pegsHitThisFrame : undefined,
       wallHit,
       bucketWallHit,
-      bucketFloorHit: bucketFloorHit || undefined
+      bucketFloorHit: bucketFloorHit || undefined,
     });
   }
 
@@ -453,10 +460,7 @@ function runSimulation(
   // Determine which slot the ball landed in
   // Adjust x position relative to playable area
   const xRelative = x - PHYSICS.BORDER_WIDTH;
-  const landedSlot = Math.min(
-    Math.max(0, Math.floor(xRelative / slotWidth)),
-    slotCount - 1
-  );
+  const landedSlot = Math.min(Math.max(0, Math.floor(xRelative / slotWidth)), slotCount - 1);
 
   return { trajectory, landedSlot };
 }
@@ -473,14 +477,7 @@ export function generateTrajectory(params: {
   selectedIndex: number;
   seed?: number;
 }): TrajectoryPoint[] {
-  const {
-    boardWidth,
-    boardHeight,
-    pegRows,
-    slotCount,
-    selectedIndex,
-    seed = Date.now()
-  } = params;
+  const { boardWidth, boardHeight, pegRows, slotCount, selectedIndex, seed = Date.now() } = params;
 
   if (selectedIndex < 0 || selectedIndex >= slotCount) {
     throw new Error(`Invalid slot index: ${selectedIndex}`);
@@ -504,24 +501,28 @@ export function generateTrajectory(params: {
     // Use different patterns to explore the space efficiently
     const pattern = attempt % 7;
     let microOffset: number;
-    if (pattern === 0) microOffset = 0; // Dead center
-    else if (pattern === 1) microOffset = 1.5; // Slightly right
-    else if (pattern === 2) microOffset = -1.5; // Slightly left
+    if (pattern === 0)
+      microOffset = 0; // Dead center
+    else if (pattern === 1)
+      microOffset = 1.5; // Slightly right
+    else if (pattern === 2)
+      microOffset = -1.5; // Slightly left
     else if (pattern === 3) microOffset = 2.5;
     else if (pattern === 4) microOffset = -2.5;
-    else if (pattern === 5) microOffset = (Math.sin(attempt * 0.618) * 2); // Sine wave pattern
-    else microOffset = (Math.cos(attempt * 1.414) * 2); // Cosine wave pattern
+    else if (pattern === 5)
+      microOffset = Math.sin(attempt * 0.618) * 2; // Sine wave pattern
+    else microOffset = Math.cos(attempt * 1.414) * 2; // Cosine wave pattern
 
     const startX = centerX + microOffset;
     const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
 
     // Vary bounce randomness systematically
-    const bounceRandomness = 0.2 + (attempt % 100) / 100 * 0.6; // 0.2 to 0.8 range
+    const bounceRandomness = 0.2 + ((attempt % 100) / 100) * 0.6; // 0.2 to 0.8 range
 
     const params: SimulationParams = {
       startX,
       startVx,
-      bounceRandomness
+      bounceRandomness,
     };
 
     // Run deterministic simulation
@@ -538,15 +539,16 @@ export function generateTrajectory(params: {
     // Check if it landed in the target slot
     if (landedSlot === selectedIndex) {
       // Success! Return this natural trajectory
-      return trajectory.map(point => ({
+      return trajectory.map((point) => ({
         ...point,
-        targetSlot: selectedIndex
+        targetSlot: selectedIndex,
       }));
     }
   }
 
   // This should never happen with proper parameter generation
-  console.error(`Failed to find natural trajectory for slot ${selectedIndex} after ${maxAttempts} attempts`);
+  console.error(
+    `Failed to find natural trajectory for slot ${selectedIndex} after ${maxAttempts} attempts`
+  );
   throw new Error(`Could not generate natural trajectory for slot ${selectedIndex}`);
 }
-

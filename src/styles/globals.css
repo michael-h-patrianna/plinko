@@ -14,7 +14,12 @@
 html,
 body {
   min-height: 100vh;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #000000;
@@ -59,13 +64,21 @@ body {
 }
 
 @keyframes pegShake {
-  0%, 100% {
+  0%,
+  100% {
     transform: translate(-50%, -50%) scale(1);
   }
-  10%, 30%, 50%, 70%, 90% {
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
     transform: translate(-48%, -50%) scale(1.2); /* Increased from 1.1 */
   }
-  20%, 40%, 60%, 80% {
+  20%,
+  40%,
+  60%,
+  80% {
     transform: translate(-52%, -50%) scale(1.2); /* Increased from 1.1 */
   }
 }
@@ -149,7 +162,12 @@ button:disabled {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
   animation: btnShine 3s infinite;
 }
 
@@ -157,7 +175,8 @@ button:disabled {
   0% {
     left: -100%;
   }
-  20%, 100% {
+  20%,
+  100% {
     left: 100%;
   }
 }

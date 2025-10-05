@@ -2,7 +2,7 @@
  * Comprehensive tests for PrizeReveal sub-components
  */
 
-import { describe, it, expect, vi, beforeEach} from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from './testUtils';
 import { CheckoutPopup } from '../components/PrizeReveal/CheckoutPopup';
 import { FreeRewardView } from '../components/PrizeReveal/FreeRewardView';
@@ -134,7 +134,7 @@ describe('CheckoutPopup Component', () => {
     });
   });
 
-  it.skip('should call onPurchase after delay', async () => {
+  it.skip('should call onPurchase after delay', () => {
     render(
       <CheckoutPopup
         isOpen={true}
@@ -148,7 +148,7 @@ describe('CheckoutPopup Component', () => {
     const purchaseButton = screen.getByText('Purchase for $29.99');
     fireEvent.click(purchaseButton);
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(1500);
     });
 
@@ -188,8 +188,8 @@ describe('FreeRewardView Component', () => {
     description: 'You won a free reward!',
     freeReward: {
       sc: 100,
-      gc: 500
-    }
+      gc: 500,
+    },
   };
 
   it('should render congratulations message', () => {
@@ -232,7 +232,7 @@ describe('FreeRewardView Component', () => {
   it('should return null if no free reward', () => {
     const prizeWithoutReward: PrizeConfig = {
       ...freePrize,
-      freeReward: undefined
+      freeReward: undefined,
     };
     const { container } = render(
       <FreeRewardView prize={prizeWithoutReward} onClaim={mockOnClaim} canClaim={true} />
@@ -246,8 +246,8 @@ describe('FreeRewardView Component', () => {
       freeReward: {
         sc: 50,
         gc: 200,
-        spins: 10
-      }
+        spins: 10,
+      },
     };
     render(<FreeRewardView prize={multiRewardPrize} onClaim={mockOnClaim} canClaim={true} />);
     expect(screen.getByText(/50/)).toBeInTheDocument();
@@ -275,11 +275,11 @@ describe('PurchaseOfferView Component', () => {
     description: '200% Bonus Package',
     purchaseOffer: {
       title: '200% Bonus',
-      description: '$29.99'
+      description: '$29.99',
     },
     freeReward: {
-      gc: 1000
-    }
+      gc: 1000,
+    },
   };
 
   it('should render special offer header', () => {
@@ -316,9 +316,7 @@ describe('PurchaseOfferView Component', () => {
     const closeButton = screen.getByText('×');
     fireEvent.click(closeButton);
 
-    waitFor(() => {
-      expect(screen.queryByText('Checkout')).not.toBeInTheDocument();
-    });
+    expect(screen.queryByText('Checkout')).not.toBeInTheDocument();
   });
 
   it('should disable purchase button when canClaim is false', () => {
@@ -330,7 +328,7 @@ describe('PurchaseOfferView Component', () => {
   it('should return null if no purchase offer', () => {
     const prizeWithoutOffer: PrizeConfig = {
       ...purchasePrize,
-      purchaseOffer: undefined
+      purchaseOffer: undefined,
     };
     const { container } = render(
       <PurchaseOfferView prize={prizeWithoutOffer} onClaim={mockOnClaim} canClaim={true} />
@@ -360,7 +358,7 @@ describe('NoWinView Component', () => {
     slotColor: '#888888',
     type: 'no_win',
     title: 'Better Luck Next Time',
-    description: 'Keep trying!'
+    description: 'Keep trying!',
   };
 
   it('should render title', () => {
@@ -376,7 +374,7 @@ describe('NoWinView Component', () => {
   it('should render default description if none provided', () => {
     const prizeNoDescription: PrizeConfig = {
       ...noWinPrize,
-      description: undefined
+      description: undefined,
     };
     render(<NoWinView prize={prizeNoDescription} onClaim={mockOnClaim} canClaim={true} />);
     expect(screen.getByText(/Better luck next time!/i)).toBeInTheDocument();
@@ -437,12 +435,7 @@ describe('RewardItem Component', () => {
 
   it('should render XP reward with icon', () => {
     render(
-      <RewardItem
-        type="xp"
-        amount={250}
-        xpConfig={{ icon: '⭐', name: 'Star XP' }}
-        delay={0}
-      />
+      <RewardItem type="xp" amount={250} xpConfig={{ icon: '⭐', name: 'Star XP' }} delay={0} />
     );
     expect(screen.getByText(/250.*Star XP/)).toBeInTheDocument();
     const image = screen.getByAltText('Star XP');

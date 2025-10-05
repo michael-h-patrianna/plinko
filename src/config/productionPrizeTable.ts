@@ -3,7 +3,11 @@
  */
 
 import type { Prize } from '../game/prizeTypes';
-import { validatePrizeSet, getPrizeByIndex as getPrizeByIndexUtil, normalizeProbabilities } from '../utils/prizeUtils';
+import {
+  validatePrizeSet,
+  getPrizeByIndex as getPrizeByIndexUtil,
+  normalizeProbabilities,
+} from '../utils/prizeUtils';
 import scIcon from '../assets/sc.png';
 import gcIcon from '../assets/gc.png';
 import gcscIcon from '../assets/gcsc.png';
@@ -27,8 +31,8 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotColor: '#F97316', // orange-500
     title: '500 Free SC',
     freeReward: {
-      sc: 500
-    }
+      sc: 500,
+    },
   },
   {
     id: 'sc_250',
@@ -38,19 +42,19 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotColor: '#FB923C', // orange-400
     title: '250 Free SC',
     freeReward: {
-      sc: 250
-    }
+      sc: 250,
+    },
   },
   {
     id: 'sc_100',
     type: 'free',
-    probability: 0.10,
+    probability: 0.1,
     slotIcon: scIcon,
     slotColor: '#FBBF24', // yellow-500
     title: '100 Free SC',
     freeReward: {
-      sc: 100
-    }
+      sc: 100,
+    },
   },
 
   // Combined rewards (SC + GC)
@@ -63,8 +67,8 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     title: 'Combo Reward',
     freeReward: {
       sc: 50,
-      gc: 5000
-    }
+      gc: 5000,
+    },
   },
 
   // GC rewards
@@ -76,8 +80,8 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotColor: '#34D399', // emerald-400
     title: '10,000 GC',
     freeReward: {
-      gc: 10000
-    }
+      gc: 10000,
+    },
   },
   {
     id: 'gc_5000',
@@ -87,21 +91,21 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotColor: '#60A5FA', // blue-400
     title: '5,000 GC',
     freeReward: {
-      gc: 5000
-    }
+      gc: 5000,
+    },
   },
 
   // Free Spins
   {
     id: 'spins_25',
     type: 'free',
-    probability: 0.10,
+    probability: 0.1,
     slotIcon: freeSpinsIcon,
     slotColor: '#A78BFA', // violet-400
     title: '25 Free Spins',
     freeReward: {
-      spins: 25
-    }
+      spins: 25,
+    },
   },
   {
     id: 'spins_10',
@@ -111,8 +115,8 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotColor: '#C084FC', // violet-300
     title: '10 Free Spins',
     freeReward: {
-      spins: 10
-    }
+      spins: 10,
+    },
   },
 
   // Collectible rewards (Stars, Bats, Pumpkins, etc.)
@@ -128,10 +132,10 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
         amount: 500,
         config: {
           icon: xpIcon,
-          name: 'Stars'
-        }
-      }
-    }
+          name: 'Stars',
+        },
+      },
+    },
   },
 
   // Random reward (Bronze Wheel)
@@ -147,10 +151,10 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
       randomReward: {
         config: {
           icon: randomRewardIcon,
-          name: 'Bronze Wheel'
-        }
-      }
-    }
+          name: 'Bronze Wheel',
+        },
+      },
+    },
   },
 
   // Mega combo (for testing multiple rewards)
@@ -169,16 +173,16 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
         amount: 1000,
         config: {
           icon: xpIcon,
-          name: 'Stars'
-        }
+          name: 'Stars',
+        },
       },
       randomReward: {
         config: {
           icon: randomRewardIcon,
-          name: 'Bronze Wheel'
-        }
-      }
-    }
+          name: 'Bronze Wheel',
+        },
+      },
+    },
   },
 
   // Purchase offers
@@ -192,13 +196,13 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     description: 'Limited time deal just for you!',
     freeReward: {
       gc: 10000,
-      sc: 100
+      sc: 100,
     },
     purchaseOffer: {
       offerId: 'offer_001',
       title: '50% Off Premium Pack',
-      description: 'Get 10,000 GC + 100 SC for half price!'
-    }
+      description: 'Get 10,000 GC + 100 SC for half price!',
+    },
   },
 
   // No win (consolation)
@@ -209,14 +213,16 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     slotIcon: noWinIcon,
     slotColor: '#64748B', // slate-500
     title: 'No Win',
-    description: 'Better luck next time!'
-  }
+    description: 'Better luck next time!',
+  },
 ];
 
 /**
  * Add backward-compatible fields to Prize for legacy components
  */
-function addBackwardCompatFields(prize: Prize): Prize & { label: string; color: string; description?: string } {
+function addBackwardCompatFields(
+  prize: Prize
+): Prize & { label: string; color: string; description?: string } {
   return {
     ...prize,
     label: prize.title,
@@ -231,7 +237,7 @@ function addBackwardCompatFields(prize: Prize): Prize & { label: string; color: 
  */
 export function generateProductionPrizeSet(count?: number): Prize[] {
   // Use provided count or random 3-8
-  const prizeCount = count ?? (Math.floor(Math.random() * 6) + 3);
+  const prizeCount = count ?? Math.floor(Math.random() * 6) + 3;
 
   // Shuffle and select
   const shuffled = [...PRODUCTION_PRIZE_POOL].sort(() => Math.random() - 0.5);
@@ -239,7 +245,7 @@ export function generateProductionPrizeSet(count?: number): Prize[] {
 
   // Normalize probabilities using shared utility and add backward-compatible fields
   const normalized = normalizeProbabilities(selected);
-  return normalized.map(prize => addBackwardCompatFields(prize));
+  return normalized.map((prize) => addBackwardCompatFields(prize));
 }
 
 /**

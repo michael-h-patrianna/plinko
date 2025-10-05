@@ -1,6 +1,9 @@
 /**
- * Purchase offer reveal view
- * Similar to free rewards but with ribbon and price button
+ * Purchase offer reveal view with special deal styling
+ * Displays rewards with ribbon banner and price button, opens checkout popup
+ * @param prize - Prize configuration with purchase offer details
+ * @param onClaim - Callback when purchase completes
+ * @param canClaim - Whether the purchase button should be enabled
  */
 
 import { useState } from 'react';
@@ -25,7 +28,8 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
   if (!offer) return null;
 
   // Extract price from offer description or default
-  const priceMatch = offer.description?.match(/\$[\d.]+/) || offer.title.match(/\$[\d.]+/) || ['$29.99'];
+  const priceMatch = offer.description.match(/\$[\d.]+/) ||
+    offer.title.match(/\$[\d.]+/) || ['$29.99'];
   const price = priceMatch[0];
 
   const handlePurchaseClick = () => {
@@ -49,7 +53,8 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
     if (rewards.sc) rewardItems.push({ type: 'sc', amount: rewards.sc });
     if (rewards.gc) rewardItems.push({ type: 'gc', amount: rewards.gc });
     if (rewards.spins) rewardItems.push({ type: 'spins', amount: rewards.spins });
-    if (rewards.xp) rewardItems.push({ type: 'xp', amount: rewards.xp.amount, xpConfig: rewards.xp.config });
+    if (rewards.xp)
+      rewardItems.push({ type: 'xp', amount: rewards.xp.amount, xpConfig: rewards.xp.config });
     if (rewards.randomReward) rewardItems.push({ type: 'randomReward' });
   }
 
@@ -100,7 +105,12 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
 
           {/* Sparkles for offer */}
           {Array.from({ length: 4 }).map((_, i) => {
-            const colors = [theme.colors.game.ball.primary, theme.colors.status.warning, theme.colors.status.error, theme.colors.status.warning];
+            const colors = [
+              theme.colors.game.ball.primary,
+              theme.colors.status.warning,
+              theme.colors.status.error,
+              theme.colors.status.warning,
+            ];
             const color = colors[i % colors.length];
             const offsetX = [-50, -30, 30, 50][i];
 
@@ -161,11 +171,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                 transition={{ duration: 0.25, delay: 0.5 }}
               >
                 {rewardItems.map((item, index) => (
-                  <RewardItem
-                    key={`${item.type}-${index}`}
-                    {...item}
-                    delay={0.6 + index * 0.1}
-                  />
+                  <RewardItem key={`${item.type}-${index}`} {...item} delay={0.6 + index * 0.1} />
                 ))}
               </motion.div>
             )}

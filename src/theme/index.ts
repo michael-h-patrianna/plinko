@@ -4,6 +4,7 @@
 
 export * from './types';
 export * from './ThemeContext';
+export * from './themeUtils';
 export { defaultTheme } from './themes/defaultTheme';
 export { darkBlueTheme } from './themes/darkBlueTheme';
 export { playFameTheme } from './themes/playFameTheme';

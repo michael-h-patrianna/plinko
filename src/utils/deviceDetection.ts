@@ -9,7 +9,9 @@
  */
 export function isMobileDevice(): boolean {
   const userAgent = navigator.userAgent.toLowerCase();
-  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+    userAgent
+  );
   const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
   return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
 }

@@ -1,5 +1,10 @@
 /**
  * Impact particles for peg collisions - Disney Secondary Action principle
+ * Spawns and animates particles when ball hits pegs with gravity physics
+ * @param pegHit - Whether a peg was hit (triggers particle spawn)
+ * @param pegX - X position of peg hit
+ * @param pegY - Y position of peg hit
+ * @param reset - Signal to clear all active particles
  */
 
 import { useEffect, useState } from 'react';
@@ -52,12 +57,12 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           life: 1,
-          size: 3 + Math.random() * 3 // 3-6px
+          size: 3 + Math.random() * 3, // 3-6px
         });
       }
 
-      setParticles(prev => [...prev, ...newParticles]);
-      setParticleIdCounter(prev => prev + particleCount);
+      setParticles((prev) => [...prev, ...newParticles]);
+      setParticleIdCounter((prev) => prev + particleCount);
     }
   }, [pegHit, pegX, pegY, particleIdCounter]);
 
@@ -70,16 +75,16 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
     const LIFE_DECAY = 0.02; // Fade out speed
 
     const interval = setInterval(() => {
-      setParticles(prev => {
+      setParticles((prev) => {
         return prev
-          .map(p => ({
+          .map((p) => ({
             ...p,
             x: p.x + p.vx * dt,
             y: p.y + p.vy * dt,
             vy: p.vy + GRAVITY * dt, // Apply gravity
-            life: p.life - LIFE_DECAY
+            life: p.life - LIFE_DECAY,
           }))
-          .filter(p => p.life > 0); // Remove dead particles
+          .filter((p) => p.life > 0); // Remove dead particles
       });
     }, 16); // ~60 FPS
 
@@ -88,19 +93,31 @@ export function ImpactParticles({ pegHit, pegX, pegY, reset }: ImpactParticlesPr
 
   return (
     <>
-      {particles.map(p => (
+      {particles.map((p) => (
         <div
           key={p.id}
           className="absolute rounded-full pointer-events-none"
           style={{
             width: `${p.size}px`,
             height: `${p.size}px`,
-            background: `radial-gradient(circle, ${theme.colors.game.ball.primary}${Math.round(p.life * 255).toString(16).padStart(2, '0')} 0%, ${theme.colors.game.ball.secondary}${Math.round(p.life * 0.6 * 255).toString(16).padStart(2, '0')} 50%, transparent 100%)`,
+            background: `radial-gradient(circle, ${theme.colors.game.ball.primary}${Math.round(
+              p.life * 255
+            )
+              .toString(16)
+              .padStart(2, '0')} 0%, ${theme.colors.game.ball.secondary}${Math.round(
+              p.life * 0.6 * 255
+            )
+              .toString(16)
+              .padStart(2, '0')} 50%, transparent 100%)`,
             transform: `translate(${p.x - p.size / 2}px, ${p.y - p.size / 2}px)`,
             opacity: p.life,
-            boxShadow: `0 0 ${p.size * 2}px ${theme.colors.game.ball.primary}${Math.round(p.life * 0.8 * 255).toString(16).padStart(2, '0')}`,
+            boxShadow: `0 0 ${p.size * 2}px ${theme.colors.game.ball.primary}${Math.round(
+              p.life * 0.8 * 255
+            )
+              .toString(16)
+              .padStart(2, '0')}`,
             zIndex: 22,
-            willChange: 'transform, opacity'
+            willChange: 'transform, opacity',
           }}
         />
       ))}

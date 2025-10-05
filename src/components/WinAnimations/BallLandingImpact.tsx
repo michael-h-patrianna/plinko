@@ -1,7 +1,10 @@
 /**
- * Ball Landing Impact Animation
- * Subtle, polished impact effect - not overdone
- * React Native compatible: transform (scale), opacity, radial gradients
+ * Ball landing impact animation with shockwave ring and glow pulse
+ * Subtle, polished effect triggered when ball lands in winning slot
+ * @param x - X position of impact
+ * @param y - Y position of impact
+ * @param color - Color for the impact effect
+ * @param trigger - Whether to trigger the animation
  */
 
 import { motion } from 'framer-motion';
@@ -19,7 +22,7 @@ export function BallLandingImpact({ x, y, color, trigger }: BallLandingImpactPro
 
   useEffect(() => {
     if (trigger) {
-      setKey(prev => prev + 1);
+      setKey((prev) => prev + 1);
     }
   }, [trigger]);
 

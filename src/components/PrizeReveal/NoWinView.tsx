@@ -1,6 +1,9 @@
 /**
- * No win result view
- * Subdued, encouraging, not celebratory
+ * No win result view with encouraging messaging
+ * Uses subdued styling and gentle animations, not celebratory
+ * @param prize - Prize configuration with no-win messaging
+ * @param onClaim - Callback to try again
+ * @param canClaim - Whether the try again button should be enabled
  */
 
 import { motion } from 'framer-motion';
@@ -80,7 +83,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             transition={{ duration: 0.25, delay: 0.4 }}
           >
             <p className="text-base leading-relaxed" style={{ color: theme.colors.text.secondary }}>
-              {prize.description || "Better luck next time!"}
+              {prize.description || 'Better luck next time!'}
             </p>
             <p className="text-sm mt-2" style={{ color: theme.colors.text.tertiary }}>
               Keep trying - your big win could be just around the corner!
@@ -88,12 +91,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
           </motion.div>
 
           {/* Try again button */}
-          <ThemedButton
-            onClick={onClaim}
-            disabled={!canClaim}
-            delay={0.6}
-            className="w-full"
-          >
+          <ThemedButton onClick={onClaim} disabled={!canClaim} delay={0.6} className="w-full">
             Try Again
           </ThemedButton>
         </div>

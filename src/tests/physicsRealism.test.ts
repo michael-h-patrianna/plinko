@@ -12,6 +12,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../game/trajectory';
+import type { TrajectoryPoint } from '../game/types';
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;
@@ -20,7 +21,7 @@ const SLOT_COUNT = 6;
 
 // Physics constants
 const GRAVITY = 980; // px/s²
-const DT = 1/60; // 60 FPS
+const DT = 1 / 60; // 60 FPS
 const BALL_RADIUS = 9;
 const PEG_RADIUS = 7;
 const COLLISION_RADIUS = BALL_RADIUS + PEG_RADIUS;
@@ -33,7 +34,6 @@ const ACCELERATION_LIMIT = GRAVITY * 10; // Max 10x gravity for elastic collisio
 const ENERGY_GAIN_TOLERANCE = 1.1; // Allow 10% energy gain (numerical errors)
 
 describe('Physics Realism Tests', () => {
-
   /**
    * Generate peg positions for collision checking
    */
@@ -41,7 +41,7 @@ describe('Physics Realism Tests', () => {
     const pegs: { x: number; y: number; row: number; col: number }[] = [];
     const OPTIMAL_PEG_COLUMNS = 6;
     const pegPadding = PEG_RADIUS + 10; // Peg radius + 10px safety margin
-    const playableWidth = BOARD_WIDTH - (BORDER_WIDTH * 2) - (pegPadding * 2);
+    const playableWidth = BOARD_WIDTH - BORDER_WIDTH * 2 - pegPadding * 2;
     const playableHeight = BOARD_HEIGHT * 0.65;
     const verticalSpacing = playableHeight / (PEG_ROWS + 1);
     const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
@@ -73,7 +73,7 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 1000
+          seed: seed * 1000,
         });
 
         for (let i = 1; i < trajectory.length; i++) {
@@ -88,8 +88,8 @@ describe('Physics Realism Tests', () => {
           if (distance > POSITION_JUMP_THRESHOLD && !curr.pegHit) {
             violations.push(
               `Seed ${seed}, Frame ${i}: Ball teleported ${distance.toFixed(1)}px ` +
-              `from (${prev.x.toFixed(1)}, ${prev.y.toFixed(1)}) to ` +
-              `(${curr.x.toFixed(1)}, ${curr.y.toFixed(1)})`
+                `from (${prev.x.toFixed(1)}, ${prev.y.toFixed(1)}) to ` +
+                `(${curr.x.toFixed(1)}, ${curr.y.toFixed(1)})`
             );
           }
         }
@@ -105,7 +105,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 2,
-        seed: 12345
+        seed: 12345,
       });
 
       for (let i = 1; i < trajectory.length; i++) {
@@ -114,12 +114,10 @@ describe('Physics Realism Tests', () => {
 
         // Even collision frames should not jump unreasonably
         const maxAllowedJump = curr.pegHit ? 30 : POSITION_JUMP_THRESHOLD;
-        const distance = Math.sqrt(
-          Math.pow(curr.x - prev.x, 2) +
-          Math.pow(curr.y - prev.y, 2)
-        );
+        const distance = Math.sqrt(Math.pow(curr.x - prev.x, 2) + Math.pow(curr.y - prev.y, 2));
 
-        expect(distance).toBeLessThan(maxAllowedJump,
+        expect(distance).toBeLessThan(
+          maxAllowedJump,
           `Frame ${i}: Distance ${distance.toFixed(1)}px exceeds limit`
         );
       }
@@ -137,17 +135,25 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 2000
+          seed: seed * 2000,
         });
 
         for (let i = 1; i < trajectory.length - 1; i++) {
-          const prev = trajectory[i - 1];
           const curr = trajectory[i];
           const next = trajectory[i + 1];
 
           // Skip collision frames (all types)
-          if (curr.pegHit || next.pegHit || curr.bucketFloorHit || next.bucketFloorHit ||
-              curr.wallHit || next.wallHit || curr.bucketWallHit || next.bucketWallHit) continue;
+          if (
+            curr.pegHit ||
+            next.pegHit ||
+            curr.bucketFloorHit ||
+            next.bucketFloorHit ||
+            curr.wallHit ||
+            next.wallHit ||
+            curr.bucketWallHit ||
+            next.bucketWallHit
+          )
+            continue;
 
           // Calculate acceleration
           const ax = (next.vx - curr.vx) / DT;
@@ -157,7 +163,7 @@ describe('Physics Realism Tests', () => {
           if (totalAccel > ACCELERATION_LIMIT) {
             violations.push(
               `Seed ${seed}, Frame ${i}: Acceleration ${totalAccel.toFixed(0)}px/s² ` +
-              `exceeds limit of ${ACCELERATION_LIMIT}px/s²`
+                `exceeds limit of ${ACCELERATION_LIMIT}px/s²`
             );
           }
         }
@@ -173,7 +179,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 3,
-        seed: 99999
+        seed: 99999,
       });
 
       const nonCollisionFrames: number[] = [];
@@ -184,13 +190,14 @@ describe('Physics Realism Tests', () => {
 
         // Skip collision frames and their neighbors
         if (curr.pegHit || next.pegHit) continue;
-        if (trajectory[i-1]?.pegHit || trajectory[i+1]?.pegHit) continue;
+        if (trajectory[i - 1]?.pegHit || trajectory[i + 1]?.pegHit) continue;
 
         // Calculate vertical acceleration
         const ay = (next.vy - curr.vy) / DT;
 
         // During free fall, acceleration should be close to gravity
-        if (curr.y < BOARD_HEIGHT * 0.6) { // Above bucket zone
+        if (curr.y < BOARD_HEIGHT * 0.6) {
+          // Above bucket zone
           nonCollisionFrames.push(ay);
         }
       }
@@ -213,7 +220,7 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 3000
+          seed: seed * 3000,
         });
 
         for (let i = 1; i < trajectory.length - 1; i++) {
@@ -242,7 +249,7 @@ describe('Physics Realism Tests', () => {
           if (currTotal > prevTotal * ENERGY_GAIN_TOLERANCE) {
             violations.push(
               `Seed ${seed}, Frame ${i}: Energy increased from ${prevTotal.toFixed(0)} ` +
-              `to ${currTotal.toFixed(0)} (${((currTotal/prevTotal - 1) * 100).toFixed(1)}% gain)`
+                `to ${currTotal.toFixed(0)} (${((currTotal / prevTotal - 1) * 100).toFixed(1)}% gain)`
             );
           }
         }
@@ -258,7 +265,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 2,
-        seed: 55555
+        seed: 55555,
       });
 
       // Find collision frames
@@ -279,7 +286,8 @@ describe('Physics Realism Tests', () => {
 
           // After collision, speed should generally decrease (energy lost)
           // Allow some increase due to gravity and guidance forces
-          expect(speedAfter).toBeLessThan(speedBefore * 1.5,
+          expect(speedAfter).toBeLessThan(
+            speedBefore * 1.5,
             `Collision at frame ${index} increased speed too much`
           );
         }
@@ -298,7 +306,7 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 4000
+          seed: seed * 4000,
         });
 
         for (let i = 0; i < trajectory.length; i++) {
@@ -308,7 +316,7 @@ describe('Physics Realism Tests', () => {
           if (point.x < BORDER_WIDTH + BALL_RADIUS) {
             violations.push(
               `Seed ${seed}, Frame ${i}: Ball clipped through left wall ` +
-              `(x=${point.x.toFixed(1)}, min=${(BORDER_WIDTH + BALL_RADIUS).toFixed(1)})`
+                `(x=${point.x.toFixed(1)}, min=${(BORDER_WIDTH + BALL_RADIUS).toFixed(1)})`
             );
           }
 
@@ -316,7 +324,7 @@ describe('Physics Realism Tests', () => {
           if (point.x > BOARD_WIDTH - BORDER_WIDTH - BALL_RADIUS) {
             violations.push(
               `Seed ${seed}, Frame ${i}: Ball clipped through right wall ` +
-              `(x=${point.x.toFixed(1)}, max=${(BOARD_WIDTH - BORDER_WIDTH - BALL_RADIUS).toFixed(1)})`
+                `(x=${point.x.toFixed(1)}, max=${(BOARD_WIDTH - BORDER_WIDTH - BALL_RADIUS).toFixed(1)})`
             );
           }
         }
@@ -336,7 +344,7 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 5000
+          seed: seed * 5000,
         });
 
         for (let i = 1; i < trajectory.length; i++) {
@@ -350,29 +358,28 @@ describe('Physics Realism Tests', () => {
 
             // Check if line segment passes through peg
             const linePassesThroughPeg = doesLineIntersectCircle(
-              prev.x, prev.y,
-              curr.x, curr.y,
-              peg.x, peg.y,
+              prev.x,
+              prev.y,
+              curr.x,
+              curr.y,
+              peg.x,
+              peg.y,
               COLLISION_RADIUS
             );
 
             if (linePassesThroughPeg) {
               // Check if there was a collision reported
-              const hadCollision = curr.pegHit &&
-                curr.pegHitRow === peg.row &&
-                curr.pegHitCol === peg.col;
+              const hadCollision =
+                curr.pegHit && curr.pegHitRow === peg.row && curr.pegHitCol === peg.col;
 
               if (!hadCollision) {
-                const dist = Math.sqrt(
-                  Math.pow(curr.x - peg.x, 2) +
-                  Math.pow(curr.y - peg.y, 2)
-                );
+                const dist = Math.sqrt(Math.pow(curr.x - peg.x, 2) + Math.pow(curr.y - peg.y, 2));
 
                 // Only report if ball is inside peg (not just passing nearby)
                 if (dist < COLLISION_RADIUS * 0.9) {
                   violations.push(
                     `Seed ${seed}, Frame ${i}: Ball passed through peg at ` +
-                    `(${peg.x.toFixed(0)}, ${peg.y.toFixed(0)}) without collision`
+                      `(${peg.x.toFixed(0)}, ${peg.y.toFixed(0)}) without collision`
                   );
                 }
               }
@@ -396,17 +403,18 @@ describe('Physics Realism Tests', () => {
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
           selectedIndex: seed % SLOT_COUNT,
-          seed: seed * 6000
+          seed: seed * 6000,
         });
 
         for (let i = 0; i < trajectory.length; i++) {
           const point = trajectory[i];
           const speed = Math.sqrt(point.vx * point.vx + point.vy * point.vy);
 
-          if (speed > TERMINAL_VELOCITY * 1.1) { // 10% tolerance
+          if (speed > TERMINAL_VELOCITY * 1.1) {
+            // 10% tolerance
             violations.push(
               `Seed ${seed}, Frame ${i}: Speed ${speed.toFixed(0)}px/s ` +
-              `exceeds terminal velocity of ${TERMINAL_VELOCITY}px/s`
+                `exceeds terminal velocity of ${TERMINAL_VELOCITY}px/s`
             );
           }
         }
@@ -422,7 +430,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 3,
-        seed: 77777
+        seed: 77777,
       });
 
       for (let i = 1; i < trajectory.length; i++) {
@@ -432,12 +440,13 @@ describe('Physics Realism Tests', () => {
         // Skip collision frames AND frames near collisions
         // where velocity can change due to bounce effects
         // Use wider buffer to avoid frames affected by collision impulse
-        const isCollision = (frame: any) => frame?.pegHit || frame?.bucketFloorHit || frame?.wallHit || frame?.bucketWallHit;
+        const isCollision = (frame: TrajectoryPoint | undefined) =>
+          frame?.pegHit || frame?.bucketFloorHit || frame?.wallHit || frame?.bucketWallHit;
 
         if (isCollision(curr) || isCollision(prev)) continue;
-        if (isCollision(trajectory[i+1]) || isCollision(trajectory[i-1])) continue;
-        if (isCollision(trajectory[i+2]) || isCollision(trajectory[i-2])) continue;
-        if (isCollision(trajectory[i+3]) || isCollision(trajectory[i-3])) continue;
+        if (isCollision(trajectory[i + 1]) || isCollision(trajectory[i - 1])) continue;
+        if (isCollision(trajectory[i + 2]) || isCollision(trajectory[i - 2])) continue;
+        if (isCollision(trajectory[i + 3]) || isCollision(trajectory[i - 3])) continue;
 
         // Velocity change should be limited by acceleration * dt
         const dvx = Math.abs(curr.vx - prev.vx);
@@ -447,10 +456,12 @@ describe('Physics Realism Tests', () => {
         const maxDVx = GRAVITY * DT * 15; // Horizontal can change significantly due to damping/spin
         const maxDVy = GRAVITY * DT * 10; // Vertical can accelerate/decelerate
 
-        expect(dvx).toBeLessThan(maxDVx,
+        expect(dvx).toBeLessThan(
+          maxDVx,
           `Frame ${i}: Horizontal velocity changed by ${dvx.toFixed(1)}px/s`
         );
-        expect(dvy).toBeLessThan(maxDVy,
+        expect(dvy).toBeLessThan(
+          maxDVy,
           `Frame ${i}: Vertical velocity changed by ${dvy.toFixed(1)}px/s`
         );
       }
@@ -465,7 +476,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 2,
-        seed: 88888
+        seed: 88888,
       });
 
       // Count frames where ball moves upward
@@ -489,7 +500,7 @@ describe('Physics Realism Tests', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: 4,
-        seed: 33333
+        seed: 33333,
       });
 
       // Find segments between collisions
@@ -507,8 +518,9 @@ describe('Physics Realism Tests', () => {
 
       // Check that segments show acceleration due to gravity
       for (const segment of segments) {
-        if (segment.length > 5) { // Need enough points to check
-          const vyValues = segment.map(i => trajectory[i].vy);
+        if (segment.length > 5) {
+          // Need enough points to check
+          const vyValues = segment.map((i) => trajectory[i].vy);
 
           // Vertical velocity should generally increase (falling)
           let increasing = 0;
@@ -529,9 +541,12 @@ describe('Physics Realism Tests', () => {
  * Check if a line segment intersects with a circle
  */
 function doesLineIntersectCircle(
-  x1: number, y1: number,
-  x2: number, y2: number,
-  cx: number, cy: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  cx: number,
+  cy: number,
   radius: number
 ): boolean {
   // Vector from start to end
@@ -547,7 +562,7 @@ function doesLineIntersectCircle(
   if (a === 0) return false;
 
   const b = 2 * (fx * dx + fy * dy);
-  const c = (fx * fx + fy * fy) - radius * radius;
+  const c = fx * fx + fy * fy - radius * radius;
 
   // Check discriminant
   const discriminant = b * b - 4 * a * c;
@@ -559,6 +574,5 @@ function doesLineIntersectCircle(
   const t2 = (-b + sqrt) / (2 * a);
 
   // Check if intersection is within line segment
-  return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1) ||
-         (t1 < 0 && t2 > 1); // Line passes through circle
+  return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1) || (t1 < 0 && t2 > 1); // Line passes through circle
 }

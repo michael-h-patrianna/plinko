@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from './testUtils';
+import { render, screen, fireEvent, act } from './testUtils';
 import { Ball } from '../components/Ball';
 import { BallLauncher } from '../components/BallLauncher';
 import { Countdown } from '../components/Countdown';
@@ -17,7 +17,7 @@ import { ViewportSelector } from '../components/ViewportSelector';
 import { ThemeSelector } from '../components/ThemeSelector';
 import { PopupContainer } from '../components/PopupContainer';
 import { MOCK_PRIZES } from '../config/prizeTable';
-import type { BallPosition, GameState, TrajectoryPoint, PrizeConfig } from '../game/types';
+import type { BallPosition, TrajectoryPoint, PrizeConfig } from '../game/types';
 
 // ============================================================================
 // Ball Component Tests
@@ -26,7 +26,7 @@ describe('Ball Component', () => {
   const mockPosition: BallPosition = {
     x: 100,
     y: 200,
-    rotation: 45
+    rotation: 45,
   };
 
   const mockTrajectoryPoint: TrajectoryPoint = {
@@ -36,27 +36,21 @@ describe('Ball Component', () => {
     rotation: 45,
     vx: 50,
     vy: 100,
-    pegHit: false
+    pegHit: false,
   };
 
   it('should not render when position is null', () => {
-    const { container } = render(
-      <Ball position={null} state="idle" currentFrame={0} />
-    );
+    const { container } = render(<Ball position={null} state="idle" currentFrame={0} />);
     expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
   });
 
   it('should not render during idle state', () => {
-    const { container } = render(
-      <Ball position={mockPosition} state="idle" currentFrame={0} />
-    );
+    const { container } = render(<Ball position={mockPosition} state="idle" currentFrame={0} />);
     expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
   });
 
   it('should not render during ready state', () => {
-    const { container } = render(
-      <Ball position={mockPosition} state="ready" currentFrame={0} />
-    );
+    const { container } = render(<Ball position={mockPosition} state="ready" currentFrame={0} />);
     expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
   });
 
@@ -68,32 +62,24 @@ describe('Ball Component', () => {
   });
 
   it('should render during dropping state', () => {
-    render(
-      <Ball position={mockPosition} state="dropping" currentFrame={5} />
-    );
+    render(<Ball position={mockPosition} state="dropping" currentFrame={5} />);
     expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
   });
 
   it('should render during landed state', () => {
-    render(
-      <Ball position={mockPosition} state="landed" currentFrame={100} />
-    );
+    render(<Ball position={mockPosition} state="landed" currentFrame={100} />);
     expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
   });
 
   it('should apply correct position transform', () => {
-    render(
-      <Ball position={mockPosition} state="dropping" currentFrame={5} />
-    );
+    render(<Ball position={mockPosition} state="dropping" currentFrame={5} />);
     const ball = screen.getByTestId('plinko-ball');
     expect(ball.style.transform).toContain('translate(93px, 193px)'); // Position - radius (7px)
     expect(ball.style.transform).toContain('rotate(45deg)');
   });
 
   it('should render with data attributes', () => {
-    render(
-      <Ball position={mockPosition} state="dropping" currentFrame={15} />
-    );
+    render(<Ball position={mockPosition} state="dropping" currentFrame={15} />);
     const ball = screen.getByTestId('plinko-ball');
     expect(ball).toHaveAttribute('data-state', 'dropping');
     expect(ball).toHaveAttribute('data-frame', '15');
@@ -104,10 +90,15 @@ describe('Ball Component', () => {
       ...mockTrajectoryPoint,
       pegHit: true,
       vx: 100,
-      vy: 500
+      vy: 500,
     };
     render(
-      <Ball position={mockPosition} state="dropping" currentFrame={5} trajectoryPoint={pegHitPoint} />
+      <Ball
+        position={mockPosition}
+        state="dropping"
+        currentFrame={5}
+        trajectoryPoint={pegHitPoint}
+      />
     );
     const ball = screen.getByTestId('plinko-ball');
     // Should have scaleX and scaleY transforms when hitting peg
@@ -119,10 +110,15 @@ describe('Ball Component', () => {
       ...mockTrajectoryPoint,
       vx: 50,
       vy: 400,
-      pegHit: false
+      pegHit: false,
     };
     render(
-      <Ball position={mockPosition} state="dropping" currentFrame={5} trajectoryPoint={fastFallPoint} />
+      <Ball
+        position={mockPosition}
+        state="dropping"
+        currentFrame={5}
+        trajectoryPoint={fastFallPoint}
+      />
     );
     const ball = screen.getByTestId('plinko-ball');
     // Should have scaleX and scaleY transforms when falling fast
@@ -131,7 +127,12 @@ describe('Ball Component', () => {
 
   it('should render trail effects during drop', () => {
     const { container } = render(
-      <Ball position={mockPosition} state="dropping" currentFrame={10} trajectoryPoint={mockTrajectoryPoint} />
+      <Ball
+        position={mockPosition}
+        state="dropping"
+        currentFrame={10}
+        trajectoryPoint={mockTrajectoryPoint}
+      />
     );
     // Trail should be rendered (multiple divs with rounded-full class)
     const trailElements = container.querySelectorAll('.rounded-full.pointer-events-none');
@@ -144,33 +145,25 @@ describe('Ball Component', () => {
 // ============================================================================
 describe('BallLauncher Component', () => {
   it('should render launcher chamber', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={false} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={false} />);
     expect(container.querySelector('.absolute.pointer-events-none')).toBeInTheDocument();
   });
 
   it('should position launcher at correct coordinates', () => {
-    const { container } = render(
-      <BallLauncher x={150} y={75} isLaunching={false} />
-    );
+    const { container } = render(<BallLauncher x={150} y={75} isLaunching={false} />);
     const launcher = container.querySelector('.absolute.pointer-events-none') as HTMLElement;
     expect(launcher.style.left).toBe('150px');
     expect(launcher.style.top).toBe('75px');
   });
 
   it('should show ball inside chamber when not launching', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={false} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={false} />);
     const ball = container.querySelector('.rounded-full');
     expect(ball).toBeInTheDocument();
   });
 
   it('should hide ball when launching', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={true} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={true} />);
     // Ball should not be rendered when launching
     const balls = container.querySelectorAll('.rounded-full');
     // There might be other rounded elements, but the ball motion div should not be present
@@ -178,35 +171,29 @@ describe('BallLauncher Component', () => {
   });
 
   it('should show pusher mechanism', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={false} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={false} />);
     // Pusher is a div with specific height of 4px
     const elements = container.querySelectorAll('.absolute');
     expect(elements.length).toBeGreaterThan(1);
   });
 
   it('should show spring coil when not launching', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={false} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={false} />);
     // Spring coil has repeating-linear-gradient background
     const elements = Array.from(container.querySelectorAll('.absolute'));
     const springCoil = elements.find((el) => {
       const htmlEl = el as HTMLElement;
-      return htmlEl.style.background?.includes('repeating-linear-gradient');
+      return htmlEl.style.background.includes('repeating-linear-gradient');
     });
     expect(springCoil).toBeInTheDocument();
   });
 
   it('should hide spring coil when launching', () => {
-    const { container } = render(
-      <BallLauncher x={100} y={50} isLaunching={true} />
-    );
+    const { container } = render(<BallLauncher x={100} y={50} isLaunching={true} />);
     const elements = Array.from(container.querySelectorAll('.absolute'));
     const springCoil = elements.find((el) => {
       const htmlEl = el as HTMLElement;
-      return htmlEl.style.background?.includes('repeating-linear-gradient');
+      return htmlEl.style.background.includes('repeating-linear-gradient');
     });
     expect(springCoil).toBeUndefined();
   });
@@ -229,56 +216,56 @@ describe('Countdown Component', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it('should countdown from 3 to 2', async () => {
+  it('should countdown from 3 to 2', () => {
     render(<Countdown onComplete={vi.fn()} />);
     expect(screen.getByText('3')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
-  it('should countdown from 2 to 1', async () => {
+  it('should countdown from 2 to 1', () => {
     render(<Countdown onComplete={vi.fn()} />);
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('1')).toBeInTheDocument();
   });
 
-  it('should show GO after 1', async () => {
+  it('should show GO after 1', () => {
     render(<Countdown onComplete={vi.fn()} />);
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('1')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('GO!')).toBeInTheDocument();
   });
 
-  it('should transition through all countdown states', async () => {
+  it('should transition through all countdown states', () => {
     const onComplete = vi.fn();
     render(<Countdown onComplete={onComplete} />);
 
@@ -286,33 +273,29 @@ describe('Countdown Component', () => {
     expect(screen.getByText('3')).toBeInTheDocument();
 
     // Advance through countdown
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('1')).toBeInTheDocument();
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('GO!')).toBeInTheDocument();
   });
 
   it('should accept custom board height', () => {
-    const { container } = render(
-      <Countdown onComplete={vi.fn()} boardHeight={600} />
-    );
+    const { container } = render(<Countdown onComplete={vi.fn()} boardHeight={600} />);
     expect(container.querySelector('.absolute.inset-0')).toBeInTheDocument();
   });
 
   it('should accept custom peg rows', () => {
-    const { container } = render(
-      <Countdown onComplete={vi.fn()} pegRows={12} />
-    );
+    const { container } = render(<Countdown onComplete={vi.fn()} pegRows={12} />);
     expect(container.querySelector('.absolute.inset-0')).toBeInTheDocument();
   });
 
@@ -352,14 +335,14 @@ describe('StartScreen Component', () => {
 
   it('should render all prizes', () => {
     render(<StartScreen prizes={MOCK_PRIZES} onStart={mockOnStart} disabled={false} />);
-    MOCK_PRIZES.forEach(prize => {
+    MOCK_PRIZES.forEach((prize) => {
       expect(screen.getByText(prize.label!)).toBeInTheDocument();
     });
   });
 
   it('should render prize probabilities', () => {
     render(<StartScreen prizes={MOCK_PRIZES} onStart={mockOnStart} disabled={false} />);
-    MOCK_PRIZES.forEach(prize => {
+    MOCK_PRIZES.forEach((prize) => {
       const percentage = (prize.probability * 100).toFixed(0) + '%';
       expect(screen.getAllByText(percentage).length).toBeGreaterThan(0);
     });
@@ -389,7 +372,7 @@ describe('StartScreen Component', () => {
     expect(mockOnStart).not.toHaveBeenCalled();
   });
 
-  it('should expand combo prizes when clicked', async () => {
+  it('should expand combo prizes when clicked', () => {
     const comboPrize: PrizeConfig = {
       ...MOCK_PRIZES[0],
       id: 'combo',
@@ -397,8 +380,8 @@ describe('StartScreen Component', () => {
       label: 'Combo Prize',
       freeReward: {
         sc: 100,
-        gc: 500
-      }
+        gc: 500,
+      },
     };
     const prizes = [comboPrize, ...MOCK_PRIZES.slice(1)];
 
@@ -406,7 +389,7 @@ describe('StartScreen Component', () => {
 
     const comboPrizeElement = screen.getByText('Combo Prize');
 
-    await act(async () => {
+    act(() => {
       fireEvent.click(comboPrizeElement.closest('div')!);
     });
 
@@ -431,7 +414,7 @@ describe('PrizeReveal Component', () => {
       ...MOCK_PRIZES[0],
       type: 'no_win',
       title: 'Better Luck',
-      description: 'Try again!'
+      description: 'Try again!',
     };
 
     const { container } = render(
@@ -449,8 +432,8 @@ describe('PrizeReveal Component', () => {
       description: 'Special offer!',
       purchaseOffer: {
         title: '200% Bonus',
-        description: '$29.99'
-      }
+        description: '$29.99',
+      },
     };
 
     const { container } = render(
@@ -467,8 +450,8 @@ describe('PrizeReveal Component', () => {
       title: 'Free Reward',
       description: 'You won!',
       freeReward: {
-        sc: 100
-      }
+        sc: 100,
+      },
     };
 
     const { container } = render(
@@ -482,7 +465,7 @@ describe('PrizeReveal Component', () => {
     const prize: PrizeConfig = {
       ...MOCK_PRIZES[0],
       type: 'free',
-      freeReward: { sc: 100 }
+      freeReward: { sc: 100 },
     };
 
     const { container } = render(
@@ -527,7 +510,7 @@ describe('PrizeClaimed Component', () => {
   });
 
   it('should render checkmark', () => {
-    const { container } = render(<PrizeClaimed prize={mockPrize} onClose={mockOnClose} />);
+    render(<PrizeClaimed prize={mockPrize} onClose={mockOnClose} />);
     expect(screen.getByText('✓')).toBeInTheDocument();
   });
 });
@@ -539,80 +522,37 @@ describe('Slot Component', () => {
   const mockPrize = MOCK_PRIZES[0];
 
   it('should render slot', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
     expect(screen.getByTestId('slot-0')).toBeInTheDocument();
   });
 
   it('should position slot correctly', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={100}
-        width={50}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={100} width={50} />);
     const slot = screen.getByTestId('slot-0');
     expect(slot.style.left).toBe('100px');
     expect(slot.style.width).toBe('50px');
   });
 
   it('should render prize label', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
     expect(screen.getByText(mockPrize.label!)).toBeInTheDocument();
   });
 
   it('should mark winning slot with data-active', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        isWinning={true}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} isWinning={true} />);
     const slot = screen.getByTestId('slot-0');
     expect(slot).toHaveAttribute('data-active', 'true');
   });
 
   it('should mark non-winning slot with data-active false', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        isWinning={false}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} isWinning={false} />);
     const slot = screen.getByTestId('slot-0');
     expect(slot).toHaveAttribute('data-active', 'false');
   });
 
   it('should show wall impact flash on left', () => {
     const { container } = render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        wallImpact="left"
-      />
+      <Slot index={0} prize={mockPrize} x={50} width={60} wallImpact="left" />
     );
     // Wall impact creates a motion div
     const impactFlash = container.querySelector('.absolute.left-0.top-0.bottom-0');
@@ -621,13 +561,7 @@ describe('Slot Component', () => {
 
   it('should show wall impact flash on right', () => {
     const { container } = render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        wallImpact="right"
-      />
+      <Slot index={0} prize={mockPrize} x={50} width={60} wallImpact="right" />
     );
     const impactFlash = container.querySelector('.absolute.right-0.top-0.bottom-0');
     expect(impactFlash).toBeInTheDocument();
@@ -635,13 +569,7 @@ describe('Slot Component', () => {
 
   it('should show floor impact flash', () => {
     const { container } = render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        floorImpact={true}
-      />
+      <Slot index={0} prize={mockPrize} x={50} width={60} floorImpact={true} />
     );
     const impactFlash = container.querySelector('.absolute.bottom-0.left-0.right-0');
     expect(impactFlash).toBeInTheDocument();
@@ -649,49 +577,30 @@ describe('Slot Component', () => {
 
   it('should show red winning badge when isWinning', () => {
     const { container } = render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        isWinning={true}
-      />
+      <Slot index={0} prize={mockPrize} x={50} width={60} isWinning={true} />
     );
     // Winning badge has specific gradient background
     const badges = Array.from(container.querySelectorAll('.absolute')).filter((el) => {
       const htmlEl = el as HTMLElement;
-      return htmlEl.style.background?.includes('linear-gradient') &&
-             htmlEl.style.background?.includes('#ef4444');
+      return (
+        htmlEl.style.background.includes('linear-gradient') &&
+        htmlEl.style.background.includes('#ef4444')
+      );
     });
     expect(badges.length).toBeGreaterThan(0);
   });
 
   it('should show combo badge when comboBadgeNumber provided', () => {
-    render(
-      <Slot
-        index={0}
-        prize={mockPrize}
-        x={50}
-        width={60}
-        comboBadgeNumber={2}
-      />
-    );
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} comboBadgeNumber={2} />);
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
   it('should render icon when prize has slotIcon', () => {
     const prizeWithIcon = {
       ...mockPrize,
-      slotIcon: '/test-icon.png'
+      slotIcon: '/test-icon.png',
     };
-    const { container } = render(
-      <Slot
-        index={0}
-        prize={prizeWithIcon}
-        x={50}
-        width={60}
-      />
-    );
+    const { container } = render(<Slot index={0} prize={prizeWithIcon} x={50} width={60} />);
     const icon = container.querySelector('img[alt]');
     expect(icon).toBeInTheDocument();
   });
@@ -759,9 +668,7 @@ describe('Peg Component', () => {
   });
 
   it('should reset flash when shouldReset is true', () => {
-    const { rerender } = render(
-      <Peg row={0} col={0} x={100} y={200} isActive={true} />
-    );
+    const { rerender } = render(<Peg row={0} col={0} x={100} y={200} isActive={true} />);
 
     rerender(<Peg row={0} col={0} x={100} y={200} isActive={false} shouldReset={true} />);
 
@@ -805,26 +712,42 @@ describe('ThemedButton Component', () => {
   });
 
   it('should be disabled when disabled prop is true', () => {
-    render(<ThemedButton onClick={mockOnClick} disabled={true}>Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} disabled={true}>
+        Click Me
+      </ThemedButton>
+    );
     const button = screen.getByText('Click Me').closest('button');
     expect(button).toBeDisabled();
   });
 
   it('should not call onClick when disabled', () => {
-    render(<ThemedButton onClick={mockOnClick} disabled={true}>Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} disabled={true}>
+        Click Me
+      </ThemedButton>
+    );
     const button = screen.getByText('Click Me').closest('button');
     fireEvent.click(button!);
     expect(mockOnClick).not.toHaveBeenCalled();
   });
 
   it('should apply custom className', () => {
-    render(<ThemedButton onClick={mockOnClick} className="custom-class">Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} className="custom-class">
+        Click Me
+      </ThemedButton>
+    );
     const button = screen.getByText('Click Me').closest('button');
     expect(button).toHaveClass('custom-class');
   });
 
   it('should render with testId', () => {
-    render(<ThemedButton onClick={mockOnClick} testId="test-button">Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} testId="test-button">
+        Click Me
+      </ThemedButton>
+    );
     expect(screen.getByTestId('test-button')).toBeInTheDocument();
   });
 
@@ -835,14 +758,22 @@ describe('ThemedButton Component', () => {
   });
 
   it('should apply reduced opacity when disabled', () => {
-    render(<ThemedButton onClick={mockOnClick} disabled={true}>Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} disabled={true}>
+        Click Me
+      </ThemedButton>
+    );
     const button = screen.getByText('Click Me').closest('button') as HTMLElement;
     // Button should be disabled
     expect(button).toBeDisabled();
   });
 
   it('should be fully visible when enabled', () => {
-    render(<ThemedButton onClick={mockOnClick} disabled={false}>Click Me</ThemedButton>);
+    render(
+      <ThemedButton onClick={mockOnClick} disabled={false}>
+        Click Me
+      </ThemedButton>
+    );
     const button = screen.getByText('Click Me').closest('button') as HTMLElement;
     // Button should be enabled
     expect(button).toBeEnabled();
@@ -861,11 +792,7 @@ describe('ViewportSelector Component', () => {
 
   it('should render all viewport size options', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     expect(screen.getByText('iPhone SE')).toBeInTheDocument();
@@ -876,11 +803,7 @@ describe('ViewportSelector Component', () => {
 
   it('should render all width values', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     expect(screen.getByText('320px')).toBeInTheDocument();
@@ -891,11 +814,7 @@ describe('ViewportSelector Component', () => {
 
   it('should call onWidthChange when button clicked', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     fireEvent.click(screen.getByText('320px'));
@@ -904,11 +823,7 @@ describe('ViewportSelector Component', () => {
 
   it('should not call onWidthChange when disabled', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={true}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={true} />
     );
 
     fireEvent.click(screen.getByText('320px'));
@@ -917,11 +832,7 @@ describe('ViewportSelector Component', () => {
 
   it('should highlight selected viewport', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     const button = screen.getByText('375px').closest('button') as HTMLElement;
@@ -930,26 +841,18 @@ describe('ViewportSelector Component', () => {
 
   it('should disable all buttons when disabled prop is true', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={true}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={true} />
     );
 
     const buttons = screen.getAllByRole('button');
-    buttons.forEach(button => {
+    buttons.forEach((button) => {
       expect(button).toBeDisabled();
     });
   });
 
   it('should apply opacity 0.5 to disabled buttons', () => {
     render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={true}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={true} />
     );
 
     const button = screen.getByText('375px').closest('button') as HTMLElement;
@@ -958,11 +861,7 @@ describe('ViewportSelector Component', () => {
 
   it('should change selection on different button click', () => {
     const { rerender } = render(
-      <ViewportSelector
-        selectedWidth={375}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={375} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     fireEvent.click(screen.getByText('414px'));
@@ -970,11 +869,7 @@ describe('ViewportSelector Component', () => {
 
     // Simulate parent updating selected width
     rerender(
-      <ViewportSelector
-        selectedWidth={414}
-        onWidthChange={mockOnWidthChange}
-        disabled={false}
-      />
+      <ViewportSelector selectedWidth={414} onWidthChange={mockOnWidthChange} disabled={false} />
     );
 
     const button = screen.getByText('414px').closest('button') as HTMLElement;
@@ -987,7 +882,7 @@ describe('ViewportSelector Component', () => {
 // ============================================================================
 describe('ThemeSelector Component', () => {
   it('should render theme selector', () => {
-    const { container } = render(<ThemeSelector />);
+    render(<ThemeSelector />);
     expect(screen.getByText('Theme:')).toBeInTheDocument();
   });
 
@@ -999,7 +894,7 @@ describe('ThemeSelector Component', () => {
   });
 
   it('should highlight current theme', () => {
-    const { container } = render(<ThemeSelector />);
+    render(<ThemeSelector />);
     const buttons = screen.getAllByRole('button');
     // At least one button should be highlighted (current theme)
     expect(buttons.length).toBeGreaterThan(0);

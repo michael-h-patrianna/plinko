@@ -10,7 +10,7 @@ import {
   defaultZIndex,
   defaultBorderRadius,
   defaultButtons,
-  defaultComponents
+  defaultComponents,
 } from '../themeDefaults';
 
 export const defaultTheme: Theme = {
@@ -167,14 +167,16 @@ export const defaultTheme: Theme = {
 
     // Ball gradients - linear replacements for radial
     ballMain: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 30%, #fb923c 70%, #f97316 100%)',
-    ballGlow: 'linear-gradient(135deg, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 50%, transparent 100%)',
+    ballGlow:
+      'linear-gradient(135deg, rgba(251,191,36,0.5) 0%, rgba(251,146,60,0.3) 50%, transparent 100%)',
 
     // Peg gradients - linear replacements for radial
     pegDefault: 'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 30%, #94a3b8 70%, #64748b 100%)',
     pegActive: 'linear-gradient(135deg, #fef3c7 0%, #fde047 30%, #facc15 70%, #eab308 100%)',
 
     // Slot gradients - all linear
-    slotBackground: 'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(59,130,246,0.2) 70%, rgba(59,130,246,0.4) 100%)',
+    slotBackground:
+      'linear-gradient(180deg, transparent 0%, transparent 40%, rgba(59,130,246,0.2) 70%, rgba(59,130,246,0.4) 100%)',
     slotHighlight: 'linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 100%)',
     slotWin: 'linear-gradient(135deg, #fef3c7 0%, #fbbf24 50%, #f59e0b 100%)',
   },

@@ -1,7 +1,10 @@
 /**
- * Slot Anticipation Animation
- * Disney Principle: ANTICIPATION - preparatory animation signaling the win
- * React Native compatible: transform (scale), opacity, radial gradients
+ * Slot anticipation animation with ascending light particles
+ * Implements Disney anticipation principle - preparatory animation signaling the win
+ * @param x - X position of the slot
+ * @param width - Width of the slot
+ * @param color - Color for the particle effects
+ * @param isActive - Whether the animation should be shown
  */
 
 import { motion } from 'framer-motion';

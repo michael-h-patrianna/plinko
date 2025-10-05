@@ -1,6 +1,10 @@
 /**
- * Single reward item in grid
- * Shows icon and amount/label
+ * Individual reward item displayed in reward grid
+ * Shows icon and formatted amount/label with entrance animation
+ * @param type - Type of reward (gc, sc, spins, xp, randomReward)
+ * @param amount - Amount of the reward
+ * @param xpConfig - Configuration for XP rewards (icon and name)
+ * @param delay - Animation delay in seconds
  */
 
 import { motion } from 'framer-motion';
@@ -9,6 +13,7 @@ import gcIcon from '../../assets/gc.png';
 import freeSpinsIcon from '../../assets/free-spins.png';
 import randomRewardIcon from '../../assets/random_reward.png';
 import { useTheme } from '../../theme';
+import type { Theme } from '../../theme/types';
 
 interface RewardItemProps {
   type: 'gc' | 'sc' | 'spins' | 'xp' | 'randomReward';
@@ -21,7 +26,7 @@ interface RewardItemProps {
 interface RewardConfigItem {
   icon: string;
   label: string;
-  getColor: (theme: any) => string;
+  getColor: (theme: Theme) => string;
 }
 
 const getRewardConfig = (): Record<string, RewardConfigItem> => ({
@@ -50,9 +55,14 @@ const getRewardConfig = (): Record<string, RewardConfigItem> => ({
 export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProps) {
   const { theme } = useTheme();
   const rewardConfig = getRewardConfig();
-  const config = type === 'xp' && xpConfig
-    ? { icon: xpConfig.icon, label: xpConfig.name, getColor: (t: any) => t.colors.prizes.blue.light }
-    : rewardConfig[type];
+  const config =
+    type === 'xp' && xpConfig
+      ? {
+          icon: xpConfig.icon,
+          label: xpConfig.name,
+          getColor: (t: Theme) => t.colors.prizes.blue.light,
+        }
+      : rewardConfig[type];
 
   if (!config) {
     return null;
@@ -60,13 +70,14 @@ export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProp
 
   const color = config.getColor(theme);
   const displayAmount = amount ?? 1;
-  const displayText = type === 'spins'
-    ? `${displayAmount} ${config.label}`
-    : type === 'randomReward'
-    ? config.label
-    : type === 'xp'
-    ? `${displayAmount} ${config.label}`
-    : `${config.label} ${displayAmount.toLocaleString()}`;
+  const displayText =
+    type === 'spins'
+      ? `${displayAmount} ${config.label}`
+      : type === 'randomReward'
+        ? config.label
+        : type === 'xp'
+          ? `${displayAmount} ${config.label}`
+          : `${config.label} ${displayAmount.toLocaleString()}`;
 
   return (
     <motion.div

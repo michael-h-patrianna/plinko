@@ -1,13 +1,13 @@
 /**
- * Theme Context and Provider
- * Manages theme state and provides theme utilities to the application
+ * Theme Context and Provider for managing application theming
+ * Provides theme switching functionality with localStorage persistence
  */
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useState, useCallback, ReactNode } from 'react';
 import { Theme } from './types';
 import { defaultTheme } from './themes/defaultTheme';
 
-interface ThemeContextType {
+export interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   themeName: string;
@@ -15,7 +15,7 @@ interface ThemeContextType {
   switchTheme: (themeName: string) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -23,6 +23,13 @@ interface ThemeProviderProps {
   themes?: Theme[];
 }
 
+/**
+ * Theme provider component that wraps the application
+ * Loads saved theme from localStorage on mount and persists theme changes
+ * @param children - Child components to render
+ * @param initialTheme - Initial theme to use (default: defaultTheme)
+ * @param themes - Array of available themes
+ */
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   children,
   initialTheme = defaultTheme,
@@ -31,14 +38,17 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
   const [theme, setTheme] = useState<Theme>(initialTheme);
   const [availableThemes] = useState<Theme[]>(themes);
 
-  const switchTheme = useCallback((themeName: string) => {
-    const newTheme = availableThemes.find(t => t.name === themeName);
-    if (newTheme) {
-      setTheme(newTheme);
-      // Persist theme preference
-      localStorage.setItem('plinko-theme', themeName);
-    }
-  }, [availableThemes]);
+  const switchTheme = useCallback(
+    (themeName: string) => {
+      const newTheme = availableThemes.find((t) => t.name === themeName);
+      if (newTheme) {
+        setTheme(newTheme);
+        // Persist theme preference
+        localStorage.setItem('plinko-theme', themeName);
+      }
+    },
+    [availableThemes]
+  );
 
   // Load saved theme on mount
   React.useEffect(() => {
@@ -56,85 +66,5 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
     switchTheme,
   };
 
-  return (
-    <ThemeContext.Provider value={value}>
-      {children}
-    </ThemeContext.Provider>
-  );
-};
-
-export const useTheme = (): ThemeContextType => {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
-
-// Utility hook for getting specific theme values
-export const useThemeValue = <K extends keyof Theme>(key: K): Theme[K] => {
-  const { theme } = useTheme();
-  return theme[key];
-};
-
-/**
- * Helper function to create CSS variables from theme
- *
- * This utility converts a Theme object into CSS custom properties (variables).
- * Useful for:
- * - Server-side rendering (SSR) where you need to inject theme CSS into HTML
- * - CSS-in-JS frameworks that support CSS variables
- * - Dynamic theme switching via style tags
- *
- * @example
- * ```tsx
- * const cssVars = createCSSVariables(theme);
- * const styleTag = `<style>:root { ${cssVars} }</style>`;
- * ```
- *
- * @param theme - Theme object to convert
- * @returns CSS variable declarations as a string
- */
-export const createCSSVariables = (theme: Theme): string => {
-  const cssVars: string[] = [];
-
-  // Colors
-  Object.entries(theme.colors).forEach(([category, colors]) => {
-    if (typeof colors === 'object') {
-      Object.entries(colors).forEach(([name, value]) => {
-        cssVars.push(`--color-${category}-${name}: ${value};`);
-      });
-    }
-  });
-
-  // Gradients
-  Object.entries(theme.gradients).forEach(([name, value]) => {
-    cssVars.push(`--gradient-${name}: ${value};`);
-  });
-
-  // Spacing
-  Object.entries(theme.spacing).forEach(([name, value]) => {
-    cssVars.push(`--spacing-${name}: ${value}px;`);
-  });
-
-  // Typography
-  Object.entries(theme.typography.fontSize).forEach(([name, value]) => {
-    cssVars.push(`--font-size-${name}: ${value};`);
-  });
-
-  Object.entries(theme.typography.fontWeight).forEach(([name, value]) => {
-    cssVars.push(`--font-weight-${name}: ${value};`);
-  });
-
-  // Border radius
-  Object.entries(theme.borderRadius).forEach(([name, value]) => {
-    cssVars.push(`--radius-${name}: ${value}px;`);
-  });
-
-  // Animation durations
-  Object.entries(theme.animation.duration).forEach(([name, value]) => {
-    cssVars.push(`--duration-${name}: ${value}ms;`);
-  });
-
-  return cssVars.join('\n  ');
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

@@ -1,5 +1,7 @@
 /**
- * Legend showing combo reward details for numbered badges
+ * Legend component showing full reward details for combo prizes
+ * Displays below the board with numbered badges matching slot combo badges
+ * @param slots - Array of slot data with prizes and combo badge numbers
  */
 
 import type { PrizeConfig } from '../../game/types';
@@ -17,7 +19,7 @@ interface ComboLegendProps {
 export function ComboLegend({ slots }: ComboLegendProps) {
   const { theme } = useTheme();
   // Filter slots that have combo badges
-  const comboSlots = slots.filter(slot => slot.comboBadgeNumber !== undefined);
+  const comboSlots = slots.filter((slot) => slot.comboBadgeNumber !== undefined);
 
   if (comboSlots.length === 0) {
     return null;
@@ -26,14 +28,11 @@ export function ComboLegend({ slots }: ComboLegendProps) {
   return (
     <div className="mt-6 px-3 text-xs space-y-1.5">
       {comboSlots.map((slot) => {
-        const color = (slot.prize as any).slotColor || slot.prize.color || theme.colors.game.slot.border;
-        const fullComboText = getSlotDisplayText(slot.prize as any, abbreviateNumber, true);
+        const color = slot.prize.slotColor || slot.prize.color || theme.colors.game.slot.border;
+        const fullComboText = getSlotDisplayText(slot.prize, abbreviateNumber, true);
 
         return (
-          <div
-            key={slot.comboBadgeNumber}
-            className="flex items-center gap-2"
-          >
+          <div key={slot.comboBadgeNumber} className="flex items-center gap-2">
             {/* Badge number */}
             <div
               className="font-bold leading-none flex-shrink-0"

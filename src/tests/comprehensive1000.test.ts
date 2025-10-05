@@ -53,7 +53,7 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
         selectedIndex: targetSlot,
-        seed
+        seed,
       });
 
       const finalFrame = trajectory[trajectory.length - 1];
@@ -70,7 +70,7 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
           finalX: 0,
           maxStuckFrames: 0,
           maxJumpDistance: 0,
-          reachedBucketZone: false
+          reachedBucketZone: false,
         });
         totalFailed++;
         continue;
@@ -78,7 +78,6 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
 
       // Calculate slot boundaries
       const slotWidth = BOARD_WIDTH / SLOT_COUNT;
-      const targetSlotCenterX = (targetSlot + 0.5) * slotWidth;
       const slotLeftX = targetSlot * slotWidth;
       const slotRightX = (targetSlot + 1) * slotWidth;
 
@@ -86,7 +85,6 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       const bucketZoneY = BOARD_HEIGHT * 0.7;
       const slotHeight = 90;
       const slotTopY = BOARD_HEIGHT - slotHeight; // 410px
-      const slotBottomY = BOARD_HEIGHT; // 500px
 
       // Validation 1: Ball must traverse the whole playing field (reach bucket zone)
       let reachedBucketZone = false;
@@ -101,16 +99,19 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       }
 
       if (!reachedBucketZone) {
-        errors.push(`Ball never reached bucket zone (y >= ${bucketZoneY}px). Max Y reached: ${maxY.toFixed(1)}px`);
+        errors.push(
+          `Ball never reached bucket zone (y >= ${bucketZoneY}px). Max Y reached: ${maxY.toFixed(1)}px`
+        );
       }
 
       // Validation 2: Ball must land in correct slot (horizontally)
       const finalX = finalFrame.x;
-      const distanceFromSlotCenter = Math.abs(finalX - targetSlotCenterX);
       const isInCorrectSlot = finalX >= slotLeftX && finalX <= slotRightX;
 
       if (!isInCorrectSlot) {
-        errors.push(`Ball landed in wrong slot. Final X: ${finalX.toFixed(1)}px, Target slot X range: [${slotLeftX.toFixed(1)}, ${slotRightX.toFixed(1)}]`);
+        errors.push(
+          `Ball landed in wrong slot. Final X: ${finalX.toFixed(1)}px, Target slot X range: [${slotLeftX.toFixed(1)}, ${slotRightX.toFixed(1)}]`
+        );
       }
 
       // Validation 3: Detect stuck behavior (no movement for extended period)
@@ -142,9 +143,13 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
 
       // Allow up to 30 frames (0.5 seconds) of stuck before flagging
       if (maxStuckFrames > 30) {
-        errors.push(`Ball got stuck for ${maxStuckFrames} frames (${(maxStuckFrames / 60).toFixed(2)}s)`);
+        errors.push(
+          `Ball got stuck for ${maxStuckFrames} frames (${(maxStuckFrames / 60).toFixed(2)}s)`
+        );
       } else if (maxStuckFrames > 15) {
-        warnings.push(`Ball paused for ${maxStuckFrames} frames (${(maxStuckFrames / 60).toFixed(2)}s) - borderline`);
+        warnings.push(
+          `Ball paused for ${maxStuckFrames} frames (${(maxStuckFrames / 60).toFixed(2)}s) - borderline`
+        );
       }
 
       // Validation 4: Detect unnatural jumps and unrealistic speeds
@@ -186,19 +191,25 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         // 1. Speed limit: Terminal velocity for small objects is ~200-300px/s in game physics
         // With gravity boost, max realistic speed should be ~800px/s
         if (speed > 800) {
-          errors.push(`Unrealistic speed at frame ${i}: ${speed.toFixed(0)}px/s (max realistic: 800px/s)`);
+          errors.push(
+            `Unrealistic speed at frame ${i}: ${speed.toFixed(0)}px/s (max realistic: 800px/s)`
+          );
         }
 
         // 2. Distance per frame: At 60 FPS, max realistic jump is ~13px (800px/s / 60)
         // Allow 20px for collision bounces
         if (jumpDistance > 20) {
-          errors.push(`Unrealistic movement at frame ${i}: ${jumpDistance.toFixed(1)}px in one frame (from [${prev.x.toFixed(1)}, ${prev.y.toFixed(1)}] to [${curr.x.toFixed(1)}, ${curr.y.toFixed(1)}])`);
+          errors.push(
+            `Unrealistic movement at frame ${i}: ${jumpDistance.toFixed(1)}px in one frame (from [${prev.x.toFixed(1)}, ${prev.y.toFixed(1)}] to [${curr.x.toFixed(1)}, ${curr.y.toFixed(1)}])`
+          );
         }
 
         // 3. Diagonal racing detection: Ball should not travel far distances without hitting pegs
         // In peg zone (y > 50 && y < bucket), ball should hit pegs regularly
         if (maxFramesWithoutCollision > 40 && curr.y > 100 && curr.y < slotTopY - 50) {
-          errors.push(`Ball racing through grid without collisions: ${maxFramesWithoutCollision} consecutive frames without hitting peg at y=${curr.y.toFixed(1)}px`);
+          errors.push(
+            `Ball racing through grid without collisions: ${maxFramesWithoutCollision} consecutive frames without hitting peg at y=${curr.y.toFixed(1)}px`
+          );
         }
       }
 
@@ -206,24 +217,32 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       const finalY = finalFrame.y;
       if (finalY < slotTopY - 20) {
         // Allow 20px tolerance above slot for settling
-        errors.push(`Ball did not reach bucket. Final Y: ${finalY.toFixed(1)}px, Expected Y >= ${slotTopY - 20}px`);
+        errors.push(
+          `Ball did not reach bucket. Final Y: ${finalY.toFixed(1)}px, Expected Y >= ${slotTopY - 20}px`
+        );
       }
 
       // Validation 6: Trajectory should be reasonably long (not too short)
       const expectedMinFrames = 120; // At least 2 seconds of animation
       if (trajectory.length < expectedMinFrames) {
-        warnings.push(`Trajectory seems short: ${trajectory.length} frames (expected >= ${expectedMinFrames})`);
+        warnings.push(
+          `Trajectory seems short: ${trajectory.length} frames (expected >= ${expectedMinFrames})`
+        );
       }
 
       // Validation 7: Ball should not go outside board bounds
       for (let i = 0; i < trajectory.length; i++) {
         const point = trajectory[i];
         if (point.x < 0 || point.x > BOARD_WIDTH) {
-          errors.push(`Ball went outside board horizontally at frame ${i}: x=${point.x.toFixed(1)}px`);
+          errors.push(
+            `Ball went outside board horizontally at frame ${i}: x=${point.x.toFixed(1)}px`
+          );
         }
         if (point.y < 0 || point.y > BOARD_HEIGHT + 5) {
           // Allow 5px tolerance for rounding
-          errors.push(`Ball went outside board vertically at frame ${i}: y=${point.y.toFixed(1)}px`);
+          errors.push(
+            `Ball went outside board vertically at frame ${i}: y=${point.y.toFixed(1)}px`
+          );
         }
       }
 
@@ -245,31 +264,33 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         finalX,
         maxStuckFrames,
         maxJumpDistance,
-        reachedBucketZone
+        reachedBucketZone,
       });
 
       // Print progress every 100 tests
       if ((testNum + 1) % 100 === 0) {
-        const progressPercent = ((testNum + 1) / 1000 * 100).toFixed(0);
-        console.log(`Progress: ${testNum + 1}/1000 (${progressPercent}%) - Passed: ${totalPassed}, Failed: ${totalFailed}`);
+        const progressPercent = (((testNum + 1) / 1000) * 100).toFixed(0);
+        console.log(
+          `Progress: ${testNum + 1}/1000 (${progressPercent}%) - Passed: ${totalPassed}, Failed: ${totalFailed}`
+        );
       }
     }
 
     console.log('\n' + '='.repeat(80));
     console.log('\n📊 TEST RESULTS SUMMARY\n');
     console.log(`Total tests: 1000`);
-    console.log(`✅ Passed: ${totalPassed} (${(totalPassed / 1000 * 100).toFixed(1)}%)`);
-    console.log(`❌ Failed: ${totalFailed} (${(totalFailed / 1000 * 100).toFixed(1)}%)`);
+    console.log(`✅ Passed: ${totalPassed} (${((totalPassed / 1000) * 100).toFixed(1)}%)`);
+    console.log(`❌ Failed: ${totalFailed} (${((totalFailed / 1000) * 100).toFixed(1)}%)`);
 
     // Analyze failure patterns
     if (totalFailed > 0) {
       console.log(`\n⚠️  FAILURE ANALYSIS:\n`);
 
       const errorTypes: { [key: string]: number } = {};
-      const failedTests = results.filter(r => !r.passed);
+      const failedTests = results.filter((r) => !r.passed);
 
-      failedTests.forEach(result => {
-        result.errors.forEach(error => {
+      failedTests.forEach((result) => {
+        result.errors.forEach((error) => {
           const errorType = error.split(':')[0] || error.substring(0, 50);
           errorTypes[errorType] = (errorTypes[errorType] || 0) + 1;
         });
@@ -284,19 +305,25 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
 
       // Show first 10 failures in detail
       console.log(`\n🔍 First 10 Failures (detailed):\n`);
-      failedTests.slice(0, 10).forEach(result => {
-        console.log(`Test #${result.testNumber} (seed: ${result.seed}, target slot: ${result.targetSlot}):`);
-        result.errors.forEach(err => console.log(`  ❌ ${err}`));
-        result.warnings.forEach(warn => console.log(`  ⚠️  ${warn}`));
-        console.log(`  Final position: x=${result.finalX.toFixed(1)}px, y=${result.finalY.toFixed(1)}px`);
-        console.log(`  Max stuck: ${result.maxStuckFrames} frames, Max jump: ${result.maxJumpDistance.toFixed(1)}px`);
+      failedTests.slice(0, 10).forEach((result) => {
+        console.log(
+          `Test #${result.testNumber} (seed: ${result.seed}, target slot: ${result.targetSlot}):`
+        );
+        result.errors.forEach((err) => console.log(`  ❌ ${err}`));
+        result.warnings.forEach((warn) => console.log(`  ⚠️  ${warn}`));
+        console.log(
+          `  Final position: x=${result.finalX.toFixed(1)}px, y=${result.finalY.toFixed(1)}px`
+        );
+        console.log(
+          `  Max stuck: ${result.maxStuckFrames} frames, Max jump: ${result.maxJumpDistance.toFixed(1)}px`
+        );
         console.log(`  Reached bucket zone: ${result.reachedBucketZone ? 'Yes' : 'No'}`);
         console.log('');
       });
     }
 
     // Warning summary
-    const testsWithWarnings = results.filter(r => r.warnings.length > 0);
+    const testsWithWarnings = results.filter((r) => r.warnings.length > 0);
     if (testsWithWarnings.length > 0) {
       console.log(`\n⚠️  ${testsWithWarnings.length} tests had warnings (but passed validation)\n`);
     }

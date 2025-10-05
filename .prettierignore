@@ -1,0 +1,29 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+coverage
+
+# Test outputs
+.vitest
+playwright-report
+test-results
+
+# Config files
+*.config.js
+*.config.ts
+
+# Generated files
+*.d.ts
+
+# Logs
+*.log
+
+# Editor
+.vscode
+.idea
+
+# E2E screenshots
+e2e/screenshots

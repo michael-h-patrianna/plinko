@@ -17,14 +17,10 @@ export function abbreviateNumber(value: number): string {
     // Thousands
     const thousands = value / 1000;
     // Remove unnecessary decimals (e.g., 2.0k -> 2k)
-    return thousands % 1 === 0
-      ? `${Math.floor(thousands)}k`
-      : `${thousands.toFixed(1)}k`;
+    return thousands % 1 === 0 ? `${Math.floor(thousands)}k` : `${thousands.toFixed(1)}k`;
   }
 
   // Millions
   const millions = value / 1000000;
-  return millions % 1 === 0
-    ? `${Math.floor(millions)}M`
-    : `${millions.toFixed(1)}M`;
+  return millions % 1 === 0 ? `${Math.floor(millions)}M` : `${millions.toFixed(1)}M`;
 }

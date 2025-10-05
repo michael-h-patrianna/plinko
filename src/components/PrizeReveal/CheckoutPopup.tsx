@@ -1,6 +1,11 @@
 /**
- * Fake checkout popup for purchase offers
- * Simulates checkout flow
+ * Simulated checkout popup for purchase offers
+ * Displays fake payment information and processes demo purchase with delay
+ * @param isOpen - Whether the popup is currently visible
+ * @param price - Price string to display (e.g., "$29.99")
+ * @param offerTitle - Title of the offer being purchased
+ * @param onClose - Callback to close the popup
+ * @param onPurchase - Callback when purchase completes
  */
 
 import { AnimatePresence, motion } from 'framer-motion';
@@ -16,7 +21,13 @@ interface CheckoutPopupProps {
   onPurchase: () => void;
 }
 
-export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }: CheckoutPopupProps) {
+export function CheckoutPopup({
+  isOpen,
+  price,
+  offerTitle,
+  onClose,
+  onPurchase,
+}: CheckoutPopupProps) {
   const { theme } = useTheme();
   const [isPurchasing, setIsPurchasing] = useState(false);
 
@@ -35,7 +46,6 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
       {isOpen && (
         <motion.div
           className="absolute inset-0 z-50 flex items-center justify-center p-6"
-
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -64,16 +74,20 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
                 fontSize: '24px',
                 lineHeight: 1,
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = theme.colors.text.primary}
-              onMouseLeave={(e) => e.currentTarget.style.color = theme.colors.text.tertiary}
+              onMouseEnter={(e) => (e.currentTarget.style.color = theme.colors.text.primary)}
+              onMouseLeave={(e) => (e.currentTarget.style.color = theme.colors.text.tertiary)}
             >
               ×
             </button>
 
             {/* Checkout header */}
             <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold mb-2" style={{ color: theme.colors.text.primary }}>Checkout</h3>
-              <p className="text-sm" style={{ color: theme.colors.text.tertiary }}>{offerTitle}</p>
+              <h3 className="text-2xl font-bold mb-2" style={{ color: theme.colors.text.primary }}>
+                Checkout
+              </h3>
+              <p className="text-sm" style={{ color: theme.colors.text.tertiary }}>
+                {offerTitle}
+              </p>
             </div>
 
             {/* Price display */}
@@ -84,8 +98,12 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
                 border: `1px solid ${theme.colors.status.success}4d`,
               }}
             >
-              <div className="text-sm mb-1" style={{ color: theme.colors.text.tertiary }}>Total</div>
-              <div className="text-4xl font-bold" style={{ color: theme.colors.text.primary }}>{price}</div>
+              <div className="text-sm mb-1" style={{ color: theme.colors.text.tertiary }}>
+                Total
+              </div>
+              <div className="text-4xl font-bold" style={{ color: theme.colors.text.primary }}>
+                {price}
+              </div>
             </div>
 
             {/* Fake payment info */}
@@ -99,8 +117,12 @@ export function CheckoutPopup({ isOpen, price, offerTitle, onClose, onPurchase }
               >
                 <div className="text-2xl">💳</div>
                 <div className="flex-1">
-                  <div className="text-sm font-medium" style={{ color: theme.colors.text.primary }}>Card ending in 4242</div>
-                  <div className="text-xs" style={{ color: theme.colors.text.tertiary }}>Expires 12/25</div>
+                  <div className="text-sm font-medium" style={{ color: theme.colors.text.primary }}>
+                    Card ending in 4242
+                  </div>
+                  <div className="text-xs" style={{ color: theme.colors.text.tertiary }}>
+                    Expires 12/25
+                  </div>
                 </div>
               </div>
             </div>

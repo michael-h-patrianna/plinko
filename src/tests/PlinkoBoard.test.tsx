@@ -16,7 +16,7 @@ describe('PlinkoBoard Component', () => {
     boardHeight: 500,
     pegRows: 10,
     ballPosition: null,
-    ballState: 'idle' as const
+    ballState: 'idle' as const,
   };
 
   it('should render board', () => {
@@ -32,7 +32,7 @@ describe('PlinkoBoard Component', () => {
     const slotCount = MOCK_PRIZES.length;
     const evenRows = Math.ceil(defaultProps.pegRows / 2);
     const oddRows = Math.floor(defaultProps.pegRows / 2);
-    const expectedPegs = (evenRows * (slotCount + 1)) + (oddRows * slotCount);
+    const expectedPegs = evenRows * (slotCount + 1) + oddRows * slotCount;
     const pegs = container.querySelectorAll('[data-testid^="peg-"]');
     expect(pegs.length).toBe(expectedPegs);
   });
