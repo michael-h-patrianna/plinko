@@ -13,6 +13,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../theme';
+import { isMobileDevice } from '../../utils/deviceDetection';
 
 interface DevToolsMenuProps {
   /** Current viewport width for device simulation */
@@ -53,6 +54,11 @@ export function DevToolsMenu({
     }
   }, [isOpen]);
 
+  // Don't render on mobile devices
+  if (isMobileDevice()) {
+    return null;
+  }
+
   return (
     <div className="fixed top-4 right-4 z-50" ref={menuRef}>
       {/* Gear Icon Button */}
@@ -67,19 +73,13 @@ export function DevToolsMenu({
         whileTap={{ scale: 0.95 }}
         aria-label="Dev Tools Settings"
       >
-        <svg
+        <img
+          src="/src/assets/gear.png"
+          alt="Settings"
           width="24"
           height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke={theme.colors.text.primary}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 1v6m0 6v6m5.2-13.2l-4.2 4.2m-1 1l-4.2 4.2M23 12h-6m-6 0H1m18.2 5.2l-4.2-4.2m-1-1l-4.2-4.2" />
-        </svg>
+          style={{ display: 'block' }}
+        />
       </motion.button>
 
       {/* Popup Menu */}

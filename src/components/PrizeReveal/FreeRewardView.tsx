@@ -8,9 +8,9 @@
 
 import { motion } from 'framer-motion';
 import type { Prize } from '../../game/prizeTypes';
-import { RewardItem } from './RewardItem';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../ThemedButton';
+import { RewardItem } from './RewardItem';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -76,7 +76,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
               fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
-              filter: `drop-shadow(0 0 20px ${theme.colors.shadows.colored}) drop-shadow(0 4px 12px ${theme.colors.shadows.default})`,
+
             }}
             initial={{ scale: 0, rotate: -5 }}
             animate={{

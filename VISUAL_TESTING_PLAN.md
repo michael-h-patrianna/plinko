@@ -215,6 +215,6 @@ User requirement: At least 1 hour of research, planning, implementation, and tes
 This testing phase is critical to meeting that requirement.
 
 
-1. When the ball has landed in its final slot, shortly before transitioning to the prize reveal, the ball quickly moves to its initial state on top of the board. Instead the ball should stay in its position.
 
-2. When clicking the button in the nowinview it opens the prizeclaimed view. But there is no prize to claim. Instead this should be the end of the user journey for a user who has not won a prize. App should reset and bring user back to startscreen.
+1. The devtoolsmenu should only be available on desktop viewports.
+2. The icon on the devtoolsmenu button to open the menu should use src/assets/gear.png as icon.
