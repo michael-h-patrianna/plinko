@@ -14,6 +14,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../theme';
 import { isMobileDevice } from '../../utils/deviceDetection';
+import gearIcon from '../../assets/gear.png';
 
 interface DevToolsMenuProps {
   /** Current viewport width for device simulation */
@@ -74,7 +75,7 @@ export function DevToolsMenu({
         aria-label="Dev Tools Settings"
       >
         <img
-          src="/src/assets/gear.png"
+          src={gearIcon}
           alt="Settings"
           width="24"
           height="24"
