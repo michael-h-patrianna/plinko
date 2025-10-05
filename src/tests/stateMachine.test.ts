@@ -103,16 +103,6 @@ describe('State Machine', () => {
   });
 
   describe('dropping state transitions', () => {
-    it('should update frame on FRAME_ADVANCED', () => {
-      const result = transition('dropping', mockContext, {
-        type: 'FRAME_ADVANCED',
-        payload: { frame: 5 },
-      });
-
-      expect(result.state).toBe('dropping');
-      expect(result.context.currentFrame).toBe(5);
-    });
-
     it('should transition to landed on LANDING_COMPLETED', () => {
       const result = transition('dropping', mockContext, {
         type: 'LANDING_COMPLETED',

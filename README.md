@@ -30,6 +30,8 @@ Open [http://localhost:5173](http://localhost:5173)
 
 ### Testing
 
+Vitest cleanup runs automatically before every test command, so you don't need to manually kill stray workers. Interactive watch mode is intentionally locked down—only set `ALLOW_VITEST_WATCH=1` when you truly need it, and prefer the standard `npm test` run for automation.
+
 ```bash
 # Run all tests
 npm test
@@ -39,6 +41,9 @@ npm test -- trajectory-100.test.ts
 
 # Run comprehensive 10,000 trajectory test
 npm test -- trajectory-comprehensive.test.ts
+
+# Optional: run Vitest in watch mode (manual use only)
+ALLOW_VITEST_WATCH=1 npm run test:watch
 ```
 
 ## 📊 Test Results
@@ -74,8 +79,27 @@ plinko/
 │   └── App.tsx
 ├── docs/
 │   └── architecture.md         # Detailed technical docs
+├── scripts/
+│   ├── cleanup-vitest.mjs      # Kills stray Vitest workers before runs
+│   ├── vitest-watch.mjs        # Guarded watch wrapper (requires ALLOW_VITEST_WATCH=1)
+│   ├── playwright/             # Playwright/Puppeteer harnesses & manual UI check scripts
+│   └── tools/                  # Deterministic physics + analysis utilities (Node CLI)
+├── screenshots/                # Output from Playwright/Puppeteer runs (always store assets here)
 └── package.json
 ```
+
+### Agent Folder Guidelines
+
+All LLM coding agents **must** keep generated artifacts inside their designated directories. Use this routing matrix every time you create supporting assets:
+
+| Activity | Directory | Agent Rules |
+| --- | --- | --- |
+| Playwright / Puppeteer harnesses, manual runners, video recorders | `scripts/playwright/` | Place every executable browser script here. Ensure any captures they create write into `screenshots/` (use `path.join(__dirname, '../../screenshots/...')`). |
+| Physics probes, RNG audits, CLI utilities | `scripts/tools/` | Keep deterministic Node scripts here. Never drop `.js`/`.mjs` utilities in the repo root. |
+| Visual artifacts (screenshots, videos, GIFs) | `screenshots/` | Store all image/video output in this folder. Create subdirectories (e.g., `screenshots/quality-test/`, `screenshots/videos/`) for large batches. |
+| Formal documentation or research notes | `docs/` | Add long-form analysis here rather than scattering markdown files elsewhere. |
+| Temporary experiments | `src/dev-tools/` | Use this sandbox for throwaway UI/physics experiments; remove when finished. |
+| 🚫 Forbidden | project root | Keep the top level clean—no new scripts, screenshots, or scratch files belong here. |
 
 ## 🔧 How It Works
 

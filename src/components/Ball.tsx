@@ -88,9 +88,8 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
   // Update trail as ball moves
   useEffect(() => {
     if (position && (state === 'dropping' || state === 'landed')) {
-      setTrail((prev) => {
-        const newTrail = [{ x: position.x, y: position.y, id: Date.now() }, ...prev];
-        // Keep dynamic trail length based on speed
+      setTrail((prevTrail) => {
+        const newTrail = [{ x: position.x, y: position.y, id: Date.now() }, ...prevTrail];
         return newTrail.slice(0, trailLength);
       });
     } else if (state === 'idle' || state === 'ready' || state === 'countdown') {
@@ -99,6 +98,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
   }, [position, state, currentFrame, trailLength]);
 
   // Hide ball during countdown - it's shown in the launcher
+  // Keep ball visible during 'revealed' state to prevent reset to top
   if (!position || state === 'idle' || state === 'ready' || state === 'countdown') return null;
 
   return (

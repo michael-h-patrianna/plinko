@@ -184,40 +184,44 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
     expect(maxOverlapDetected).toBeLessThanOrEqual(0.5); // Max 0.5px tolerance
   }, 60000); // 60 second timeout for this test
 
-  it('should never have ball overlapping with pegs', () => {
-    const boardWidth = 375;
-    const boardHeight = 500;
-    const pegRows = 10;
-    const slotCount = 7;
+  it(
+    'should never have ball overlapping with pegs',
+    () => {
+      const boardWidth = 375;
+      const boardHeight = 500;
+      const pegRows = 10;
+      const slotCount = 7;
 
-    const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
+      const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
 
-    // Test 100 trajectories in detail
-    for (let slot = 0; slot < slotCount; slot++) {
-      for (let run = 0; run < 100 / slotCount; run++) {
-        const trajectory = generateTrajectory({
-          boardWidth,
-          boardHeight,
-          pegRows,
-          slotCount,
-          selectedIndex: slot,
-          seed: Date.now() + run * 1000 + slot,
-        });
+      // Test 100 trajectories in detail
+      for (let slot = 0; slot < slotCount; slot++) {
+        for (let run = 0; run < 100 / slotCount; run++) {
+          const trajectory = generateTrajectory({
+            boardWidth,
+            boardHeight,
+            pegRows,
+            slotCount,
+            selectedIndex: slot,
+            seed: Date.now() + run * 1000 + slot,
+          });
 
-        // Check every single frame
-        for (const point of trajectory) {
-          for (const peg of pegs) {
-            const dx = point.x - peg.x;
-            const dy = point.y - peg.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+          // Check every single frame
+          for (const point of trajectory) {
+            for (const peg of pegs) {
+              const dx = point.x - peg.x;
+              const dy = point.y - peg.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
 
-            // Ball edge should never overlap peg edge
-            expect(distance).toBeGreaterThanOrEqual(PHYSICS.COLLISION_RADIUS - 0.5);
+              // Ball edge should never overlap peg edge
+              expect(distance).toBeGreaterThanOrEqual(PHYSICS.COLLISION_RADIUS - 0.5);
+            }
           }
         }
       }
-    }
-  });
+    },
+    60000
+  ); // 60 second timeout for this test
 
   it('should have smooth, continuous motion without teleportation', () => {
     const trajectory = generateTrajectory({

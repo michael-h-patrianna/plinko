@@ -12,7 +12,7 @@ import type { Theme } from '../theme/types';
 import { defaultTheme } from '../theme/themes/defaultTheme';
 import { playFameTheme } from '../theme/themes/playFameTheme';
 import { darkBlueTheme } from '../theme/themes/darkBlueTheme';
-import { ThemeSelector } from '../components/ThemeSelector';
+import { ThemeSelector } from '../dev-tools';
 
 // Mock localStorage
 const localStorageMock = (() => {

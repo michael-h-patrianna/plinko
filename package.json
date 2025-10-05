@@ -12,8 +12,11 @@
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
+    "pretest": "node scripts/cleanup-vitest.mjs",
     "test": "vitest run",
-    "test:watch": "vitest",
+    "pretest:watch": "node scripts/cleanup-vitest.mjs",
+    "test:watch": "node scripts/vitest-watch.mjs",
+    "pretest:coverage": "node scripts/cleanup-vitest.mjs",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed"

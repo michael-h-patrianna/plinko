@@ -14,13 +14,14 @@ import { PurchaseOfferView } from './PrizeReveal/PurchaseOfferView';
 interface PrizeRevealProps {
   prize: PrizeConfig;
   onClaim: () => void;
+  onReset?: () => void;
   canClaim: boolean;
 }
 
-export function PrizeReveal({ prize, onClaim, canClaim }: PrizeRevealProps) {
+export function PrizeReveal({ prize, onClaim, onReset, canClaim }: PrizeRevealProps) {
   // Route to appropriate view based on prize type
   if (prize.type === 'no_win') {
-    return <NoWinView prize={prize} onClaim={onClaim} canClaim={canClaim} />;
+    return <NoWinView prize={prize} onClaim={onReset || onClaim} canClaim={canClaim} />;
   }
 
   if (prize.type === 'purchase') {

@@ -17,7 +17,6 @@ export type GameEvent =
     }
   | { type: 'DROP_REQUESTED' }
   | { type: 'COUNTDOWN_COMPLETED' }
-  | { type: 'FRAME_ADVANCED'; payload: { frame: number } }
   | { type: 'LANDING_COMPLETED' }
   | { type: 'REVEAL_CONFIRMED' }
   | { type: 'CLAIM_REQUESTED' }
@@ -90,12 +89,6 @@ export function transition(
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'dropping':
-      if (event.type === 'FRAME_ADVANCED') {
-        return {
-          state: 'dropping',
-          context: { ...context, currentFrame: event.payload.frame },
-        };
-      }
       if (event.type === 'LANDING_COMPLETED') {
         return {
           state: 'landed',

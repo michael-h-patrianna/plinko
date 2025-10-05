@@ -12,9 +12,9 @@
  * @param ballState - Current game state (idle, countdown, dropping, landed, etc.)
  */
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useSyncExternalStore } from 'react';
 import { motion } from 'framer-motion';
-import type { PrizeConfig, TrajectoryPoint, BallPosition, GameState } from '../../game/types';
+import type { PrizeConfig, TrajectoryPoint, GameState } from '../../game/types';
 import { Peg } from './Peg';
 import { Slot } from './Slot';
 import { BorderWall } from './BorderWall';
@@ -27,25 +27,40 @@ import { ComboLegend } from './ComboLegend';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
 import { useTheme } from '../../theme';
 
+interface FrameStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => number;
+  getCurrentFrame: () => number;
+}
+
 interface PlinkoBoardProps {
   prizes: PrizeConfig[];
   selectedIndex: number;
-  currentTrajectoryPoint: TrajectoryPoint | null;
+  trajectory?: TrajectoryPoint[];
+  frameStore?: FrameStore;
+  getBallPosition?: () => any;
+  getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
+  // Legacy props for backwards compatibility with tests
+  ballPosition?: any;
+  currentTrajectoryPoint?: TrajectoryPoint | null;
   boardWidth?: number;
   boardHeight?: number;
   pegRows?: number;
-  ballPosition: BallPosition | null;
   ballState: GameState;
 }
 
 export function PlinkoBoard({
   prizes,
   selectedIndex,
-  currentTrajectoryPoint,
+  trajectory,
+  frameStore,
+  getBallPosition,
+  getCurrentTrajectoryPoint,
+  ballPosition: ballPositionProp,
+  currentTrajectoryPoint: currentTrajectoryPointProp,
   boardWidth = 375,
   boardHeight = 500,
   pegRows = 10,
-  ballPosition,
   ballState,
 }: PlinkoBoardProps) {
   const { theme } = useTheme();
@@ -55,6 +70,18 @@ export function PlinkoBoard({
   const CSS_BORDER = 2;
   // Internal content width = declared width - CSS borders on both sides
   const internalWidth = boardWidth - CSS_BORDER * 2;
+
+  // Subscribe to frame updates if frameStore is provided (production)
+  // Otherwise use null (tests provide ballPosition/currentTrajectoryPoint directly)
+  const currentFrame = frameStore
+    ? useSyncExternalStore(frameStore.subscribe, frameStore.getSnapshot, frameStore.getSnapshot)
+    : 0;
+
+  // Get current values - either from functions (production) or props (tests)
+  const currentTrajectoryPoint = getCurrentTrajectoryPoint
+    ? getCurrentTrajectoryPoint()
+    : currentTrajectoryPointProp ?? null;
+  const ballPosition = getBallPosition ? getBallPosition() : ballPositionProp ?? null;
 
   // Consolidated dimension calculations - single source of truth
   const dimensions = useMemo(() => {

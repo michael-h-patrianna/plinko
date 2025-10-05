@@ -11,8 +11,7 @@ import { StartScreen } from './components/StartScreen';
 import { Countdown } from './components/Countdown';
 import { PrizeReveal } from './components/PrizeReveal';
 import { PrizeClaimed } from './components/PrizeClaimed';
-import { ViewportSelector } from './components/ViewportSelector';
-import { ThemeSelector } from './components/ThemeSelector';
+import { DevToolsMenu } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
 
@@ -32,8 +31,10 @@ function AppContent() {
     prizes,
     selectedPrize,
     selectedIndex,
-    ballPosition,
-    currentTrajectoryPoint,
+    trajectory,
+    frameStore,
+    getBallPosition,
+    getCurrentTrajectoryPoint,
     startGame,
     completeCountdown,
     claimPrize,
@@ -106,16 +107,13 @@ function AppContent() {
         padding: isMobile ? '0' : '1rem',
       }}
     >
-      {/* Theme and Viewport selectors - hidden on actual mobile devices */}
+      {/* DEV TOOLS - Not part of production game */}
       {!isMobile && (
-        <>
-          <ThemeSelector />
-          <ViewportSelector
-            selectedWidth={viewportWidth}
-            onWidthChange={handleViewportChange}
-            disabled={isViewportLocked}
-          />
-        </>
+        <DevToolsMenu
+          viewportWidth={viewportWidth}
+          onViewportChange={handleViewportChange}
+          viewportDisabled={isViewportLocked}
+        />
       )}
 
       {/* Game container */}
@@ -153,11 +151,13 @@ function AppContent() {
                   key="board"
                   prizes={prizes}
                   selectedIndex={selectedIndex}
-                  currentTrajectoryPoint={currentTrajectoryPoint}
+                  trajectory={trajectory}
+                  frameStore={frameStore}
+                  getBallPosition={getBallPosition}
+                  getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
                   boardWidth={lockedBoardWidth}
                   boardHeight={500}
                   pegRows={10}
-                  ballPosition={ballPosition}
                   ballState={state}
                 />
               )}
@@ -182,6 +182,7 @@ function AppContent() {
                 key="prize-reveal"
                 prize={selectedPrize}
                 onClaim={claimPrize}
+                onReset={resetGame}
                 canClaim={canClaim}
               />
             )}
@@ -196,16 +197,6 @@ function AppContent() {
         </PopupContainer>
       </div>
 
-      {/* Info text - only show on desktop */}
-      {!isMobile && (
-        <div
-          className="mt-4 text-xs text-center max-w-md"
-          style={{ color: theme.colors.text.tertiary }}
-        >
-          Select a viewport size to test different mobile devices. The viewport is locked during
-          gameplay to ensure physics accuracy.
-        </div>
-      )}
     </div>
   );
 }

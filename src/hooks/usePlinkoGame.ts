@@ -3,12 +3,19 @@
  * Manages state machine, animation loop, and game lifecycle
  */
 
-import { useEffect, useReducer, useRef, useMemo, useState } from 'react';
+import { useEffect, useReducer, useRef, useMemo, useState, useCallback } from 'react';
 import type { GameState, GameContext, BallPosition, PrizeConfig } from '../game/types';
 import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import { selectPrize } from '../game/rng';
 import { createValidatedProductionPrizeSet, getPrizeByIndex } from '../config/productionPrizeTable';
 import { generateTrajectory } from '../game/trajectory';
+
+// Frame store for efficient per-frame updates without re-rendering entire tree
+interface FrameStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => number;
+  getCurrentFrame: () => number;
+}
 
 interface PlinkoGameState {
   state: GameState;
@@ -40,6 +47,24 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
   const animationFrameRef = useRef<number | null>(null);
   const startTimestampRef = useRef<number | null>(null);
+
+  // Frame store: holds current frame in ref, notifies subscribers without causing re-renders
+  const currentFrameRef = useRef(0);
+  const frameListenersRef = useRef<Set<() => void>>(new Set());
+
+  const frameStore: FrameStore = useMemo(
+    () => ({
+      subscribe: (listener: () => void) => {
+        frameListenersRef.current.add(listener);
+        return () => {
+          frameListenersRef.current.delete(listener);
+        };
+      },
+      getSnapshot: () => currentFrameRef.current,
+      getCurrentFrame: () => currentFrameRef.current,
+    }),
+    []
+  );
 
   // Initialize game: select prize and generate trajectory
   // Only run once on mount or when game is explicitly reset to idle
@@ -96,11 +121,9 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
           gameState.context.trajectory.length - 1
         );
 
-        // Update the frame
-        dispatch({
-          type: 'FRAME_ADVANCED',
-          payload: { frame: currentFrameIndex },
-        });
+        // Update frame in ref (not state!) and notify subscribers
+        currentFrameRef.current = currentFrameIndex;
+        frameListenersRef.current.forEach((listener) => listener());
 
         if (currentFrameIndex < gameState.context.trajectory.length - 1) {
           // Continue animation
@@ -125,6 +148,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
           landingTimeoutRef.current = null;
         }
         startTimestampRef.current = null;
+        // Don't reset frame on cleanup - keep ball at last position
+        // currentFrameRef.current = 0;
       };
     }
   }, [gameState.state, gameState.context.trajectory.length]);
@@ -139,13 +164,14 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     }
   }, [gameState.state]);
 
-  // Calculate current ball position
-  const ballPosition: BallPosition | null = useMemo(() => {
+  // Helper functions to get current position/trajectory without causing re-renders
+  const getBallPosition = useCallback((): BallPosition | null => {
     if (gameState.state === 'idle' || gameState.state === 'ready') {
       return null;
     }
 
-    const { trajectory, currentFrame } = gameState.context;
+    const { trajectory } = gameState.context;
+    const currentFrame = currentFrameRef.current;
     if (trajectory.length === 0 || !trajectory[currentFrame]) {
       return null;
     }
@@ -156,13 +182,12 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       y: point.y,
       rotation: point.rotation,
     };
-  }, [gameState]);
+  }, [gameState.state, gameState.context]);
 
-  // Get current trajectory point for peg hit detection
-  const currentTrajectoryPoint = useMemo(() => {
+  const getCurrentTrajectoryPoint = useCallback(() => {
     if (gameState.state === 'idle') return null;
-    return gameState.context.trajectory[gameState.context.currentFrame] ?? null;
-  }, [gameState.state, gameState.context.currentFrame, gameState.context.trajectory]);
+    return gameState.context.trajectory[currentFrameRef.current] ?? null;
+  }, [gameState.state, gameState.context.trajectory]);
 
   const startGame = () => {
     if (gameState.state === 'ready') {
@@ -171,6 +196,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   };
 
   const resetGame = () => {
+    // Reset frame to 0 for new game
+    currentFrameRef.current = 0;
     // Generate new random prize set for next game
     setPrizes(createValidatedProductionPrizeSet());
     dispatch({ type: 'RESET_REQUESTED' });
@@ -186,11 +213,20 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     dispatch({ type: 'COUNTDOWN_COMPLETED' });
   };
 
+  // Provide backwards-compatible computed values (but they're derived from refs, not state)
+  // These will still cause re-renders in tests, but not in production with the subscription pattern
+  const ballPosition = getBallPosition();
+  const currentTrajectoryPoint = getCurrentTrajectoryPoint();
+
   return {
     state: gameState.state,
     prizes,
     selectedPrize: gameState.context.prize,
     selectedIndex: gameState.context.selectedIndex,
+    trajectory: gameState.context.trajectory,
+    frameStore,
+    getBallPosition,
+    getCurrentTrajectoryPoint,
     ballPosition,
     currentTrajectoryPoint,
     startGame,
