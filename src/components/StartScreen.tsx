@@ -59,9 +59,8 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
 
       {/* Prize list - using theme component styles */}
       <motion.div
-        className="p-4 mb-8 w-full"
+        className="p-4 mb-8 w-full max-w-md"
         style={{
-          maxWidth: 'calc(100% - 40px)',
           background: theme.components.card.background || theme.colors.surface.primary,
           boxShadow: theme.components.card.shadow || theme.effects.shadows.card,
           border: theme.components.card.border || `1px solid ${theme.colors.border.default}`,
@@ -118,7 +117,6 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                 animate={{ opacity: 1, x: 0 }}
                 whileHover={{
                   scale: 1.02,
-                  x: 4,
                   transition: {
                     type: 'spring',
                     stiffness: 400,

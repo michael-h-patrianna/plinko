@@ -23,6 +23,10 @@ interface DevToolsMenuProps {
   onViewportChange: (width: number) => void;
   /** Whether viewport selection is disabled (e.g., during gameplay) */
   viewportDisabled: boolean;
+  /** Current choice mechanic */
+  choiceMechanic?: ChoiceMechanic;
+  /** Callback when choice mechanic changes */
+  onChoiceMechanicChange?: (mechanic: ChoiceMechanic) => void;
 }
 
 const VIEWPORT_SIZES = [
@@ -32,10 +36,19 @@ const VIEWPORT_SIZES = [
   { width: 414, label: 'iPhone 14 Pro Max', colorKey: 'warning' as const },
 ];
 
+export type ChoiceMechanic = 'none' | 'drop-position';
+
+const CHOICE_MECHANICS: { value: ChoiceMechanic; label: string }[] = [
+  { value: 'none', label: 'None (Classic)' },
+  { value: 'drop-position', label: 'Drop Position' },
+];
+
 export function DevToolsMenu({
   viewportWidth,
   onViewportChange,
   viewportDisabled,
+  choiceMechanic = 'none',
+  onChoiceMechanicChange,
 }: DevToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -55,13 +68,10 @@ export function DevToolsMenu({
     }
   }, [isOpen]);
 
-  // Don't render on mobile devices
-  if (isMobileDevice()) {
-    return null;
-  }
+  const isMobile = isMobileDevice();
 
   return (
-    <div className="fixed top-4 right-4 z-50" ref={menuRef}>
+    <div className="fixed bottom-4 right-4 z-50" ref={menuRef}>
       {/* Gear Icon Button */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
@@ -87,11 +97,11 @@ export function DevToolsMenu({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="absolute top-16 right-0 rounded-lg shadow-xl overflow-hidden"
+            className="absolute bottom-16 right-0 rounded-lg shadow-xl overflow-hidden"
             style={{
               background: theme.colors.surface.primary,
               border: `1px solid ${theme.colors.border.default}`,
@@ -155,45 +165,85 @@ export function DevToolsMenu({
               </div>
             </div>
 
-            {/* Viewport Section */}
-            <div className="p-4">
+            {/* Choice Mechanic Section */}
+            <div className="p-4 border-b" style={{ borderColor: theme.colors.border.default }}>
               <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
-                Viewport Size
+                Choice Mechanic
               </label>
-              {viewportDisabled && (
-                <p className="text-xs mb-2" style={{ color: theme.colors.status.warning }}>
-                  Locked during gameplay
-                </p>
-              )}
-              <div className="grid grid-cols-2 gap-2">
-                {VIEWPORT_SIZES.map(({ width, label, colorKey }) => {
-                  const isSelected = viewportWidth === width;
-                  const color =
-                    colorKey === 'accent' ? theme.colors.accent.main : theme.colors.status[colorKey];
-
-                  return (
-                    <button
-                      key={width}
-                      onClick={() => !viewportDisabled && onViewportChange(width)}
-                      disabled={viewportDisabled}
-                      className="px-3 py-2 rounded-md text-xs transition-all"
-                      style={{
-                        background: isSelected ? color : theme.colors.surface.secondary,
-                        color: isSelected ? theme.colors.primary.contrast : theme.colors.text.secondary,
-                        border: `1px solid ${
-                          isSelected ? color : theme.colors.border.default
-                        }`,
-                        opacity: viewportDisabled ? 0.5 : 1,
-                        cursor: viewportDisabled ? 'not-allowed' : 'pointer',
-                      }}
-                    >
-                      <div className="font-medium">{label}</div>
-                      <div className="text-xs opacity-80">{width}px</div>
-                    </button>
-                  );
-                })}
+              <div className="flex flex-col gap-2">
+                {CHOICE_MECHANICS.map(({ value, label }) => (
+                  <motion.button
+                    key={value}
+                    onClick={() => onChoiceMechanicChange?.(value)}
+                    className={`
+                      px-3 py-2 rounded-md text-xs font-medium transition-all text-left
+                      ${choiceMechanic === value ? 'shadow-md' : 'hover:opacity-80'}
+                    `}
+                    style={{
+                      background:
+                        choiceMechanic === value
+                          ? theme.gradients.buttonPrimary
+                          : theme.colors.surface.elevated,
+                      color:
+                        choiceMechanic === value
+                          ? theme.colors.primary.contrast
+                          : theme.colors.text.primary,
+                      border: `1px solid ${
+                        choiceMechanic === value
+                          ? theme.colors.primary.main
+                          : theme.colors.border.default
+                      }`,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    {label}
+                  </motion.button>
+                ))}
               </div>
             </div>
+
+            {/* Viewport Section - Desktop only */}
+            {!isMobile && (
+              <div className="p-4">
+                <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
+                  Viewport Size
+                </label>
+                {viewportDisabled && (
+                  <p className="text-xs mb-2" style={{ color: theme.colors.status.warning }}>
+                    Locked during gameplay
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  {VIEWPORT_SIZES.map(({ width, label, colorKey }) => {
+                    const isSelected = viewportWidth === width;
+                    const color =
+                      colorKey === 'accent' ? theme.colors.accent.main : theme.colors.status[colorKey];
+
+                    return (
+                      <button
+                        key={width}
+                        onClick={() => !viewportDisabled && onViewportChange(width)}
+                        disabled={viewportDisabled}
+                        className="px-3 py-2 rounded-md text-xs transition-all"
+                        style={{
+                          background: isSelected ? color : theme.colors.surface.secondary,
+                          color: isSelected ? theme.colors.primary.contrast : theme.colors.text.secondary,
+                          border: `1px solid ${
+                            isSelected ? color : theme.colors.border.default
+                          }`,
+                          opacity: viewportDisabled ? 0.5 : 1,
+                          cursor: viewportDisabled ? 'not-allowed' : 'pointer',
+                        }}
+                      >
+                        <div className="font-medium">{label}</div>
+                        <div className="text-xs opacity-80">{width}px</div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Footer */}
             <div

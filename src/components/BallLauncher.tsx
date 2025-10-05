@@ -13,21 +13,41 @@ interface BallLauncherProps {
   x: number;
   y: number;
   isLaunching: boolean;
+  isSelected?: boolean;
+  onClick?: () => void;
 }
 
-export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
+export function BallLauncher({ x, y, isLaunching, isSelected = false, onClick }: BallLauncherProps) {
   const { theme } = useTheme();
   const BALL_RADIUS = 7; // Match actual ball size (14px diameter)
   const CHAMBER_WIDTH = 24; // Adjusted to fit smaller ball
   const CHAMBER_HEIGHT = 45;
 
   return (
-    <div
-      className="absolute pointer-events-none"
+    <motion.div
+      className="absolute"
+      onClick={onClick}
       style={{
         left: `${x}px`,
         top: `${y}px`,
         transform: 'translate(-50%, -50%)',
+        pointerEvents: onClick ? 'auto' : 'none',
+        cursor: onClick ? 'pointer' : 'default',
+        zIndex: isSelected ? 25 : 20,
+      }}
+      animate={{
+        scale: isSelected ? 1.3 : 1,
+        y: isSelected ? [0, -3, 0] : 0,
+      }}
+      transition={{
+        scale: { duration: 0.3, ease: [0.34, 1.56, 0.64, 1] },
+        y: isSelected
+          ? {
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }
+          : { duration: 0 },
       }}
     >
       {/* Launch chamber/hole */}
@@ -177,6 +197,6 @@ export function BallLauncher({ x, y, isLaunching }: BallLauncherProps) {
           }}
         />
       )}
-    </div>
+    </motion.div>
   );
 }

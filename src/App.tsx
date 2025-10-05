@@ -3,18 +3,18 @@
  * With smooth state transitions using AnimatePresence
  */
 
-import { useState, useEffect } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { PopupContainer } from './components/PopupContainer';
-import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
-import { StartScreen } from './components/StartScreen';
+import { useEffect, useState } from 'react';
 import { Countdown } from './components/Countdown';
-import { PrizeReveal } from './components/PrizeReveal';
+import { ScreenShake } from './components/effects/ScreenShake';
+import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
+import { PopupContainer } from './components/PopupContainer';
 import { PrizeClaimed } from './components/PrizeClaimed';
-import { DevToolsMenu } from './dev-tools';
+import { PrizeReveal } from './components/PrizeReveal';
+import { StartScreen } from './components/StartScreen';
+import { DevToolsMenu, type ChoiceMechanic } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
-import { ScreenShake } from './components/effects/ScreenShake';
 
 /**
  * Main application content component
@@ -26,6 +26,7 @@ function AppContent() {
   const [viewportWidth, setViewportWidth] = useState(375);
   const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
   const [shakeActive, setShakeActive] = useState(false);
+  const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('none');
 
   // Use game hook with the locked board width
   const {
@@ -38,6 +39,7 @@ function AppContent() {
     getBallPosition,
     getCurrentTrajectoryPoint,
     startGame,
+    selectDropPosition,
     completeCountdown,
     claimPrize,
     resetGame,
@@ -46,6 +48,7 @@ function AppContent() {
     boardWidth: lockedBoardWidth,
     boardHeight: 500,
     pegRows: 10,
+    choiceMechanic,
   });
 
   // Inline viewport management instead of broken hook
@@ -82,12 +85,13 @@ function AppContent() {
 
   // Trigger screen shake when ball lands
   useEffect(() => {
-    if (state === 'landed') {
+    const isLanded = state === 'landed';
+    if (isLanded) {
       setShakeActive(true);
       const timer = setTimeout(() => setShakeActive(false), 500);
       return () => clearTimeout(timer);
     }
-  }, [state === 'landed']); // Only trigger on landed state, don't cleanup when state changes away
+  }, [state]); // Only trigger on landed state, don't cleanup when state changes away
 
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
@@ -119,19 +123,34 @@ function AppContent() {
       }}
     >
       {/* DEV TOOLS - Not part of production game */}
-      {!isMobile && (
-        <DevToolsMenu
-          viewportWidth={viewportWidth}
-          onViewportChange={handleViewportChange}
-          viewportDisabled={isViewportLocked}
-        />
-      )}
+      <div
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          right: 0,
+          zIndex: 9999,
+          maxWidth: isMobile ? undefined : `calc(50vw + 400px)`,
+          width: '100%',
+          pointerEvents: 'none',
+        }}
+      >
+        <div style={{ pointerEvents: 'auto' }}>
+          <DevToolsMenu
+            viewportWidth={viewportWidth}
+            onViewportChange={handleViewportChange}
+            viewportDisabled={isViewportLocked}
+            choiceMechanic={choiceMechanic}
+            onChoiceMechanicChange={setChoiceMechanic}
+          />
+        </div>
+      </div>
 
       {/* Game container with screen shake */}
       <ScreenShake active={shakeActive} intensity="medium" duration={400}>
         <div
           style={{
             width: isMobile ? '100%' : `${lockedBoardWidth}px`,
+            margin: '0 auto',
             maxWidth: isMobile ? '414px' : undefined,
             height: isMobile ? '100vh' : undefined,
             display: 'flex',
@@ -171,6 +190,8 @@ function AppContent() {
                   boardHeight={500}
                   pegRows={10}
                   ballState={state}
+                  isSelectingPosition={state === 'selecting-position'}
+                  onPositionSelected={selectDropPosition}
                 />
               )}
           </AnimatePresence>

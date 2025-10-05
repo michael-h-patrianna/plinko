@@ -4,11 +4,12 @@
  */
 
 import { useEffect, useReducer, useRef, useMemo, useState, useCallback } from 'react';
-import type { GameState, GameContext, BallPosition, PrizeConfig } from '../game/types';
+import type { GameState, GameContext, BallPosition, PrizeConfig, DropZone } from '../game/types';
 import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import { selectPrize } from '../game/rng';
 import { createValidatedProductionPrizeSet } from '../config/productionPrizeTable';
 import { generateTrajectory } from '../game/trajectory';
+import type { ChoiceMechanic } from '../dev-tools';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
 interface FrameStore {
@@ -32,10 +33,11 @@ interface UsePlinkoGameOptions {
   boardWidth?: number;
   boardHeight?: number;
   pegRows?: number;
+  choiceMechanic?: ChoiceMechanic;
 }
 
 export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
-  const { seedOverride, boardWidth = 375, boardHeight = 500, pegRows = 10 } = options;
+  const { seedOverride, boardWidth = 375, boardHeight = 500, pegRows = 10, choiceMechanic = 'none' } = options;
 
   // Generate random prize set for each game session
   const [prizes, setPrizes] = useState<PrizeConfig[]>(() => createValidatedProductionPrizeSet());
@@ -205,9 +207,55 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
   const startGame = () => {
     if (gameState.state === 'ready') {
-      dispatch({ type: 'DROP_REQUESTED' });
+      // If drop position mechanic is enabled, transition to selecting-position state
+      if (choiceMechanic === 'drop-position') {
+        dispatch({ type: 'START_POSITION_SELECTION' });
+      } else {
+        dispatch({ type: 'DROP_REQUESTED' });
+      }
     }
   };
+
+  const selectDropPosition = useCallback((dropZone: DropZone) => {
+    if (gameState.state === 'selecting-position') {
+      // Regenerate trajectory with the selected drop zone
+      // Use the existing seed from context
+      const currentSeed = gameState.context.seed || Date.now();
+
+      const { trajectory, landedSlot } = generateTrajectory({
+        boardWidth,
+        boardHeight,
+        pegRows,
+        slotCount: prizes.length,
+        seed: currentSeed,
+        dropZone, // Pass the selected drop zone
+      });
+
+      // Rearrange prizes to match landed slot
+      const rearrangedPrizes = [...prizes];
+      const currentWinningIndex = gameState.context.selectedIndex;
+
+      if (landedSlot !== currentWinningIndex) {
+        const temp = rearrangedPrizes[landedSlot]!;
+        rearrangedPrizes[landedSlot] = rearrangedPrizes[currentWinningIndex]!;
+        rearrangedPrizes[currentWinningIndex] = temp;
+      }
+
+      setPrizes(rearrangedPrizes);
+      const prize = rearrangedPrizes[landedSlot]!;
+
+      // Dispatch position selected with new trajectory data
+      dispatch({
+        type: 'POSITION_SELECTED',
+        payload: {
+          dropZone,
+          trajectory,
+          selectedIndex: landedSlot,
+          prize,
+        },
+      });
+    }
+  }, [gameState.state, gameState.context.seed, gameState.context.selectedIndex, prizes, boardWidth, boardHeight, pegRows]);
 
   const resetGame = () => {
     // Reset frame to 0 for new game
@@ -244,6 +292,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     ballPosition,
     currentTrajectoryPoint,
     startGame,
+    selectDropPosition,
     completeCountdown,
     claimPrize,
     resetGame,

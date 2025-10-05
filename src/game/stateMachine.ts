@@ -5,6 +5,8 @@
 
 import type { GameState, GameContext, TrajectoryPoint, PrizeConfig } from './types';
 
+import type { DropZone } from './types';
+
 export type GameEvent =
   | {
       type: 'INITIALIZE';
@@ -13,9 +15,20 @@ export type GameEvent =
         trajectory: TrajectoryPoint[];
         prize: PrizeConfig;
         seed: number;
+        dropZone?: DropZone;
       };
     }
   | { type: 'DROP_REQUESTED' }
+  | { type: 'START_POSITION_SELECTION' }
+  | {
+      type: 'POSITION_SELECTED';
+      payload: {
+        dropZone: DropZone;
+        trajectory: TrajectoryPoint[];
+        selectedIndex: number;
+        prize: PrizeConfig;
+      };
+    }
   | { type: 'COUNTDOWN_COMPLETED' }
   | { type: 'LANDING_COMPLETED' }
   | { type: 'REVEAL_CONFIRMED' }
@@ -63,6 +76,34 @@ export function transition(
         return {
           state: 'countdown',
           context: { ...context, currentFrame: 0 },
+        };
+      }
+      if (event.type === 'START_POSITION_SELECTION') {
+        return {
+          state: 'selecting-position',
+          context,
+        };
+      }
+      if (event.type === 'RESET_REQUESTED') {
+        return {
+          state: 'idle',
+          context: initialContext,
+        };
+      }
+      throw new Error(`Invalid event ${event.type} for state ${state}`);
+
+    case 'selecting-position':
+      if (event.type === 'POSITION_SELECTED') {
+        return {
+          state: 'countdown',
+          context: {
+            ...context,
+            dropZone: event.payload.dropZone,
+            trajectory: event.payload.trajectory,
+            selectedIndex: event.payload.selectedIndex,
+            prize: event.payload.prize,
+            currentFrame: 0,
+          },
         };
       }
       if (event.type === 'RESET_REQUESTED') {

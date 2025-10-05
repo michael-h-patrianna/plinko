@@ -10,5 +10,6 @@
  */
 
 export { DevToolsMenu } from './components/DevToolsMenu';
+export type { ChoiceMechanic } from './components/DevToolsMenu';
 export { ThemeSelector } from './components/ThemeSelector';
 export { ViewportSelector } from './components/ViewportSelector';

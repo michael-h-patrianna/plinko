@@ -31,11 +31,14 @@ export interface TrajectoryPoint {
 export type GameState =
   | 'idle'
   | 'ready'
+  | 'selecting-position' // User selecting drop position
   | 'countdown'
   | 'dropping'
   | 'landed'
   | 'revealed'
   | 'claimed';
+
+export type DropZone = 'left' | 'left-center' | 'center' | 'right-center' | 'right';
 
 export interface GameContext {
   selectedIndex: number;
@@ -43,6 +46,7 @@ export interface GameContext {
   currentFrame: number;
   prize: PrizeConfig | null;
   seed: number;
+  dropZone?: DropZone; // Selected drop zone for choice mechanic
 }
 
 export interface BallPosition {

@@ -46,6 +46,7 @@ export function ScreenShake({
       className={shakeClass}
       style={{
         animationDuration: `${duration}ms`,
+        width: '100%',
       }}
     >
       {children}

@@ -10,9 +10,23 @@
  * We simply find the right starting conditions that naturally lead to the desired outcome.
  */
 
-import type { TrajectoryPoint } from './types';
+import type { TrajectoryPoint, DropZone } from './types';
 import { createRng } from './rng';
 import { calculateBucketZoneY } from '../utils/slotDimensions';
+
+/**
+ * Get the X coordinate range for a drop zone
+ */
+function getDropZoneRange(zone: DropZone, boardWidth: number): { min: number; max: number } {
+  const zoneMap: Record<DropZone, { min: number; max: number }> = {
+    'left': { min: boardWidth * 0.05, max: boardWidth * 0.15 },
+    'left-center': { min: boardWidth * 0.25, max: boardWidth * 0.35 },
+    'center': { min: boardWidth * 0.45, max: boardWidth * 0.55 },
+    'right-center': { min: boardWidth * 0.65, max: boardWidth * 0.75 },
+    'right': { min: boardWidth * 0.85, max: boardWidth * 0.95 },
+  };
+  return zoneMap[zone];
+}
 
 // Physics constants for realistic simulation
 const PHYSICS = {
@@ -477,8 +491,9 @@ export function generateTrajectory(params: {
   pegRows: number;
   slotCount: number;
   seed?: number;
+  dropZone?: DropZone; // Optional drop zone constraint
 }): { trajectory: TrajectoryPoint[]; landedSlot: number } {
-  const { boardWidth, boardHeight, pegRows, slotCount, seed = Date.now() } = params;
+  const { boardWidth, boardHeight, pegRows, slotCount, seed = Date.now(), dropZone } = params;
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
 
@@ -486,27 +501,39 @@ export function generateTrajectory(params: {
   // This ensures the ball NEVER gets stuck - we just keep trying until physics works properly
   const maxAttempts = 50000; // Same as before to ensure high success rate
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Ball ALWAYS starts near center with ZERO velocity - realistic drop
-    const centerX = boardWidth / 2;
+  // Determine search range based on drop zone
+  let searchCenterX: number;
+  let searchRangeX: number;
 
+  if (dropZone) {
+    // User selected a specific drop zone - constrain search to that zone
+    const { min, max } = getDropZoneRange(dropZone, boardWidth);
+    searchCenterX = (min + max) / 2;
+    searchRangeX = (max - min) / 2;
+  } else {
+    // Classic mode - search center area
+    searchCenterX = boardWidth / 2;
+    searchRangeX = 2.5; // Small range around center
+  }
+
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
     // Microscopic variations that are imperceptible but change entire trajectory
     // Use different patterns to explore the space efficiently
     const pattern = attempt % 7;
     let microOffset: number;
     if (pattern === 0)
-      microOffset = 0; // Dead center
+      microOffset = 0; // Dead center of zone
     else if (pattern === 1)
-      microOffset = 1.5; // Slightly right
+      microOffset = searchRangeX * 0.3; // Slightly right
     else if (pattern === 2)
-      microOffset = -1.5; // Slightly left
-    else if (pattern === 3) microOffset = 2.5;
-    else if (pattern === 4) microOffset = -2.5;
+      microOffset = -searchRangeX * 0.3; // Slightly left
+    else if (pattern === 3) microOffset = searchRangeX * 0.6;
+    else if (pattern === 4) microOffset = -searchRangeX * 0.6;
     else if (pattern === 5)
-      microOffset = Math.sin(attempt * 0.618) * 2; // Sine wave pattern
-    else microOffset = Math.cos(attempt * 1.414) * 2; // Cosine wave pattern
+      microOffset = Math.sin(attempt * 0.618) * searchRangeX * 0.8; // Sine wave pattern
+    else microOffset = Math.cos(attempt * 1.414) * searchRangeX * 0.8; // Cosine wave pattern
 
-    const startX = centerX + microOffset;
+    const startX = searchCenterX + microOffset;
     const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
 
     // Vary bounce randomness systematically

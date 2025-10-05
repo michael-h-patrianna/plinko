@@ -26,6 +26,7 @@ import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
 import { ComboLegend } from './ComboLegend';
 import { calculateBucketZoneY } from '../../utils/slotDimensions';
 import { useTheme } from '../../theme';
+import { DropPositionControls } from '../DropPositionSelector';
 
 interface FrameStore {
   subscribe: (listener: () => void) => () => void;
@@ -47,6 +48,8 @@ interface PlinkoBoardProps {
   boardHeight?: number;
   pegRows?: number;
   ballState: GameState;
+  isSelectingPosition?: boolean;
+  onPositionSelected?: (zone: import('../../game/types').DropZone) => void;
 }
 
 export function PlinkoBoard({
@@ -61,6 +64,8 @@ export function PlinkoBoard({
   boardHeight = 500,
   pegRows = 10,
   ballState,
+  isSelectingPosition = false,
+  onPositionSelected,
 }: PlinkoBoardProps) {
   const { theme } = useTheme();
   const slotCount = prizes.length;
@@ -98,6 +103,17 @@ export function PlinkoBoard({
   const [showWinReveal, setShowWinReveal] = useState(false);
   const [showLandingImpact, setShowLandingImpact] = useState(false);
   const [showAnticipation, setShowAnticipation] = useState(false);
+
+  // Drop position selection state
+  const [selectedDropIndex, setSelectedDropIndex] = useState(2); // Center by default
+
+  const DROP_ZONES: Array<{ zone: import('../../game/types').DropZone; position: number }> = [
+    { zone: 'left', position: 0.1 },
+    { zone: 'left-center', position: 0.3 },
+    { zone: 'center', position: 0.5 },
+    { zone: 'right-center', position: 0.7 },
+    { zone: 'right', position: 0.9 },
+  ];
 
   // Trigger landing impact and anticipation, then win reveal when ball lands
   useEffect(() => {
@@ -248,25 +264,27 @@ export function PlinkoBoard({
         <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} />
 
         {/* Pegs */}
-        {pegs.map((peg) => {
-          // Check if this peg is in the pegsHit array
-          const isActive =
-            currentTrajectoryPoint?.pegsHit?.some(
-              (hit) => hit.row === peg.row && hit.col === peg.col
-            ) ?? false;
+        <div style={{ opacity: isSelectingPosition ? 0.1 : 1, transition: 'opacity 0.3s ease' }}>
+          {pegs.map((peg) => {
+            // Check if this peg is in the pegsHit array
+            const isActive =
+              currentTrajectoryPoint?.pegsHit?.some(
+                (hit) => hit.row === peg.row && hit.col === peg.col
+              ) ?? false;
 
-          return (
-            <Peg
-              key={`peg-${peg.row}-${peg.col}`}
-              row={peg.row}
-              col={peg.col}
-              x={peg.x}
-              y={peg.y}
-              isActive={isActive}
-              shouldReset={ballState === 'idle'}
-            />
-          );
-        })}
+            return (
+              <Peg
+                key={`peg-${peg.row}-${peg.col}`}
+                row={peg.row}
+                col={peg.col}
+                x={peg.x}
+                y={peg.y}
+                isActive={isActive}
+                shouldReset={ballState === 'idle'}
+              />
+            );
+          })}
+        </div>
 
         {/* Slots */}
         {slots.map((slot) => {
@@ -307,23 +325,48 @@ export function PlinkoBoard({
           );
         })}
 
-        {/* Ball launcher - visible during countdown */}
-        {ballState === 'countdown' && ballPosition && (
-          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={false} />
+        {/* SELECTION MODE: Drop position launchers - 5 options when selecting */}
+        {isSelectingPosition && DROP_ZONES.map((dropZone, index) => (
+          <BallLauncher
+            key={dropZone.zone}
+            x={boardWidth * dropZone.position}
+            y={BORDER_WIDTH + 10}
+            isLaunching={false}
+            isSelected={index === selectedDropIndex}
+            onClick={() => setSelectedDropIndex(index)}
+          />
+        ))}
+
+        {/* SELECTION MODE: Controls - title, arrows, START button */}
+        {isSelectingPosition && (
+          <DropPositionControls
+            boardWidth={boardWidth}
+            boardHeight={boardHeight}
+            onPrevious={() => setSelectedDropIndex((prev) => (prev === 0 ? DROP_ZONES.length - 1 : prev - 1))}
+            onNext={() => setSelectedDropIndex((prev) => (prev === DROP_ZONES.length - 1 ? 0 : prev + 1))}
+            onConfirm={() => onPositionSelected?.(DROP_ZONES[selectedDropIndex]!.zone)}
+          />
         )}
 
-        {/* Ball launcher launching animation - brief moment when dropping starts */}
-        {ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition && (
-          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={true} />
+        {/* NORMAL MODE: Ball launcher - visible during countdown only */}
+        {!isSelectingPosition && ballState === 'countdown' && ballPosition && (
+          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={false} isSelected={false} />
         )}
 
-        {/* Ball - positioned within board coordinate system */}
-        <Ball
-          position={ballPosition}
-          state={ballState}
-          currentFrame={currentTrajectoryPoint?.frame ?? 0}
-          trajectoryPoint={currentTrajectoryPoint}
-        />
+        {/* NORMAL MODE: Ball launcher launching animation - brief moment when dropping starts */}
+        {!isSelectingPosition && ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition && (
+          <BallLauncher x={ballPosition.x} y={ballPosition.y} isLaunching={true} isSelected={false} />
+        )}
+
+        {/* Ball - positioned within board coordinate system, hidden during selection */}
+        {!isSelectingPosition && (
+          <Ball
+            position={ballPosition}
+            state={ballState}
+            currentFrame={currentTrajectoryPoint?.frame ?? 0}
+            trajectoryPoint={currentTrajectoryPoint}
+          />
+        )}
 
         {/* Ball Landing Impact - triggers when ball lands */}
         {showLandingImpact &&
@@ -367,6 +410,7 @@ export function PlinkoBoard({
               isActive={showWinReveal}
             />
           )}
+
       </motion.div>
 
       {/* Combo legend - shows below board, part of board so it animates with it */}
