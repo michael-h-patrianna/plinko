@@ -1,12 +1,11 @@
 // Quick test to see what the trajectory looks like
 import { generateTrajectory } from '../../src/game/trajectory.ts';
 
-const trajectory = generateTrajectory({
+const { trajectory, landedSlot } = generateTrajectory({
   boardWidth: 375,
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 2,
   seed: 42,
 });
 
@@ -29,3 +28,5 @@ console.log('Total peg hits:', pegHits.length);
 pegHits.slice(0, 5).forEach((p) => {
   console.log(`Frame ${p.frame}: x=${p.x.toFixed(1)}, y=${p.y.toFixed(1)}`);
 });
+
+console.log(`\nLanded in slot: ${landedSlot}`);

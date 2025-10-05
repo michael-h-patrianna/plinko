@@ -467,88 +467,54 @@ function runSimulation(
 
 /**
  * Main trajectory generation function
- * Tries different initial conditions until finding one that lands in the target slot
+ * Generates a random trajectory and returns which slot it landed in
+ * The caller is responsible for rearranging prizes to match the landing slot
  */
 export function generateTrajectory(params: {
   boardWidth: number;
   boardHeight: number;
   pegRows: number;
   slotCount: number;
-  selectedIndex: number;
   seed?: number;
-}): TrajectoryPoint[] {
-  const { boardWidth, boardHeight, pegRows, slotCount, selectedIndex, seed = Date.now() } = params;
-
-  if (selectedIndex < 0 || selectedIndex >= slotCount) {
-    throw new Error(`Invalid slot index: ${selectedIndex}`);
-  }
+}): { trajectory: TrajectoryPoint[]; landedSlot: number } {
+  const { boardWidth, boardHeight, pegRows, slotCount, seed = Date.now() } = params;
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
-  // Account for border walls when calculating slot positions
-  // const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2); // Unused - for potential future use
-  // const slotWidth = playableWidth / slotCount; // Unused - for potential future use
-  // const targetX = PHYSICS.BORDER_WIDTH + selectedIndex * slotWidth + slotWidth / 2; // Unused - for potential future use
 
-  // Try different initial parameters with better strategies
-  // We try many subtle variations to find a natural path to target
-  const maxAttempts = 50000; // 50k attempts should be sufficient
+  // Use the seed to create random but reproducible initial conditions
+  const rng = createRng(seed);
 
-  for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Ball ALWAYS starts near center with ZERO velocity - realistic drop
-    const centerX = boardWidth / 2;
+  // Ball starts near center with small random offset
+  const centerX = boardWidth / 2;
+  const microOffset = (rng.next() - 0.5) * 5; // -2.5 to +2.5 px random offset
+  const startX = centerX + microOffset;
+  const startVx = 0; // Ball drops from rest
 
-    // Microscopic variations that are imperceptible but change entire trajectory
-    // Use different patterns to explore the space efficiently
-    const pattern = attempt % 7;
-    let microOffset: number;
-    if (pattern === 0)
-      microOffset = 0; // Dead center
-    else if (pattern === 1)
-      microOffset = 1.5; // Slightly right
-    else if (pattern === 2)
-      microOffset = -1.5; // Slightly left
-    else if (pattern === 3) microOffset = 2.5;
-    else if (pattern === 4) microOffset = -2.5;
-    else if (pattern === 5)
-      microOffset = Math.sin(attempt * 0.618) * 2; // Sine wave pattern
-    else microOffset = Math.cos(attempt * 1.414) * 2; // Cosine wave pattern
+  // Random bounce randomness for variety
+  const bounceRandomness = 0.2 + rng.next() * 0.6; // 0.2 to 0.8 range
 
-    const startX = centerX + microOffset;
-    const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
+  const simulationParams: SimulationParams = {
+    startX,
+    startVx,
+    bounceRandomness,
+  };
 
-    // Vary bounce randomness systematically
-    const bounceRandomness = 0.2 + ((attempt % 100) / 100) * 0.6; // 0.2 to 0.8 range
+  // Run simulation once with the random parameters
+  const simulationSeed = seed * 65537;
+  const { trajectory, landedSlot } = runSimulation(
+    simulationParams,
+    boardWidth,
+    boardHeight,
+    pegs,
+    slotCount,
+    simulationSeed
+  );
 
-    const params: SimulationParams = {
-      startX,
-      startVx,
-      bounceRandomness,
-    };
-
-    // Run deterministic simulation
-    const simulationSeed = seed * 65537 + attempt * 31337;
-    const { trajectory, landedSlot } = runSimulation(
-      params,
-      boardWidth,
-      boardHeight,
-      pegs,
-      slotCount,
-      simulationSeed
-    );
-
-    // Check if it landed in the target slot
-    if (landedSlot === selectedIndex) {
-      // Success! Return this natural trajectory
-      return trajectory.map((point) => ({
-        ...point,
-        targetSlot: selectedIndex,
-      }));
-    }
+  // Validate that we got a valid landing slot
+  if (landedSlot < 0 || landedSlot >= slotCount) {
+    console.error(`Invalid landing slot: ${landedSlot} (expected 0-${slotCount - 1})`);
+    throw new Error(`Simulation resulted in invalid landing slot: ${landedSlot}`);
   }
 
-  // This should never happen with proper parameter generation
-  console.error(
-    `Failed to find natural trajectory for slot ${selectedIndex} after ${maxAttempts} attempts`
-  );
-  throw new Error(`Could not generate natural trajectory for slot ${selectedIndex}`);
+  return { trajectory, landedSlot };
 }

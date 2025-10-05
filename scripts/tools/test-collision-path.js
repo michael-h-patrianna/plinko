@@ -8,14 +8,13 @@ const params = {
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 0,
   seed: 12345,
 };
 
 console.log('Testing trajectory generation with params:');
 console.log(JSON.stringify(params, null, 2));
 
-const trajectory = generateTrajectory(params);
+const { trajectory, landedSlot } = generateTrajectory(params);
 
 // Analyze the trajectory
 console.log('\n=== TRAJECTORY ANALYSIS ===');
@@ -51,14 +50,7 @@ console.log('Expected: 10 (one per row)');
 
 // Check final position
 const finalFrame = trajectory[trajectory.length - 1];
-const slotWidth = params.boardWidth / params.slotCount;
-const targetSlotLeft = params.selectedIndex * slotWidth;
-const targetSlotRight = (params.selectedIndex + 1) * slotWidth;
-const inCorrectSlot = finalFrame.x >= targetSlotLeft && finalFrame.x <= targetSlotRight;
 
 console.log('\n=== FINAL RESULT ===');
 console.log(`Final position: x=${finalFrame.x.toFixed(1)}, y=${finalFrame.y.toFixed(1)}`);
-console.log(
-  `Target slot ${params.selectedIndex}: x=[${targetSlotLeft.toFixed(1)}, ${targetSlotRight.toFixed(1)}]`
-);
-console.log(`Landed in correct slot: ${inCorrectSlot ? '✅ YES' : '❌ NO'}`);
+console.log(`Landed in slot: ${landedSlot}`);

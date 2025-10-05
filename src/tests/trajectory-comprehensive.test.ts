@@ -60,17 +60,14 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
     console.log('Starting 10,000 trajectory tests...');
 
     for (let run = 0; run < totalRuns; run++) {
-      // Random slot selection
-      const selectedIndex = Math.floor(Math.random() * slotCount);
       const seed = Date.now() + run;
 
       try {
-        const trajectory = generateTrajectory({
+        const { trajectory, landedSlot } = generateTrajectory({
           boardWidth,
           boardHeight,
           pegRows,
           slotCount,
-          selectedIndex,
           seed,
         });
 
@@ -133,18 +130,13 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
           }
         }
 
-        // 3. Verify ball landed in correct slot
+        // 3. Verify ball landed in valid slot
         const finalPoint = trajectory[trajectory.length - 1];
         if (finalPoint) {
-          const slotWidth = boardWidth / slotCount;
-          const landedSlot = Math.floor(finalPoint.x / slotWidth);
-
-          if (landedSlot !== selectedIndex) {
+          if (landedSlot < 0 || landedSlot >= slotCount) {
             trajectoryValid = false;
             if (run < 10) {
-              console.log(
-                `  Run ${run}: Ball landed in slot ${landedSlot} instead of target ${selectedIndex}`
-              );
+              console.log(`  Run ${run}: Ball landed in invalid slot ${landedSlot} (valid: 0-${slotCount - 1})`);
             }
           }
         }
@@ -162,7 +154,7 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
       } catch (error) {
         failures++;
         console.log(
-          `  Run ${run}: Error generating trajectory for slot ${selectedIndex}: ${error instanceof Error ? error.message : String(error)}`
+          `  Run ${run}: Error generating trajectory: ${error instanceof Error ? error.message : String(error)}`
         );
       }
     }
@@ -197,12 +189,11 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
       // Test 100 trajectories in detail
       for (let slot = 0; slot < slotCount; slot++) {
         for (let run = 0; run < 100 / slotCount; run++) {
-          const trajectory = generateTrajectory({
+          const { trajectory } = generateTrajectory({
             boardWidth,
             boardHeight,
             pegRows,
             slotCount,
-            selectedIndex: slot,
             seed: Date.now() + run * 1000 + slot,
           });
 
@@ -224,12 +215,11 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
   ); // 60 second timeout for this test
 
   it('should have smooth, continuous motion without teleportation', () => {
-    const trajectory = generateTrajectory({
+    const { trajectory } = generateTrajectory({
       boardWidth: 375,
       boardHeight: 500,
       pegRows: 10,
       slotCount: 7,
-      selectedIndex: 3,
       seed: 12345,
     });
 

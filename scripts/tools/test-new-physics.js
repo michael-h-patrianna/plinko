@@ -1,11 +1,10 @@
 import { generateTrajectory } from '../../src/game/trajectory.js';
 
-const trajectory = generateTrajectory({
+const { trajectory, landedSlot } = generateTrajectory({
   boardWidth: 375,
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 0,
   seed: 12345,
 });
 
@@ -32,11 +31,6 @@ for (let i = 70; i <= 100 && i < trajectory.length; i++) {
 
 // Check if ball lands in correct slot
 const finalFrame = trajectory[trajectory.length - 1];
-const slotWidth = 375 / 6;
-const targetSlotLeft = 0 * slotWidth;
-const targetSlotRight = 1 * slotWidth;
-const inCorrectSlot = finalFrame.x >= targetSlotLeft && finalFrame.x <= targetSlotRight;
 
 console.log(`\nFinal position: x=${finalFrame.x.toFixed(1)}, y=${finalFrame.y.toFixed(1)}`);
-console.log(`Target slot 0: x=[${targetSlotLeft.toFixed(1)}, ${targetSlotRight.toFixed(1)}]`);
-console.log(`Landed in correct slot: ${inCorrectSlot ? '✅ YES' : '❌ NO'}`);
+console.log(`Landed in slot: ${landedSlot}`);

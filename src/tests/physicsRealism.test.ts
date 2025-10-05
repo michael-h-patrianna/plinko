@@ -67,12 +67,11 @@ describe('Physics Realism Tests', () => {
 
       // Test multiple trajectories
       for (let seed = 1; seed <= 20; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 1000,
         });
 
@@ -99,12 +98,11 @@ describe('Physics Realism Tests', () => {
     });
 
     it('should have smooth position transitions even during collisions', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 2,
         seed: 12345,
       });
 
@@ -126,12 +124,11 @@ describe('Physics Realism Tests', () => {
       const violations: string[] = [];
 
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 2000,
         });
 
@@ -170,12 +167,11 @@ describe('Physics Realism Tests', () => {
     });
 
     it('should have gravity-dominated vertical acceleration when not colliding', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 3,
         seed: 99999,
       });
 
@@ -211,12 +207,11 @@ describe('Physics Realism Tests', () => {
       const violations: string[] = [];
 
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 3000,
         });
 
@@ -256,12 +251,11 @@ describe('Physics Realism Tests', () => {
     });
 
     it('should lose energy on collisions (inelastic)', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 2,
         seed: 55555,
       });
 
@@ -294,12 +288,11 @@ describe('Physics Realism Tests', () => {
       const violations: string[] = [];
 
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 4000,
         });
 
@@ -332,12 +325,11 @@ describe('Physics Realism Tests', () => {
       const violations: string[] = [];
 
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 5000,
         });
 
@@ -391,12 +383,11 @@ describe('Physics Realism Tests', () => {
       const violations: string[] = [];
 
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 6000,
         });
 
@@ -418,12 +409,11 @@ describe('Physics Realism Tests', () => {
     });
 
     it('should have continuous velocity changes', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 3,
         seed: 77777,
       });
 
@@ -458,12 +448,11 @@ describe('Physics Realism Tests', () => {
 
   describe('6. Realistic Motion Patterns', () => {
     it('should fall downward on average', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 2,
         seed: 88888,
       });
 
@@ -482,12 +471,11 @@ describe('Physics Realism Tests', () => {
     });
 
     it('should have parabolic motion between collisions', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 4,
         seed: 33333,
       });
 

@@ -1,11 +1,10 @@
 import { generateTrajectory } from '../../src/game/trajectory.ts';
 
-const trajectory = generateTrajectory({
+const { trajectory, landedSlot } = generateTrajectory({
   boardWidth: 375,
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 0,
   seed: 12345,
 });
 

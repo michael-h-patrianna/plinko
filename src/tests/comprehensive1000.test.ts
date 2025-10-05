@@ -5,8 +5,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../game/trajectory';
-import { selectPrize } from '../game/rng';
-import { MOCK_PRIZES } from '../config/prizeTable';
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;
@@ -40,19 +38,15 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       // Generate random seed
       const seed = Math.floor(Math.random() * 1000000);
 
-      // Select prize using same logic as game
-      const { selectedIndex: targetSlot } = selectPrize(MOCK_PRIZES, seed);
-
       const errors: string[] = [];
       const warnings: string[] = [];
 
       // Generate trajectory
-      const trajectory = generateTrajectory({
+      const { trajectory, landedSlot } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: targetSlot,
         seed,
       });
 
@@ -62,7 +56,7 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         results.push({
           testNumber: testNum,
           seed,
-          targetSlot,
+          targetSlot: landedSlot,
           passed: false,
           errors,
           warnings,
@@ -75,11 +69,6 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         totalFailed++;
         continue;
       }
-
-      // Calculate slot boundaries
-      const slotWidth = BOARD_WIDTH / SLOT_COUNT;
-      const slotLeftX = targetSlot * slotWidth;
-      const slotRightX = (targetSlot + 1) * slotWidth;
 
       // Bucket zone is bottom 30% of board (slots are at bottom)
       const bucketZoneY = BOARD_HEIGHT * 0.7;
@@ -104,13 +93,13 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
         );
       }
 
-      // Validation 2: Ball must land in correct slot (horizontally)
+      // Validation 2: Ball must land in valid slot (horizontally)
       const finalX = finalFrame.x;
-      const isInCorrectSlot = finalX >= slotLeftX && finalX <= slotRightX;
+      const isInValidSlot = landedSlot >= 0 && landedSlot < SLOT_COUNT;
 
-      if (!isInCorrectSlot) {
+      if (!isInValidSlot) {
         errors.push(
-          `Ball landed in wrong slot. Final X: ${finalX.toFixed(1)}px, Target slot X range: [${slotLeftX.toFixed(1)}, ${slotRightX.toFixed(1)}]`
+          `Ball landed in invalid slot ${landedSlot}. Valid range: 0-${SLOT_COUNT - 1}`
         );
       }
 
@@ -256,7 +245,7 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       results.push({
         testNumber: testNum,
         seed,
-        targetSlot,
+        targetSlot: landedSlot,
         passed,
         errors,
         warnings,

@@ -1,11 +1,10 @@
 const { generateTrajectory } = require('../../dist/game/trajectory.js');
 
-const trajectory = generateTrajectory({
+const { trajectory, landedSlot } = generateTrajectory({
   boardWidth: 375,
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 3,
   seed: 12345,
 });
 

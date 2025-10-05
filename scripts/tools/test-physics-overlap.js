@@ -49,15 +49,14 @@ let totalFramesChecked = 0;
 let maxOverlap = 0;
 
 for (let slot = 0; slot < slotCount; slot++) {
-  console.log(`Testing slot ${slot}...`);
+  console.log(`Testing run ${slot}...`);
 
   try {
-    const trajectory = generateTrajectory({
+    const { trajectory, landedSlot } = generateTrajectory({
       boardWidth,
       boardHeight,
       pegRows,
       slotCount,
-      selectedIndex: slot,
       seed: Date.now() + slot,
     });
 

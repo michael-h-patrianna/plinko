@@ -10,14 +10,13 @@ const params = {
   boardHeight: 500,
   pegRows: 10,
   slotCount: 6,
-  selectedIndex: 3,
   seed: 12345,
   dropDurationMs: 2500,
   settleDurationMs: 200,
 };
 
 console.log('Generating trajectory with params:', params);
-const trajectory = generateTrajectory(params);
+const { trajectory, landedSlot } = generateTrajectory(params);
 
 console.log('\n=== TRAJECTORY ANALYSIS ===\n');
 
@@ -96,12 +95,9 @@ for (let i = 20; i < Math.min(trajectory.length - 20, 140); i += 40) {
 
 // Final position check
 const finalPoint = trajectory[trajectory.length - 1];
-const targetSlotX = (params.selectedIndex + 0.5) * (params.boardWidth / params.slotCount);
-const xError = Math.abs(finalPoint.x - targetSlotX);
 console.log(`\n--- Final Position ---`);
-console.log(`Target slot X: ${targetSlotX.toFixed(1)}`);
+console.log(`Landed in slot: ${landedSlot}`);
 console.log(`Final X: ${finalPoint.x.toFixed(1)}`);
-console.log(`X error: ${xError.toFixed(1)}px ${xError < 10 ? '✓' : '❌'}`);
 console.log(`Final Y: ${finalPoint.y.toFixed(1)} (expected ~${params.boardHeight * 0.8})`);
 
 // Overall verdict

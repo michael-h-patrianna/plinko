@@ -28,12 +28,11 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         const results: { slot: number; success: boolean; frames: number }[] = [];
 
         for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
-          const trajectory = generateTrajectory({
+          const { trajectory } = generateTrajectory({
             boardWidth: width,
             boardHeight: BOARD_HEIGHT,
             pegRows: PEG_ROWS,
             slotCount: SLOT_COUNT,
-            selectedIndex: targetSlot,
             seed: 12345 + targetSlot,
           });
 
@@ -54,13 +53,11 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
       });
 
       it('should have zero ball-peg overlaps', () => {
-        const targetSlot = 3; // Middle slot
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: width,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: targetSlot,
           seed: 99999,
         });
 
@@ -109,13 +106,11 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
       });
 
       it('should have smooth motion (no teleportation)', () => {
-        const targetSlot = 3;
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: width,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: targetSlot,
           seed: 54321,
         });
 
@@ -143,13 +138,11 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
       });
 
       it('should keep ball within board boundaries', () => {
-        const targetSlot = 3;
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: width,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: targetSlot,
           seed: 11111,
         });
 
@@ -174,29 +167,19 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         expect(outOfBoundsCount).toBeLessThan(5);
       });
 
-      it('should land in correct slot', () => {
+      it('should land in valid slot', () => {
         for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
-          const trajectory = generateTrajectory({
+          const { landedSlot } = generateTrajectory({
             boardWidth: width,
             boardHeight: BOARD_HEIGHT,
             pegRows: PEG_ROWS,
             slotCount: SLOT_COUNT,
-            selectedIndex: targetSlot,
             seed: 22222 + targetSlot,
           });
 
-          const finalPoint = trajectory[trajectory.length - 1]!;
-
-          // Calculate which slot the ball landed in
-          const playableWidth = width - BORDER_WIDTH * 2;
-          const slotWidth = playableWidth / SLOT_COUNT;
-          const xRelative = finalPoint.x - BORDER_WIDTH;
-          const landedSlot = Math.min(
-            Math.max(0, Math.floor(xRelative / slotWidth)),
-            SLOT_COUNT - 1
-          );
-
-          expect(landedSlot).toBe(targetSlot);
+          // Verify ball landed in a valid slot
+          expect(landedSlot).toBeGreaterThanOrEqual(0);
+          expect(landedSlot).toBeLessThan(SLOT_COUNT);
         }
       });
     });
@@ -209,9 +192,8 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 3,
         seed: 77777, // Same seed for comparison
-      })
+      }).trajectory
     );
 
     // Trajectories should have different paths due to different peg layouts

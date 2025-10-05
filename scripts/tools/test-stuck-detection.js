@@ -22,12 +22,11 @@ for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
     const seed = 12345 + targetSlot * 100 + seedOffset;
     totalTests++;
 
-    const trajectory = generateTrajectory({
+    const { trajectory, landedSlot } = generateTrajectory({
       boardWidth: BOARD_WIDTH,
       boardHeight: BOARD_HEIGHT,
       pegRows: PEG_ROWS,
       slotCount: SLOT_COUNT,
-      selectedIndex: targetSlot,
       seed,
     });
 

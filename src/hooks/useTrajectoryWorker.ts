@@ -16,7 +16,6 @@ interface GenerateTrajectoryParams {
   boardHeight: number;
   pegRows: number;
   slotCount: number;
-  selectedIndex: number;
   seed?: number;
 }
 
@@ -48,7 +47,7 @@ export function useTrajectoryWorker() {
   }, []);
 
   const generateTrajectoryAsync = useCallback(
-    (params: GenerateTrajectoryParams): Promise<TrajectoryPoint[]> => {
+    (params: GenerateTrajectoryParams): Promise<{ trajectory: TrajectoryPoint[]; landedSlot: number }> => {
       const worker = getWorker();
 
       // Fallback to main thread if worker not available
@@ -69,8 +68,8 @@ export function useTrajectoryWorker() {
             hasResponded = true;
             // Fall back to synchronous generation
             try {
-              const trajectory = generateTrajectory(params);
-              resolve(trajectory);
+              const result = generateTrajectory(params);
+              resolve(result);
             } catch (error) {
               reject(error instanceof Error ? error : new Error(String(error)));
             }
@@ -80,19 +79,19 @@ export function useTrajectoryWorker() {
         const handleMessage = (event: MessageEvent<TrajectoryWorkerResponse>) => {
           if (hasResponded) return;
 
-          const { type, trajectory, error, telemetry } = event.data;
+          const { type, trajectory, landedSlot, error, telemetry } = event.data;
 
           // Log telemetry
           if (telemetry) {
             console.log(`Trajectory generation: ${telemetry.duration.toFixed(0)}ms`);
           }
 
-          if (type === 'success' && trajectory) {
+          if (type === 'success' && trajectory && landedSlot !== undefined) {
             clearTimeout(safetyTimeout);
             worker.removeEventListener('message', handleMessage);
             worker.removeEventListener('error', handleError);
             hasResponded = true;
-            resolve(trajectory);
+            resolve({ trajectory, landedSlot });
           } else if (type === 'error' || type === 'timeout') {
             clearTimeout(safetyTimeout);
             worker.removeEventListener('message', handleMessage);

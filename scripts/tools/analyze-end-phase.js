@@ -9,15 +9,14 @@ const SLOT_COUNT = 6;
 console.log('🔍 Analyzing End Phase Trajectory (After Last Peg Row)\n');
 console.log('='.repeat(80));
 
-for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
-  const seed = 12345 + targetSlot;
+for (let testRun = 0; testRun < SLOT_COUNT; testRun++) {
+  const seed = 12345 + testRun;
 
-  const trajectory = generateTrajectory({
+  const { trajectory, landedSlot } = generateTrajectory({
     boardWidth: BOARD_WIDTH,
     boardHeight: BOARD_HEIGHT,
     pegRows: PEG_ROWS,
     slotCount: SLOT_COUNT,
-    selectedIndex: targetSlot,
     seed,
   });
 
@@ -30,21 +29,19 @@ for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
   const afterLastPeg = endPhaseFrames[0];
   const finalFrame = trajectory[trajectory.length - 1];
 
-  // Calculate target slot position
+  // Calculate landed slot position
   const slotWidth = BOARD_WIDTH / SLOT_COUNT;
-  const targetSlotX = (targetSlot + 0.5) * slotWidth;
+  const landedSlotX = (landedSlot + 0.5) * slotWidth;
 
-  console.log(`\nTarget Slot ${targetSlot} (seed: ${seed}):`);
-  console.log(`  Target X: ${targetSlotX.toFixed(1)}px`);
+  console.log(`\nTest Run ${testRun} (seed: ${seed}):`);
+  console.log(`  Landed in slot: ${landedSlot}`);
+  console.log(`  Slot center X: ${landedSlotX.toFixed(1)}px`);
   console.log(`  After last peg (y=${lastPegRowY}px):`);
   console.log(`    - Position: x=${afterLastPeg.x.toFixed(1)}px`);
-  console.log(`    - Distance from target: ${Math.abs(afterLastPeg.x - targetSlotX).toFixed(1)}px`);
+  console.log(`    - Distance from slot center: ${Math.abs(afterLastPeg.x - landedSlotX).toFixed(1)}px`);
   console.log(`  Final landing:`);
   console.log(`    - Position: x=${finalFrame.x.toFixed(1)}px, y=${finalFrame.y.toFixed(1)}px`);
-  console.log(`    - Distance from target: ${Math.abs(finalFrame.x - targetSlotX).toFixed(1)}px`);
-  console.log(
-    `    - Landed in correct slot: ${Math.abs(finalFrame.x - targetSlotX) < slotWidth / 2 ? '✅ YES' : '❌ NO'}`
-  );
+  console.log(`    - Distance from slot center: ${Math.abs(finalFrame.x - landedSlotX).toFixed(1)}px`);
 
   // Analyze movement in end phase
   const endPhaseMovement = [];

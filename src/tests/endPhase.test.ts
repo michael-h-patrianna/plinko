@@ -14,12 +14,11 @@ describe('End Phase Trajectory Analysis', () => {
     for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
       const seed = 12345 + targetSlot;
 
-      const trajectory = generateTrajectory({
+      const { trajectory, landedSlot } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: targetSlot,
         seed,
       });
 
@@ -31,17 +30,17 @@ describe('End Phase Trajectory Analysis', () => {
       const afterLastPeg = endPhaseFrames[0];
       const finalFrame = trajectory[trajectory.length - 1]!;
 
-      // Calculate target slot position
+      // Calculate landed slot position
       const slotWidth = BOARD_WIDTH / SLOT_COUNT;
-      const targetSlotX = (targetSlot + 0.5) * slotWidth;
+      const landedSlotX = (landedSlot + 0.5) * slotWidth;
 
-      console.log(`\nTarget Slot ${targetSlot} (seed: ${seed}):`);
-      console.log(`  Target X: ${targetSlotX.toFixed(1)}px`);
+      console.log(`\nLanded Slot ${landedSlot} (seed: ${seed}):`);
+      console.log(`  Landed Slot X: ${landedSlotX.toFixed(1)}px`);
       if (afterLastPeg) {
         console.log(`  After last peg (y=${lastPegRowY}px):`);
         console.log(`    - Position: x=${afterLastPeg.x.toFixed(1)}px`);
         console.log(
-          `    - Distance from target: ${Math.abs(afterLastPeg.x - targetSlotX).toFixed(1)}px`
+          `    - Distance from landed slot: ${Math.abs(afterLastPeg.x - landedSlotX).toFixed(1)}px`
         );
       } else {
         console.log(`  After last peg (y=${lastPegRowY}px): No frames (ball stopped early)`);
@@ -49,10 +48,10 @@ describe('End Phase Trajectory Analysis', () => {
       console.log(`  Final landing:`);
       console.log(`    - Position: x=${finalFrame.x.toFixed(1)}px, y=${finalFrame.y.toFixed(1)}px`);
       console.log(
-        `    - Distance from target: ${Math.abs(finalFrame.x - targetSlotX).toFixed(1)}px`
+        `    - Distance from landed slot: ${Math.abs(finalFrame.x - landedSlotX).toFixed(1)}px`
       );
       console.log(
-        `    - Landed in correct slot: ${Math.abs(finalFrame.x - targetSlotX) < slotWidth / 2 ? '✅ YES' : '❌ NO'}`
+        `    - Landed in valid slot: ${landedSlot >= 0 && landedSlot < SLOT_COUNT ? '✅ YES' : '❌ NO'}`
       );
 
       // Analyze movement in end phase
@@ -77,14 +76,16 @@ describe('End Phase Trajectory Analysis', () => {
           `    - Suspicious jump: ${maxXJump > 5 ? '⚠️  YES - may be teleporting' : '✅ No - looks natural'}`
         );
 
-        // Assertions - allow slightly wider tolerance for realistic physics
-        expect(Math.abs(finalFrame.x - targetSlotX)).toBeLessThan(slotWidth / 2 + 5);
+        // Assertions - verify ball landed in valid slot
+        expect(landedSlot).toBeGreaterThanOrEqual(0);
+        expect(landedSlot).toBeLessThan(SLOT_COUNT);
         expect(maxXJump).toBeLessThan(40); // Allow bucket wall bounces - ball bounces off bucket walls
       } else {
         console.log(`  End phase motion: No end phase frames (ball stopped at slot immediately)`);
 
-        // Still verify correct slot landing - allow slightly wider tolerance for realistic physics
-        expect(Math.abs(finalFrame.x - targetSlotX)).toBeLessThan(slotWidth / 2 + 5);
+        // Still verify valid slot landing
+        expect(landedSlot).toBeGreaterThanOrEqual(0);
+        expect(landedSlot).toBeLessThan(SLOT_COUNT);
       }
     }
 

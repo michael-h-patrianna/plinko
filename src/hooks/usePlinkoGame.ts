@@ -7,7 +7,7 @@ import { useEffect, useReducer, useRef, useMemo, useState, useCallback } from 'r
 import type { GameState, GameContext, BallPosition, PrizeConfig } from '../game/types';
 import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import { selectPrize } from '../game/rng';
-import { createValidatedProductionPrizeSet, getPrizeByIndex } from '../config/productionPrizeTable';
+import { createValidatedProductionPrizeSet } from '../config/productionPrizeTable';
 import { generateTrajectory } from '../game/trajectory';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
@@ -79,21 +79,35 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       const urlSeed = urlParams.get('seed');
       const finalSeed = seedOverride ?? (urlSeed ? parseInt(urlSeed, 10) : undefined);
 
-      const { selectedIndex, seedUsed } = selectPrize(prizes, finalSeed);
-      const prize = getPrizeByIndex(prizes, selectedIndex);
+      // NEW APPROACH: Generate trajectory first (random landing slot)
+      const { selectedIndex: winningPrizeIndex, seedUsed } = selectPrize(prizes, finalSeed);
 
-      const trajectory = generateTrajectory({
+      const { trajectory, landedSlot } = generateTrajectory({
         boardWidth,
         boardHeight,
         pegRows,
         slotCount: prizes.length,
-        selectedIndex,
         seed: seedUsed,
       });
 
+      // Rearrange prizes: swap winning prize to landed slot position
+      const rearrangedPrizes = [...prizes];
+      if (landedSlot !== winningPrizeIndex) {
+        // Swap: put winning prize in landed slot, move landed slot prize to winning position
+        const temp = rearrangedPrizes[landedSlot]!;
+        rearrangedPrizes[landedSlot] = rearrangedPrizes[winningPrizeIndex]!;
+        rearrangedPrizes[winningPrizeIndex] = temp;
+      }
+
+      // Update prizes state with rearranged array
+      setPrizes(rearrangedPrizes);
+
+      // The winning prize is now at landedSlot position
+      const prize = rearrangedPrizes[landedSlot]!;
+
       dispatch({
         type: 'INITIALIZE',
-        payload: { selectedIndex, trajectory, prize, seed: seedUsed },
+        payload: { selectedIndex: landedSlot, trajectory, prize, seed: seedUsed },
       });
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;

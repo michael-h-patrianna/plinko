@@ -149,7 +149,12 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
                 </div>
                 <div className="currency-counter__content">
                   <div className="currency-counter__value-wrapper">
-                    <span className="currency-counter__value">1</span>
+                    <span
+                      className="currency-counter__value"
+                      style={{ color: theme.colors.text.primary }}
+                    >
+                      1
+                    </span>
                   </div>
                   <span className="currency-counter__label">
                     {rewards.randomReward!.config.name}

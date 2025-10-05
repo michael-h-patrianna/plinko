@@ -11,12 +11,11 @@ describe('Trajectory Peg Hit Recording', () => {
   VIEWPORT_SIZES.forEach((boardWidth) => {
     describe(`Viewport ${boardWidth}px`, () => {
       it('should record peg hits in trajectory data', () => {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth,
           boardHeight: 500,
           pegRows: 10,
           slotCount: 7,
-          selectedIndex: 3,
           seed: 12345,
         });
 
@@ -53,12 +52,11 @@ describe('Trajectory Peg Hit Recording', () => {
       });
 
       it('should have pegHit data structure correct', () => {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth,
           boardHeight: 500,
           pegRows: 10,
           slotCount: 7,
-          selectedIndex: 3,
           seed: 99999,
         });
 
@@ -82,12 +80,11 @@ describe('Trajectory Peg Hit Recording', () => {
       });
 
       it('should record consecutive peg hits correctly', () => {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth,
           boardHeight: 500,
           pegRows: 10,
           slotCount: 7,
-          selectedIndex: 3,
           seed: 54321,
         });
 
@@ -117,12 +114,11 @@ describe('Trajectory Peg Hit Recording', () => {
       });
 
       it('should not have duplicate peg hits in same frame', () => {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth,
           boardHeight: 500,
           pegRows: 10,
           slotCount: 7,
-          selectedIndex: 3,
           seed: 77777,
         });
 
@@ -149,12 +145,11 @@ describe('Trajectory Peg Hit Recording', () => {
       });
 
       it('should show all peg hits when logged', () => {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth,
           boardHeight: 500,
           pegRows: 10,
           slotCount: 7,
-          selectedIndex: 3,
           seed: 11111,
         });
 

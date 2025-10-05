@@ -16,7 +16,6 @@ export interface TrajectoryWorkerRequest {
     boardHeight: number;
     pegRows: number;
     slotCount: number;
-    selectedIndex: number;
     seed?: number;
     timeout?: number; // Optional timeout in ms
   };
@@ -25,6 +24,7 @@ export interface TrajectoryWorkerRequest {
 export interface TrajectoryWorkerResponse {
   type: 'success' | 'error' | 'timeout';
   trajectory?: TrajectoryPoint[];
+  landedSlot?: number;
   error?: string;
   telemetry?: {
     duration: number;
@@ -57,12 +57,11 @@ self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
     try {
       console.log('[Worker] Calling generateTrajectory...');
       // Generate trajectory
-      const trajectory = generateTrajectory({
+      const { trajectory, landedSlot } = generateTrajectory({
         boardWidth: payload.boardWidth,
         boardHeight: payload.boardHeight,
         pegRows: payload.pegRows,
         slotCount: payload.slotCount,
-        selectedIndex: payload.selectedIndex,
         seed: payload.seed,
       });
       console.log('[Worker] Trajectory generated, sending response...');
@@ -76,6 +75,7 @@ self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
       const response: TrajectoryWorkerResponse = {
         type: 'success',
         trajectory,
+        landedSlot,
         telemetry: {
           duration,
         },

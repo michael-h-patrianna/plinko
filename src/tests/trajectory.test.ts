@@ -11,12 +11,11 @@ describe('Trajectory Generation', () => {
     boardHeight: 500,
     pegRows: 10,
     slotCount: 6,
-    selectedIndex: 3,
     seed: 42,
   };
 
   it('should generate trajectory with correct number of frames', () => {
-    const trajectory = generateTrajectory(defaultParams);
+    const { trajectory } = generateTrajectory(defaultParams);
 
     // With realistic physics, the trajectory length can vary
     // But should be reasonable (between 100-600 frames for a typical drop)
@@ -24,19 +23,22 @@ describe('Trajectory Generation', () => {
     expect(trajectory.length).toBeLessThanOrEqual(600);
   });
 
-  it('should land ball in target slot within tolerance', () => {
-    const trajectory = generateTrajectory(defaultParams);
+  it('should land ball in valid slot', () => {
+    const { trajectory, landedSlot } = generateTrajectory({ ...defaultParams, seed: 42 });
     const finalPoint = trajectory[trajectory.length - 1]!;
 
     const slotWidth = defaultParams.boardWidth / defaultParams.slotCount;
-    const targetX = (defaultParams.selectedIndex + 0.5) * slotWidth;
+    const landedSlotX = (landedSlot + 0.5) * slotWidth;
 
-    // Ball must land within slot boundaries (slot width tolerance)
-    expect(Math.abs(finalPoint.x - targetX)).toBeLessThanOrEqual(slotWidth / 2);
+    // Ball must land within the slot boundaries it landed in
+    expect(Math.abs(finalPoint.x - landedSlotX)).toBeLessThanOrEqual(slotWidth / 2);
+    // Verify landed slot is valid
+    expect(landedSlot).toBeGreaterThanOrEqual(0);
+    expect(landedSlot).toBeLessThan(defaultParams.slotCount);
   });
 
   it('should have generally increasing y during drop phase', () => {
-    const trajectory = generateTrajectory(defaultParams);
+    const { trajectory } = generateTrajectory(defaultParams);
 
     // With physics-based bouncing, y won't be strictly monotonic
     // But overall trend should be downward (start < end)
@@ -48,31 +50,15 @@ describe('Trajectory Generation', () => {
   });
 
   it('should include peg hit markers', () => {
-    const trajectory = generateTrajectory(defaultParams);
+    const { trajectory } = generateTrajectory(defaultParams);
 
     const pegHits = trajectory.filter((p) => p.pegHit === true);
     expect(pegHits.length).toBeGreaterThan(0);
   });
 
-  it('should throw error for invalid selected index', () => {
-    expect(() =>
-      generateTrajectory({
-        ...defaultParams,
-        selectedIndex: -1,
-      })
-    ).toThrow(/Invalid slot index/);
-
-    expect(() =>
-      generateTrajectory({
-        ...defaultParams,
-        selectedIndex: defaultParams.slotCount,
-      })
-    ).toThrow(/Invalid slot index/);
-  });
-
   it('should generate same trajectory for same seed', () => {
-    const traj1 = generateTrajectory(defaultParams);
-    const traj2 = generateTrajectory(defaultParams);
+    const { trajectory: traj1 } = generateTrajectory(defaultParams);
+    const { trajectory: traj2 } = generateTrajectory(defaultParams);
 
     expect(traj1.length).toBe(traj2.length);
     expect(traj1[0]).toEqual(traj2[0]);
@@ -80,7 +66,7 @@ describe('Trajectory Generation', () => {
   });
 
   it('should have rotation values', () => {
-    const trajectory = generateTrajectory(defaultParams);
+    const { trajectory } = generateTrajectory(defaultParams);
 
     for (const point of trajectory) {
       expect(typeof point.rotation).toBe('number');
@@ -96,29 +82,28 @@ describe('Trajectory Generation', () => {
   });
 
   it('should include frame numbers', () => {
-    const trajectory = generateTrajectory(defaultParams);
+    const { trajectory } = generateTrajectory(defaultParams);
 
     for (let i = 0; i < trajectory.length; i++) {
       expect(trajectory[i]!.frame).toBe(i);
     }
   });
 
-  it('should settle at final position in correct slot', () => {
-    const trajectory = generateTrajectory(defaultParams);
+  it('should settle at final position in valid slot', () => {
+    const { trajectory, landedSlot } = generateTrajectory(defaultParams);
 
     // Last frame should be at final settled position
     const finalY = trajectory[trajectory.length - 1]!.y;
     const finalX = trajectory[trajectory.length - 1]!.x;
 
-    // Final position should be at target slot (most important!)
+    // Final position should be at landed slot
     const slotWidth = defaultParams.boardWidth / defaultParams.slotCount;
-    const targetX = getSlotCenterX(
-      defaultParams.selectedIndex,
-      defaultParams.slotCount,
-      defaultParams.boardWidth
-    );
+    const landedSlotX = getSlotCenterX(landedSlot, defaultParams.slotCount, defaultParams.boardWidth);
     // Ball MUST land within slot boundaries
-    expect(Math.abs(finalX - targetX)).toBeLessThan(slotWidth / 2);
+    expect(Math.abs(finalX - landedSlotX)).toBeLessThan(slotWidth / 2);
+    // Verify landed slot is valid
+    expect(landedSlot).toBeGreaterThanOrEqual(0);
+    expect(landedSlot).toBeLessThan(defaultParams.slotCount);
 
     // Ball should have settled within the board bounds
     // With new realistic physics, ball may settle anywhere from pegs to bucket

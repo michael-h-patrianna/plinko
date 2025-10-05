@@ -57,12 +57,11 @@ describe('Physics Violations Detection', () => {
 
       // Test 10 different trajectories
       for (let seed = 1; seed <= 10; seed++) {
-        const trajectory = generateTrajectory({
+        const { trajectory } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: seed % SLOT_COUNT,
           seed: seed * 1000,
         });
 
@@ -114,12 +113,11 @@ describe('Physics Violations Detection', () => {
     it('should never allow ball to pass through bucket walls', () => {
       // Test each slot
       for (let targetSlot = 0; targetSlot < SLOT_COUNT; targetSlot++) {
-        const trajectory = generateTrajectory({
+        const { trajectory, landedSlot } = generateTrajectory({
           boardWidth: BOARD_WIDTH,
           boardHeight: BOARD_HEIGHT,
           pegRows: PEG_ROWS,
           slotCount: SLOT_COUNT,
-          selectedIndex: targetSlot,
           seed: targetSlot * 12345,
         });
 
@@ -136,15 +134,15 @@ describe('Physics Violations Detection', () => {
           // Calculate which slot the ball is in
           const ballSlot = Math.floor(currFrame.x / slotWidth);
 
-          // Check if ball center is in wrong slot
-          if (ballSlot !== targetSlot) {
+          // Check if ball center is in wrong slot (allow tolerance)
+          if (ballSlot !== landedSlot) {
             // Allow some tolerance near boundaries for visual ball width
-            const distToTargetSlot = Math.min(
-              Math.abs(currFrame.x - targetSlot * slotWidth),
-              Math.abs(currFrame.x - (targetSlot + 1) * slotWidth)
+            const distToLandedSlot = Math.min(
+              Math.abs(currFrame.x - landedSlot * slotWidth),
+              Math.abs(currFrame.x - (landedSlot + 1) * slotWidth)
             );
 
-            expect(distToTargetSlot).toBeLessThanOrEqual(BALL_RADIUS);
+            expect(distToLandedSlot).toBeLessThanOrEqual(BALL_RADIUS);
           }
 
           // Check for wall crossing
@@ -164,12 +162,11 @@ describe('Physics Violations Detection', () => {
 
   describe('Realistic Acceleration', () => {
     it('should maintain realistic acceleration throughout trajectory', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 2,
         seed: 99999,
       });
 
@@ -221,12 +218,11 @@ describe('Physics Violations Detection', () => {
     });
 
     it('should show natural free fall after last peg row', () => {
-      const trajectory = generateTrajectory({
+      const { trajectory } = generateTrajectory({
         boardWidth: BOARD_WIDTH,
         boardHeight: BOARD_HEIGHT,
         pegRows: PEG_ROWS,
         slotCount: SLOT_COUNT,
-        selectedIndex: 3,
         seed: 77777,
       });
 

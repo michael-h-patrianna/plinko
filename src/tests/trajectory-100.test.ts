@@ -58,16 +58,14 @@ describe('100 Trajectory Physics Test', () => {
     console.log('Testing 100 trajectories...');
 
     for (let run = 0; run < totalRuns; run++) {
-      const selectedIndex = run % slotCount;
       const seed = Date.now() + run * 1000;
 
       try {
-        const trajectory = generateTrajectory({
+        const { trajectory, landedSlot } = generateTrajectory({
           boardWidth,
           boardHeight,
           pegRows,
           slotCount,
-          selectedIndex,
           seed,
         });
 
@@ -100,19 +98,16 @@ describe('100 Trajectory Physics Test', () => {
           }
         }
 
-        // Verify ball landed in correct slot
+        // Verify ball landed in a valid slot
         const finalPoint = trajectory[trajectory.length - 1];
         if (finalPoint) {
-          const slotWidth = boardWidth / slotCount;
-          const landedSlot = Math.floor(finalPoint.x / slotWidth);
-
-          if (landedSlot === selectedIndex && !hasOverlap) {
+          if (landedSlot >= 0 && landedSlot < slotCount && !hasOverlap) {
             successes++;
           } else {
             failures++;
             if (run < 5) {
               console.log(
-                `  Run ${run}: Failed - landed in slot ${landedSlot} (target: ${selectedIndex}), overlaps: ${runOverlaps}`
+                `  Run ${run}: Failed - landed in slot ${landedSlot} (valid range: 0-${slotCount - 1}), overlaps: ${runOverlaps}`
               );
             }
           }
