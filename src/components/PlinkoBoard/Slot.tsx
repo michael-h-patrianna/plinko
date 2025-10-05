@@ -89,9 +89,10 @@ export function Slot({
 
   return (
     <motion.div
-      className="absolute bottom-0 flex flex-col items-center justify-end text-center"
+      className="absolute flex flex-col items-center justify-end text-center"
       style={{
         left: `${x}px`,
+        bottom: '-10px',
         width: `${width}px`,
         height: `${bucketHeight}px`,
         background:

@@ -1,36 +1,42 @@
 /**
  * Border wall component with impact flash animation
- * Renders left, right, or top wall with visual feedback when ball collides
- * @param side - Which side of the board ('left', 'right', or 'top')
+ * Renders left, right, top, or bottom wall with visual feedback when ball collides
+ * @param side - Which side of the board ('left', 'right', 'top', or 'bottom')
  * @param width - Width of the wall in pixels
  * @param hasImpact - Whether ball is currently impacting this wall
+ * @param offset - Optional offset from edge (for bottom wall)
  */
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../theme';
 
 interface BorderWallProps {
-  side: 'left' | 'right' | 'top';
+  side: 'left' | 'right' | 'top' | 'bottom';
   width: number;
   hasImpact: boolean;
+  offset?: number;
 }
 
-export function BorderWall({ side, width, hasImpact }: BorderWallProps) {
+export function BorderWall({ side, width, hasImpact, offset = 0 }: BorderWallProps) {
   const { theme } = useTheme();
   const isVertical = side === 'left' || side === 'right';
 
   const baseStyle = {
     background: `${theme.colors.surface.elevated}66`,
     borderRadius:
-      side === 'top' ? '12px 12px 0 0' : side === 'left' ? '12px 0 0 12px' : '0 12px 12px 0',
+      side === 'top' ? '12px 12px 0 0' :
+      side === 'bottom' ? '0 0 12px 12px' :
+      side === 'left' ? '12px 0 0 12px' : '0 12px 12px 0',
   };
 
   const positionStyle =
     side === 'top'
       ? { top: 0, left: 0, right: 0, height: `${width}px` }
-      : side === 'left'
-        ? { top: 0, left: 0, bottom: 0, width: `${width}px` }
-        : { top: 0, right: 0, bottom: 0, width: `${width}px` };
+      : side === 'bottom'
+        ? { bottom: offset, left: 0, right: 0, height: `${width}px` }
+        : side === 'left'
+          ? { top: 0, left: 0, bottom: offset, width: `${width}px` }
+          : { top: 0, right: 0, bottom: offset, width: `${width}px` };
 
   return (
     <div className="absolute" style={{ ...positionStyle, ...baseStyle }}>

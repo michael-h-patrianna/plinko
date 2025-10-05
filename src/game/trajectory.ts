@@ -119,7 +119,7 @@ function runSimulation(
   const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2;
   const slotWidth = playableWidth / slotCount;
   const bucketZoneY = calculateBucketZoneY(boardHeight, slotWidth);
-  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS - 5;
+  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS + 5; // +10px to match visual slot overflow, -5 original offset
 
   // Track recent collisions to prevent double-hits
   const recentCollisions = new Map<string, number>();
@@ -339,9 +339,9 @@ function runSimulation(
     // Additional safety: hard clamp to ensure ball never escapes board
     x = Math.max(minX, Math.min(maxX, x));
 
-    // Also clamp Y to board bounds
+    // Also clamp Y to board bounds (allow 10px extra at bottom for slot overflow)
     const minY = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
-    const maxY = boardHeight - PHYSICS.BALL_RADIUS;
+    const maxY = boardHeight - PHYSICS.BALL_RADIUS + 10;
     y = Math.max(minY, Math.min(maxY, y));
 
     // Bucket physics (enhanced)

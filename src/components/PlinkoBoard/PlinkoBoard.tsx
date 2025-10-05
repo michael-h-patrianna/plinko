@@ -262,6 +262,7 @@ export function PlinkoBoard({
           hasImpact={currentTrajectoryPoint?.wallHit === 'right'}
         />
         <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} />
+        <BorderWall side="bottom" width={BORDER_WIDTH} hasImpact={false} offset={10} />
 
         {/* Pegs */}
         <div style={{ opacity: isSelectingPosition ? 0.1 : 1, transition: 'opacity 0.3s ease' }}>
