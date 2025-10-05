@@ -72,7 +72,7 @@ export function useTrajectoryWorker() {
               const trajectory = generateTrajectory(params);
               resolve(trajectory);
             } catch (error) {
-              reject(error);
+              reject(error instanceof Error ? error : new Error(String(error)));
             }
           }
         }, 12000);

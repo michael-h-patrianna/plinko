@@ -3,6 +3,9 @@
  * Tests ThemeContext, ThemeProvider, useTheme hook, theme persistence, and theme structures
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from './testUtils';
 import { renderHook, act } from '@testing-library/react';
@@ -481,7 +484,11 @@ describe('Theme System', () => {
   });
 
   describe('Theme Structures - No Undefined Required Values', () => {
-    const validateObject = (obj: any, path: string, optionalPaths: string[] = []): string[] => {
+    const validateObject = (
+      obj: Record<string, unknown>,
+      path: string,
+      optionalPaths: string[] = []
+    ): string[] => {
       const errors: string[] = [];
 
       for (const [key, value] of Object.entries(obj)) {

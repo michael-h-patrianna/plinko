@@ -3,7 +3,8 @@
  */
 
 export * from './types';
-export * from './ThemeContext';
+export { ThemeProvider } from './ThemeContext';
+export { ThemeContext } from './context';
 export * from './themeUtils';
 export { defaultTheme } from './themes/defaultTheme';
 export { darkBlueTheme } from './themes/darkBlueTheme';

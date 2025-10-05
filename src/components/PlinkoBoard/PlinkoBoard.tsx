@@ -38,10 +38,10 @@ interface PlinkoBoardProps {
   selectedIndex: number;
   trajectory?: TrajectoryPoint[];
   frameStore?: FrameStore;
-  getBallPosition?: () => any;
+  getBallPosition?: () => { x: number; y: number; rotation: number } | null;
   getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
   // Legacy props for backwards compatibility with tests
-  ballPosition?: any;
+  ballPosition?: { x: number; y: number; rotation: number } | null;
   currentTrajectoryPoint?: TrajectoryPoint | null;
   boardWidth?: number;
   boardHeight?: number;
@@ -52,7 +52,6 @@ interface PlinkoBoardProps {
 export function PlinkoBoard({
   prizes,
   selectedIndex,
-  trajectory,
   frameStore,
   getBallPosition,
   getCurrentTrajectoryPoint,
@@ -73,9 +72,14 @@ export function PlinkoBoard({
 
   // Subscribe to frame updates if frameStore is provided (production)
   // Otherwise use null (tests provide ballPosition/currentTrajectoryPoint directly)
-  const currentFrame = frameStore
-    ? useSyncExternalStore(frameStore.subscribe, frameStore.getSnapshot, frameStore.getSnapshot)
-    : 0;
+  // Note: We must always call the hook unconditionally, but use dummy values when frameStore is undefined
+  const dummySubscribe = () => () => {};
+  const dummyGetSnapshot = () => 0;
+  useSyncExternalStore(
+    frameStore?.subscribe ?? dummySubscribe,
+    frameStore?.getSnapshot ?? dummyGetSnapshot,
+    frameStore?.getSnapshot ?? dummyGetSnapshot
+  );
 
   // Get current values - either from functions (production) or props (tests)
   const currentTrajectoryPoint = getCurrentTrajectoryPoint

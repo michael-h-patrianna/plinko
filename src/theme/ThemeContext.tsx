@@ -1,21 +1,12 @@
 /**
- * Theme Context and Provider for managing application theming
+ * Theme Provider for managing application theming
  * Provides theme switching functionality with localStorage persistence
  */
 
-import React, { createContext, useState, useCallback, ReactNode } from 'react';
+import React, { useState, useCallback, ReactNode } from 'react';
 import { Theme } from './types';
 import { defaultTheme } from './themes/defaultTheme';
-
-export interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  themeName: string;
-  availableThemes: Theme[];
-  switchTheme: (themeName: string) => void;
-}
-
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+import { ThemeContext, ThemeContextType } from './context';
 
 interface ThemeProviderProps {
   children: ReactNode;

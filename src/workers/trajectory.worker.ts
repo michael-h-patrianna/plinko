@@ -35,12 +35,12 @@ export interface TrajectoryWorkerResponse {
 // Listen for messages from main thread
 self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
   console.log('[Worker] Received message:', event.data.type);
-  const { type, payload } = event.data;
+  const { payload } = event.data;
 
-  if (type === 'generate') {
-    console.log('[Worker] Starting trajectory generation...');
-    const startTime = performance.now();
-    const timeout = payload.timeout || 10000; // Default 10s timeout
+  // Handle trajectory generation request
+  console.log('[Worker] Starting trajectory generation...');
+  const startTime = performance.now();
+  const timeout = payload.timeout || 10000; // Default 10s timeout
 
     // Set up timeout watchdog
     const timeoutId = setTimeout(() => {
@@ -95,7 +95,6 @@ self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
 
       self.postMessage(response);
     }
-  }
 };
 
 // Export empty object for TypeScript

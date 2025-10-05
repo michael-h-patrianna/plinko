@@ -3,6 +3,8 @@
  * Tests edge cases, error conditions, and boundary conditions
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '../utils/prizeUtils';
 import {
@@ -752,27 +754,27 @@ describe('prizeUtils', () => {
 });
 
 describe('deviceDetection', () => {
-  // Store original values
-  const originalNavigator = global.navigator;
-  const originalWindow = global.window;
+  // Store original values - cast to unknown first to avoid error typed values
+  const originalNavigator = global.navigator as unknown as Navigator;
+  const originalWindow = global.window as unknown as Window & typeof globalThis;
 
   beforeEach(() => {
     // Reset navigator and window for each test
     global.navigator = {
       userAgent: '',
       maxTouchPoints: 0,
-    } as Navigator;
+    } as unknown as Navigator;
 
     global.window = {
       innerWidth: 1024,
       ontouchstart: undefined,
-    } as Window & typeof globalThis;
+    } as unknown as Window & typeof globalThis;
   });
 
   afterEach(() => {
     // Restore original values
-    global.navigator = originalNavigator;
-    global.window = originalWindow;
+    (global as { navigator: Navigator }).navigator = originalNavigator;
+    (global as { window: Window & typeof globalThis }).window = originalWindow;
     vi.restoreAllMocks();
   });
 
@@ -967,7 +969,7 @@ describe('deviceDetection', () => {
         configurable: true,
       });
       // Explicitly ensure ontouchstart is not in window
-      delete (global.window as any).ontouchstart;
+      delete (global.window as Record<string, unknown>).ontouchstart;
 
       expect(isMobileDevice()).toBe(false);
     });

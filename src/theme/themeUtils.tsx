@@ -5,15 +5,8 @@
 
 import { useContext } from 'react';
 import { Theme } from './types';
-import { ThemeContext } from './ThemeContext';
+import { ThemeContext, type ThemeContextType } from './context';
 
-export interface ThemeContextType {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-  themeName: string;
-  availableThemes: Theme[];
-  switchTheme: (themeName: string) => void;
-}
 
 /**
  * Hook to access the current theme context

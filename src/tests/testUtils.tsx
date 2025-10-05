@@ -17,8 +17,16 @@ function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>
   return render(ui, { wrapper: Wrapper, ...options });
 }
 
-// Re-export everything from React Testing Library
-export * from '@testing-library/react';
+// Re-export everything from React Testing Library except render
+export {
+  screen,
+  waitFor,
+  within,
+  fireEvent,
+  cleanup,
+  act,
+  renderHook,
+} from '@testing-library/react';
 
 // Override render with our custom version
 export { customRender as render };
