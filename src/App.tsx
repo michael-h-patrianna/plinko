@@ -133,31 +133,34 @@ function AppContent() {
         <PopupContainer isMobileOverlay={isMobile}>
           {/* Start screen overlay with smooth exit */}
           <AnimatePresence mode="wait">
-            {state === 'ready' && (
+            {(state === 'idle' || state === 'ready') && (
               <StartScreen
                 key="start-screen"
                 prizes={prizes}
                 onStart={startGame}
-                disabled={false}
+                disabled={state === 'idle'}
               />
             )}
           </AnimatePresence>
 
           {/* Main game board with ball - animated entrance when countdown starts */}
           <AnimatePresence mode="wait">
-            {state !== 'ready' && state !== 'revealed' && state !== 'claimed' && (
-              <PlinkoBoard
-                key="board"
-                prizes={prizes}
-                selectedIndex={selectedIndex}
-                currentTrajectoryPoint={currentTrajectoryPoint}
-                boardWidth={lockedBoardWidth}
-                boardHeight={500}
-                pegRows={10}
-                ballPosition={ballPosition}
-                ballState={state}
-              />
-            )}
+            {state !== 'idle' &&
+              state !== 'ready' &&
+              state !== 'revealed' &&
+              state !== 'claimed' && (
+                <PlinkoBoard
+                  key="board"
+                  prizes={prizes}
+                  selectedIndex={selectedIndex}
+                  currentTrajectoryPoint={currentTrajectoryPoint}
+                  boardWidth={lockedBoardWidth}
+                  boardHeight={500}
+                  pegRows={10}
+                  ballPosition={ballPosition}
+                  ballState={state}
+                />
+              )}
           </AnimatePresence>
 
           {/* Countdown overlay */}

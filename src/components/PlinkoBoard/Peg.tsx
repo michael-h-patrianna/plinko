@@ -49,8 +49,6 @@ export function Peg({ row, col, x, y, isActive = false, shouldReset = false }: P
     // Detect rising edge: was false, now true
     if (isActive && !lastActiveRef.current) {
       // Peg was just hit this frame!
-      console.log(`🎯 Peg (${row}, ${col}) HIT DETECTED - isActive changed to true`);
-
       // ALWAYS increment flash key to trigger new animation
       setFlashKey((prev) => prev + 1);
       setIsFlashing(true);

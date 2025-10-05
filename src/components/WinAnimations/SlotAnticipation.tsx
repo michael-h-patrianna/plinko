@@ -7,6 +7,7 @@
  * @param isActive - Whether the animation should be shown
  */
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
 interface SlotAnticipationProps {
@@ -17,17 +18,27 @@ interface SlotAnticipationProps {
 }
 
 export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipationProps) {
+  // Memoize particle positions and delays to avoid Math.random() on every render
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 5 }).map((_, i) => ({
+        x: x + width * (0.3 + Math.random() * 0.4),
+        delay: i * 0.2 + Math.random() * 0.3,
+      })),
+    [x, width]
+  );
+
   if (!isActive) return null;
 
   return (
     <>
       {/* Ascending light particles - APPEAL & ANTICIPATION */}
-      {[0, 1, 2, 3, 4].map((i) => (
+      {particles.map((particle, i) => (
         <motion.div
           key={`particle-${i}`}
           className="absolute pointer-events-none rounded-full"
           style={{
-            left: `${x + width * (0.3 + Math.random() * 0.4)}px`,
+            left: `${particle.x}px`,
             bottom: '0px',
             width: '6px',
             height: '6px',
@@ -42,7 +53,7 @@ export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipation
           }}
           transition={{
             duration: 2,
-            delay: i * 0.2 + Math.random() * 0.3,
+            delay: particle.delay,
             repeat: Infinity,
             ease: [0.22, 1, 0.36, 1], // Ease-out cubic
           }}

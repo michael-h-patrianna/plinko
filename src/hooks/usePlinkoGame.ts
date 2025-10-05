@@ -7,8 +7,8 @@ import { useEffect, useReducer, useRef, useMemo, useState } from 'react';
 import type { GameState, GameContext, BallPosition, PrizeConfig } from '../game/types';
 import { transition, initialContext, type GameEvent } from '../game/stateMachine';
 import { selectPrize } from '../game/rng';
-import { generateTrajectory } from '../game/trajectory';
 import { createValidatedProductionPrizeSet, getPrizeByIndex } from '../config/productionPrizeTable';
+import { generateTrajectory } from '../game/trajectory';
 
 interface PlinkoGameState {
   state: GameState;

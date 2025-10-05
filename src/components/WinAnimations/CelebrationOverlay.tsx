@@ -6,6 +6,7 @@
  * @param onComplete - Callback when animation completes
  */
 
+import { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../../game/types';
 import { useTheme } from '../../theme';
@@ -18,6 +19,32 @@ interface CelebrationOverlayProps {
 
 export function CelebrationOverlay({ prize, isVisible, onComplete }: CelebrationOverlayProps) {
   const { theme } = useTheme();
+
+  // Memoize confetti particle configurations to avoid Math.random() on every render
+  const confettiParticles = useMemo(() => {
+    const colors = [
+      theme.colors.game.ball.primary,
+      theme.colors.status.warning,
+      theme.colors.status.success,
+      theme.colors.accent.light,
+      theme.colors.primary.light,
+      theme.colors.prizes.violet.main,
+    ];
+
+    return Array.from({ length: 12 }).map(() => {
+      const startX = Math.random() * 100;
+      const endX = startX + (Math.random() - 0.5) * 30;
+      return {
+        startX,
+        endX,
+        delay: Math.random() * 0.5,
+        duration: 2 + Math.random() * 1,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        rotate: Math.random() * 720,
+      };
+    });
+  }, [theme]);
+
   return (
     <AnimatePresence>
       {isVisible && (
@@ -33,32 +60,17 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
         >
           {/* Confetti particles from top - FOLLOW THROUGH & OVERLAPPING ACTION */}
           {/* Reduced to 12 particles for mobile performance */}
-          {Array.from({ length: 12 }).map((_, i) => {
-            const startX = Math.random() * 100;
-            const endX = startX + (Math.random() - 0.5) * 30;
-            const delay = Math.random() * 0.5;
-            const duration = 2 + Math.random() * 1;
-            const colors = [
-              theme.colors.game.ball.primary,
-              theme.colors.status.warning,
-              theme.colors.status.success,
-              theme.colors.accent.light,
-              theme.colors.primary.light,
-              theme.colors.prizes.violet.main,
-            ];
-            const color = colors[Math.floor(Math.random() * colors.length)];
-
-            return (
+          {confettiParticles.map((particle, i) => (
               <motion.div
                 key={`confetti-${i}`}
                 className="absolute rounded-sm"
                 style={{
                   width: '8px',
                   height: '8px',
-                  background: color,
-                  boxShadow: `0 0 10px ${color}88`,
+                  background: particle.color,
+                  boxShadow: `0 0 10px ${particle.color}88`,
                   top: '-20px',
-                  left: `${startX}%`,
+                  left: `${particle.startX}%`,
                 }}
                 initial={{
                   y: 0,
@@ -69,19 +81,18 @@ export function CelebrationOverlay({ prize, isVisible, onComplete }: Celebration
                 }}
                 animate={{
                   y: 600,
-                  x: `${endX - startX}%`,
+                  x: `${particle.endX - particle.startX}%`,
                   opacity: [1, 1, 0.8, 0],
-                  rotate: Math.random() * 720,
+                  rotate: particle.rotate,
                   scale: [1, 0.8, 0.6],
                 }}
                 transition={{
-                  duration,
-                  delay,
+                  duration: particle.duration,
+                  delay: particle.delay,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               />
-            );
-          })}
+            ))}
 
           {/* Prize card container - STAGING */}
           <motion.div

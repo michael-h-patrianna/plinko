@@ -10,6 +10,7 @@
  * @param isActive - Whether the animation should be shown
  */
 
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTheme } from '../../theme';
 
@@ -25,6 +26,17 @@ interface SlotWinRevealProps {
 
 export function SlotWinReveal({ x, y, width, height, color, label, isActive }: SlotWinRevealProps) {
   const { theme } = useTheme();
+
+  // Memoize sparkle positions to avoid recalculating Math.random() on every render
+  const sparklePositions = useMemo(
+    () =>
+      Array.from({ length: 8 }).map(() => ({
+        offsetX: (Math.random() - 0.5) * width,
+        offsetY: Math.random() * height,
+      })),
+    [width, height]
+  );
+
   if (!isActive) return null;
 
   return (
@@ -171,17 +183,14 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
       </motion.div>
 
       {/* Floating sparkles - APPEAL */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const offsetX = (Math.random() - 0.5) * width;
-        const offsetY = Math.random() * height;
-
+      {sparklePositions.map((pos, i) => {
         return (
           <motion.div
             key={`sparkle-${i}`}
             className="absolute rounded-full"
             style={{
-              left: `${x + width / 2 + offsetX}px`,
-              top: `${y + offsetY}px`,
+              left: `${x + width / 2 + pos.offsetX}px`,
+              top: `${y + pos.offsetY}px`,
               width: '4px',
               height: '4px',
               background: `radial-gradient(circle, ${theme.colors.text.inverse} 0%, ${color} 70%, transparent 100%)`,
