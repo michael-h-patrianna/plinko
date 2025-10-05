@@ -16,10 +16,14 @@ describe('State Machine', () => {
     currentFrame: 0,
     prize: {
       id: 'p1',
+      type: 'free',
       label: 'Test Prize',
+      title: 'Test Prize',
       description: 'Test',
       probability: 1.0,
-      color: '#000'
+      color: '#000',
+      slotIcon: '',
+      slotColor: '#000'
     },
     seed: 12345
   };
@@ -48,13 +52,13 @@ describe('State Machine', () => {
     });
   });
 
-  describe('ready -> dropping transition', () => {
-    it('should transition to dropping on DROP_REQUESTED', () => {
+  describe('ready -> countdown transition', () => {
+    it('should transition to countdown on DROP_REQUESTED', () => {
       const result = transition('ready', mockContext, {
         type: 'DROP_REQUESTED'
       });
 
-      expect(result.state).toBe('dropping');
+      expect(result.state).toBe('countdown');
       expect(result.context.currentFrame).toBe(0);
     });
 
@@ -70,6 +74,30 @@ describe('State Machine', () => {
     it('should reject invalid events from ready', () => {
       expect(() =>
         transition('ready', mockContext, { type: 'LANDING_COMPLETED' })
+      ).toThrow(/Invalid event/);
+    });
+  });
+
+  describe('countdown state transitions', () => {
+    it('should transition to dropping on COUNTDOWN_COMPLETED', () => {
+      const result = transition('countdown', mockContext, {
+        type: 'COUNTDOWN_COMPLETED'
+      });
+
+      expect(result.state).toBe('dropping');
+    });
+
+    it('should transition to idle on RESET_REQUESTED', () => {
+      const result = transition('countdown', mockContext, {
+        type: 'RESET_REQUESTED'
+      });
+
+      expect(result.state).toBe('idle');
+    });
+
+    it('should reject invalid events from countdown', () => {
+      expect(() =>
+        transition('countdown', mockContext, { type: 'LANDING_COMPLETED' })
       ).toThrow(/Invalid event/);
     });
   });
@@ -109,9 +137,17 @@ describe('State Machine', () => {
       expect(result.state).toBe('revealed');
     });
 
+    it('should transition to idle on RESET_REQUESTED', () => {
+      const result = transition('landed', mockContext, {
+        type: 'RESET_REQUESTED'
+      });
+
+      expect(result.state).toBe('idle');
+    });
+
     it('should reject invalid events from landed', () => {
       expect(() =>
-        transition('landed', mockContext, { type: 'RESET_REQUESTED' })
+        transition('landed', mockContext, { type: 'DROP_REQUESTED' })
       ).toThrow(/Invalid event/);
     });
   });
@@ -152,8 +188,14 @@ describe('State Machine', () => {
       context = result.context;
       expect(context.prize).toEqual(mockContext.prize);
 
-      // ready -> dropping
+      // ready -> countdown
       result = transition(state, context, { type: 'DROP_REQUESTED' });
+      state = result.state;
+      context = result.context;
+      expect(context.prize).toEqual(mockContext.prize);
+
+      // countdown -> dropping
+      result = transition(state, context, { type: 'COUNTDOWN_COMPLETED' });
       state = result.state;
       context = result.context;
       expect(context.prize).toEqual(mockContext.prize);

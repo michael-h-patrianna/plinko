@@ -13,7 +13,7 @@ interface PrizeClaimedProps {
   onClose: () => void;
 }
 
-export function PrizeClaimed({ prize, onClose }: PrizeClaimedProps) {
+export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
   const { theme } = useTheme();
   return (
     <motion.div

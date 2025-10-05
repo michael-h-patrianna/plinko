@@ -4,7 +4,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { GameState } from './game/types';
 import { AnimatePresence } from 'framer-motion';
 import { PopupContainer } from './components/PopupContainer';
 import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';

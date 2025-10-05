@@ -81,7 +81,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes]);
 
   // Track if animation is already running
-  const landingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const landingTimeoutRef = useRef<number | null>(null);
 
   // Animation loop for dropping state - only runs when state changes to 'dropping'
   useEffect(() => {

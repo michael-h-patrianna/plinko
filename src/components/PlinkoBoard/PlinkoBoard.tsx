@@ -284,14 +284,14 @@ export function PlinkoBoard({
       />
 
       {/* Win Reveal Animation */}
-      {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && (
+      {showWinReveal && selectedIndex >= 0 && selectedIndex < slots.length && slots[selectedIndex] && (
         <SlotWinReveal
-          x={slots[selectedIndex].x}
+          x={slots[selectedIndex]!.x}
           y={bucketZoneY}
-          width={slots[selectedIndex].width}
+          width={slots[selectedIndex]!.width}
           height={boardHeight - bucketZoneY}
-          color={slots[selectedIndex].prize.color || '#64748B'}
-          label={slots[selectedIndex].prize.label || ''}
+          color={slots[selectedIndex]!.prize.color || '#64748B'}
+          label={slots[selectedIndex]!.prize.label || ''}
           isActive={showWinReveal}
         />
       )}

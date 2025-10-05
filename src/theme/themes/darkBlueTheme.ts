@@ -52,6 +52,8 @@ export const darkBlueTheme: Theme = {
       tertiary: '#8094b8',
       disabled: '#5a6e91',
       inverse: '#0a0e27',
+      link: '#4f8ef7',
+      linkHover: '#6ea4ff',
     },
 
     status: {
@@ -95,20 +97,33 @@ export const darkBlueTheme: Theme = {
         secondary: '#ff7043',
         highlight: '#ffffff',
         shadow: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: '50%',
       },
       peg: {
         default: '#5a6e91',
         active: '#ffb74d',
         highlight: '#ffcc80',
+        borderRadius: '50%',
+        shadow: '0 2px 4px rgba(0, 0, 0, 0.4)',
       },
       slot: {
         border: '#253154',
+        borderWidth: '2px',
+        borderRadius: '0 0 8px 8px',
         glow: 'rgba(79, 142, 247, 0.3)',
+        background: 'rgba(10, 14, 39, 0.8)',
       },
       launcher: {
         base: '#5a6e91',
         track: '#253154',
         accent: '#8094b8',
+        borderRadius: '4px',
+      },
+      board: {
+        background: 'linear-gradient(135deg, #111937 0%, #0a0e27 100%)',
+        border: '1px solid #253154',
+        borderRadius: '1.25rem',
+        shadow: '0 8px 24px rgba(0, 0, 0, 0.5)',
       },
     },
 
@@ -116,6 +131,7 @@ export const darkBlueTheme: Theme = {
       default: '#253154',
       light: '#3a4766',
       dark: '#1a2348',
+      focus: '#4f8ef7',
     },
 
     shadows: {
@@ -130,6 +146,7 @@ export const darkBlueTheme: Theme = {
     backgroundMain: 'linear-gradient(135deg, #0a0e27 0%, #111937 50%, #0a0e27 100%)',
     backgroundOverlay: 'linear-gradient(135deg, rgba(17,25,55,0.9) 0%, rgba(10,14,39,0.95) 100%)',
     backgroundCard: 'linear-gradient(135deg, rgba(17,25,55,0.98) 0%, rgba(10,14,39,1) 100%)',
+    backgroundHeader: 'linear-gradient(180deg, #111937 0%, #0a0e27 100%)',
 
     // Button gradients - all linear
     buttonPrimary: 'linear-gradient(135deg, #6ea4ff 0%, #4f8ef7 50%, #3575e5 100%)',
@@ -168,12 +185,19 @@ export const darkBlueTheme: Theme = {
 
   effects: {
     shadows: {
+      none: 'none',
       sm: '0 1px 3px rgba(0, 0, 0, 0.3)',
       md: '0 4px 12px rgba(0, 0, 0, 0.4)',
       lg: '0 8px 24px rgba(0, 0, 0, 0.5)',
       xl: '0 12px 48px rgba(0, 0, 0, 0.6)',
+      '2xl': '0 25px 50px rgba(0, 0, 0, 0.7)',
+      inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
       glow: '0 0 20px rgba(79, 142, 247, 0.5)',
-      inset: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)',
+      glowLg: '0 0 40px rgba(79, 142, 247, 0.6)',
+      button: '0 4px 16px rgba(79, 142, 247, 0.3)',
+      buttonHover: '0 8px 24px rgba(79, 142, 247, 0.4)',
+      card: '0 8px 24px rgba(0, 0, 0, 0.4)',
+      modal: '0 24px 48px rgba(0, 0, 0, 0.6)',
     },
 
     glows: {
@@ -181,12 +205,30 @@ export const darkBlueTheme: Theme = {
       md: '0 0 16px',
       lg: '0 0 32px',
       colored: '0 0 24px',
+      success: '0 0 20px rgba(74, 222, 128, 0.5)',
+      error: '0 0 20px rgba(248, 113, 113, 0.5)',
     },
 
     borders: {
+      none: 'none',
       thin: '1px solid',
       medium: '2px solid',
       thick: '4px solid',
+      dashed: '1px dashed',
+      dotted: '1px dotted',
+    },
+
+    backdrops: {
+      none: 'none',
+      sm: 'blur(4px)',
+      md: 'blur(8px)',
+      lg: 'blur(16px)',
+    },
+
+    transitions: {
+      fast: 'all 150ms ease',
+      normal: 'all 300ms ease',
+      slow: 'all 500ms ease',
     },
   },
 
@@ -208,45 +250,56 @@ export const darkBlueTheme: Theme = {
     },
   },
 
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    '2xl': 48,
-    '3xl': 64,
-    '4xl': 80,
-  },
+  spacing: defaultSpacing,
 
   typography: {
     fontFamily: {
       primary: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       secondary: undefined,
       mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+      display: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     },
     fontSize: {
       xs: '0.75rem',
       sm: '0.875rem',
-      md: '1rem',
-      lg: '1.25rem',
-      xl: '1.5rem',
-      '2xl': '2rem',
-      '3xl': '3rem',
-      '4xl': '4rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem',
+      '6xl': '3.75rem',
+      '7xl': '4.5rem',
+      '8xl': '6rem',
+      '9xl': '8rem',
     },
     fontWeight: {
+      thin: 100,
+      extralight: 200,
       light: 300,
       normal: 400,
       medium: 500,
       semibold: 600,
       bold: 700,
       extrabold: 800,
+      black: 900,
     },
     lineHeight: {
+      none: 1,
       tight: 1.25,
+      snug: 1.375,
       normal: 1.5,
-      relaxed: 1.75,
+      relaxed: 1.625,
+      loose: 2,
+    },
+    letterSpacing: {
+      tighter: '-0.05em',
+      tight: '-0.025em',
+      normal: '0em',
+      wide: '0.025em',
+      wider: '0.05em',
+      widest: '0.1em',
     },
   },
 
@@ -257,6 +310,7 @@ export const darkBlueTheme: Theme = {
       normal: 300,
       slow: 500,
       slower: 1000,
+      slowest: 2000,
     },
     easing: {
       linear: 'linear',
@@ -265,6 +319,8 @@ export const darkBlueTheme: Theme = {
       easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
       bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       elastic: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+      smooth: 'cubic-bezier(0.4, 0, 0.2, 1)',
     },
   },
 

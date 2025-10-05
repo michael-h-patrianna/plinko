@@ -24,7 +24,7 @@ interface RewardConfigItem {
   getColor: (theme: any) => string;
 }
 
-const getRewardConfig = (theme: any): Record<string, RewardConfigItem> => ({
+const getRewardConfig = (): Record<string, RewardConfigItem> => ({
   gc: {
     icon: gcIcon,
     label: 'GC',
@@ -49,10 +49,14 @@ const getRewardConfig = (theme: any): Record<string, RewardConfigItem> => ({
 
 export function RewardItem({ type, amount, xpConfig, delay = 0 }: RewardItemProps) {
   const { theme } = useTheme();
-  const rewardConfig = getRewardConfig(theme);
+  const rewardConfig = getRewardConfig();
   const config = type === 'xp' && xpConfig
     ? { icon: xpConfig.icon, label: xpConfig.name, getColor: (t: any) => t.colors.prizes.blue.light }
     : rewardConfig[type];
+
+  if (!config) {
+    return null;
+  }
 
   const color = config.getColor(theme);
   const displayAmount = amount ?? 1;

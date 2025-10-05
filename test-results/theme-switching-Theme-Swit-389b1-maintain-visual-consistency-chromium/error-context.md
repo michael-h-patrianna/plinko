@@ -1,0 +1,47 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e6]:
+    - generic [ref=e7]: "Theme:"
+    - generic [ref=e8]:
+      - button "Default" [ref=e9] [cursor=pointer]
+      - button "Dark Blue" [ref=e10] [cursor=pointer]
+      - button "PlayFame" [ref=e11] [cursor=pointer]
+  - generic [ref=e13]:
+    - button "iPhone SE 320px" [ref=e14] [cursor=pointer]:
+      - generic [ref=e15] [cursor=pointer]: iPhone SE
+      - generic [ref=e16] [cursor=pointer]: 320px
+    - button "Galaxy S8 360px" [ref=e17] [cursor=pointer]:
+      - generic [ref=e18] [cursor=pointer]: Galaxy S8
+      - generic [ref=e19] [cursor=pointer]: 360px
+    - button "iPhone 12 375px" [ref=e20] [cursor=pointer]:
+      - generic [ref=e21] [cursor=pointer]: iPhone 12
+      - generic [ref=e22] [cursor=pointer]: 375px
+    - button "iPhone 14 Pro Max 414px" [ref=e23] [cursor=pointer]:
+      - generic [ref=e24] [cursor=pointer]: iPhone 14 Pro Max
+      - generic [ref=e25] [cursor=pointer]: 414px
+  - generic [ref=e28]:
+    - heading "Plinko Popup" [level=1] [ref=e29]
+    - generic [ref=e30]:
+      - heading "Available Prizes" [level=2] [ref=e31]
+      - generic [ref=e32]:
+        - generic [ref=e34]:
+          - generic [ref=e35]: No Win
+          - generic [ref=e36]: 19%
+        - generic [ref=e38]:
+          - generic [ref=e39]: SC 500
+          - generic [ref=e40]: 11%
+        - generic [ref=e42]:
+          - generic [ref=e43]: 200% Special Offer
+          - generic [ref=e44]: 19%
+        - generic [ref=e46]:
+          - generic [ref=e47]: SC 250
+          - generic [ref=e48]: 22%
+        - generic [ref=e50]:
+          - generic [ref=e51]: 500 Stars
+          - generic [ref=e52]: 30%
+    - button "Drop Ball" [ref=e53] [cursor=pointer]:
+      - generic [ref=e55] [cursor=pointer]: Drop Ball
+  - generic [ref=e56]: Select a viewport size to test different mobile devices. The viewport is locked during gameplay to ensure physics accuracy.
+```

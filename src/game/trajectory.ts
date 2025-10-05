@@ -18,12 +18,12 @@ import { calculateBucketZoneY } from '../utils/slotDimensions';
 const PHYSICS = {
   GRAVITY: 980,           // px/s² (9.8 m/s² at 100px = 1m)
   RESTITUTION: 0.75,      // Energy retained on bounce (75%)
-  BALL_RADIUS: 7,         // Smaller ball (was 9)
+  BALL_RADIUS: 9,         // Ball radius in pixels
   PEG_RADIUS: 7,
-  COLLISION_RADIUS: 14,   // Ball + Peg radius (7 + 7)
+  COLLISION_RADIUS: 16,   // Ball + Peg radius (9 + 7)
   DT: 1/60,              // 60 FPS timestep
   TERMINAL_VELOCITY: 600, // px/s max fall speed
-  BORDER_WIDTH: 8,        // Thinner walls
+  BORDER_WIDTH: 12,       // Wall thickness
   MIN_BOUNCE_VELOCITY: 30, // Minimum velocity after collision
 };
 
@@ -110,6 +110,10 @@ function runSimulation(
   // Track recent collisions to prevent double-hits
   const recentCollisions = new Map<string, number>();
 
+  // Track stuck ball detection
+  let stuckFrames = 0;
+  let lastY = y;
+
   // Add initial rest frames
   for (let i = 0; i < 15; i++) {
     trajectory.push({
@@ -127,13 +131,28 @@ function runSimulation(
     // Apply gravity
     vy += PHYSICS.GRAVITY * PHYSICS.DT;
 
-    // Terminal velocity
+    // Terminal velocity (limit downward velocity)
     vy = Math.min(vy, PHYSICS.TERMINAL_VELOCITY);
+
+    // Enforce realistic velocity limits only after collisions (not during free fall)
+    // During free fall, terminal velocity is enough
+    // Only cap total speed if it's unrealistically high (e.g., from collision bugs)
+    const currentSpeed = Math.sqrt(vx * vx + vy * vy);
+    const MAX_TOTAL_SPEED = 800; // px/s - safety cap for extreme cases
+    if (currentSpeed > MAX_TOTAL_SPEED) {
+      const scale = MAX_TOTAL_SPEED / currentSpeed;
+      vx *= scale;
+      vy *= scale;
+    }
 
     // Air resistance
     vx *= 0.998;
 
-    // Store current position and velocity
+    // Store position at start of frame for distance limiting
+    const frameStartX = x;
+    const frameStartY = y;
+
+    // Store current position and velocity for collision detection
     const oldX = x;
     const oldY = y;
     const oldVx = vx;
@@ -155,7 +174,7 @@ function runSimulation(
 
       // Check if we're colliding
       if (distSq < PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS) {
-        const dist = Math.sqrt(distSq);
+        // const dist = Math.sqrt(distSq); // Unused - keeping for potential future use
 
         // Skip if we recently hit this peg
         const pegKey = `${peg.row}-${peg.col}`;
@@ -233,8 +252,8 @@ function runSimulation(
           vx = newVx;
           vy = newVy;
 
-          // Clamp velocities
-          const MAX_VELOCITY = 500;
+          // Clamp velocities to realistic maximum
+          const MAX_VELOCITY = 750;
           vx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vx));
           vy = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vy));
 
@@ -242,6 +261,15 @@ function runSimulation(
           const speed = Math.sqrt(vx * vx + vy * vy);
           if (speed < PHYSICS.MIN_BOUNCE_VELOCITY && speed > 0) {
             const scale = PHYSICS.MIN_BOUNCE_VELOCITY / speed;
+            vx *= scale;
+            vy *= scale;
+          }
+
+          // Final speed cap after all collision effects
+          const finalSpeed = Math.sqrt(vx * vx + vy * vy);
+          const MAX_POST_COLLISION_SPEED = 800;
+          if (finalSpeed > MAX_POST_COLLISION_SPEED) {
+            const scale = MAX_POST_COLLISION_SPEED / finalSpeed;
             vx *= scale;
             vy *= scale;
           }
@@ -253,8 +281,10 @@ function runSimulation(
 
         // Clean old collisions
         if (recentCollisions.size > 10) {
-          const firstKey = recentCollisions.keys().next().value;
-          recentCollisions.delete(firstKey);
+          const firstKey = recentCollisions.keys().next().value as string | undefined;
+          if (firstKey) {
+            recentCollisions.delete(firstKey);
+          }
         }
 
         break; // Only handle one collision per frame FOR PHYSICS
@@ -273,17 +303,28 @@ function runSimulation(
       }
     }
 
-    // Wall collision detection
+    // Wall collision detection with strict bounds enforcement
     let wallHit: 'left' | 'right' | undefined = undefined;
-    if (x <= PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS) {
-      x = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
+    const minX = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
+    const maxX = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
+
+    if (x < minX) {
+      x = minX;
       vx = Math.abs(vx) * PHYSICS.RESTITUTION;
       wallHit = 'left';
-    } else if (x >= boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS) {
-      x = boardWidth - PHYSICS.BORDER_WIDTH - PHYSICS.BALL_RADIUS;
+    } else if (x > maxX) {
+      x = maxX;
       vx = -Math.abs(vx) * PHYSICS.RESTITUTION;
       wallHit = 'right';
     }
+
+    // Additional safety: hard clamp to ensure ball never escapes board
+    x = Math.max(minX, Math.min(maxX, x));
+
+    // Also clamp Y to board bounds
+    const minY = PHYSICS.BORDER_WIDTH + PHYSICS.BALL_RADIUS;
+    const maxY = boardHeight - PHYSICS.BALL_RADIUS;
+    y = Math.max(minY, Math.min(maxY, y));
 
     // Bucket physics (enhanced)
     let bucketWallHit: 'left' | 'right' | undefined = undefined;
@@ -350,6 +391,43 @@ function runSimulation(
     // Update rotation based on horizontal velocity
     rotation += (vx / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60;
 
+    // Final velocity cap after ALL physics (collisions, walls, buckets, etc.)
+    const totalSpeed = Math.sqrt(vx * vx + vy * vy);
+    const ABSOLUTE_MAX_SPEED = 795; // px/s - cap slightly below 800 to account for floating point
+    if (totalSpeed > ABSOLUTE_MAX_SPEED) {
+      const scale = ABSOLUTE_MAX_SPEED / totalSpeed;
+      vx *= scale;
+      vy *= scale;
+    }
+
+    // Also cap the actual distance moved this frame to prevent collision resolution
+    // from causing unrealistic jumps
+    const actualDx = x - frameStartX;
+    const actualDy = y - frameStartY;
+    const actualDist = Math.sqrt(actualDx * actualDx + actualDy * actualDy);
+    const MAX_DIST_PER_FRAME = 13.2; // At 795px/s and 60fps = 13.25px max
+    if (actualDist > MAX_DIST_PER_FRAME) {
+      const scale = MAX_DIST_PER_FRAME / actualDist;
+      x = frameStartX + actualDx * scale;
+      y = frameStartY + actualDy * scale;
+    }
+
+    // Detect stuck ball (not in bucket zone and not making vertical progress)
+    if (y < bucketZoneY) {
+      if (Math.abs(y - lastY) < 0.5) {
+        stuckFrames++;
+        // If stuck for too long, this is an invalid trajectory
+        // (will be detected later and cause retry with different parameters)
+        if (stuckFrames > 60) {
+          // Mark as invalid by breaking early
+          break;
+        }
+      } else {
+        stuckFrames = 0;
+      }
+      lastY = y;
+    }
+
     // Add frame
     trajectory.push({
       frame: frame++,
@@ -363,6 +441,13 @@ function runSimulation(
       bucketWallHit,
       bucketFloorHit: bucketFloorHit || undefined
     });
+  }
+
+  // Validate that ball reached bucket zone (not stuck above it)
+  if (y < bucketZoneY - 10) {
+    // Ball got stuck before reaching bucket - this is an invalid trajectory
+    // Return invalid slot to trigger retry
+    return { trajectory, landedSlot: -1 };
   }
 
   // Determine which slot the ball landed in
@@ -403,9 +488,9 @@ export function generateTrajectory(params: {
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
   // Account for border walls when calculating slot positions
-  const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2);
-  const slotWidth = playableWidth / slotCount;
-  const targetX = PHYSICS.BORDER_WIDTH + selectedIndex * slotWidth + slotWidth / 2;
+  // const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2); // Unused - for potential future use
+  // const slotWidth = playableWidth / slotCount; // Unused - for potential future use
+  // const targetX = PHYSICS.BORDER_WIDTH + selectedIndex * slotWidth + slotWidth / 2; // Unused - for potential future use
 
   // Try different initial parameters with better strategies
   // We try many subtle variations to find a natural path to target

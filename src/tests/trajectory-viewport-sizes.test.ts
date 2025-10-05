@@ -16,10 +16,10 @@ const VIEWPORT_SIZES = [
 const BOARD_HEIGHT = 500;
 const PEG_ROWS = 10;
 const SLOT_COUNT = 7;
-const BALL_RADIUS = 7;
+const BALL_RADIUS = 9;
 const PEG_RADIUS = 7;
-const COLLISION_RADIUS = BALL_RADIUS + PEG_RADIUS; // 14px
-const BORDER_WIDTH = 8;
+const COLLISION_RADIUS = BALL_RADIUS + PEG_RADIUS; // 16px
+const BORDER_WIDTH = 12;
 
 describe('Trajectory Generation - Mobile Viewport Sizes', () => {
   VIEWPORT_SIZES.forEach(({ width, label }) => {
@@ -66,17 +66,18 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
 
         // Generate peg layout (same logic as trajectory.ts)
         const pegs: { x: number; y: number }[] = [];
+        const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
         const pegPadding = PEG_RADIUS + 10;
         const playableWidth = width - (BORDER_WIDTH * 2) - (pegPadding * 2);
         const playableHeight = BOARD_HEIGHT * 0.65;
         const verticalSpacing = playableHeight / (PEG_ROWS + 1);
-        const horizontalSpacing = playableWidth / SLOT_COUNT;
+        const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
 
         for (let row = 0; row < PEG_ROWS; row++) {
           const y = verticalSpacing * (row + 1) + BORDER_WIDTH + 20;
           const isOffsetRow = row % 2 === 1;
           const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-          const numPegs = isOffsetRow ? SLOT_COUNT : SLOT_COUNT + 1;
+          const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
           for (let col = 0; col < numPegs; col++) {
             const x = BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;

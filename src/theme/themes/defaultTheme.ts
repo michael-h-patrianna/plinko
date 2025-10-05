@@ -51,6 +51,8 @@ export const defaultTheme: Theme = {
       tertiary: '#94a3b8', // slate-400
       disabled: '#64748b', // slate-500
       inverse: '#0f172a', // slate-900
+      link: '#3b82f6', // blue-500
+      linkHover: '#60a5fa', // blue-400
     },
 
     status: {
@@ -94,20 +96,33 @@ export const defaultTheme: Theme = {
         secondary: '#fb923c', // orange-400
         highlight: '#ffffff',
         shadow: 'rgba(0, 0, 0, 0.4)',
+        borderRadius: '50%',
       },
       peg: {
         default: '#64748b', // slate-500
         active: '#fbbf24', // yellow-500
         highlight: '#facc15', // yellow-400
+        borderRadius: '50%',
+        shadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
       },
       slot: {
         border: '#475569', // slate-600
+        borderWidth: '2px',
+        borderRadius: '0 0 8px 8px',
         glow: 'rgba(255, 255, 255, 0.3)',
+        background: 'rgba(15, 23, 42, 0.8)',
       },
       launcher: {
         base: '#64748b', // slate-500
         track: '#475569', // slate-600
         accent: '#94a3b8', // slate-400
+        borderRadius: '4px',
+      },
+      board: {
+        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+        border: '1px solid #475569',
+        borderRadius: '1.25rem',
+        shadow: '0 8px 24px rgba(0, 0, 0, 0.4)',
       },
     },
 
@@ -115,6 +130,7 @@ export const defaultTheme: Theme = {
       default: '#475569', // slate-600
       light: '#64748b', // slate-500
       dark: '#334155', // slate-700
+      focus: '#3b82f6', // blue-500
     },
 
     shadows: {
@@ -129,6 +145,7 @@ export const defaultTheme: Theme = {
     backgroundMain: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
     backgroundOverlay: 'linear-gradient(135deg, rgba(30,41,59,0.9) 0%, rgba(15,23,42,0.95) 100%)',
     backgroundCard: 'linear-gradient(135deg, rgba(30,41,59,0.98) 0%, rgba(15,23,42,1) 100%)',
+    backgroundHeader: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
 
     // Button gradients - all linear
     buttonPrimary: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
@@ -164,12 +181,19 @@ export const defaultTheme: Theme = {
 
   effects: {
     shadows: {
+      none: 'none',
       sm: '0 1px 3px rgba(0, 0, 0, 0.2)',
       md: '0 4px 12px rgba(0, 0, 0, 0.3)',
       lg: '0 8px 24px rgba(0, 0, 0, 0.4)',
       xl: '0 12px 48px rgba(0, 0, 0, 0.5)',
+      '2xl': '0 25px 50px rgba(0, 0, 0, 0.6)',
+      inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
       glow: '0 0 20px rgba(251, 146, 60, 0.6)',
-      inset: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
+      glowLg: '0 0 40px rgba(251, 146, 60, 0.7)',
+      button: '0 4px 16px rgba(59, 130, 246, 0.3)',
+      buttonHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
+      card: '0 8px 24px rgba(0, 0, 0, 0.3)',
+      modal: '0 24px 48px rgba(0, 0, 0, 0.5)',
     },
 
     glows: {
@@ -177,12 +201,30 @@ export const defaultTheme: Theme = {
       md: '0 0 16px',
       lg: '0 0 32px',
       colored: '0 0 24px',
+      success: '0 0 20px rgba(16, 185, 129, 0.5)',
+      error: '0 0 20px rgba(239, 68, 68, 0.5)',
     },
 
     borders: {
+      none: 'none',
       thin: '1px solid',
       medium: '2px solid',
       thick: '4px solid',
+      dashed: '1px dashed',
+      dotted: '1px dotted',
+    },
+
+    backdrops: {
+      none: 'none',
+      sm: 'blur(4px)',
+      md: 'blur(8px)',
+      lg: 'blur(16px)',
+    },
+
+    transitions: {
+      fast: 'all 150ms ease',
+      normal: 'all 300ms ease',
+      slow: 'all 500ms ease',
     },
   },
 
@@ -205,45 +247,56 @@ export const defaultTheme: Theme = {
     },
   },
 
-  spacing: {
-    xs: 4,
-    sm: 8,
-    md: 16,
-    lg: 24,
-    xl: 32,
-    '2xl': 48,
-    '3xl': 64,
-    '4xl': 80,
-  },
+  spacing: defaultSpacing,
 
   typography: {
     fontFamily: {
       primary: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       secondary: undefined,
       mono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+      display: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     },
     fontSize: {
       xs: '0.75rem',
       sm: '0.875rem',
-      md: '1rem',
-      lg: '1.25rem',
-      xl: '1.5rem',
-      '2xl': '2rem',
-      '3xl': '3rem',
-      '4xl': '4rem',
+      base: '1rem',
+      lg: '1.125rem',
+      xl: '1.25rem',
+      '2xl': '1.5rem',
+      '3xl': '1.875rem',
+      '4xl': '2.25rem',
+      '5xl': '3rem',
+      '6xl': '3.75rem',
+      '7xl': '4.5rem',
+      '8xl': '6rem',
+      '9xl': '8rem',
     },
     fontWeight: {
+      thin: 100,
+      extralight: 200,
       light: 300,
       normal: 400,
       medium: 500,
       semibold: 600,
       bold: 700,
       extrabold: 800,
+      black: 900,
     },
     lineHeight: {
+      none: 1,
       tight: 1.25,
+      snug: 1.375,
       normal: 1.5,
-      relaxed: 1.75,
+      relaxed: 1.625,
+      loose: 2,
+    },
+    letterSpacing: {
+      tighter: '-0.05em',
+      tight: '-0.025em',
+      normal: '0em',
+      wide: '0.025em',
+      wider: '0.05em',
+      widest: '0.1em',
     },
   },
 
@@ -254,6 +307,7 @@ export const defaultTheme: Theme = {
       normal: 300,
       slow: 500,
       slower: 1000,
+      slowest: 2000,
     },
     easing: {
       linear: 'linear',
@@ -262,6 +316,8 @@ export const defaultTheme: Theme = {
       easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
       bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
       elastic: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+      sharp: 'cubic-bezier(0.4, 0, 0.6, 1)',
+      smooth: 'cubic-bezier(0.4, 0, 0.2, 1)',
     },
   },
 

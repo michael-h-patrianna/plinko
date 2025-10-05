@@ -6,25 +6,26 @@ import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../game/trajectory';
 
 const PHYSICS = {
-  BALL_RADIUS: 7,
+  BALL_RADIUS: 9,
   PEG_RADIUS: 7,
-  COLLISION_RADIUS: 14,
-  BORDER_WIDTH: 8
+  COLLISION_RADIUS: 16, // Ball + Peg (9 + 7)
+  BORDER_WIDTH: 12
 };
 
-function generatePegLayout(boardWidth: number, boardHeight: number, pegRows: number, slotCount: number) {
+function generatePegLayout(boardWidth: number, boardHeight: number, pegRows: number, _slotCount: number) {
   const pegs: Array<{x: number, y: number, row: number, col: number}> = [];
+  const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
   const pegPadding = PHYSICS.PEG_RADIUS + 10;
   const playableWidth = boardWidth - (PHYSICS.BORDER_WIDTH * 2) - (pegPadding * 2);
   const playableHeight = boardHeight * 0.65;
   const verticalSpacing = playableHeight / (pegRows + 1);
-  const horizontalSpacing = playableWidth / slotCount;
+  const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
 
   for (let row = 0; row < pegRows; row++) {
     const y = verticalSpacing * (row + 1) + PHYSICS.BORDER_WIDTH + 20;
     const isOffsetRow = row % 2 === 1;
     const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-    const numPegs = isOffsetRow ? slotCount : slotCount + 1;
+    const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
     for (let col = 0; col < numPegs; col++) {
       const x = PHYSICS.BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;

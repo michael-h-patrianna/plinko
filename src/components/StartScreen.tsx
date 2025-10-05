@@ -3,12 +3,12 @@
  * FULLY THEMEABLE - No hard-coded styles
  */
 
+import { AnimatePresence, motion } from 'framer-motion';
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import type { PrizeConfig } from '../game/types';
 import { getSlotDisplayText } from '../game/prizeTypes';
-import { abbreviateNumber } from '../utils/formatNumber';
+import type { PrizeConfig } from '../game/types';
 import { useTheme } from '../theme';
+import { abbreviateNumber } from '../utils/formatNumber';
 import { ThemedButton } from './ThemedButton';
 
 interface StartScreenProps {
@@ -61,7 +61,7 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
           maxWidth: 'calc(100% - 40px)',
           background: theme.components?.card?.background || theme.colors.surface.primary,
           boxShadow: theme.components?.card?.shadow || theme.effects.shadows.card,
-          border: theme.components?.card?.border || `1px solid ${theme.colors.border.primary}`,
+          border: theme.components?.card?.border || `1px solid ${theme.colors.border.default}`,
           borderRadius: theme.components?.card?.borderRadius || theme.borderRadius.card,
         }}
         initial={{ opacity: 0, y: 20 }}
@@ -175,11 +175,11 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                         ease: 'easeInOut'
                       }}
                     >
-                      {prizeReward.sc && <div>• Coins: {abbreviateNumber(prizeReward.sc)}</div>}
-                      {prizeReward.gc && <div>• Gold Coins: {abbreviateNumber(prizeReward.gc)}</div>}
+                      {prizeReward.sc && <div>• Free SC: {abbreviateNumber(prizeReward.sc)}</div>}
+                      {prizeReward.gc && <div>• GC: {abbreviateNumber(prizeReward.gc)}</div>}
                       {prizeReward.spins && <div>• Free Spins: {prizeReward.spins}</div>}
                       {prizeReward.xp && <div>• XP Points: {abbreviateNumber(prizeReward.xp)}</div>}
-                      {prizeReward.randomReward && <div>• Mystery Reward</div>}
+                      {prizeReward.randomReward && <div>• Bronze Wheel</div>}
                     </motion.div>
                   )}
                 </AnimatePresence>

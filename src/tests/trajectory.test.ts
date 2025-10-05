@@ -60,14 +60,14 @@ describe('Trajectory Generation', () => {
         ...defaultParams,
         selectedIndex: -1
       })
-    ).toThrow(/out of range/);
+    ).toThrow(/Invalid slot index/);
 
     expect(() =>
       generateTrajectory({
         ...defaultParams,
         selectedIndex: defaultParams.slotCount
       })
-    ).toThrow(/out of range/);
+    ).toThrow(/Invalid slot index/);
   });
 
   it('should generate same trajectory for same seed', () => {

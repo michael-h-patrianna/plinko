@@ -10,7 +10,6 @@ import {
   defaultBreakpoints,
   defaultZIndex,
   defaultBorderRadius,
-  defaultEffects,
   playFameButtons,
   playFameComponents
 } from '../themeDefaults';

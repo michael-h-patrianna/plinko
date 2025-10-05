@@ -87,7 +87,7 @@ export function getSlotDisplayText(
 
     // For slots: show only first reward from priority list
     // For prize table: show all with " + " separator
-    return fullCombo ? parts.join(' + ') : parts[0];
+    return fullCombo ? parts.join(' + ') : (parts[0] || '');
   }
 
   return '';

@@ -6,7 +6,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import type { PrizeConfig } from '../../game/types';
-import { useTheme } from '../theme';
+import { useTheme } from '../../theme';
 
 interface CelebrationOverlayProps {
   prize: PrizeConfig;
