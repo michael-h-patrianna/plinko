@@ -15,18 +15,21 @@ interface BorderWallProps {
   width: number;
   hasImpact: boolean;
   offset?: number;
+  boardWidth?: number;
 }
 
-export function BorderWall({ side, width, hasImpact, offset = 0 }: BorderWallProps) {
+export function BorderWall({ side, width, hasImpact, offset = 0, boardWidth }: BorderWallProps) {
   const { theme } = useTheme();
   const isVertical = side === 'left' || side === 'right';
+  const isMobile = boardWidth !== undefined && boardWidth <= 375;
 
   const baseStyle = {
     background: `${theme.colors.surface.elevated}66`,
     borderRadius:
-      side === 'top' ? '12px 12px 0 0' :
+      side === 'top' ? (isMobile ? '0' : '12px 12px 0 0') :
       side === 'bottom' ? '0 0 12px 12px' :
-      side === 'left' ? '12px 0 0 12px' : '0 12px 12px 0',
+      side === 'left' ? '0 0 0 12px' :  // Left wall never has top corners
+      '0 12px 0 0',  // Right wall never has top corners (they meet the top wall)
   };
 
   const positionStyle =
@@ -35,8 +38,8 @@ export function BorderWall({ side, width, hasImpact, offset = 0 }: BorderWallPro
       : side === 'bottom'
         ? { bottom: offset, left: 0, right: 0, height: `${width}px` }
         : side === 'left'
-          ? { top: 0, left: 0, bottom: offset, width: `${width}px` }
-          : { top: 0, right: 0, bottom: offset, width: `${width}px` };
+          ? { top: isMobile ? 0 : `${width}px`, left: 0, bottom: offset, width: `${width}px` }
+          : { top: isMobile ? 0 : `${width}px`, right: 0, bottom: offset, width: `${width}px` };
 
   return (
     <div className="absolute" style={{ ...positionStyle, ...baseStyle }}>

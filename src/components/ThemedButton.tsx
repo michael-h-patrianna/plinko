@@ -20,6 +20,7 @@ interface ThemedButtonProps {
   children: React.ReactNode;
   testId?: string;
   style?: React.CSSProperties;
+  variant?: 'primary' | 'secondary';
 }
 
 export function ThemedButton({
@@ -30,8 +31,10 @@ export function ThemedButton({
   children,
   testId,
   style,
+  variant = 'primary',
 }: ThemedButtonProps) {
   const { theme } = useTheme();
+  const buttonStyle = variant === 'primary' ? theme.buttons.primary : theme.buttons.secondary;
 
   return (
     <motion.button
@@ -39,17 +42,17 @@ export function ThemedButton({
       disabled={disabled}
       className={`font-bold relative overflow-hidden group ${className}`}
       style={{
-        background: theme.buttons.primary.background,
-        color: theme.buttons.primary.color,
-        border: theme.buttons.primary.border,
-        borderWidth: theme.buttons.primary.borderWidth,
-        borderRadius: theme.buttons.primary.borderRadius,
-        padding: `${theme.buttons.primary.padding.y} ${theme.buttons.primary.padding.x}`,
-        fontSize: theme.buttons.primary.fontSize,
-        fontWeight: theme.buttons.primary.fontWeight,
+        background: buttonStyle.background,
+        color: buttonStyle.color,
+        border: buttonStyle.border,
+        borderWidth: buttonStyle.borderWidth,
+        borderRadius: buttonStyle.borderRadius,
+        padding: `${buttonStyle.padding.y} ${buttonStyle.padding.x}`,
+        fontSize: buttonStyle.fontSize,
+        fontWeight: buttonStyle.fontWeight,
         fontFamily: theme.typography.fontFamily.primary,
-        boxShadow: theme.buttons.primary.shadow,
-        transition: theme.buttons.primary.transition,
+        boxShadow: buttonStyle.shadow,
+        transition: buttonStyle.transition,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
         ...style,
@@ -58,7 +61,7 @@ export function ThemedButton({
         !disabled
           ? {
               scale: 1.05,
-              boxShadow: theme.buttons.primary.shadowHover,
+              boxShadow: buttonStyle.shadowHover,
               transition: {
                 type: 'spring',
                 stiffness: 400,

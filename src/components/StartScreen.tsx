@@ -209,7 +209,12 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
       </motion.div>
 
       {/* Play button */}
-      <ThemedButton onClick={onStart} disabled={disabled} delay={0.3} testId="drop-ball-button">
+      <ThemedButton onClick={onStart} disabled={disabled} delay={0.3} testId="drop-ball-button" style={{
+            minWidth: '120px',
+            height: '56px',
+            fontSize: '18px',
+            fontWeight: 700,
+          }}>
         Drop Ball
       </ThemedButton>
     </motion.div>

@@ -3,15 +3,15 @@
  * All blur effects removed, only linear gradients used
  */
 
-import { Theme } from '../types';
 import {
-  defaultSpacing,
-  defaultBreakpoints,
-  defaultZIndex,
   defaultBorderRadius,
-  defaultButtons,
+  defaultBreakpoints,
   defaultComponents,
+  defaultSpacing,
+  defaultZIndex,
+  createButtonStyle,
 } from '../themeDefaults';
+import { Theme } from '../types';
 
 export const defaultTheme: Theme = {
   name: 'Default',
@@ -148,7 +148,8 @@ export const defaultTheme: Theme = {
     backgroundHeader: 'linear-gradient(180deg, #1e293b 0%, #0f172a 100%)',
 
     // Button gradients - all linear
-    buttonPrimary: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
+    buttonPrimary:
+      'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(59, 130, 246) 50%, rgb(37, 99, 235) 100%)',
     buttonSecondary: 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 50%, #7c3aed 100%)',
     buttonSuccess: 'linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%)',
     buttonDanger: 'linear-gradient(135deg, #f87171 0%, #ef4444 50%, #dc2626 100%)',
@@ -327,7 +328,51 @@ export const defaultTheme: Theme = {
 
   // Required properties that were missing
   isDark: false,
-  buttons: defaultButtons,
+  buttons: {
+    primary: createButtonStyle(
+      'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(59, 130, 246) 50%, rgb(37, 99, 235) 100%)',
+      '#ffffff',
+      'transparent',
+      {
+        backgroundHover: 'linear-gradient(135deg, rgb(147, 197, 253) 0%, rgb(96, 165, 250) 50%, rgb(59, 130, 246) 100%)',
+        shadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
+        shadowHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
+        textTransform: 'uppercase',
+      }
+    ),
+    secondary: createButtonStyle(
+      'linear-gradient(135deg, rgb(71, 85, 105) 0%, rgb(51, 65, 85) 50%, rgb(30, 41, 59) 100%)',
+      '#ffffff',
+      'transparent',
+      {
+        backgroundHover: 'linear-gradient(135deg, rgb(100, 116, 139) 0%, rgb(71, 85, 105) 50%, rgb(51, 65, 85) 100%)',
+        shadow: '0 4px 12px rgba(71, 85, 105, 0.3)',
+        shadowHover: '0 8px 24px rgba(71, 85, 105, 0.4)',
+      }
+    ),
+    outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
+      backgroundHover: 'rgba(59, 130, 246, 0.1)',
+      outline: true,
+      shadow: 'none',
+      shadowHover: '0 4px 12px rgba(59, 130, 246, 0.2)',
+    }),
+    ghost: createButtonStyle('transparent', '#64748b', 'transparent', {
+      backgroundHover: 'rgba(100, 116, 139, 0.1)',
+      shadow: 'none',
+      shadowHover: 'none',
+    }),
+    danger: createButtonStyle('#ef4444', '#ffffff', 'transparent', {
+      backgroundHover: '#dc2626',
+    }),
+    success: createButtonStyle('#22c55e', '#ffffff', 'transparent', {
+      backgroundHover: '#16a34a',
+    }),
+    sizes: {
+      sm: { padding: { x: '1rem', y: '0.5rem' }, fontSize: '0.875rem' },
+      md: { padding: { x: '1.5rem', y: '0.75rem' }, fontSize: '1rem' },
+      lg: { padding: { x: '2rem', y: '1rem' }, fontSize: '1.125rem' },
+    },
+  },
   components: defaultComponents,
   breakpoints: defaultBreakpoints,
   zIndex: defaultZIndex,

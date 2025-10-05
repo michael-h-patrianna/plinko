@@ -3,9 +3,9 @@
  */
 
 import { motion } from 'framer-motion';
-import { useTheme } from '../theme';
 import arrowLeftImg from '../assets/arrow-left.png';
 import arrowRightImg from '../assets/arrow-right.png';
+import { useTheme } from '../theme';
 import { ThemedButton } from './ThemedButton';
 
 interface DropPositionControlsProps {
@@ -85,6 +85,7 @@ export function DropPositionControls({
         {/* Left arrow */}
         <ThemedButton
           onClick={onPrevious}
+          variant="secondary"
           style={{
             width: '48px',
             height: '48px',
@@ -92,9 +93,6 @@ export function DropPositionControls({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `${theme.colors.surface.elevated}e6`,
-            border: `2px solid ${theme.colors.game.ball.primary}60`,
-            boxShadow: `0 4px 12px ${theme.colors.shadows.default}60, 0 0 20px ${theme.colors.game.ball.primary}30`,
           }}
         >
           <img src={arrowLeftImg} alt="Previous" style={{ width: '24px', height: '24px' }} />
@@ -108,9 +106,6 @@ export function DropPositionControls({
             height: '56px',
             fontSize: '18px',
             fontWeight: 700,
-            background: `linear-gradient(135deg, ${theme.colors.game.ball.primary} 0%, ${theme.colors.game.ball.secondary} 100%)`,
-            border: `2px solid ${theme.colors.game.ball.highlight}80`,
-            boxShadow: `0 6px 20px ${theme.colors.game.ball.primary}80, 0 0 30px ${theme.colors.game.ball.primary}50`,
           }}
         >
           START
@@ -119,6 +114,7 @@ export function DropPositionControls({
         {/* Right arrow */}
         <ThemedButton
           onClick={onNext}
+          variant="secondary"
           style={{
             width: '48px',
             height: '48px',
@@ -126,9 +122,6 @@ export function DropPositionControls({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            background: `${theme.colors.surface.elevated}e6`,
-            border: `2px solid ${theme.colors.game.ball.primary}60`,
-            boxShadow: `0 4px 12px ${theme.colors.shadows.default}60, 0 0 20px ${theme.colors.game.ball.primary}30`,
           }}
         >
           <img src={arrowRightImg} alt="Next" style={{ width: '24px', height: '24px' }} />

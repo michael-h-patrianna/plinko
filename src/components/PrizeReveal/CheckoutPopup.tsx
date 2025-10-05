@@ -132,7 +132,15 @@ export function CheckoutPopup({
               onClick={handlePurchase}
               disabled={isPurchasing}
               delay={0.2}
-              className="w-full"
+              className="w-full" style={{
+            minWidth: '120px',
+            height: '56px',
+            fontSize: '18px',
+            fontWeight: 700,
+            background: `linear-gradient(135deg, ${theme.colors.game.ball.primary} 0%, ${theme.colors.game.ball.secondary} 100%)`,
+            border: `2px solid ${theme.colors.game.ball.highlight}80`,
+            boxShadow: `0 4px 12px ${theme.colors.game.ball.primary}80, 0 0 30px ${theme.colors.game.ball.primary}50`,
+          }}
             >
               {isPurchasing ? (
                 <span className="flex items-center justify-center gap-2">

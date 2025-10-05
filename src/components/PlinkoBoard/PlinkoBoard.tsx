@@ -12,21 +12,21 @@
  * @param ballState - Current game state (idle, countdown, dropping, landed, etc.)
  */
 
-import { useMemo, useState, useEffect, useSyncExternalStore } from 'react';
 import { motion } from 'framer-motion';
-import type { PrizeConfig, TrajectoryPoint, GameState } from '../../game/types';
-import { Peg } from './Peg';
-import { Slot } from './Slot';
-import { BorderWall } from './BorderWall';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import type { GameState, PrizeConfig, TrajectoryPoint } from '../../game/types';
+import { useTheme } from '../../theme';
+import { calculateBucketZoneY } from '../../utils/slotDimensions';
 import { Ball } from '../Ball';
 import { BallLauncher } from '../BallLauncher';
-import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
+import { DropPositionControls } from '../DropPositionSelector';
 import { BallLandingImpact } from '../WinAnimations/BallLandingImpact';
 import { SlotAnticipation } from '../WinAnimations/SlotAnticipation';
+import { SlotWinReveal } from '../WinAnimations/SlotWinReveal';
+import { BorderWall } from './BorderWall';
 import { ComboLegend } from './ComboLegend';
-import { calculateBucketZoneY } from '../../utils/slotDimensions';
-import { useTheme } from '../../theme';
-import { DropPositionControls } from '../DropPositionSelector';
+import { Peg } from './Peg';
+import { Slot } from './Slot';
 
 interface FrameStore {
   subscribe: (listener: () => void) => () => void;
@@ -239,7 +239,7 @@ export function PlinkoBoard({
           background: theme.colors.game.board.background || theme.gradients.backgroundCard,
           boxShadow: theme.colors.game.board.shadow || theme.effects.shadows.card,
           border: theme.colors.game.board.border || `1px solid ${theme.colors.border.default}`,
-          borderRadius: theme.colors.game.board.borderRadius || theme.borderRadius.card,
+          borderRadius: boardWidth <= 375 ? '0 0 12px 12px' : (theme.colors.game.board.borderRadius || theme.borderRadius.card),
         }}
         initial={{ opacity: 0, scale: 0.92, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -255,14 +255,16 @@ export function PlinkoBoard({
           side="left"
           width={BORDER_WIDTH}
           hasImpact={currentTrajectoryPoint?.wallHit === 'left'}
+          boardWidth={boardWidth}
         />
         <BorderWall
           side="right"
           width={BORDER_WIDTH}
           hasImpact={currentTrajectoryPoint?.wallHit === 'right'}
+          boardWidth={boardWidth}
         />
-        <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} />
-        <BorderWall side="bottom" width={BORDER_WIDTH} hasImpact={false} offset={10} />
+        <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} boardWidth={boardWidth} />
+
 
         {/* Pegs */}
         <div style={{ opacity: isSelectingPosition ? 0.1 : 1, transition: 'opacity 0.3s ease' }}>

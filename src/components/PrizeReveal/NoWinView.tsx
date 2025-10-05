@@ -7,8 +7,8 @@
  */
 
 import { motion } from 'framer-motion';
-import type { Prize } from '../../game/prizeTypes';
 import noWinImage from '../../assets/nowin.png';
+import type { Prize } from '../../game/prizeTypes';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../ThemedButton';
 
@@ -91,8 +91,13 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
           </motion.div>
 
           {/* Try again button */}
-          <ThemedButton onClick={onClaim} disabled={!canClaim} delay={0.6} className="w-full">
-            Try Again
+          <ThemedButton onClick={onClaim} disabled={!canClaim} delay={0.6} className="w-full" style={{
+            minWidth: '120px',
+            height: '56px',
+            fontSize: '18px',
+            fontWeight: 700,
+          }}>
+            Close
           </ThemedButton>
         </div>
       </motion.div>

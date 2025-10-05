@@ -14,6 +14,7 @@ export interface ButtonStyle {
   borderRadius: string | number;
   color: string;
   colorHover?: string;
+  textTransform?: string;
   shadow: string;
   shadowHover?: string;
   padding: {

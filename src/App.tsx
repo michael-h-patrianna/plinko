@@ -83,15 +83,20 @@ function AppContent() {
     }
   }, [state, viewportWidth]);
 
-  // Trigger screen shake when ball lands
+  // Trigger screen shake when ball lands, reset when returning to idle
   useEffect(() => {
     const isLanded = state === 'landed';
+    const isIdle = state === 'idle';
+
     if (isLanded) {
       setShakeActive(true);
       const timer = setTimeout(() => setShakeActive(false), 500);
       return () => clearTimeout(timer);
+    } else if (isIdle) {
+      // Reset shake state when returning to start screen
+      setShakeActive(false);
     }
-  }, [state]); // Only trigger on landed state, don't cleanup when state changes away
+  }, [state]);
 
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 

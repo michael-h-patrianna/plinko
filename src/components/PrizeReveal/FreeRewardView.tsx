@@ -8,16 +8,16 @@
  */
 
 import { motion } from 'framer-motion';
+import spinsIcon from '../../assets/free-spins.png';
+import gcIcon from '../../assets/gc.png';
+import randomRewardIcon from '../../assets/random_reward.png';
+import scIcon from '../../assets/sc.png';
+import xpIcon from '../../assets/xp.png';
 import type { Prize } from '../../game/prizeTypes';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../ThemedButton';
-import { YouWonText } from '../effects/YouWonText';
 import { CurrencyCounter } from '../effects/CurrencyCounter';
-import gcIcon from '../../assets/gc.png';
-import scIcon from '../../assets/sc.png';
-import spinsIcon from '../../assets/free-spins.png';
-import xpIcon from '../../assets/xp.png';
-import randomRewardIcon from '../../assets/random_reward.png';
+import { YouWonText } from '../effects/YouWonText';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -166,7 +166,12 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: timing.claimButton, duration: 0.3 }}
           >
-            <ThemedButton onClick={onClaim} disabled={!canClaim} className="w-full">
+            <ThemedButton onClick={onClaim} disabled={!canClaim} className="w-full" style={{
+            minWidth: '120px',
+            height: '56px',
+            fontSize: '18px',
+            fontWeight: 700,
+          }}>
               Claim Prize
             </ThemedButton>
           </motion.div>

@@ -4,14 +4,14 @@
  */
 
 import {
-  ThemeSpacing,
-  ThemeButtons,
-  ComponentStyles,
-  ThemeBreakpoints,
-  ThemeZIndex,
-  ThemeBorderRadius,
-  ThemeEffects,
   ButtonStyle,
+  ComponentStyles,
+  ThemeBorderRadius,
+  ThemeBreakpoints,
+  ThemeButtons,
+  ThemeEffects,
+  ThemeSpacing,
+  ThemeZIndex,
 } from './types';
 
 // Default spacing values (in rem/px)
@@ -89,9 +89,9 @@ export const defaultBorderRadius: ThemeBorderRadius = {
   '3xl': '1.5rem',
   full: '9999px',
   // Component specific
-  button: '0.5rem',
+  button: '3px',
   card: '0.75rem',
-  input: '0.375rem',
+  input: '3px',
   modal: '1rem',
   badge: '0.25rem',
   chip: '9999px',
@@ -158,6 +158,7 @@ export function createButtonStyle(
     borderWidth: options.borderWidth || '2px',
     borderRadius: options.borderRadius || defaultBorderRadius.button,
     color,
+    textTransform: options.textTransform || 'none',
     colorHover: options.colorHover,
     shadow: options.shadow || defaultEffects.shadows.button,
     shadowHover: options.shadowHover || defaultEffects.shadows.buttonHover,
@@ -179,11 +180,19 @@ export const defaultButtons: ThemeButtons = {
       backgroundHover: 'linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%)',
       shadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
       shadowHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
+      textTransform: 'uppercase',
     }
   ),
-  secondary: createButtonStyle('#475569', '#ffffff', 'transparent', {
-    backgroundHover: '#64748b',
-  }),
+  secondary: createButtonStyle(
+    'linear-gradient(135deg, #64748b 0%, #475569 50%, #334155 100%)',
+    '#ffffff',
+    'transparent',
+    {
+      backgroundHover: 'linear-gradient(135deg, #94a3b8 0%, #64748b 50%, #475569 100%)',
+      shadow: '0 4px 12px rgba(71, 85, 105, 0.3)',
+      shadowHover: '0 8px 24px rgba(71, 85, 105, 0.4)',
+    }
+  ),
   outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
     backgroundHover: 'rgba(59, 130, 246, 0.1)',
     outline: true,
@@ -231,6 +240,7 @@ export const playFameButtons: ThemeButtons = {
       backgroundHover: 'linear-gradient(180deg, #47d631 0%, #1bee02 100%)',
       borderRadius: '9999px',
       shadow: '0 4px 16px rgba(27, 238, 2, 0.3)',
+      shadowHover: '0 8px 24px rgba(27, 238, 2, 0.4)',
       padding: { x: '2rem', y: '0.875rem' },
       fontWeight: 700,
     }
