@@ -1,0 +1,41 @@
+@keyframes shake-low {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-1px, 0); }
+  20%, 40%, 60%, 80% { transform: translate(1px, 0); }
+}
+
+@keyframes shake-medium {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-2px, -1px); }
+  20%, 40%, 60%, 80% { transform: translate(2px, 1px); }
+}
+
+@keyframes shake-high {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-3px, -2px); }
+  20% { transform: translate(3px, 2px); }
+  30% { transform: translate(-3px, 2px); }
+  40% { transform: translate(3px, -2px); }
+  50% { transform: translate(-3px, -2px); }
+  60% { transform: translate(3px, 2px); }
+  70% { transform: translate(-2px, 1px); }
+  80% { transform: translate(2px, -1px); }
+  90% { transform: translate(-1px, 0); }
+}
+
+.screen-shake {
+  animation-timing-function: cubic-bezier(0.36, 0.07, 0.19, 0.97);
+  animation-fill-mode: both;
+}
+
+.screen-shake--low {
+  animation-name: shake-low;
+}
+
+.screen-shake--medium {
+  animation-name: shake-medium;
+}
+
+.screen-shake--high {
+  animation-name: shake-high;
+}

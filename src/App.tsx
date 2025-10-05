@@ -14,6 +14,7 @@ import { PrizeClaimed } from './components/PrizeClaimed';
 import { DevToolsMenu } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
+import { ScreenShake } from './components/effects/ScreenShake';
 
 /**
  * Main application content component
@@ -24,6 +25,7 @@ function AppContent() {
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(375);
   const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
+  const [shakeActive, setShakeActive] = useState(false);
 
   // Use game hook with the locked board width
   const {
@@ -78,6 +80,15 @@ function AppContent() {
     }
   }, [state, viewportWidth]);
 
+  // Trigger screen shake when ball lands
+  useEffect(() => {
+    if (state === 'landed') {
+      setShakeActive(true);
+      const timer = setTimeout(() => setShakeActive(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [state]);
+
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
   /**
@@ -116,19 +127,20 @@ function AppContent() {
         />
       )}
 
-      {/* Game container */}
-      <div
-        style={{
-          width: isMobile ? '100%' : `${lockedBoardWidth}px`,
-          maxWidth: isMobile ? '414px' : undefined,
-          height: isMobile ? '100vh' : undefined,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: isMobile ? 'center' : undefined,
-          transition: isViewportLocked ? 'none' : 'width 0.3s ease-in-out',
-        }}
-      >
-        <PopupContainer isMobileOverlay={isMobile}>
+      {/* Game container with screen shake */}
+      <ScreenShake active={shakeActive} intensity="medium" duration={400}>
+        <div
+          style={{
+            width: isMobile ? '100%' : `${lockedBoardWidth}px`,
+            maxWidth: isMobile ? '414px' : undefined,
+            height: isMobile ? '100vh' : undefined,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: isMobile ? 'center' : undefined,
+            transition: isViewportLocked ? 'none' : 'width 0.3s ease-in-out',
+          }}
+        >
+          <PopupContainer isMobileOverlay={isMobile}>
           {/* Start screen overlay with smooth exit */}
           <AnimatePresence mode="wait">
             {(state === 'idle' || state === 'ready') && (
@@ -195,8 +207,8 @@ function AppContent() {
             )}
           </AnimatePresence>
         </PopupContainer>
-      </div>
-
+        </div>
+      </ScreenShake>
     </div>
   );
 }

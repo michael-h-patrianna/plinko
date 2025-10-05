@@ -27,6 +27,16 @@ interface TrailPoint {
 export function Ball({ position, state, currentFrame, trajectoryPoint }: BallProps) {
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const { theme } = useTheme();
+  const [slowMoActive, setSlowMoActive] = useState(false);
+
+  // Detect final descent for slow-mo effect (when y > 80% of board height ~400px)
+  useEffect(() => {
+    if (state === 'dropping' && position && position.y > 400) {
+      setSlowMoActive(true);
+    } else {
+      setSlowMoActive(false);
+    }
+  }, [state, position]);
 
   // Calculate squash/stretch based on velocity (Disney principle)
   const { scaleX, scaleY } = useMemo(() => {
@@ -135,7 +145,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           borderRadius: '50%',
           transition: isLaunching
             ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
-            : 'transform 100ms ease-out',
+            : slowMoActive
+              ? 'transform 180ms ease-out'
+              : 'transform 100ms ease-out',
         }}
       />
 
@@ -153,7 +165,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           borderRadius: '50%',
           transition: isLaunching
             ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
-            : 'transform 100ms ease-out',
+            : slowMoActive
+              ? 'transform 180ms ease-out'
+              : 'transform 100ms ease-out',
         }}
       />
 
@@ -181,7 +195,9 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
           borderRadius: '50%',
           transition: isLaunching
             ? 'transform 200ms cubic-bezier(0.34, 1.56, 0.64, 1)'
-            : 'transform 100ms ease-out',
+            : slowMoActive
+              ? 'transform 180ms ease-out'
+              : 'transform 100ms ease-out',
         }}
         data-state={state}
         data-frame={currentFrame}

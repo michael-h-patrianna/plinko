@@ -1,6 +1,7 @@
 /**
- * Free reward reveal view with celebratory animations
- * Displays grid of reward items with staggered entrance animations
+ * Free reward reveal view with quality text animations
+ * Uses premium text effects from animations library for professional celebration
+ * Handles ALL prize types: GC, SC, spins, XP, randomReward
  * @param prize - Prize configuration with free rewards
  * @param onClaim - Callback when user claims the prize
  * @param canClaim - Whether the claim button should be enabled
@@ -10,7 +11,13 @@ import { motion } from 'framer-motion';
 import type { Prize } from '../../game/prizeTypes';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../ThemedButton';
-import { RewardItem } from './RewardItem';
+import { YouWonText } from '../effects/YouWonText';
+import { CurrencyCounter } from '../effects/CurrencyCounter';
+import gcIcon from '../../assets/gc.png';
+import scIcon from '../../assets/sc.png';
+import spinsIcon from '../../assets/free-spins.png';
+import xpIcon from '../../assets/xp.png';
+import randomRewardIcon from '../../assets/random_reward.png';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -24,19 +31,29 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
   const rewards = prize.freeReward;
   if (!rewards) return null;
 
-  // Build reward items array
-  const rewardItems: Array<{
-    type: 'gc' | 'sc' | 'spins' | 'xp' | 'randomReward';
-    amount?: number;
-    xpConfig?: { icon: string; name: string };
-  }> = [];
+  const hasGC = rewards.gc && rewards.gc > 0;
+  const hasSC = rewards.sc && rewards.sc > 0;
+  const hasSpins = rewards.spins && rewards.spins > 0;
+  const hasXP = rewards.xp && rewards.xp.amount > 0;
+  const hasRandomReward = !!rewards.randomReward;
 
-  if (rewards.sc) rewardItems.push({ type: 'sc', amount: rewards.sc });
-  if (rewards.gc) rewardItems.push({ type: 'gc', amount: rewards.gc });
-  if (rewards.spins) rewardItems.push({ type: 'spins', amount: rewards.spins });
-  if (rewards.xp)
-    rewardItems.push({ type: 'xp', amount: rewards.xp.amount, xpConfig: rewards.xp.config });
-  if (rewards.randomReward) rewardItems.push({ type: 'randomReward' });
+  // Choreographed timing - overlapping animations for fluid feel
+  const timing = {
+    cardEntrance: 0,
+    youWonStart: 0.2,
+    rewardsContainerFade: 0.5, // Rewards container fades in while "You Won!" is still animating
+    firstCounterStart: 0.7, // First counter starts counting while text is finishing
+    counterStagger: 150, // Reduced from 300ms - tighter spacing
+    claimButton: 1.2, // Button appears early, overlapping with counters
+  };
+
+  // Calculate counter delays with tight staggering
+  let counterDelay = timing.firstCounterStart * 1000;
+  const getNextCounterDelay = () => {
+    const delay = counterDelay;
+    counterDelay += timing.counterStagger;
+    return delay;
+  };
 
   return (
     <motion.div
@@ -44,70 +61,102 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      transition={{ duration: 0.3 }}
     >
-      {/* Main card with anticipation */}
+      {/* Main card */}
       <motion.div
         className="relative rounded-2xl p-8 max-w-md w-full"
         style={{
           background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
-          boxShadow: `0 4px 12px ${theme.colors.shadows.default}4d`,
+          boxShadow: `0 8px 24px ${theme.colors.shadows.default}66`,
           border: `1px solid ${theme.colors.surface.elevated}66`,
         }}
-        initial={{ scale: 0, rotate: 0, opacity: 0 }}
-        animate={{
-          scale: [0, 0.9, 1.15, 1],
-          rotate: [0, -3, 3, 0],
-          opacity: [0, 1, 1, 1],
-        }}
+        initial={{ scale: 0.8, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
         transition={{
-          duration: 0.5,
-          times: [0, 0.3, 0.7, 1],
+          duration: 0.4,
+          delay: timing.cardEntrance,
           ease: [0.34, 1.56, 0.64, 1],
         }}
       >
         <div role="status" aria-live="polite" className="text-center">
-          {/* Congratulations header with gradient and glow */}
-          <motion.h2
-            className="text-4xl font-extrabold mb-4 relative inline-block"
-            style={{
-              background: theme.gradients.titleGradient || theme.gradients.buttonPrimary,
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-              fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
-
-            }}
-            initial={{ scale: 0, rotate: -5 }}
-            animate={{
-              scale: 1,
-              rotate: 0,
-            }}
-            transition={{
-              duration: 0.35,
-              delay: 0.3,
-              ease: [0.34, 1.56, 0.64, 1],
-            }}
-          >
-            You won!
-          </motion.h2>
-
-          {/* Reward grid */}
+          {/* Epic "You Won!" text */}
           <motion.div
-            className="flex flex-wrap gap-3 justify-center my-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.25, delay: 0.6 }}
+            transition={{ delay: timing.youWonStart, duration: 0.3 }}
           >
-            {rewardItems.map((item, index) => (
-              <RewardItem
-                key={`${item.type}-${index}`}
-                {...item}
-                delay={0.7 + index * 0.1}
-                index={index}
-                totalCount={rewardItems.length}
+            <YouWonText />
+          </motion.div>
+
+          {/* All rewards with counter animations - fades in while YouWon is still animating */}
+          <motion.div
+            className="flex flex-col gap-4 my-8"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: timing.rewardsContainerFade, duration: 0.3 }}
+          >
+            {/* GC Counter */}
+            {hasGC && (
+              <CurrencyCounter
+                targetAmount={rewards.gc!}
+                label="Gold Coins"
+                icon={<img src={gcIcon} alt="GC" />}
+                delay={getNextCounterDelay()}
               />
-            ))}
+            )}
+
+            {/* SC Counter */}
+            {hasSC && (
+              <CurrencyCounter
+                targetAmount={rewards.sc!}
+                label="Sweeps Coins"
+                icon={<img src={scIcon} alt="SC" />}
+                delay={getNextCounterDelay()}
+              />
+            )}
+
+            {/* Free Spins Counter */}
+            {hasSpins && (
+              <CurrencyCounter
+                targetAmount={rewards.spins!}
+                label="Free Spins"
+                icon={<img src={spinsIcon} alt="Free Spins" />}
+                delay={getNextCounterDelay()}
+              />
+            )}
+
+            {/* XP/Collectible Counter */}
+            {hasXP && (
+              <CurrencyCounter
+                targetAmount={rewards.xp!.amount}
+                label={rewards.xp!.config.name}
+                icon={<img src={xpIcon} alt={rewards.xp!.config.name} />}
+                delay={getNextCounterDelay()}
+              />
+            )}
+
+            {/* Random Reward (no counter, just display) */}
+            {hasRandomReward && (
+              <motion.div
+                className="currency-counter"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: getNextCounterDelay() / 1000, duration: 0.4 }}
+              >
+                <div className="currency-counter__icon">
+                  <img src={randomRewardIcon} alt="Random Reward" />
+                </div>
+                <div className="currency-counter__content">
+                  <div className="currency-counter__value-wrapper">
+                    <span className="currency-counter__value">1</span>
+                  </div>
+                  <span className="currency-counter__label">
+                    {rewards.randomReward!.config.name}
+                  </span>
+                </div>
+              </motion.div>
+            )}
           </motion.div>
 
           {/* Description if available */}
@@ -117,16 +166,22 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               style={{ color: theme.colors.text.secondary }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ duration: 0.25, delay: 1 }}
+              transition={{ delay: timing.claimButton, duration: 0.3 }}
             >
               {prize.description}
             </motion.p>
           )}
 
           {/* Claim button */}
-          <ThemedButton onClick={onClaim} disabled={!canClaim} delay={0.5} className="w-full">
-            Claim Prize
-          </ThemedButton>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: timing.claimButton, duration: 0.3 }}
+          >
+            <ThemedButton onClick={onClaim} disabled={!canClaim} className="w-full">
+              Claim Prize
+            </ThemedButton>
+          </motion.div>
         </div>
       </motion.div>
     </motion.div>

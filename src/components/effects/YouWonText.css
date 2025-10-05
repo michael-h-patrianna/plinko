@@ -1,0 +1,76 @@
+.you-won-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80px;
+  padding: 20px;
+  position: relative;
+}
+
+.you-won-text-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  white-space: nowrap;
+}
+
+.you-won-shadow-far {
+  position: absolute;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: rgba(0, 0, 0, 0.08);
+  z-index: 0;
+  transform: scale(1.1);
+  opacity: 0.5;
+  white-space: nowrap;
+}
+
+.you-won-shadow-mid {
+  position: absolute;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  transform: scale(1.05);
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.you-won-main-text {
+  position: relative;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  z-index: 3;
+  perspective: 200px;
+  white-space: nowrap;
+}
+
+.you-won-char {
+  display: inline-block;
+  transform-origin: center center;
+  position: relative;
+  transform-style: preserve-3d;
+}
+
+.you-won-char-inner {
+  display: inline-block;
+  position: relative;
+  /* Color applied via inline style from theme */
+}
+
+.you-won-char-glow {
+  position: absolute;
+  inset: -8px;
+  /* Background applied via inline style from theme */
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.8;
+  transform: scale(1.1);
+}
