@@ -96,7 +96,7 @@ describe('Trajectory Peg Hit Recording', () => {
         let currentConsecutive = 0;
 
         for (let i = 0; i < trajectory.length; i++) {
-          if (trajectory[i].pegHit === true) {
+          if (trajectory[i]!.pegHit === true) {
             currentConsecutive++;
             maxConsecutiveHits = Math.max(maxConsecutiveHits, currentConsecutive);
           } else {

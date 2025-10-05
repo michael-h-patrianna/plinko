@@ -77,8 +77,8 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 1; i < trajectory.length; i++) {
-          const prev = trajectory[i - 1];
-          const curr = trajectory[i];
+          const prev = trajectory[i - 1]!;
+          const curr = trajectory[i]!;
 
           const dx = Math.abs(curr.x - prev.x);
           const dy = Math.abs(curr.y - prev.y);
@@ -109,17 +109,14 @@ describe('Physics Realism Tests', () => {
       });
 
       for (let i = 1; i < trajectory.length; i++) {
-        const prev = trajectory[i - 1];
-        const curr = trajectory[i];
+        const prev = trajectory[i - 1]!;
+        const curr = trajectory[i]!;
 
         // Even collision frames should not jump unreasonably
         const maxAllowedJump = curr.pegHit ? 30 : POSITION_JUMP_THRESHOLD;
         const distance = Math.sqrt(Math.pow(curr.x - prev.x, 2) + Math.pow(curr.y - prev.y, 2));
 
-        expect(distance).toBeLessThan(
-          maxAllowedJump,
-          `Frame ${i}: Distance ${distance.toFixed(1)}px exceeds limit`
-        );
+        expect(distance).toBeLessThan(maxAllowedJump);
       }
     });
   });
@@ -139,8 +136,8 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 1; i < trajectory.length - 1; i++) {
-          const curr = trajectory[i];
-          const next = trajectory[i + 1];
+          const curr = trajectory[i]!;
+          const next = trajectory[i + 1]!;
 
           // Skip collision frames (all types)
           if (
@@ -156,8 +153,8 @@ describe('Physics Realism Tests', () => {
             continue;
 
           // Calculate acceleration
-          const ax = (next.vx - curr.vx) / DT;
-          const ay = (next.vy - curr.vy) / DT;
+          const ax = (next.vx! - curr.vx!) / DT;
+          const ay = (next.vy! - curr.vy!) / DT;
           const totalAccel = Math.sqrt(ax * ax + ay * ay);
 
           if (totalAccel > ACCELERATION_LIMIT) {
@@ -185,15 +182,15 @@ describe('Physics Realism Tests', () => {
       const nonCollisionFrames: number[] = [];
 
       for (let i = 10; i < trajectory.length - 10; i++) {
-        const curr = trajectory[i];
-        const next = trajectory[i + 1];
+        const curr = trajectory[i]!;
+        const next = trajectory[i + 1]!;
 
         // Skip collision frames and their neighbors
         if (curr.pegHit || next.pegHit) continue;
         if (trajectory[i - 1]?.pegHit || trajectory[i + 1]?.pegHit) continue;
 
         // Calculate vertical acceleration
-        const ay = (next.vy - curr.vy) / DT;
+        const ay = (next.vy! - curr.vy!) / DT;
 
         // During free fall, acceleration should be close to gravity
         if (curr.y < BOARD_HEIGHT * 0.6) {
@@ -224,16 +221,16 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 1; i < trajectory.length - 1; i++) {
-          const prev = trajectory[i - 1];
-          const curr = trajectory[i];
+          const prev = trajectory[i - 1]!;
+          const curr = trajectory[i]!;
 
           // Skip collision frames
           if (curr.pegHit || prev.pegHit) continue;
 
           // Calculate kinetic energy (KE = 0.5 * m * v²)
           // Using unit mass, so KE = 0.5 * v²
-          const prevKE = 0.5 * (prev.vx * prev.vx + prev.vy * prev.vy);
-          const currKE = 0.5 * (curr.vx * curr.vx + curr.vy * curr.vy);
+          const prevKE = 0.5 * (prev.vx! * prev.vx! + prev.vy! * prev.vy!);
+          const currKE = 0.5 * (curr.vx! * curr.vx! + curr.vy! * curr.vy!);
 
           // Calculate potential energy (PE = m * g * h)
           // Using unit mass, so PE = g * h
@@ -277,19 +274,16 @@ describe('Physics Realism Tests', () => {
 
       for (const { index } of collisionFrames) {
         if (index > 0 && index < trajectory.length - 1) {
-          const before = trajectory[index - 1];
-          const after = trajectory[index + 1];
+          const before = trajectory[index - 1]!;
+          const after = trajectory[index + 1]!;
 
           // Calculate speeds
-          const speedBefore = Math.sqrt(before.vx * before.vx + before.vy * before.vy);
-          const speedAfter = Math.sqrt(after.vx * after.vx + after.vy * after.vy);
+          const speedBefore = Math.sqrt(before.vx! * before.vx! + before.vy! * before.vy!);
+          const speedAfter = Math.sqrt(after.vx! * after.vx! + after.vy! * after.vy!);
 
           // After collision, speed should generally decrease (energy lost)
           // Allow some increase due to gravity and guidance forces
-          expect(speedAfter).toBeLessThan(
-            speedBefore * 1.5,
-            `Collision at frame ${index} increased speed too much`
-          );
+          expect(speedAfter).toBeLessThan(speedBefore * 1.5);
         }
       }
     });
@@ -310,7 +304,7 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 0; i < trajectory.length; i++) {
-          const point = trajectory[i];
+          const point = trajectory[i]!;
 
           // Check left wall
           if (point.x < BORDER_WIDTH + BALL_RADIUS) {
@@ -348,8 +342,8 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 1; i < trajectory.length; i++) {
-          const prev = trajectory[i - 1];
-          const curr = trajectory[i];
+          const prev = trajectory[i - 1]!;
+          const curr = trajectory[i]!;
 
           // Check line segment from prev to curr against all pegs
           for (const peg of pegs) {
@@ -407,8 +401,8 @@ describe('Physics Realism Tests', () => {
         });
 
         for (let i = 0; i < trajectory.length; i++) {
-          const point = trajectory[i];
-          const speed = Math.sqrt(point.vx * point.vx + point.vy * point.vy);
+          const point = trajectory[i]!;
+          const speed = Math.sqrt(point.vx! * point.vx! + point.vy! * point.vy!);
 
           if (speed > TERMINAL_VELOCITY * 1.1) {
             // 10% tolerance
@@ -434,8 +428,8 @@ describe('Physics Realism Tests', () => {
       });
 
       for (let i = 1; i < trajectory.length; i++) {
-        const prev = trajectory[i - 1];
-        const curr = trajectory[i];
+        const prev = trajectory[i - 1]!;
+        const curr = trajectory[i]!;
 
         // Skip collision frames AND frames near collisions
         // where velocity can change due to bounce effects
@@ -449,21 +443,15 @@ describe('Physics Realism Tests', () => {
         if (isCollision(trajectory[i + 3]) || isCollision(trajectory[i - 3])) continue;
 
         // Velocity change should be limited by acceleration * dt
-        const dvx = Math.abs(curr.vx - prev.vx);
-        const dvy = Math.abs(curr.vy - prev.vy);
+        const dvx = Math.abs(curr.vx! - prev.vx!);
+        const dvy = Math.abs(curr.vy! - prev.vy!);
 
         // Max velocity change per frame (during free fall, not collision)
         const maxDVx = GRAVITY * DT * 15; // Horizontal can change significantly due to damping/spin
         const maxDVy = GRAVITY * DT * 10; // Vertical can accelerate/decelerate
 
-        expect(dvx).toBeLessThan(
-          maxDVx,
-          `Frame ${i}: Horizontal velocity changed by ${dvx.toFixed(1)}px/s`
-        );
-        expect(dvy).toBeLessThan(
-          maxDVy,
-          `Frame ${i}: Vertical velocity changed by ${dvy.toFixed(1)}px/s`
-        );
+        expect(dvx).toBeLessThan(maxDVx);
+        expect(dvy).toBeLessThan(maxDVy);
       }
     });
   });
@@ -484,7 +472,7 @@ describe('Physics Realism Tests', () => {
       let downwardFrames = 0;
 
       for (let i = 1; i < trajectory.length; i++) {
-        const dy = trajectory[i].y - trajectory[i - 1].y;
+        const dy = trajectory[i]!.y - trajectory[i - 1]!.y;
         if (dy < 0) upwardFrames++;
         else if (dy > 0) downwardFrames++;
       }
@@ -508,10 +496,10 @@ describe('Physics Realism Tests', () => {
       let currentSegment: number[] = [];
 
       for (let i = 0; i < trajectory.length; i++) {
-        if (trajectory[i].pegHit && currentSegment.length > 0) {
+        if (trajectory[i]!.pegHit && currentSegment.length > 0) {
           segments.push(currentSegment);
           currentSegment = [];
-        } else if (!trajectory[i].pegHit) {
+        } else if (!trajectory[i]!.pegHit) {
           currentSegment.push(i);
         }
       }
@@ -520,12 +508,12 @@ describe('Physics Realism Tests', () => {
       for (const segment of segments) {
         if (segment.length > 5) {
           // Need enough points to check
-          const vyValues = segment.map((i) => trajectory[i].vy);
+          const vyValues = segment.map((i) => trajectory[i]!.vy!);
 
           // Vertical velocity should generally increase (falling)
           let increasing = 0;
           for (let i = 1; i < vyValues.length; i++) {
-            if (vyValues[i] > vyValues[i - 1]) increasing++;
+            if (vyValues[i]! > vyValues[i - 1]!) increasing++;
           }
 
           // Most frames should show increasing vy (gravity effect)

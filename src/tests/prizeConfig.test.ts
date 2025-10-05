@@ -2,6 +2,9 @@
  * Comprehensive tests for prize configurations
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { describe, it, expect } from 'vitest';
 import {
   MOCK_PRIZES,
@@ -148,10 +151,10 @@ describe('Prize Set Generation', () => {
     it('should include backward-compatible fields', () => {
       const prizes = generateProductionPrizeSet(5);
       prizes.forEach((prize, index) => {
-        expect(prize, `Prize ${index}`).toHaveProperty('label');
-        expect(prize, `Prize ${index}`).toHaveProperty('color');
-        expect(prize.label, `Prize ${index} label`).toBe(prize.title);
-        expect(prize.color, `Prize ${index} color`).toBe(prize.slotColor);
+        expect(prize, `Prize ${index}`).toHaveProperty('title');
+        expect(prize, `Prize ${index}`).toHaveProperty('slotColor');
+        expect((prize as any).label, `Prize ${index} label`).toBe(prize.title);
+        expect((prize as any).color, `Prize ${index} color`).toBe(prize.slotColor);
       });
     });
 

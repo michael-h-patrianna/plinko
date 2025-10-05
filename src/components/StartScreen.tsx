@@ -192,15 +192,15 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                         ease: 'easeInOut',
                       }}
                     >
-                      {prizeReward.sc && <div>• Free SC: {abbreviateNumber(prizeReward.sc)}</div>}
-                      {prizeReward.gc && <div>• GC: {abbreviateNumber(prizeReward.gc)}</div>}
-                      {prizeReward.spins && <div>• Free Spins: {prizeReward.spins}</div>}
-                      {prizeReward.xp && (
+                      {prizeReward?.sc && <div>• Free SC: {abbreviateNumber(prizeReward.sc)}</div>}
+                      {prizeReward?.gc && <div>• GC: {abbreviateNumber(prizeReward.gc)}</div>}
+                      {prizeReward?.spins && <div>• Free Spins: {prizeReward.spins}</div>}
+                      {prizeReward?.xp && (
                         <div>
                           • {prizeReward.xp.config.name}: {abbreviateNumber(prizeReward.xp.amount)}
                         </div>
                       )}
-                      {prizeReward.randomReward && <div>• Bronze Wheel</div>}
+                      {prizeReward?.randomReward && <div>• Bronze Wheel</div>}
                     </motion.div>
                   )}
                 </AnimatePresence>

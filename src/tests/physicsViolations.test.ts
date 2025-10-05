@@ -68,8 +68,8 @@ describe('Physics Violations Detection', () => {
 
         // Check each frame for peg violations
         for (let i = 1; i < trajectory.length; i++) {
-          const prevFrame = trajectory[i - 1];
-          const currFrame = trajectory[i];
+          const prevFrame = trajectory[i - 1]!;
+          const currFrame = trajectory[i]!;
 
           // Check if ball path intersects with any peg
           for (const peg of pegs) {
@@ -101,13 +101,7 @@ describe('Physics Violations Detection', () => {
                   COLLISION_RADIUS
                 );
 
-                expect(pathCrossesPeg).toBe(
-                  false,
-                  `Ball passed through peg at (${peg.x}, ${peg.y}) without collision ` +
-                    `between frames ${i - 1} and ${i}. ` +
-                    `Ball moved from (${prevFrame.x.toFixed(1)}, ${prevFrame.y.toFixed(1)}) ` +
-                    `to (${currFrame.x.toFixed(1)}, ${currFrame.y.toFixed(1)})`
-                );
+                expect(pathCrossesPeg).toBe(false);
               }
             }
           }
@@ -134,7 +128,7 @@ describe('Physics Violations Detection', () => {
 
         // Check frames in bucket zone
         for (let i = 1; i < trajectory.length; i++) {
-          const currFrame = trajectory[i];
+          const currFrame = trajectory[i]!;
 
           // Only check frames in bucket zone
           if (currFrame.y < bucketZoneY) continue;
@@ -150,25 +144,17 @@ describe('Physics Violations Detection', () => {
               Math.abs(currFrame.x - (targetSlot + 1) * slotWidth)
             );
 
-            expect(distToTargetSlot).toBeLessThanOrEqual(
-              BALL_RADIUS,
-              `Ball center at x=${currFrame.x.toFixed(1)} is in slot ${ballSlot} ` +
-                `but should be in slot ${targetSlot}. Frame ${i}, y=${currFrame.y.toFixed(1)}`
-            );
+            expect(distToTargetSlot).toBeLessThanOrEqual(BALL_RADIUS);
           }
 
           // Check for wall crossing
-          const prevFrame = trajectory[i - 1];
+          const prevFrame = trajectory[i - 1]!;
           if (prevFrame.y >= bucketZoneY) {
             const prevSlot = Math.floor(prevFrame.x / slotWidth);
 
             // If ball jumped slots, it passed through a wall
             if (Math.abs(prevSlot - ballSlot) > 1) {
-              expect(Math.abs(prevSlot - ballSlot)).toBeLessThanOrEqual(
-                1,
-                `Ball jumped from slot ${prevSlot} to slot ${ballSlot} in one frame, ` +
-                  `passing through wall(s). Frame ${i}`
-              );
+              expect(Math.abs(prevSlot - ballSlot)).toBeLessThanOrEqual(1);
             }
           }
         }
@@ -194,7 +180,7 @@ describe('Physics Violations Detection', () => {
       // Skip initial rest frames
       let startIdx = 0;
       for (let i = 0; i < trajectory.length - 1; i++) {
-        if (trajectory[i].vx !== 0 || trajectory[i].vy !== 0) {
+        if (trajectory[i]!.vx !== 0 || trajectory[i]!.vy !== 0) {
           startIdx = i;
           break;
         }
@@ -202,8 +188,8 @@ describe('Physics Violations Detection', () => {
 
       // Check acceleration between frames
       for (let i = startIdx + 1; i < trajectory.length - 1; i++) {
-        const prevFrame = trajectory[i - 1];
-        const currFrame = trajectory[i];
+        const prevFrame = trajectory[i - 1]!;
+        const currFrame = trajectory[i]!;
 
         // Skip collision frames as they have instant velocity changes
         if (
@@ -215,34 +201,22 @@ describe('Physics Violations Detection', () => {
           continue;
 
         // Calculate acceleration
-        const ax = (currFrame.vx - prevFrame.vx) / dt;
-        const ay = (currFrame.vy - prevFrame.vy) / dt;
+        const ax = (currFrame.vx! - prevFrame.vx!) / dt;
+        const ay = (currFrame.vy! - prevFrame.vy!) / dt;
         const totalAccel = Math.sqrt(ax * ax + ay * ay);
 
         // After last peg row, acceleration should be mostly gravity
         if (currFrame.y > bucketZoneY && prevFrame.y > bucketZoneY) {
           // In bucket zone - should be mostly free fall with minimal horizontal guidance
           // Allow 50% tolerance for damping/air resistance effects
-          expect(Math.abs(ay - GRAVITY)).toBeLessThan(
-            GRAVITY * 0.5,
-            `Unnatural vertical acceleration in bucket zone: ${ay.toFixed(0)} px/s² ` +
-              `(expected ~${GRAVITY} px/s²) at frame ${i}, y=${currFrame.y.toFixed(1)}`
-          );
+          expect(Math.abs(ay - GRAVITY)).toBeLessThan(GRAVITY * 0.5);
 
           // Horizontal acceleration should be minimal (just gentle guidance)
-          expect(Math.abs(ax)).toBeLessThan(
-            500,
-            `Excessive horizontal acceleration in bucket zone: ${ax.toFixed(0)} px/s² ` +
-              `at frame ${i}, y=${currFrame.y.toFixed(1)}`
-          );
+          expect(Math.abs(ax)).toBeLessThan(500);
         }
 
         // Overall acceleration should never be too extreme
-        expect(totalAccel).toBeLessThan(
-          maxRealisticAcceleration * 2,
-          `Unrealistic total acceleration: ${totalAccel.toFixed(0)} px/s² ` +
-            `at frame ${i}, y=${currFrame.y.toFixed(1)}`
-        );
+        expect(totalAccel).toBeLessThan(maxRealisticAcceleration * 2);
       }
     });
 
@@ -259,13 +233,13 @@ describe('Physics Violations Detection', () => {
       // Find last peg hit
       let lastPegHitIdx = -1;
       for (let i = trajectory.length - 1; i >= 0; i--) {
-        if (trajectory[i].pegHit) {
+        if (trajectory[i]!.pegHit) {
           lastPegHitIdx = i;
           break;
         }
       }
 
-      expect(lastPegHitIdx).toBeGreaterThan(0, 'Should have at least one peg hit');
+      expect(lastPegHitIdx).toBeGreaterThan(0);
 
       // Check velocity profile after last peg
       const framesAfterLastPeg = trajectory.slice(lastPegHitIdx + 1);
@@ -276,22 +250,18 @@ describe('Physics Violations Detection', () => {
 
       for (let i = 1; i < framesAfterLastPeg.length - 30; i++) {
         // Skip settling frames
-        const prevFrame = framesAfterLastPeg[i - 1];
-        const currFrame = framesAfterLastPeg[i];
+        const prevFrame = framesAfterLastPeg[i - 1]!;
+        const currFrame = framesAfterLastPeg[i]!;
 
         totalFrames++;
-        if (currFrame.vy >= prevFrame.vy) {
+        if (currFrame.vy! >= prevFrame.vy!) {
           increasingVyCount++;
         }
       }
 
       // At least 70% of frames should show increasing vertical velocity (falling)
       const increasingRatio = increasingVyCount / totalFrames;
-      expect(increasingRatio).toBeGreaterThan(
-        0.7,
-        `Only ${(increasingRatio * 100).toFixed(1)}% of frames show increasing vertical velocity ` +
-          `after last peg. Expected natural free fall.`
-      );
+      expect(increasingRatio).toBeGreaterThan(0.7);
     });
   });
 });

@@ -123,8 +123,8 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
         let teleportationCount = 0;
 
         for (let i = 1; i < trajectory.length; i++) {
-          const prev = trajectory[i - 1];
-          const curr = trajectory[i];
+          const prev = trajectory[i - 1]!;
+          const curr = trajectory[i]!;
 
           const dx = curr.x - prev.x;
           const dy = curr.y - prev.y;
@@ -185,7 +185,7 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
             seed: 22222 + targetSlot,
           });
 
-          const finalPoint = trajectory[trajectory.length - 1];
+          const finalPoint = trajectory[trajectory.length - 1]!;
 
           // Calculate which slot the ball landed in
           const playableWidth = width - BORDER_WIDTH * 2;
@@ -222,9 +222,9 @@ describe('Trajectory Generation - Mobile Viewport Sizes', () => {
       const traj = trajectories[i];
 
       // Compare a sample of positions (frame 50 if exists)
-      if (firstTraj.length > 50 && traj.length > 50) {
-        const pos1 = firstTraj[50];
-        const pos2 = traj[50];
+      if (firstTraj!.length > 50 && traj!.length > 50) {
+        const pos1 = firstTraj![50]!;
+        const pos2 = traj![50]!;
 
         if (Math.abs(pos1.x - pos2.x) > 1 || Math.abs(pos1.y - pos2.y) > 1) {
           allIdentical = false;

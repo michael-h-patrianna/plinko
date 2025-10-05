@@ -373,9 +373,9 @@ describe('StartScreen Component', () => {
 
   it('should expand combo prizes when clicked', () => {
     const comboPrize: PrizeConfig = {
-      ...MOCK_PRIZES[0],
+      ...MOCK_PRIZES[0]!,
       id: 'combo',
-      type: 'free',
+      type: 'free' as const,
       label: 'Combo Prize',
       freeReward: {
         sc: 100,
@@ -410,8 +410,8 @@ describe('PrizeReveal Component', () => {
 
   it('should render NoWinView for no_win prize type', () => {
     const noWinPrize: PrizeConfig = {
-      ...MOCK_PRIZES[0],
-      type: 'no_win',
+      ...MOCK_PRIZES[0]!,
+      type: 'no_win' as const,
       title: 'Better Luck',
       description: 'Try again!',
     };
@@ -425,11 +425,12 @@ describe('PrizeReveal Component', () => {
 
   it('should render PurchaseOfferView for purchase prize type', () => {
     const purchasePrize: PrizeConfig = {
-      ...MOCK_PRIZES[0],
-      type: 'purchase',
+      ...MOCK_PRIZES[0]!,
+      type: 'purchase' as const,
       title: '200% Bonus',
       description: 'Special offer!',
       purchaseOffer: {
+        offerId: 'test-offer',
         title: '200% Bonus',
         description: '$29.99',
       },
@@ -444,8 +445,8 @@ describe('PrizeReveal Component', () => {
 
   it('should render FreeRewardView for free prize type', () => {
     const freePrize: PrizeConfig = {
-      ...MOCK_PRIZES[0],
-      type: 'free',
+      ...MOCK_PRIZES[0]!,
+      type: 'free' as const,
       title: 'Free Reward',
       description: 'You won!',
       freeReward: {
@@ -462,8 +463,8 @@ describe('PrizeReveal Component', () => {
 
   it('should pass canClaim prop correctly', () => {
     const prize: PrizeConfig = {
-      ...MOCK_PRIZES[0],
-      type: 'free',
+      ...MOCK_PRIZES[0]!,
+      type: 'free' as const,
       freeReward: { sc: 100 },
     };
 
@@ -480,7 +481,7 @@ describe('PrizeReveal Component', () => {
 // ============================================================================
 describe('PrizeClaimed Component', () => {
   const mockOnClose = vi.fn();
-  const mockPrize = MOCK_PRIZES[0];
+  const mockPrize = MOCK_PRIZES[0]!;
 
   beforeEach(() => {
     mockOnClose.mockClear();
@@ -518,7 +519,7 @@ describe('PrizeClaimed Component', () => {
 // Slot Component Tests
 // ============================================================================
 describe('Slot Component', () => {
-  const mockPrize = MOCK_PRIZES[0];
+  const mockPrize = MOCK_PRIZES[0]!;
 
   it('should render slot', () => {
     render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
@@ -595,7 +596,7 @@ describe('Slot Component', () => {
   });
 
   it('should render icon when prize has slotIcon', () => {
-    const prizeWithIcon = {
+    const prizeWithIcon: PrizeConfig = {
       ...mockPrize,
       slotIcon: '/test-icon.png',
     };
@@ -904,7 +905,7 @@ describe('ThemeSelector Component', () => {
     const buttons = screen.getAllByRole('button');
 
     if (buttons.length > 1) {
-      fireEvent.click(buttons[1]);
+      fireEvent.click(buttons[1]!);
       // Theme should switch (testing via theme context)
       expect(buttons[1]).toBeInTheDocument();
     }

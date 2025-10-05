@@ -29,7 +29,7 @@ describe('End Phase Trajectory Analysis', () => {
       // Find frames after last peg row
       const endPhaseFrames = trajectory.filter((p) => p.y >= lastPegRowY);
       const afterLastPeg = endPhaseFrames[0];
-      const finalFrame = trajectory[trajectory.length - 1];
+      const finalFrame = trajectory[trajectory.length - 1]!;
 
       // Calculate target slot position
       const slotWidth = BOARD_WIDTH / SLOT_COUNT;
@@ -59,8 +59,8 @@ describe('End Phase Trajectory Analysis', () => {
       if (endPhaseFrames.length > 1) {
         const endPhaseMovement = [];
         for (let i = 1; i < endPhaseFrames.length; i++) {
-          const dx = endPhaseFrames[i].x - endPhaseFrames[i - 1].x;
-          const dy = endPhaseFrames[i].y - endPhaseFrames[i - 1].y;
+          const dx = endPhaseFrames[i]!.x - endPhaseFrames[i - 1]!.x;
+          const dy = endPhaseFrames[i]!.y - endPhaseFrames[i - 1]!.y;
           const speed = Math.sqrt(dx * dx + dy * dy);
           endPhaseMovement.push({ dx, dy, speed });
         }

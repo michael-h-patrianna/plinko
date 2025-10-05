@@ -4,6 +4,7 @@
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '../utils/prizeUtils';
@@ -22,7 +23,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 1',
           slotIcon: '',
@@ -30,7 +31,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 2',
           slotIcon: '',
@@ -38,7 +39,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 3',
           slotIcon: '',
@@ -53,7 +54,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.333333,
           title: 'Prize 1',
           slotIcon: '',
@@ -61,7 +62,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.333333,
           title: 'Prize 2',
           slotIcon: '',
@@ -69,7 +70,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.333334,
           title: 'Prize 3',
           slotIcon: '',
@@ -84,7 +85,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.2,
           title: 'Prize 1',
           slotIcon: '',
@@ -92,7 +93,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 2',
           slotIcon: '',
@@ -100,7 +101,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 3',
           slotIcon: '',
@@ -117,7 +118,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 1',
           slotIcon: '',
@@ -125,7 +126,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 2',
           slotIcon: '',
@@ -133,7 +134,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 3',
           slotIcon: '',
@@ -150,7 +151,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 1',
           slotIcon: '',
@@ -158,7 +159,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 2',
           slotIcon: '',
@@ -186,7 +187,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 1',
           slotIcon: '',
@@ -194,7 +195,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 2',
           slotIcon: '',
@@ -202,7 +203,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 3',
           slotIcon: '',
@@ -239,7 +240,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 1',
           slotIcon: '',
@@ -247,7 +248,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 2',
           slotIcon: '',
@@ -255,7 +256,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 3',
           slotIcon: '',
@@ -272,7 +273,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: -0.5,
           title: 'Prize 1',
           slotIcon: '',
@@ -280,7 +281,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 1.0,
           title: 'Prize 2',
           slotIcon: '',
@@ -288,7 +289,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 3',
           slotIcon: '',
@@ -303,7 +304,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 1000,
           title: 'Prize 1',
           slotIcon: '',
@@ -311,7 +312,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: -998,
           title: 'Prize 2',
           slotIcon: '',
@@ -319,7 +320,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: -1,
           title: 'Prize 3',
           slotIcon: '',
@@ -405,7 +406,7 @@ describe('prizeUtils', () => {
     });
 
     it('should handle single element array', () => {
-      const singlePrize = [prizes[0]];
+      const singlePrize = [prizes[0]!];
       expect(getPrizeByIndex(singlePrize, 0)).toBe(prizes[0]);
       expect(() => getPrizeByIndex(singlePrize, 1)).toThrow(/Prize index 1 out of range \[0, 0\]/);
     });
@@ -416,11 +417,11 @@ describe('prizeUtils', () => {
       }
       const extendedPrizes: ExtendedPrize[] = [
         {
-          ...prizes[0],
+          ...prizes[0]!,
           customField: 'custom1',
         },
         {
-          ...prizes[1],
+          ...prizes[1]!,
           customField: 'custom2',
         },
       ];
@@ -435,7 +436,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 1.0,
           title: 'Prize 1',
           slotIcon: '',
@@ -443,7 +444,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 2',
           slotIcon: '',
@@ -451,7 +452,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 3',
           slotIcon: '',
@@ -461,9 +462,9 @@ describe('prizeUtils', () => {
 
       const normalized = normalizeProbabilities(prizes);
 
-      expect(normalized[0].probability).toBe(0.5);
-      expect(normalized[1].probability).toBe(0.25);
-      expect(normalized[2].probability).toBe(0.25);
+      expect(normalized[0]!.probability).toBe(0.5);
+      expect(normalized[1]!.probability).toBe(0.25);
+      expect(normalized[2]!.probability).toBe(0.25);
       expect(normalized.reduce((sum, p) => sum + p.probability, 0)).toBeCloseTo(1.0);
     });
 
@@ -471,7 +472,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.1,
           title: 'Prize 1',
           slotIcon: '',
@@ -479,7 +480,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.2,
           title: 'Prize 2',
           slotIcon: '',
@@ -487,7 +488,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.2,
           title: 'Prize 3',
           slotIcon: '',
@@ -497,9 +498,9 @@ describe('prizeUtils', () => {
 
       const normalized = normalizeProbabilities(prizes);
 
-      expect(normalized[0].probability).toBe(0.2);
-      expect(normalized[1].probability).toBe(0.4);
-      expect(normalized[2].probability).toBe(0.4);
+      expect(normalized[0]!.probability).toBe(0.2);
+      expect(normalized[1]!.probability).toBe(0.4);
+      expect(normalized[2]!.probability).toBe(0.4);
       expect(normalized.reduce((sum, p) => sum + p.probability, 0)).toBeCloseTo(1.0);
     });
 
@@ -507,7 +508,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 1',
           slotIcon: '',
@@ -515,7 +516,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.4,
           title: 'Prize 2',
           slotIcon: '',
@@ -523,7 +524,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.3,
           title: 'Prize 3',
           slotIcon: '',
@@ -533,16 +534,16 @@ describe('prizeUtils', () => {
 
       const normalized = normalizeProbabilities(prizes);
 
-      expect(normalized[0].probability).toBeCloseTo(0.3);
-      expect(normalized[1].probability).toBeCloseTo(0.4);
-      expect(normalized[2].probability).toBeCloseTo(0.3);
+      expect(normalized[0]!.probability).toBeCloseTo(0.3);
+      expect(normalized[1]!.probability).toBeCloseTo(0.4);
+      expect(normalized[2]!.probability).toBeCloseTo(0.3);
     });
 
     it('should throw error when total probability is zero', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 1',
           slotIcon: '',
@@ -550,7 +551,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 2',
           slotIcon: '',
@@ -558,7 +559,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0,
           title: 'Prize 3',
           slotIcon: '',
@@ -573,7 +574,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 1.0,
           title: 'Prize 1',
           slotIcon: '',
@@ -581,7 +582,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: -0.5,
           title: 'Prize 2',
           slotIcon: '',
@@ -589,7 +590,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: -0.5,
           title: 'Prize 3',
           slotIcon: '',
@@ -605,7 +606,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 1.0,
           title: 'Prize 1',
           description: 'Description 1',
@@ -624,25 +625,25 @@ describe('prizeUtils', () => {
 
       const normalized = normalizeProbabilities(prizes);
 
-      expect(normalized[0].id).toBe('p1');
-      expect(normalized[0].type).toBe('free');
-      expect(normalized[0].title).toBe('Prize 1');
-      expect(normalized[0].description).toBe('Description 1');
-      expect(normalized[0].slotIcon).toBe('icon1.png');
-      expect(normalized[0].slotColor).toBe('#FF0000');
+      expect(normalized[0]!.id).toBe('p1');
+      expect(normalized[0]!.type).toBe('free');
+      expect(normalized[0]!.title).toBe('Prize 1');
+      expect(normalized[0]!.description).toBe('Description 1');
+      expect(normalized[0]!.slotIcon).toBe('icon1.png');
+      expect(normalized[0]!.slotColor).toBe('#FF0000');
 
-      expect(normalized[1].id).toBe('p2');
-      expect(normalized[1].type).toBe('purchase');
-      expect(normalized[1].title).toBe('Prize 2');
-      expect(normalized[1].slotIcon).toBe('icon2.png');
-      expect(normalized[1].slotColor).toBe('#00FF00');
+      expect(normalized[1]!.id).toBe('p2');
+      expect(normalized[1]!.type).toBe('purchase');
+      expect(normalized[1]!.title).toBe('Prize 2');
+      expect(normalized[1]!.slotIcon).toBe('icon2.png');
+      expect(normalized[1]!.slotColor).toBe('#00FF00');
     });
 
     it('should create new array and not modify original', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 1',
           slotIcon: '',
@@ -650,7 +651,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 2',
           slotIcon: '',
@@ -658,7 +659,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.5,
           title: 'Prize 3',
           slotIcon: '',
@@ -669,9 +670,9 @@ describe('prizeUtils', () => {
       const originalProbs = prizes.map((p) => p.probability);
       const normalized = normalizeProbabilities(prizes);
 
-      expect(prizes[0].probability).toBe(originalProbs[0]);
-      expect(prizes[1].probability).toBe(originalProbs[1]);
-      expect(prizes[2].probability).toBe(originalProbs[2]);
+      expect(prizes[0]!.probability).toBe(originalProbs[0]);
+      expect(prizes[1]!.probability).toBe(originalProbs[1]);
+      expect(prizes[2]!.probability).toBe(originalProbs[2]);
       expect(normalized).not.toBe(prizes);
     });
 
@@ -684,7 +685,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.0000001,
           title: 'Prize 1',
           slotIcon: '',
@@ -692,7 +693,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.0000002,
           title: 'Prize 2',
           slotIcon: '',
@@ -700,7 +701,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 0.0000003,
           title: 'Prize 3',
           slotIcon: '',
@@ -718,7 +719,7 @@ describe('prizeUtils', () => {
       const prizes: PrizeConfig[] = [
         {
           id: 'p1',
-          type: 'free',
+          type: 'free' as const,
           probability: 1000000,
           title: 'Prize 1',
           slotIcon: '',
@@ -726,7 +727,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p2',
-          type: 'free',
+          type: 'free' as const,
           probability: 2000000,
           title: 'Prize 2',
           slotIcon: '',
@@ -734,7 +735,7 @@ describe('prizeUtils', () => {
         },
         {
           id: 'p3',
-          type: 'free',
+          type: 'free' as const,
           probability: 3000000,
           title: 'Prize 3',
           slotIcon: '',
@@ -746,26 +747,26 @@ describe('prizeUtils', () => {
       const sum = normalized.reduce((acc, p) => acc + p.probability, 0);
 
       expect(sum).toBeCloseTo(1.0);
-      expect(normalized[0].probability).toBeCloseTo(1 / 6);
-      expect(normalized[1].probability).toBeCloseTo(2 / 6);
-      expect(normalized[2].probability).toBeCloseTo(3 / 6);
+      expect(normalized[0]!.probability).toBeCloseTo(1 / 6);
+      expect(normalized[1]!.probability).toBeCloseTo(2 / 6);
+      expect(normalized[2]!.probability).toBeCloseTo(3 / 6);
     });
   });
 });
 
 describe('deviceDetection', () => {
   // Store original values - cast to unknown first to avoid error typed values
-  const originalNavigator = global.navigator as unknown as Navigator;
-  const originalWindow = global.window as unknown as Window & typeof globalThis;
+  const originalNavigator = globalThis.navigator as unknown as Navigator;
+  const originalWindow = globalThis.window as unknown as Window & typeof globalThis;
 
   beforeEach(() => {
     // Reset navigator and window for each test
-    global.navigator = {
+    globalThis.navigator = {
       userAgent: '',
       maxTouchPoints: 0,
     } as unknown as Navigator;
 
-    global.window = {
+    globalThis.window = {
       innerWidth: 1024,
       ontouchstart: undefined,
     } as unknown as Window & typeof globalThis;
@@ -773,14 +774,14 @@ describe('deviceDetection', () => {
 
   afterEach(() => {
     // Restore original values
-    (global as { navigator: Navigator }).navigator = originalNavigator;
-    (global as { window: Window & typeof globalThis }).window = originalWindow;
+    (globalThis as any).navigator = originalNavigator;
+    (globalThis as any).window = originalWindow;
     vi.restoreAllMocks();
   });
 
   describe('isMobileDevice', () => {
     it('should return true for iPhone user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
         configurable: true,
       });
@@ -789,7 +790,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for iPad user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPad; CPU OS 14_0 like Mac OS X)',
         configurable: true,
       });
@@ -798,7 +799,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for Android user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Linux; Android 10)',
         configurable: true,
       });
@@ -807,7 +808,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for iPod user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPod touch; CPU iPhone OS 14_0)',
         configurable: true,
       });
@@ -816,7 +817,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for BlackBerry user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (BlackBerry)',
         configurable: true,
       });
@@ -825,7 +826,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for IEMobile user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows Phone; IEMobile)',
         configurable: true,
       });
@@ -834,7 +835,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for Opera Mini user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Opera/9.80 (J2ME/MIDP; Opera Mini)',
         configurable: true,
       });
@@ -843,7 +844,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for WebOS user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (webOS/1.4.0)',
         configurable: true,
       });
@@ -852,7 +853,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return false for desktop user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         configurable: true,
       });
@@ -861,15 +862,15 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for touch device with width <= 768', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         configurable: true,
       });
-      Object.defineProperty(global.navigator, 'maxTouchPoints', {
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 5,
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 768,
         configurable: true,
       });
@@ -878,15 +879,15 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for touch device with width < 768', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         configurable: true,
       });
-      Object.defineProperty(global.navigator, 'maxTouchPoints', {
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 5,
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 375,
         configurable: true,
       });
@@ -895,15 +896,15 @@ describe('deviceDetection', () => {
     });
 
     it('should return false for touch device with width > 768', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         configurable: true,
       });
-      Object.defineProperty(global.navigator, 'maxTouchPoints', {
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 5,
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 1024,
         configurable: true,
       });
@@ -912,15 +913,15 @@ describe('deviceDetection', () => {
     });
 
     it('should return true for ontouchstart property', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'ontouchstart', {
+      Object.defineProperty(globalThis.window, 'ontouchstart', {
         value: null,
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 768,
         configurable: true,
       });
@@ -929,7 +930,7 @@ describe('deviceDetection', () => {
     });
 
     it('should handle case-insensitive user agent matching', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'MOZILLA/5.0 (IPHONE; CPU IPHONE OS 14_0)',
         configurable: true,
       });
@@ -938,11 +939,11 @@ describe('deviceDetection', () => {
     });
 
     it('should return false for non-mobile, non-touch device', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
-      Object.defineProperty(global.navigator, 'maxTouchPoints', {
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 0,
         configurable: true,
       });
@@ -951,7 +952,7 @@ describe('deviceDetection', () => {
     });
 
     it('should return false for empty user agent', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: '',
         configurable: true,
       });
@@ -960,16 +961,16 @@ describe('deviceDetection', () => {
     });
 
     it('should return false when maxTouchPoints is 0 and ontouchstart is undefined', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
-      Object.defineProperty(global.navigator, 'maxTouchPoints', {
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 0,
         configurable: true,
       });
       // Explicitly ensure ontouchstart is not in window
-      delete (global.window as Record<string, unknown>).ontouchstart;
+      delete (globalThis.window as any).ontouchstart;
 
       expect(isMobileDevice()).toBe(false);
     });
@@ -991,11 +992,11 @@ describe('deviceDetection', () => {
 
   describe('getResponsiveViewportWidth', () => {
     it('should return window width for desktop device', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 1920,
         configurable: true,
       });
@@ -1004,11 +1005,11 @@ describe('deviceDetection', () => {
     });
 
     it('should return capped width for mobile device with width > max', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 500,
         configurable: true,
       });
@@ -1017,11 +1018,11 @@ describe('deviceDetection', () => {
     });
 
     it('should return actual width for mobile device with width < max', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 375,
         configurable: true,
       });
@@ -1030,11 +1031,11 @@ describe('deviceDetection', () => {
     });
 
     it('should return max width for mobile device with width = max', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 414,
         configurable: true,
       });
@@ -1043,11 +1044,11 @@ describe('deviceDetection', () => {
     });
 
     it('should handle very small mobile width', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 320,
         configurable: true,
       });
@@ -1056,11 +1057,11 @@ describe('deviceDetection', () => {
     });
 
     it('should handle very large desktop width', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 3840,
         configurable: true,
       });
@@ -1069,11 +1070,11 @@ describe('deviceDetection', () => {
     });
 
     it('should handle zero width gracefully', () => {
-      Object.defineProperty(global.navigator, 'userAgent', {
+      Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
-      Object.defineProperty(global.window, 'innerWidth', {
+      Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 0,
         configurable: true,
       });

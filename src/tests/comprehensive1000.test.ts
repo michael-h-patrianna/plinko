@@ -120,8 +120,8 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       const REST_FRAMES = 15; // Initial rest period is expected
 
       for (let i = REST_FRAMES + 1; i < trajectory.length; i++) {
-        const prev = trajectory[i - 1];
-        const curr = trajectory[i];
+        const prev = trajectory[i - 1]!;
+        const curr = trajectory[i]!;
 
         // Skip if in bucket zone (settling is expected)
         if (curr.y >= slotTopY) continue;
@@ -159,8 +159,8 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
       let maxFramesWithoutCollision = 0;
 
       for (let i = 1; i < trajectory.length; i++) {
-        const prev = trajectory[i - 1];
-        const curr = trajectory[i];
+        const prev = trajectory[i - 1]!;
+        const curr = trajectory[i]!;
 
         const dx = curr.x - prev.x;
         const dy = curr.y - prev.y;
@@ -232,7 +232,7 @@ describe('Comprehensive 1000-Trajectory Validation', () => {
 
       // Validation 7: Ball should not go outside board bounds
       for (let i = 0; i < trajectory.length; i++) {
-        const point = trajectory[i];
+        const point = trajectory[i]!;
         if (point.x < 0 || point.x > BOARD_WIDTH) {
           errors.push(
             `Ball went outside board horizontally at frame ${i}: x=${point.x.toFixed(1)}px`

@@ -3,14 +3,14 @@
  * Tests ThemeContext, ThemeProvider, useTheme hook, theme persistence, and theme structures
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from './testUtils';
 import { renderHook, act } from '@testing-library/react';
 import { ReactNode } from 'react';
-import { ThemeProvider, useTheme, useThemeValue, type ThemeContextType } from '../theme';
+import { ThemeProvider, useTheme, useThemeValue } from '../theme';
 import type { Theme } from '../theme/types';
 import { defaultTheme } from '../theme/themes/defaultTheme';
 import { playFameTheme } from '../theme/themes/playFameTheme';
@@ -105,7 +105,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), {
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), {
         wrapper,
       });
 
@@ -121,7 +121,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), {
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), {
         wrapper,
       });
 
@@ -150,7 +150,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -170,7 +170,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -190,7 +190,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('Default');
 
@@ -212,7 +212,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       act(() => {
         result.current.switchTheme('PlayFame');
@@ -232,7 +232,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       // Wait for useEffect to run and load from localStorage
       await waitFor(() => {
@@ -248,7 +248,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.name).toBe('PlayFame');
     });
@@ -263,7 +263,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       // Should remain as initial theme
       await waitFor(() => {
@@ -295,7 +295,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<{ theme: ThemeContextType; name: string }, unknown>(
+      const { result } = renderHook<{ theme: ReturnType<typeof useTheme>; name: string }, unknown>(
         () => {
           const theme = useTheme();
           const name = useThemeValue('name');
@@ -502,7 +502,7 @@ describe('Theme System', () => {
         if (value === null || value === undefined) {
           errors.push(`${currentPath} is ${value}`);
         } else if (typeof value === 'object' && !Array.isArray(value)) {
-          errors.push(...validateObject(value, currentPath, optionalPaths));
+          errors.push(...validateObject(value as any, currentPath, optionalPaths));
         }
       }
 
@@ -568,17 +568,17 @@ describe('Theme System', () => {
     ];
 
     it('Default theme should have no undefined/null required values', () => {
-      const errors = validateObject(defaultTheme, '', optionalPaths);
+      const errors = validateObject(defaultTheme as any, '', optionalPaths);
       expect(errors).toEqual([]);
     });
 
     it('PlayFame theme should have no undefined/null required values', () => {
-      const errors = validateObject(playFameTheme, '', optionalPaths);
+      const errors = validateObject(playFameTheme as any, '', optionalPaths);
       expect(errors).toEqual([]);
     });
 
     it('Dark Blue theme should have no undefined/null required values', () => {
-      const errors = validateObject(darkBlueTheme, '', optionalPaths);
+      const errors = validateObject(darkBlueTheme as any, '', optionalPaths);
       expect(errors).toEqual([]);
     });
   });
@@ -592,7 +592,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       // Initial state
       expect(result.current.theme.colors.primary.main).toBe(defaultTheme.colors.primary.main);
@@ -627,7 +627,7 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const { result } = renderHook<ThemeContextType, unknown>(() => useTheme(), { wrapper });
+      const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       expect(result.current.theme.colors.game.ball.primary).toBe(
         defaultTheme.colors.game.ball.primary

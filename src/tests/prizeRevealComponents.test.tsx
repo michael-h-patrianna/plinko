@@ -182,8 +182,9 @@ describe('FreeRewardView Component', () => {
   const freePrize: PrizeConfig = {
     id: 'test-free',
     probability: 0.5,
+    slotIcon: '',
     slotColor: '#00ff00',
-    type: 'free',
+    type: 'free' as const,
     title: 'Free Reward',
     description: 'You won a free reward!',
     freeReward: {
@@ -269,16 +270,15 @@ describe('PurchaseOfferView Component', () => {
   const purchasePrize: PrizeConfig = {
     id: 'test-purchase',
     probability: 0.3,
+    slotIcon: '',
     slotColor: '#ff0000',
-    type: 'purchase',
+    type: 'purchase' as const,
     title: 'Special Offer',
     description: '200% Bonus Package',
     purchaseOffer: {
+      offerId: 'test-purchase',
       title: '200% Bonus',
       description: '$29.99',
-    },
-    freeReward: {
-      gc: 1000,
     },
   };
 
@@ -361,8 +361,9 @@ describe('NoWinView Component', () => {
   const noWinPrize: PrizeConfig = {
     id: 'test-nowin',
     probability: 0.2,
+    slotIcon: '',
     slotColor: '#888888',
-    type: 'no_win',
+    type: 'no_win' as const,
     title: 'Better Luck Next Time',
     description: 'Keep trying!',
   };

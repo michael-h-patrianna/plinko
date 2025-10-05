@@ -2,6 +2,10 @@
  * Component tests for PlinkoBoard
  */
 
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { describe, it, expect } from 'vitest';
 import { render, screen } from './testUtils';
 import { PlinkoBoard } from '../components/PlinkoBoard/PlinkoBoard';
@@ -67,7 +71,7 @@ describe('PlinkoBoard Component', () => {
     render(<PlinkoBoard {...defaultProps} />);
 
     for (const prize of MOCK_PRIZES) {
-      expect(screen.getByText(prize.label)).toBeInTheDocument();
+      expect(screen.getByText((prize as any).label || prize.title)).toBeInTheDocument();
     }
   });
 });
