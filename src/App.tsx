@@ -87,7 +87,7 @@ function AppContent() {
       const timer = setTimeout(() => setShakeActive(false), 500);
       return () => clearTimeout(timer);
     }
-  }, [state]);
+  }, [state === 'landed']); // Only trigger on landed state, don't cleanup when state changes away
 
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 

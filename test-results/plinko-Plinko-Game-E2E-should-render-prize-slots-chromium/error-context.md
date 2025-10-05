@@ -10,16 +10,22 @@
       - heading "Available Prizes" [level=2] [ref=e12]
       - generic [ref=e13]:
         - generic [ref=e15]:
-          - generic [ref=e16]: SC 500
-          - generic [ref=e17]: 19%
+          - generic [ref=e16]: SC 250
+          - generic [ref=e17]: 20%
         - generic [ref=e19]:
-          - generic [ref=e20]: 10 Free Spins
-          - generic [ref=e21]: 75%
+          - generic [ref=e20]: GC 5k
+          - generic [ref=e21]: 50%
         - generic [ref=e23] [cursor=pointer]:
           - generic [ref=e24] [cursor=pointer]:
             - text: Mega Combo!
             - generic [ref=e25] [cursor=pointer]: ▶
-          - generic [ref=e26] [cursor=pointer]: 6%
+          - generic [ref=e26] [cursor=pointer]: 3%
+        - generic [ref=e28]:
+          - generic [ref=e29]: 200% Special Offer
+          - generic [ref=e30]: 17%
+        - generic [ref=e32]:
+          - generic [ref=e33]: SC 500
+          - generic [ref=e34]: 10%
     - button "Drop Ball":
       - generic: Drop Ball
 ```

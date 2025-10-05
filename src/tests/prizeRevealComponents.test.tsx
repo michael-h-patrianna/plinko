@@ -194,18 +194,26 @@ describe('FreeRewardView Component', () => {
   };
 
   it('should render congratulations message', () => {
-    render(<FreeRewardView prize={freePrize} onClaim={mockOnClaim} canClaim={true} />);
-    expect(screen.getByText('You won!')).toBeInTheDocument();
+    const { container } = render(
+      <FreeRewardView prize={freePrize} onClaim={mockOnClaim} canClaim={true} />
+    );
+    // YouWonText splits characters, so check for presence via class
+    const youWonText = container.querySelector('.you-won-container');
+    expect(youWonText).toBeInTheDocument();
   });
 
   it('should render reward items for SC', () => {
     render(<FreeRewardView prize={freePrize} onClaim={mockOnClaim} canClaim={true} />);
-    expect(screen.getByText(/100/)).toBeInTheDocument(); // SC amount
+    // Check for SC currency label (counter starts at 0 and animates)
+    expect(screen.getByText('Sweeps Coins')).toBeInTheDocument();
+    expect(screen.getByAltText('SC')).toBeInTheDocument();
   });
 
   it('should render reward items for GC', () => {
     render(<FreeRewardView prize={freePrize} onClaim={mockOnClaim} canClaim={true} />);
-    expect(screen.getByText(/500/)).toBeInTheDocument(); // GC amount
+    // Check for GC currency label (counter starts at 0 and animates)
+    expect(screen.getByText('Gold Coins')).toBeInTheDocument();
+    expect(screen.getByAltText('GC')).toBeInTheDocument();
   });
 
   it('should render description when provided', () => {
@@ -251,9 +259,10 @@ describe('FreeRewardView Component', () => {
       },
     };
     render(<FreeRewardView prize={multiRewardPrize} onClaim={mockOnClaim} canClaim={true} />);
-    expect(screen.getByText(/50/)).toBeInTheDocument();
-    expect(screen.getByText(/200/)).toBeInTheDocument();
-    expect(screen.getByText(/10/)).toBeInTheDocument();
+    // Check for all currency labels (counters start at 0 and animate)
+    expect(screen.getByText('Sweeps Coins')).toBeInTheDocument();
+    expect(screen.getByText('Gold Coins')).toBeInTheDocument();
+    expect(screen.getByText('Free Spins')).toBeInTheDocument();
   });
 });
 

@@ -468,6 +468,7 @@ function runSimulation(
 /**
  * Main trajectory generation function
  * Generates a random trajectory and returns which slot it landed in
+ * Uses brute-force retry to ensure ball never gets stuck
  * The caller is responsible for rearranging prizes to match the landing slot
  */
 export function generateTrajectory(params: {
@@ -481,40 +482,63 @@ export function generateTrajectory(params: {
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
 
-  // Use the seed to create random but reproducible initial conditions
-  const rng = createRng(seed);
+  // BRUTE-FORCE: Keep trying different initialization parameters until we get a valid trajectory
+  // This ensures the ball NEVER gets stuck - we just keep trying until physics works properly
+  const maxAttempts = 50000; // Same as before to ensure high success rate
 
-  // Ball starts near center with small random offset
-  const centerX = boardWidth / 2;
-  const microOffset = (rng.next() - 0.5) * 5; // -2.5 to +2.5 px random offset
-  const startX = centerX + microOffset;
-  const startVx = 0; // Ball drops from rest
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    // Ball ALWAYS starts near center with ZERO velocity - realistic drop
+    const centerX = boardWidth / 2;
 
-  // Random bounce randomness for variety
-  const bounceRandomness = 0.2 + rng.next() * 0.6; // 0.2 to 0.8 range
+    // Microscopic variations that are imperceptible but change entire trajectory
+    // Use different patterns to explore the space efficiently
+    const pattern = attempt % 7;
+    let microOffset: number;
+    if (pattern === 0)
+      microOffset = 0; // Dead center
+    else if (pattern === 1)
+      microOffset = 1.5; // Slightly right
+    else if (pattern === 2)
+      microOffset = -1.5; // Slightly left
+    else if (pattern === 3) microOffset = 2.5;
+    else if (pattern === 4) microOffset = -2.5;
+    else if (pattern === 5)
+      microOffset = Math.sin(attempt * 0.618) * 2; // Sine wave pattern
+    else microOffset = Math.cos(attempt * 1.414) * 2; // Cosine wave pattern
 
-  const simulationParams: SimulationParams = {
-    startX,
-    startVx,
-    bounceRandomness,
-  };
+    const startX = centerX + microOffset;
+    const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
 
-  // Run simulation once with the random parameters
-  const simulationSeed = seed * 65537;
-  const { trajectory, landedSlot } = runSimulation(
-    simulationParams,
-    boardWidth,
-    boardHeight,
-    pegs,
-    slotCount,
-    simulationSeed
-  );
+    // Vary bounce randomness systematically
+    const bounceRandomness = 0.2 + ((attempt % 100) / 100) * 0.6; // 0.2 to 0.8 range
 
-  // Validate that we got a valid landing slot
-  if (landedSlot < 0 || landedSlot >= slotCount) {
-    console.error(`Invalid landing slot: ${landedSlot} (expected 0-${slotCount - 1})`);
-    throw new Error(`Simulation resulted in invalid landing slot: ${landedSlot}`);
+    const simulationParams: SimulationParams = {
+      startX,
+      startVx,
+      bounceRandomness,
+    };
+
+    // Run deterministic simulation
+    const simulationSeed = seed * 65537 + attempt * 31337;
+    const { trajectory, landedSlot } = runSimulation(
+      simulationParams,
+      boardWidth,
+      boardHeight,
+      pegs,
+      slotCount,
+      simulationSeed
+    );
+
+    // Check if we got a valid landing slot (ball didn't get stuck)
+    if (landedSlot >= 0 && landedSlot < slotCount) {
+      // Success! First valid trajectory - accept whatever slot it landed in
+      return { trajectory, landedSlot };
+    }
+
+    // Ball got stuck (landedSlot === -1), try again with different initialization
   }
 
-  return { trajectory, landedSlot };
+  // This should never happen with proper parameter generation
+  console.error(`Failed to generate valid trajectory after ${maxAttempts} attempts`);
+  throw new Error(`Could not generate valid trajectory after ${maxAttempts} attempts`);
 }

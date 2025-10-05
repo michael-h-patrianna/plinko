@@ -136,31 +136,14 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               />
             )}
 
-            {/* Random Reward (no counter, just display) */}
+            {/* Random Reward - Use CurrencyCounter for consistent styling */}
             {hasRandomReward && (
-              <motion.div
-                className="currency-counter"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: getNextCounterDelay() / 1000, duration: 0.4 }}
-              >
-                <div className="currency-counter__icon">
-                  <img src={randomRewardIcon} alt="Random Reward" />
-                </div>
-                <div className="currency-counter__content">
-                  <div className="currency-counter__value-wrapper">
-                    <span
-                      className="currency-counter__value"
-                      style={{ color: theme.colors.text.primary }}
-                    >
-                      1
-                    </span>
-                  </div>
-                  <span className="currency-counter__label">
-                    {rewards.randomReward!.config.name}
-                  </span>
-                </div>
-              </motion.div>
+              <CurrencyCounter
+                targetAmount={1}
+                label={rewards.randomReward!.config.name}
+                icon={<img src={randomRewardIcon} alt="Random Reward" />}
+                delay={getNextCounterDelay()}
+              />
             )}
           </motion.div>
 
