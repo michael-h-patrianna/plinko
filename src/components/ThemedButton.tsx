@@ -19,6 +19,7 @@ interface ThemedButtonProps {
   delay?: number;
   children: React.ReactNode;
   testId?: string;
+  style?: React.CSSProperties;
 }
 
 export function ThemedButton({
@@ -28,6 +29,7 @@ export function ThemedButton({
   delay = 0,
   children,
   testId,
+  style,
 }: ThemedButtonProps) {
   const { theme } = useTheme();
 
@@ -50,6 +52,7 @@ export function ThemedButton({
         transition: theme.buttons.primary.transition,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.5 : 1,
+        ...style,
       }}
       whileHover={
         !disabled

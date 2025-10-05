@@ -180,19 +180,17 @@ describe('Drop Position Game Flow Integration', () => {
   describe('Error handling', () => {
     it('should throw error if invalid event sent to selecting-position state', () => {
       expect(() => {
-        // @ts-expect-error - Testing invalid event type
         transition('selecting-position', mockContext, {
           type: 'COUNTDOWN_COMPLETED',
-        });
+        } as any);
       }).toThrow();
     });
 
     it('should throw error if invalid event sent to ready state', () => {
       expect(() => {
-        // @ts-expect-error - Testing invalid event type
         transition('ready', mockContext, {
           type: 'LANDING_COMPLETED',
-        });
+        } as any);
       }).toThrow();
     });
   });

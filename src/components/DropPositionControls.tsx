@@ -85,7 +85,6 @@ export function DropPositionControls({
         {/* Left arrow */}
         <ThemedButton
           onClick={onPrevious}
-          variant="outline"
           style={{
             width: '48px',
             height: '48px',
@@ -104,7 +103,6 @@ export function DropPositionControls({
         {/* Start button */}
         <ThemedButton
           onClick={onConfirm}
-          variant="primary"
           style={{
             minWidth: '120px',
             height: '56px',
@@ -121,7 +119,6 @@ export function DropPositionControls({
         {/* Right arrow */}
         <ThemedButton
           onClick={onNext}
-          variant="outline"
           style={{
             width: '48px',
             height: '48px',
