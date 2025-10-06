@@ -51,6 +51,56 @@ plinko/
 
 ---
 
+## Configuration and Prize Delivery
+
+Deterministic behaviour is coordinated through a root `AppConfig` object exposed via `AppConfigProvider`. Hosts can override feature flags or supply a custom prize provider while the default configuration keeps local demos running out of the box.
+
+### PrizeProvider Contract
+
+Prize data flows through a `PrizeProvider` interface defined in `src/game/prizeProvider.ts`:
+
+```typescript
+export interface PrizeProviderContext {
+  seedOverride?: number;
+  requestId?: string;
+}
+
+export interface PrizeProviderResult {
+  prizes: PrizeConfig[];
+  winningIndex: number;
+  seed: number;
+  source: 'default' | 'fixture' | 'remote';
+}
+
+export interface PrizeProvider {
+  load(context?: PrizeProviderContext): Promise<PrizeProviderResult>;
+  loadSync?(context?: PrizeProviderContext): PrizeProviderResult;
+}
+```
+
+- `load` must resolve with a fully validated session. Throwing inside the body will be surfaced to callers as a rejected promise.
+- `loadSync` is optional and enables SSR/bootstrap hydration. When present, `usePlinkoGame` consumes it for immediate render before the async refresh lands.
+- All payloads are validated with Zod schemas to ensure prize types, free reward structures, and winning indices are consistent.
+
+### Default Implementation
+
+`createDefaultPrizeProvider()` wraps the legacy `createValidatedProductionPrizeSet()` helper. It deterministically selects a winner via `selectPrize()` using either the provided `seedOverride` or a generated seed. Both `load` and `loadSync` delegate to the same synchronous `buildDefaultSession()` implementation, guaranteeing identical results between execution paths.
+
+When prize generation fails (for example, by requesting an out-of-range prize count), the provider normalises thrown values into `Error` instances and rejects the async loader so React hooks can surface meaningful UI messages.
+
+### Hook Integration
+
+`usePlinkoGame` now depends solely on the provider for prize data. The hook:
+
+1. Attempts synchronous hydration via `loadSync` (if available) when the component mounts or when a reset occurs.
+2. Always triggers an async `load` request, updating state when the promise resolves.
+3. Captures any thrown error and exposes it through `prizeLoadError` for UI components.
+4. Feeds the validated prize session into the trajectory generator, swapping prize order when the physics landing slot differs from the server-selected index.
+
+This separation keeps deterministic prize selection server-authoritative while preserving the realistic animation system.
+
+---
+
 ## Physics Engine
 
 The physics engine (`src/game/trajectory.ts`) is the heart of the application. It simulates realistic ball physics while ensuring deterministic outcomes.

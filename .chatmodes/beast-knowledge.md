@@ -1,29 +1,26 @@
 # Knowledge Log
 
 ## Assumptions
-- A1 (medium confidence): User wants a comprehensive implementation roadmap without modifying source code yet.
-- A2 (high confidence): Priorities P0–P3 correspond to the table in `docs/codereview.md`, each needing detailed implementation sequencing.
-- A3 (high confidence): Task requires transforming existing roadmap into a checkbox-based tracker without altering underlying priorities.
-- A4 (medium confidence): Tasks should be executed in listed order unless dependencies dictate otherwise.
+- A1 (high confidence): Cross-cutting prep remains complete; current sprint targets closing P0.1 gaps before tackling P0.2/P0.3.
+- A2 (high confidence): Manual edits introducing sync provider bootstrapping are authoritative and should be preserved while hardening behaviour/tests.
+- A3 (medium confidence): Production launch requires documentation updates before P0.1 may be marked done.
+- A4 (medium confidence): Provider load failures should surface to UI via `prizeLoadError`; existing hook plumbing suffices if tests are added.
 
 ## Decisions
-- D1: Proceed with planning documentation-only updates since task focuses on outlining steps.
-- D2: Document roadmap in `docs/implementation-roadmap.md` to maintain a durable reference for execution.
-- D3: Modify the existing roadmap file instead of creating a new document to keep single source of truth.
-- D4: Use Sequential Thinking MCP for non-trivial tasks to plan implementation steps before coding.
-- D5: Introduced `AppConfig` context/provider to centralize feature flags and prize provider hooks, enabling future overrides.
+- D1: Retain Zod-driven validation and expand tests to assert both success and error branches for provider loaders.
+- D2: Leave `usePlinkoGame` trajectory shuffling in place temporarily; revisit once deterministic trajectory work (P0.2) begins.
+- D3: Update roadmap/documentation within this cycle to reflect finished provider work rather than deferring to later phases.
+- D4: Capture provider usage contract in README/architecture docs as part of acceptance criteria sign-off.
+- D5: React act warnings in hook tests are noise but tolerated for now; address when adjusting test harness (tracked under future P2.3).
+- D6: Remaining P0.1 scope is limited to normalising `createValidatedProductionPrizeSet` counts, scheduled for the next iteration.
 
-## Context Notes
-- User supplied latest `docs/codereview.md` capturing current findings and updated recommendations.
-- Request explicitly requires using Sequential Thinking MCP to structure the plan.
-- Roadmap enumerating actionable steps for P0–P3 now lives in `docs/implementation-roadmap.md`.
-- Roadmap converted into checkbox-based task list to support progress tracking.
-- Config audit captured in `docs/audits/config-framework-audit.md` to inform upcoming framework work.
-- AppConfig infrastructure lives in `src/config/appConfig.ts`, context provider in `src/config/AppConfigContext.tsx`, and is wired via `src/main.tsx`.
-- README now documents how to override `AppConfig` for host applications.
-- Deterministic fixtures created under `src/tests/fixtures/` (seeds, prize sets, trajectories) for the new test harness.
-- Vitest lifecycle now resets mocks via `src/tests/setupTests.ts` leveraging `resetHarnessState()` from `src/tests/fixtures/harness.ts`.
-- CI commands route through deterministic runners (`scripts/run-vitest.mjs`, `scripts/run-playwright.mjs`) ensuring fixture-driven env vars propagate during automated tests.
+- Provider implementation lives in `src/game/prizeProvider.ts` with `load` and `loadSync`; hook consumes sessions and reshuffles prizes to match trajectory.
+- `createDefaultPrizeProvider` now normalises thrown errors to rejected promises; tests exercise both success and failure paths.
+- `productionPrizeTable` still exposes optional count parameter—remaining roadmap item is to remove randomised counts at the source.
+- Hook maintains `prizeLoadError` but lacks assertions; we added provider-level tests and will extend hook coverage later if needed.
+- Documentation and roadmap updated this cycle to describe the provider contract and mark completed tasks.
+- Deterministic harness command `node ./scripts/run-vitest.mjs run ...` remains the preferred execution path for suites.
 
 ## Sources
-- S1: `docs/codereview.md` (provided attachment).
+- S1: `docs/implementation-roadmap.md` (current focus).
+- S2: `src/game/prizeProvider.ts`, `src/hooks/usePlinkoGame.ts` (manual edits reviewed this cycle).

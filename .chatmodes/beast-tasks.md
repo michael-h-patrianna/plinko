@@ -1,13 +1,21 @@
-# Phase Plan
+# Phase Plan & Progress
 
 ## Phase 1 – Understand & Plan
-- [✓] Confirm execution order for checklist tasks (top-to-bottom with prerequisites).
-- [✓] Capture assumptions/constraints for implementation wave in `.chatmodes/beast-knowledge.md`.
+- [✓] Re-ingest latest manual edits in provider/config/hook modules.
+- [✓] Align roadmap milestones with current code state and outstanding gaps.
+- [✓] Define concrete work items to close P0.1 prize provider acceptance criteria.
 
 ## Phase 2 – Implement Solution
-- [ ] Execute checklist items sequentially, updating `docs/implementation-roadmap.md` statuses as tasks complete.
-- [ ] Perform code/documentation updates required for each completed task.
+- [✓] **Task A – Prize Provider Completion Checks**
+	- [✓] Audit all prize usages to ensure they consume the provider session output.
+	- [✓] Ensure `selectPrize` RNG is only used inside provider layer and document reasoning.
+	- [✓] Backfill tests covering `createDefaultPrizeProvider` happy path and failure modes.
+- [✓] **Task B – Documentation + Roadmap Sync**
+	- [✓] Update `README.md` and `docs/architecture.md` with provider integration guidance.
+	- [✓] Reflect progress in `docs/implementation-roadmap.md` P0.1 checklist.
+	- [✓] Capture any new operational notes for integrators.
 
 ## Phase 3 – Validate & Iterate
-- [ ] After each task, validate against acceptance criteria and update logs.
-- [ ] Decide whether to continue to next task or iterate on failures.
+- [✓] Run targeted Vitest suites and typecheck; expand to full run if clean.
+- [✓] Validate outcomes against `.chatmodes/beast-prd.md` acceptance criteria.
+- [⚠️] Determine if another iteration is required (<=3 total cycles).

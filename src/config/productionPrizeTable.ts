@@ -2,20 +2,21 @@
  * Production prize table with realistic prize configurations
  */
 
-import type { Prize } from '../game/prizeTypes';
-import {
-  validatePrizeSet,
-  getPrizeByIndex as getPrizeByIndexUtil,
-  normalizeProbabilities,
-} from '../utils/prizeUtils';
-import scIcon from '../assets/sc.png';
+import freeSpinsIcon from '../assets/free-spins.png';
 import gcIcon from '../assets/gc.png';
 import gcscIcon from '../assets/gcsc.png';
-import xpIcon from '../assets/xp.png';
+import noWinIcon from '../assets/nowin.png';
 import offerIcon from '../assets/offer.png';
 import randomRewardIcon from '../assets/random_reward.png';
-import freeSpinsIcon from '../assets/free-spins.png';
-import noWinIcon from '../assets/nowin.png';
+import scIcon from '../assets/sc.png';
+import xpIcon from '../assets/xp.png';
+import type { Prize } from '../game/prizeTypes';
+import { createRng, generateSeed } from '../game/rng';
+import {
+  getPrizeByIndex as getPrizeByIndexUtil,
+  normalizeProbabilities,
+  validatePrizeSet,
+} from '../utils/prizeUtils';
 
 /**
  * Prize pool for production use
@@ -231,19 +232,43 @@ function addBackwardCompatFields(
   };
 }
 
+export const DEFAULT_PRODUCTION_PRIZE_COUNT = 6;
+
+export interface ProductionPrizeSetOptions {
+  count?: number;
+  seed?: number;
+}
+
+function getShuffleSeed(seed?: number): number {
+  if (typeof seed === 'number' && Number.isFinite(seed)) {
+    return seed;
+  }
+  return generateSeed();
+}
+
 /**
- * Generates a random prize set with 3-8 prizes from the pool
+ * Generates a prize set with deterministic shuffle support
  * Ensures probabilities sum to 1.0
  */
-export function generateProductionPrizeSet(count?: number): Prize[] {
-  // Use provided count or random 3-8
-  const prizeCount = count ?? Math.floor(Math.random() * 6) + 3;
+export function generateProductionPrizeSet(options: ProductionPrizeSetOptions = {}): Prize[] {
+  const { count = DEFAULT_PRODUCTION_PRIZE_COUNT, seed } = options;
 
-  // Shuffle and select
-  const shuffled = [...PRODUCTION_PRIZE_POOL].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, prizeCount);
+  if (count < 3 || count > 8) {
+    throw new Error(`Production prize set count must be between 3 and 8 (received ${count}).`);
+  }
 
-  // Normalize probabilities using shared utility and add backward-compatible fields
+  const shuffleSeed = getShuffleSeed(seed);
+  const rng = createRng(shuffleSeed);
+  const pool = [...PRODUCTION_PRIZE_POOL];
+
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(rng.next() * (i + 1));
+    const temp = pool[i]!;
+    pool[i] = pool[j]!;
+    pool[j] = temp;
+  }
+
+  const selected = pool.slice(0, count);
   const normalized = normalizeProbabilities(selected);
   return normalized.map((prize) => addBackwardCompatFields(prize));
 }
@@ -251,8 +276,10 @@ export function generateProductionPrizeSet(count?: number): Prize[] {
 /**
  * Creates and validates a prize set
  */
-export function createValidatedProductionPrizeSet(count?: number): Prize[] {
-  const prizes = generateProductionPrizeSet(count);
+export function createValidatedProductionPrizeSet(
+  options: ProductionPrizeSetOptions = {}
+): Prize[] {
+  const prizes = generateProductionPrizeSet(options);
   validatePrizeSet(prizes);
   return prizes;
 }

@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAppConfig } from '../config/AppConfigContext';
 import type { ChoiceMechanic } from '../dev-tools';
+import type { PrizeProviderResult } from '../game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '../game/stateMachine';
 import { generateTrajectory } from '../game/trajectory';
 import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig } from '../game/types';
@@ -45,8 +46,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   } = options;
   const { prizeProvider } = useAppConfig();
 
-  // Generate random prize set for each game session
-  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => prizeProvider.createPrizeSet());
+  const [sessionKey, setSessionKey] = useState(0);
+  const [loadError, setLoadError] = useState<Error | null>(null);
 
   const [gameState, dispatch] = useReducer(gameReducer, {
     state: 'idle',
@@ -74,56 +75,116 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     []
   );
 
+  const resolveSeedOverride = useCallback((): number | undefined => {
+    if (typeof seedOverride === 'number') {
+      return seedOverride;
+    }
+
+    if (typeof window === 'undefined') {
+      return undefined;
+    }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlSeed = urlParams.get('seed');
+    if (!urlSeed) {
+      return undefined;
+    }
+
+    const parsed = Number.parseInt(urlSeed, 10);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }, [seedOverride]);
+
+  const initialSyncSession = useMemo(() => {
+    if (typeof prizeProvider.loadSync !== 'function') {
+      return null;
+    }
+
+    try {
+      const initialSeed = resolveSeedOverride();
+      return prizeProvider.loadSync({ seedOverride: initialSeed });
+    } catch (error) {
+      console.error('Failed to synchronously load prize session', error);
+      return null;
+    }
+  }, [prizeProvider, resolveSeedOverride]);
+
+  const [prizeSession, setPrizeSession] = useState<PrizeProviderResult | null>(initialSyncSession);
+  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => initialSyncSession?.prizes ?? []);
+  const [isLoadingSession, setIsLoadingSession] = useState(!initialSyncSession);
+
   // Initialize game: select prize and generate trajectory
   // Only run once on mount or when game is explicitly reset to idle
   const hasInitialized = useRef(false);
 
   useEffect(() => {
-    if (gameState.state === 'idle' && !hasInitialized.current) {
+    let cancelled = false;
+    const finalSeedOverride = resolveSeedOverride();
+
+    if (!initialSyncSession || sessionKey > 0) {
+      setIsLoadingSession(true);
+    }
+    setLoadError(null);
+
+    prizeProvider
+      .load({ seedOverride: finalSeedOverride })
+      .then((result) => {
+        if (cancelled) {
+          return;
+        }
+        hasInitialized.current = false;
+        setPrizeSession(result);
+        setPrizes(result.prizes);
+        setIsLoadingSession(false);
+      })
+      .catch((error: unknown) => {
+        console.error('Failed to load prize session', error);
+        if (cancelled) {
+          return;
+        }
+        setPrizeSession(null);
+        setPrizes([]);
+        setLoadError(error instanceof Error ? error : new Error('Failed to load prizes'));
+        setIsLoadingSession(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSyncSession, prizeProvider, resolveSeedOverride, sessionKey]);
+
+  useEffect(() => {
+    if (prizeSession && gameState.state === 'idle' && !hasInitialized.current) {
       hasInitialized.current = true;
 
-      // Read seed from URL query params if available
-      const urlParams = new URLSearchParams(window.location.search);
-      const urlSeed = urlParams.get('seed');
-      const finalSeed = seedOverride ?? (urlSeed ? parseInt(urlSeed, 10) : undefined);
-
-      // NEW APPROACH: Generate trajectory first (random landing slot)
-      const { selectedIndex: winningPrizeIndex, seedUsed } = prizeProvider.selectPrize(
-        prizes,
-        finalSeed
-      );
-
+      const sessionPrizes = [...prizeSession.prizes];
       const { trajectory, landedSlot } = generateTrajectory({
         boardWidth,
         boardHeight,
         pegRows,
-        slotCount: prizes.length,
-        seed: seedUsed,
+        slotCount: sessionPrizes.length,
+        seed: prizeSession.seed,
       });
 
-      // Rearrange prizes: swap winning prize to landed slot position
-      const rearrangedPrizes = [...prizes];
-      if (landedSlot !== winningPrizeIndex) {
-        // Swap: put winning prize in landed slot, move landed slot prize to winning position
+      const winningIndex = prizeSession.winningIndex;
+      const rearrangedPrizes = [...sessionPrizes];
+      if (landedSlot !== winningIndex) {
         const temp = rearrangedPrizes[landedSlot]!;
-        rearrangedPrizes[landedSlot] = rearrangedPrizes[winningPrizeIndex]!;
-        rearrangedPrizes[winningPrizeIndex] = temp;
+        rearrangedPrizes[landedSlot] = rearrangedPrizes[winningIndex]!;
+        rearrangedPrizes[winningIndex] = temp;
       }
 
-      // Update prizes state with rearranged array
       setPrizes(rearrangedPrizes);
 
-      // The winning prize is now at landedSlot position
       const prize = rearrangedPrizes[landedSlot]!;
 
       dispatch({
         type: 'INITIALIZE',
-        payload: { selectedIndex: landedSlot, trajectory, prize, seed: seedUsed },
+        payload: { selectedIndex: landedSlot, trajectory, prize, seed: prizeSession.seed },
       });
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
     }
-  }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes, prizeProvider]);
+  }, [boardWidth, boardHeight, pegRows, gameState.state, prizeSession, dispatch]);
 
   // Track if animation is already running
   const landingTimeoutRef = useRef<number | null>(null);
@@ -280,8 +341,23 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   const resetGame = () => {
     // Reset frame to 0 for new game
     currentFrameRef.current = 0;
-    // Generate new random prize set for next game
-    setPrizes(prizeProvider.createPrizeSet());
+    hasInitialized.current = false;
+
+    const syncSeedOverride = resolveSeedOverride();
+    const nextSession = prizeProvider.loadSync?.({ seedOverride: syncSeedOverride });
+
+    if (nextSession) {
+      setPrizeSession(nextSession);
+      setPrizes(nextSession.prizes);
+      setIsLoadingSession(false);
+    } else {
+      setPrizeSession(null);
+      setPrizes([]);
+      setIsLoadingSession(true);
+    }
+
+    setLoadError(null);
+    setSessionKey((key) => key + 1);
     dispatch({ type: 'RESET_REQUESTED' });
   };
 
@@ -317,5 +393,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     claimPrize,
     resetGame,
     canClaim: gameState.state === 'revealed',
+    isLoadingPrizes: isLoadingSession,
+    prizeLoadError: loadError,
   };
 }

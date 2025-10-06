@@ -21,14 +21,14 @@ Use the checkboxes below to track progress across priority tiers (P0–P3). Mark
 
 ## Priority P0 — Production Readiness
 - [ ] **P0.1 Prize Provider Interface & Deterministic Outcomes**
-  - [ ] Inventory current prize usages and confirm prerequisites from cross-cutting prep.
-  - [ ] Design `PrizeProvider` interface supporting async loading and mock fallback (`src/game/prizeProvider.ts`).
+  - [x] Inventory current prize usages and confirm prerequisites from cross-cutting prep.
+  - [x] Design `PrizeProvider` interface supporting async loading and mock fallback (`src/game/prizeProvider.ts`).
   - [ ] Refactor `createValidatedProductionPrizeSet()` to conform to the interface and remove random prize count.
-  - [ ] Update `usePlinkoGame` to accept injected provider plus server-selected winning index.
-  - [ ] Replace direct RNG usage in `selectPrize()` with provider results.
-  - [ ] Add schema validation guards (e.g., Zod) for prize payloads.
-  - [ ] Write unit and integration tests validating deterministic outcomes.
-  - [ ] Update `README.md` and `docs/architecture.md` with provider configuration guidance.
+  - [x] Update `usePlinkoGame` to accept injected provider plus server-selected winning index.
+  - [x] Replace direct RNG usage in `selectPrize()` with provider results.
+  - [x] Add schema validation guards (e.g., Zod) for prize payloads.
+  - [x] Write unit and integration tests validating deterministic outcomes.
+  - [x] Update `README.md` and `docs/architecture.md` with provider configuration guidance.
 - [ ] **P0.2 Trajectory Generator Alignment with Target Slot**
   - [ ] Ensure deterministic test harness is in place.
   - [ ] Extend `src/game/trajectory.ts` to accept a target slot or precomputed peg path.

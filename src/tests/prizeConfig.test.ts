@@ -5,24 +5,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   MOCK_PRIZES,
+  createValidatedPrizeSet,
   generateRandomPrizeSet,
   getPrizeByIndex,
-  createValidatedPrizeSet,
 } from '../config/prizeTable';
 import {
-  generateProductionPrizeSet,
   createValidatedProductionPrizeSet,
+  generateProductionPrizeSet,
   getPrizeByIndex as getProductionPrizeByIndex,
 } from '../config/productionPrizeTable';
-import {
-  validatePrizeSet,
-  normalizeProbabilities,
-  getPrizeByIndex as getPrizeByIndexUtil,
-} from '../utils/prizeUtils';
 import type { PrizeConfig } from '../game/types';
+import {
+  getPrizeByIndex as getPrizeByIndexUtil,
+  normalizeProbabilities,
+  validatePrizeSet,
+} from '../utils/prizeUtils';
 
 describe('MOCK_PRIZES Configuration', () => {
   it('should have exactly 6 prizes', () => {
@@ -135,7 +135,7 @@ describe('Prize Set Generation', () => {
     it('should generate exact count when specified', () => {
       const counts = [3, 4, 5, 6, 7, 8];
       counts.forEach((count) => {
-        const prizes = generateProductionPrizeSet(count);
+        const prizes = generateProductionPrizeSet({ count });
         expect(prizes.length).toBe(count);
       });
     });
@@ -149,7 +149,7 @@ describe('Prize Set Generation', () => {
     });
 
     it('should include backward-compatible fields', () => {
-      const prizes = generateProductionPrizeSet(5);
+      const prizes = generateProductionPrizeSet({ count: 5 });
       prizes.forEach((prize, index) => {
         expect(prize, `Prize ${index}`).toHaveProperty('title');
         expect(prize, `Prize ${index}`).toHaveProperty('slotColor');
@@ -255,7 +255,7 @@ describe('Prize Set Validation', () => {
     });
 
     it('should accept count parameter', () => {
-      const prizes = createValidatedProductionPrizeSet(5);
+      const prizes = createValidatedProductionPrizeSet({ count: 5 });
       expect(prizes.length).toBe(5);
 
       const sum = prizes.reduce((acc, p) => acc + p.probability, 0);
@@ -349,7 +349,7 @@ describe('Prize Retrieval by Index', () => {
     });
 
     it('should work with production prizes', () => {
-      const prizes = generateProductionPrizeSet(5);
+      const prizes = generateProductionPrizeSet({ count: 5 });
       const prize = getProductionPrizeByIndex(prizes, 0);
       expect(prize).toBe(prizes[0]);
     });
@@ -382,13 +382,13 @@ describe('Prize Retrieval by Index', () => {
 
 describe('Prize Configuration Edge Cases', () => {
   it('should handle minimum prize set (3 prizes)', () => {
-    const prizes = generateProductionPrizeSet(3);
+    const prizes = generateProductionPrizeSet({ count: 3 });
     expect(() => validatePrizeSet(prizes)).not.toThrow();
     expect(prizes.length).toBe(3);
   });
 
   it('should handle maximum prize set (8 prizes)', () => {
-    const prizes = generateProductionPrizeSet(8);
+    const prizes = generateProductionPrizeSet({ count: 8 });
     expect(() => validatePrizeSet(prizes)).not.toThrow();
     expect(prizes.length).toBe(8);
   });
@@ -427,7 +427,7 @@ describe('Prize Types Coverage', () => {
 
   it('should support production prize types', () => {
     const validTypes = ['free', 'purchase', 'no_win'];
-    const prizes = generateProductionPrizeSet(8);
+    const prizes = generateProductionPrizeSet({ count: 8 });
 
     prizes.forEach((prize) => {
       expect(validTypes).toContain(prize.type);

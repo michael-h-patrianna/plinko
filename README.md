@@ -96,7 +96,7 @@ The Plinko app reads runtime configuration from a central `AppConfig` object tha
 
 - The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/main.tsx`).
 - Feature flags are grouped under `featureFlags`—currently only `devToolsEnabled` and `dropPositionMechanicEnabled` are exposed.
-- Prize data creation and selection flow through the `prizeProvider`, which already wraps the legacy `createValidatedProductionPrizeSet()` and `selectPrize()` helpers.
+- Prize data is supplied by a `PrizeProvider` implementation. The default provider wraps the legacy production prize table while exposing deterministic `load`/`loadSync` APIs for host overrides.
 
 ### Overriding in a Host Application
 
@@ -108,11 +108,24 @@ const hostOverrides = {
     devToolsEnabled: false,
   },
   prizeProvider: {
-    createPrizeSet: () => myServerPayload.prizes,
-    selectPrize: (prizes, seed) => ({
-      selectedIndex: myServerPayload.winningIndex,
-      seedUsed: seed ?? myServerPayload.seed,
-    }),
+    async load({ seedOverride }) {
+      const response = await fetch(`/api/prize-session?seed=${seedOverride ?? ''}`);
+      const payload = await response.json();
+      return {
+        prizes: payload.prizes,
+        winningIndex: payload.winningIndex,
+        seed: payload.seed,
+        source: 'remote',
+      };
+    },
+    loadSync({ seedOverride }) {
+      // Optional: hydrate from SSR payload or deterministic fixture
+      const session = window.__BOOTSTRAP_PRIZE_SESSION__;
+      if (!session) {
+        throw new Error('Prize session missing from bootstrap data');
+      }
+      return { ...session, seed: seedOverride ?? session.seed };
+    },
   },
 };
 
