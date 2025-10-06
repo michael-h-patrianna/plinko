@@ -7,8 +7,6 @@
 import type { TrajectoryPoint } from '../game/types';
 import { generateTrajectory } from '../game/trajectory';
 
-console.log('[Worker] Trajectory worker loaded successfully');
-
 export interface TrajectoryWorkerRequest {
   type: 'generate';
   payload: {
@@ -34,11 +32,9 @@ export interface TrajectoryWorkerResponse {
 
 // Listen for messages from main thread
 self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
-  console.log('[Worker] Received message:', event.data.type);
   const { payload } = event.data;
 
   // Handle trajectory generation request
-  console.log('[Worker] Starting trajectory generation...');
   const startTime = performance.now();
   const timeout = payload.timeout || 10000; // Default 10s timeout
 
@@ -55,7 +51,6 @@ self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
     }, timeout);
 
     try {
-      console.log('[Worker] Calling generateTrajectory...');
       // Generate trajectory
       const { trajectory, landedSlot } = generateTrajectory({
         boardWidth: payload.boardWidth,
@@ -64,7 +59,6 @@ self.onmessage = (event: MessageEvent<TrajectoryWorkerRequest>) => {
         slotCount: payload.slotCount,
         seed: payload.seed,
       });
-      console.log('[Worker] Trajectory generated, sending response...');
 
       // Clear timeout since we succeeded
       clearTimeout(timeoutId);

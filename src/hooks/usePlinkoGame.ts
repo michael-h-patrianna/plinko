@@ -48,6 +48,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
   const [sessionKey, setSessionKey] = useState(0);
   const [loadError, setLoadError] = useState<Error | null>(null);
+  // Force fresh seed on resets (ignores URL/prop seed overrides) - using ref to avoid triggering effects
+  const forceFreshSeedRef = useRef(false);
 
   const [gameState, dispatch] = useReducer(gameReducer, {
     state: 'idle',
@@ -76,6 +78,11 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   );
 
   const resolveSeedOverride = useCallback((): number | undefined => {
+    // When forceFreshSeedRef is true (automatic reset), return undefined to force new random seed
+    if (forceFreshSeedRef.current) {
+      return undefined;
+    }
+
     if (typeof seedOverride === 'number') {
       return seedOverride;
     }
@@ -94,47 +101,65 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     return Number.isFinite(parsed) ? parsed : undefined;
   }, [seedOverride]);
 
-  const initialSyncSession = useMemo(() => {
-    if (typeof prizeProvider.loadSync !== 'function') {
-      return null;
-    }
+  // Single async load pattern - no more dual loading
+  const [prizeSession, setPrizeSession] = useState<PrizeProviderResult | null>(null);
+  const [prizes, setPrizes] = useState<PrizeConfig[]>([]);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
 
-    try {
-      const initialSeed = resolveSeedOverride();
-      return prizeProvider.loadSync({ seedOverride: initialSeed });
-    } catch (error) {
-      console.error('Failed to synchronously load prize session', error);
-      return null;
-    }
-  }, [prizeProvider, resolveSeedOverride]);
+  // Track which session has been initialized by its seed (not a boolean)
+  const initializedSessionId = useRef<number | null>(null);
 
-  const [prizeSession, setPrizeSession] = useState<PrizeProviderResult | null>(initialSyncSession);
-  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => initialSyncSession?.prizes ?? []);
-  const [isLoadingSession, setIsLoadingSession] = useState(!initialSyncSession);
+  // Guard to prevent overwriting locked winning prize
+  const winningPrizeLockedRef = useRef(false);
 
-  // Initialize game: select prize and generate trajectory
-  // Only run once on mount or when game is explicitly reset to idle
-  const hasInitialized = useRef(false);
-
+  // Single async load effect with retry and timeout
   useEffect(() => {
     let cancelled = false;
-    const finalSeedOverride = resolveSeedOverride();
-
-    if (!initialSyncSession || sessionKey > 0) {
-      setIsLoadingSession(true);
-    }
+    setIsLoadingSession(true);
     setLoadError(null);
 
-    prizeProvider
-      .load({ seedOverride: finalSeedOverride })
+    const finalSeedOverride = resolveSeedOverride();
+
+    // Constants for retry and timeout
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 1000;
+    const LOAD_TIMEOUT_MS = 10000; // 10 seconds
+
+    // Timeout wrapper
+    function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+      return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+          setTimeout(() => reject(new Error('Provider load timeout')), timeoutMs)
+        ),
+      ]);
+    }
+
+    // Retry wrapper
+    async function loadWithRetry(attempt = 1): Promise<PrizeProviderResult> {
+      try {
+        const result = await prizeProvider.load({ seedOverride: finalSeedOverride });
+        return result;
+      } catch (error) {
+        if (attempt >= MAX_RETRIES) {
+          throw error; // Final failure
+        }
+        await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
+        return loadWithRetry(attempt + 1);
+      }
+    }
+
+    // Execute load with timeout and retry
+    withTimeout(loadWithRetry(), LOAD_TIMEOUT_MS)
       .then((result) => {
         if (cancelled) {
           return;
         }
-        hasInitialized.current = false;
         setPrizeSession(result);
-        setPrizes(result.prizes);
+        // DON'T set prizes here - let the initialization effect handle swapping
         setIsLoadingSession(false);
+        // Reset forceFreshSeed ref after successful load
+        forceFreshSeedRef.current = false;
       })
       .catch((error: unknown) => {
         console.error('Failed to load prize session', error);
@@ -145,46 +170,87 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         setPrizes([]);
         setLoadError(error instanceof Error ? error : new Error('Failed to load prizes'));
         setIsLoadingSession(false);
+        // Reset forceFreshSeed ref even on error
+        forceFreshSeedRef.current = false;
       });
 
     return () => {
       cancelled = true;
     };
-  }, [initialSyncSession, prizeProvider, resolveSeedOverride, sessionKey]);
+  }, [prizeProvider, resolveSeedOverride, sessionKey]);
 
+  // Store the winning prize object separately - this is what the user will actually win
+  // This is immutable and independent of any prize array swaps
+  const [winningPrize, setWinningPrize] = useState<PrizeConfig | null>(null);
+
+  // Track the current position of the winning prize after swaps (for visual indicator only)
+  const [currentWinningIndex, setCurrentWinningIndex] = useState<number | undefined>(undefined);
+
+  // Initialization effect - runs once per unique session
   useEffect(() => {
-    if (prizeSession && gameState.state === 'idle' && !hasInitialized.current) {
-      hasInitialized.current = true;
+    if (
+      prizeSession &&
+      gameState.state === 'idle' &&
+      initializedSessionId.current !== prizeSession.seed
+    ) {
+      initializedSessionId.current = prizeSession.seed;
 
       const sessionPrizes = [...prizeSession.prizes];
-      const { trajectory, landedSlot } = generateTrajectory({
+      const winningIndex = prizeSession.winningIndex;
+
+      // STEP 1: Store the winning prize BEFORE any swaps
+      // This is what the user will actually win - immutable safety net
+      const actualWinningPrize = sessionPrizes[winningIndex]!;
+
+      // Guard against overwriting locked winning prize (should only happen if resetGame wasn't called properly)
+      if (winningPrizeLockedRef.current) {
+        console.error(
+          'CRITICAL: Attempted to overwrite locked winning prize. ' +
+            'This should not happen - resetGame() should unlock before re-initialization. ' +
+            `Current session: ${prizeSession.seed}, Lock status: ${winningPrizeLockedRef.current}`
+        );
+        return;
+      }
+      setWinningPrize(actualWinningPrize);
+      winningPrizeLockedRef.current = true;
+
+      // STEP 2: Generate trajectory - let ball land wherever it naturally lands (fast - usually 1 attempt)
+      // Do NOT pass targetSlot - that causes thousands of attempts
+      const trajectoryResult = generateTrajectory({
         boardWidth,
         boardHeight,
         pegRows,
         slotCount: sessionPrizes.length,
         seed: prizeSession.seed,
+        precomputedTrajectory: prizeSession.deterministicTrajectory,
       });
 
-      const winningIndex = prizeSession.winningIndex;
-      const rearrangedPrizes = [...sessionPrizes];
-      if (landedSlot !== winningIndex) {
-        const temp = rearrangedPrizes[landedSlot]!;
-        rearrangedPrizes[landedSlot] = rearrangedPrizes[winningIndex]!;
-        rearrangedPrizes[winningIndex] = temp;
+      const landedSlot = trajectoryResult.landedSlot;
+
+      // STEP 3: Swap prizes array for visual display only
+      // After swap, the winning prize will be at landedSlot position visually
+      if (landedSlot !== winningIndex && landedSlot >= 0) {
+        const temp = sessionPrizes[landedSlot]!;
+        sessionPrizes[landedSlot] = sessionPrizes[winningIndex]!;
+        sessionPrizes[winningIndex] = temp;
       }
 
-      setPrizes(rearrangedPrizes);
+      setPrizes(sessionPrizes);
+      // Track where the winning prize is visually (for red dot indicator)
+      setCurrentWinningIndex(landedSlot);
 
-      const prize = rearrangedPrizes[landedSlot]!;
-
+      // Initialize game state with trajectory and selectedIndex
       dispatch({
         type: 'INITIALIZE',
-        payload: { selectedIndex: landedSlot, trajectory, prize, seed: prizeSession.seed },
+        payload: {
+          selectedIndex: landedSlot,
+          trajectory: trajectoryResult.trajectory,
+          prize: sessionPrizes[landedSlot]!,
+          seed: prizeSession.seed,
+        },
       });
-    } else if (gameState.state !== 'idle') {
-      hasInitialized.current = false;
     }
-  }, [boardWidth, boardHeight, pegRows, gameState.state, prizeSession, dispatch]);
+  }, [boardWidth, boardHeight, pegRows, gameState.state, prizeSession?.seed, prizeSession?.prizes.length, prizeSession?.winningIndex]);
 
   // Track if animation is already running
   const landingTimeoutRef = useRef<number | null>(null);
@@ -245,9 +311,10 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     if (gameState.state === 'landed') {
       const timer = setTimeout(() => {
         dispatch({ type: 'REVEAL_CONFIRMED' });
-      }, 300);
+      }, 320);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [gameState.state]);
 
   // Helper functions to get current position/trajectory without causing re-renders
@@ -288,41 +355,50 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
   const selectDropPosition = useCallback(
     (dropZone: DropZone) => {
-      if (gameState.state === 'selecting-position') {
-        // Regenerate trajectory with the selected drop zone
-        // Use the existing seed from context
+      if (gameState.state === 'selecting-position' && prizeSession) {
         const currentSeed = gameState.context.seed || Date.now();
 
-        const { trajectory, landedSlot } = generateTrajectory({
+        // Reset prizes to original session order
+        const freshPrizes = [...prizeSession.prizes];
+        const winningIndex = prizeSession.winningIndex;
+
+        // STEP 1: The winning prize is already stored in state, don't change it
+        // winningPrize remains immutable
+
+        // STEP 2: Generate new trajectory with drop zone - let ball land wherever it naturally lands
+        // Do NOT pass targetSlot - that causes thousands of attempts
+        const trajectoryResult = generateTrajectory({
           boardWidth,
           boardHeight,
           pegRows,
-          slotCount: prizes.length,
+          slotCount: freshPrizes.length,
           seed: currentSeed,
-          dropZone, // Pass the selected drop zone
+          dropZone,
+          precomputedTrajectory: prizeSession.deterministicTrajectory,
         });
 
-        // Rearrange prizes to match landed slot
-        const rearrangedPrizes = [...prizes];
-        const currentWinningIndex = gameState.context.selectedIndex;
+        const landedSlot = trajectoryResult.landedSlot;
 
-        if (landedSlot !== currentWinningIndex) {
-          const temp = rearrangedPrizes[landedSlot]!;
-          rearrangedPrizes[landedSlot] = rearrangedPrizes[currentWinningIndex]!;
-          rearrangedPrizes[currentWinningIndex] = temp;
+        // STEP 3: Swap prizes array for visual display only
+        // After swap, the winning prize will be at landedSlot position visually
+        if (landedSlot !== winningIndex && landedSlot >= 0) {
+          const temp = freshPrizes[landedSlot]!;
+          freshPrizes[landedSlot] = freshPrizes[winningIndex]!;
+          freshPrizes[winningIndex] = temp;
         }
 
-        setPrizes(rearrangedPrizes);
-        const prize = rearrangedPrizes[landedSlot]!;
+        setPrizes(freshPrizes);
+        // Track where the winning prize is visually (for red dot indicator)
+        setCurrentWinningIndex(landedSlot);
 
-        // Dispatch position selected with new trajectory data
+        // Dispatch position selected with new trajectory and selectedIndex
         dispatch({
           type: 'POSITION_SELECTED',
           payload: {
             dropZone,
-            trajectory,
+            trajectory: trajectoryResult.trajectory,
             selectedIndex: landedSlot,
-            prize,
+            prize: freshPrizes[landedSlot]!,
           },
         });
       }
@@ -330,36 +406,42 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     [
       gameState.state,
       gameState.context.seed,
-      gameState.context.selectedIndex,
-      prizes,
       boardWidth,
       boardHeight,
       pegRows,
+      prizeSession?.seed,
+      prizeSession?.prizes.length,
+      prizeSession?.winningIndex,
     ]
   );
 
-  const resetGame = () => {
+  const resetGame = useCallback(() => {
+    // AUTOMATIC RESET: After claiming prize, reset game with fresh random prize table
+    // This is called automatically when user closes prize popup to allow replay
+
     // Reset frame to 0 for new game
     currentFrameRef.current = 0;
-    hasInitialized.current = false;
-
-    const syncSeedOverride = resolveSeedOverride();
-    const nextSession = prizeProvider.loadSync?.({ seedOverride: syncSeedOverride });
-
-    if (nextSession) {
-      setPrizeSession(nextSession);
-      setPrizes(nextSession.prizes);
-      setIsLoadingSession(false);
-    } else {
-      setPrizeSession(null);
-      setPrizes([]);
-      setIsLoadingSession(true);
-    }
-
+    // Reset session ID to allow initialization of new session
+    initializedSessionId.current = null;
+    // Reset winning prize lock (allows new winning prize to be set)
+    winningPrizeLockedRef.current = false;
+    // Clear error state
     setLoadError(null);
-    setSessionKey((key) => key + 1);
+    // Clear winning prize state
+    setWinningPrize(null);
+    setCurrentWinningIndex(undefined);
+    // Clear prize session to prevent initialization with stale data
+    setPrizeSession(null);
+    setPrizes([]);
+    // Force fresh random seed (ignores URL ?seed= parameter for automatic reset)
+    forceFreshSeedRef.current = true;
+
+    // Reset game state machine
     dispatch({ type: 'RESET_REQUESTED' });
-  };
+
+    // Trigger new session load with fresh seed
+    setSessionKey((key) => key + 1);
+  }, []);
 
   const claimPrize = () => {
     // In real app, this would call backend API
@@ -379,8 +461,9 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   return {
     state: gameState.state,
     prizes,
-    selectedPrize: gameState.context.prize,
+    selectedPrize: winningPrize, // ALWAYS use the stored winning prize, not derived from swapped array
     selectedIndex: gameState.context.selectedIndex,
+    winningIndex: currentWinningIndex,
     trajectory: gameState.context.trajectory,
     frameStore,
     getBallPosition,

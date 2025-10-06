@@ -235,7 +235,7 @@ function addBackwardCompatFields(
 export const DEFAULT_PRODUCTION_PRIZE_COUNT = 6;
 
 export interface ProductionPrizeSetOptions {
-  count?: number;
+  count: number;
   seed?: number;
 }
 
@@ -250,8 +250,14 @@ function getShuffleSeed(seed?: number): number {
  * Generates a prize set with deterministic shuffle support
  * Ensures probabilities sum to 1.0
  */
-export function generateProductionPrizeSet(options: ProductionPrizeSetOptions = {}): Prize[] {
-  const { count = DEFAULT_PRODUCTION_PRIZE_COUNT, seed } = options;
+export function generateProductionPrizeSet(
+  options: ProductionPrizeSetOptions = { count: DEFAULT_PRODUCTION_PRIZE_COUNT }
+): Prize[] {
+  const { count, seed } = options;
+
+  if (!Number.isFinite(count)) {
+    throw new Error('Production prize set requires an explicit prize count.');
+  }
 
   if (count < 3 || count > 8) {
     throw new Error(`Production prize set count must be between 3 and 8 (received ${count}).`);
@@ -277,7 +283,7 @@ export function generateProductionPrizeSet(options: ProductionPrizeSetOptions = 
  * Creates and validates a prize set
  */
 export function createValidatedProductionPrizeSet(
-  options: ProductionPrizeSetOptions = {}
+  options: ProductionPrizeSetOptions = { count: DEFAULT_PRODUCTION_PRIZE_COUNT }
 ): Prize[] {
   const prizes = generateProductionPrizeSet(options);
   validatePrizeSet(prizes);

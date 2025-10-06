@@ -9,8 +9,10 @@
  * @param testId - Test ID for testing
  */
 
-import { motion } from 'framer-motion';
+import { motion, type MotionProps, type Transition } from 'framer-motion';
 import { useTheme } from '../theme';
+
+type EntranceAnimation = 'fade' | 'hero' | 'none';
 
 interface ThemedButtonProps {
   onClick: () => void;
@@ -21,6 +23,7 @@ interface ThemedButtonProps {
   testId?: string;
   style?: React.CSSProperties;
   variant?: 'primary' | 'secondary';
+  entranceAnimation?: EntranceAnimation;
 }
 
 export function ThemedButton({
@@ -32,9 +35,45 @@ export function ThemedButton({
   testId,
   style,
   variant = 'primary',
+  entranceAnimation = 'fade',
 }: ThemedButtonProps) {
   const { theme } = useTheme();
   const buttonStyle = variant === 'primary' ? theme.buttons.primary : theme.buttons.secondary;
+
+  let animateTarget: MotionProps['animate'] = { scale: 1, rotate: 0, opacity: 1, y: 0 };
+
+  let initialState: MotionProps['initial'] = false;
+  let entranceTransition: Transition | undefined;
+
+  switch (entranceAnimation) {
+    case 'hero':
+      initialState = { scale: 0.9, opacity: 0, y: 10 };
+      animateTarget = {
+        scale: [0.9, 1.04, 1],
+        y: [10, -3, 0],
+        opacity: [0, 1, 1],
+      };
+      entranceTransition = {
+        delay,
+        duration: 0.26,
+        ease: 'easeOut',
+        times: [0, 0.65, 1],
+      };
+      break;
+    case 'fade':
+      initialState = { scale: 0.97, rotate: 0, opacity: 0 };
+      entranceTransition = {
+        duration: 0.25,
+        delay,
+        ease: [0.22, 1, 0.36, 1],
+      };
+      break;
+    case 'none':
+    default:
+      initialState = false;
+      entranceTransition = undefined;
+      break;
+  }
 
   return (
     <motion.button
@@ -82,13 +121,9 @@ export function ThemedButton({
             }
           : {}
       }
-      initial={{ scale: 0, rotate: -5, opacity: 0 }}
-      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-      transition={{
-        duration: 0.2,
-        delay,
-        ease: [0.34, 1.56, 0.64, 1],
-      }}
+      initial={initialState}
+      animate={animateTarget}
+      transition={entranceTransition}
       data-testid={testId}
     >
       {/* Button shine effect */}

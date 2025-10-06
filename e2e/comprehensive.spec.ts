@@ -2,10 +2,9 @@
  * Comprehensive E2E tests covering ALL functionality
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Comprehensive Plinko E2E', () => {
-
   // =========================================================================
   // 1. BASIC GAME FLOW
   // =========================================================================
@@ -28,7 +27,7 @@ test.describe('Comprehensive Plinko E2E', () => {
     await expect(prizeReveal).toBeVisible({ timeout: 12000 });
 
     // Claim button should appear
-    const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+    const claimButton = page.getByTestId('claim-prize-button');
     await expect(claimButton).toBeVisible({ timeout: 2000 });
 
     // Click claim
@@ -45,7 +44,7 @@ test.describe('Comprehensive Plinko E2E', () => {
       await page.getByTestId('drop-ball-button').click();
 
       // Wait for completion
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await expect(claimButton).toBeVisible({ timeout: 12000 });
 
       await claimButton.click();
@@ -70,7 +69,12 @@ test.describe('Comprehensive Plinko E2E', () => {
 
       // Capture what type of prize was shown
       const text = await prizeReveal.textContent();
-      if (text?.includes('won') || text?.includes('SC') || text?.includes('GC') || text?.includes('Spins')) {
+      if (
+        text?.includes('won') ||
+        text?.includes('SC') ||
+        text?.includes('GC') ||
+        text?.includes('Spins')
+      ) {
         prizeTypes.add('reward');
       }
       if (text?.includes('Special Offer') || text?.includes('$')) {
@@ -80,7 +84,7 @@ test.describe('Comprehensive Plinko E2E', () => {
         prizeTypes.add('nowin');
       }
 
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await claimButton.click();
       await page.waitForTimeout(500);
     }
@@ -114,7 +118,7 @@ test.describe('Comprehensive Plinko E2E', () => {
 
     await page.getByTestId('drop-ball-button').click();
 
-    const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+    const claimButton = page.getByTestId('claim-prize-button');
     await expect(claimButton).toBeVisible({ timeout: 10000 });
 
     const duration = Date.now() - startTime;
@@ -174,7 +178,7 @@ test.describe('Comprehensive Plinko E2E', () => {
       // Play a game with this theme
       await page.getByTestId('drop-ball-button').click();
 
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await expect(claimButton).toBeVisible({ timeout: 12000 });
     });
   }
@@ -221,7 +225,7 @@ test.describe('Comprehensive Plinko E2E', () => {
       const styles = window.getComputedStyle(el);
       return {
         bg: styles.backgroundColor,
-        text: styles.color
+        text: styles.color,
       };
     });
 
@@ -254,7 +258,9 @@ test.describe('Comprehensive Plinko E2E', () => {
     await page.getByTestId('drop-ball-button').click();
     await expect(page.getByTestId('plinko-ball')).toBeVisible({ timeout: 3000 });
 
-    const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+    const claimButton = page
+      .getByTestId('claim-prize-button')
+      .or(page.getByText(/claim|try again/i));
     await expect(claimButton).toBeVisible({ timeout: 12000 });
   });
 
@@ -312,11 +318,15 @@ test.describe('Comprehensive Plinko E2E', () => {
 
     // Start performance monitoring
     const performanceMetrics: number[] = [];
-    page.on('metrics', ({ metrics }) => {
-      if (metrics.TaskDuration) {
-        performanceMetrics.push(metrics.TaskDuration);
+    (page as unknown as { on: (event: string, handler: (payload: unknown) => void) => void }).on(
+      'metrics',
+      (payload: unknown) => {
+        const metrics = (payload as { metrics?: Record<string, number> })?.metrics;
+        if (metrics?.TaskDuration) {
+          performanceMetrics.push(metrics.TaskDuration);
+        }
       }
-    });
+    );
 
     await page.getByTestId('drop-ball-button').click();
 
@@ -384,7 +394,7 @@ test.describe('Comprehensive Plinko E2E', () => {
       const text = await prizeReveal.textContent();
       results.push(text || '');
 
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await claimButton.click();
       await page.waitForTimeout(500);
     }

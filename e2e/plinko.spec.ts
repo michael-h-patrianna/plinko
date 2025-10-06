@@ -2,7 +2,7 @@
  * Core Plinko game E2E tests
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Plinko Game E2E', () => {
   test('should complete full game flow with deterministic seed', async ({ page }) => {
@@ -22,7 +22,7 @@ test.describe('Plinko Game E2E', () => {
     await expect(prizeReveal).toBeVisible({ timeout: 12000 });
 
     // Verify claim button appears (could be "Claim Prize" or "Try Again")
-    const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+    const claimButton = page.getByTestId('claim-prize-button');
     await expect(claimButton).toBeVisible({ timeout: 2000 });
 
     // Click claim button
@@ -80,7 +80,7 @@ test.describe('Plinko Game E2E', () => {
     await page.getByTestId('drop-ball-button').click();
 
     // Animation must complete in < 12 seconds
-    const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+    const claimButton = page.getByTestId('claim-prize-button');
     await expect(claimButton).toBeVisible({ timeout: 12000 });
   });
 

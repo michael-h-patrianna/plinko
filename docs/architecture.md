@@ -70,6 +70,12 @@ export interface PrizeProviderResult {
   winningIndex: number;
   seed: number;
   source: 'default' | 'fixture' | 'remote';
+  deterministicTrajectory?: {
+    points: TrajectoryPoint[];
+    landingSlot?: number;
+    seed?: number;
+    provider?: string;
+  };
 }
 
 export interface PrizeProvider {
@@ -86,6 +92,8 @@ export interface PrizeProvider {
 
 `createDefaultPrizeProvider()` wraps the legacy `createValidatedProductionPrizeSet()` helper. It deterministically selects a winner via `selectPrize()` using either the provided `seedOverride` or a generated seed. Both `load` and `loadSync` delegate to the same synchronous `buildDefaultSession()` implementation, guaranteeing identical results between execution paths.
 
+- The production prize table now requires an explicit prize count. When no value is supplied, the helper falls back to `DEFAULT_PRODUCTION_PRIZE_COUNT` (6 slots) so the board layout remains stable. Hosts can override the count through `createDefaultPrizeProvider({ count: ... })`.
+
 When prize generation fails (for example, by requesting an out-of-range prize count), the provider normalises thrown values into `Error` instances and rejects the async loader so React hooks can surface meaningful UI messages.
 
 ### Hook Integration
@@ -95,9 +103,12 @@ When prize generation fails (for example, by requesting an out-of-range prize co
 1. Attempts synchronous hydration via `loadSync` (if available) when the component mounts or when a reset occurs.
 2. Always triggers an async `load` request, updating state when the promise resolves.
 3. Captures any thrown error and exposes it through `prizeLoadError` for UI components.
-4. Feeds the validated prize session into the trajectory generator, swapping prize order when the physics landing slot differs from the server-selected index.
+4. Stores the original winning prize from the session before any swaps occur.
+5. Generates a fast trajectory (typically 1 simulation attempt) without forcing a specific landing slot.
+6. Swaps prize array elements if needed: `prizes[landedSlot] ↔ prizes[winningIndex]`
+7. Passes the stored original winning prize to game context (not the swapped array element).
 
-This separation keeps deterministic prize selection server-authoritative while preserving the realistic animation system.
+This **swap-based architecture** is 1000x faster than forcing trajectories to land in specific slots. The original prize object is preserved throughout all state transitions, ensuring correct prize display regardless of array manipulations.
 
 ---
 

@@ -19,9 +19,10 @@ interface StartScreenProps {
   prizes: PrizeConfig[];
   onStart: () => void;
   disabled: boolean;
+  winningIndex?: number;
 }
 
-export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
+export function StartScreen({ prizes, onStart, disabled, winningIndex }: StartScreenProps) {
   const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
   const { theme } = useTheme();
 
@@ -148,9 +149,27 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
                     borderLeft: `2px solid ${getPrizeThemeColor(prize, theme)}`,
                     borderRadius: theme.borderRadius.sm,
                     cursor: isCombo ? 'pointer' : 'default',
+                    position: 'relative',
                   }}
                   onClick={() => isCombo && setExpandedPrize(isExpanded ? null : prize.id)}
                 >
+                  {winningIndex === index && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '-6px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: '#EF4444',
+                        border: '1px solid #ffffff',
+                        boxShadow: '0 0 4px rgba(239, 68, 68, 0.6)',
+                        zIndex: 10,
+                      }}
+                    />
+                  )}
                   <span
                     className="font-medium flex items-center gap-1"
                     style={{ color: theme.colors.text.primary }}
@@ -221,12 +240,14 @@ export function StartScreen({ prizes, onStart, disabled }: StartScreenProps) {
       </motion.div>
 
       {/* Play button */}
-      <ThemedButton onClick={onStart} disabled={disabled} delay={0.3} testId="drop-ball-button" style={{
-            minWidth: '120px',
-            height: '56px',
-            fontSize: '18px',
-            fontWeight: 700,
-          }}>
+      <ThemedButton
+        onClick={onStart}
+        disabled={disabled}
+        entranceAnimation="hero"
+  delay={0.24}
+        testId="drop-ball-button"
+        className="min-w-[120px] h-14 text-lg"
+      >
         Drop Ball
       </ThemedButton>
     </motion.div>

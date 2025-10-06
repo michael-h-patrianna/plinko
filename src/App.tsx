@@ -6,6 +6,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { Countdown } from './components/Countdown';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenShake } from './components/effects/ScreenShake';
 import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
 import { PopupContainer } from './components/PopupContainer';
@@ -34,6 +35,7 @@ function AppContent() {
     prizes,
     selectedPrize,
     selectedIndex,
+    winningIndex,
     trajectory,
     frameStore,
     getBallPosition,
@@ -44,6 +46,8 @@ function AppContent() {
     claimPrize,
     resetGame,
     canClaim,
+    isLoadingPrizes,
+    prizeLoadError,
   } = usePlinkoGame({
     boardWidth: lockedBoardWidth,
     boardHeight: 500,
@@ -151,7 +155,7 @@ function AppContent() {
       </div>
 
       {/* Game container with screen shake */}
-      <ScreenShake active={shakeActive} intensity="medium" duration={400}>
+  <ScreenShake active={shakeActive} intensity="high" duration={400}>
         <div
           style={{
             width: isMobile ? '100%' : `${lockedBoardWidth}px`,
@@ -172,7 +176,8 @@ function AppContent() {
                 key="start-screen"
                 prizes={prizes}
                 onStart={startGame}
-                disabled={state === 'idle'}
+                disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
+                winningIndex={winningIndex}
               />
             )}
           </AnimatePresence>
@@ -245,8 +250,10 @@ function AppContent() {
  */
 export function App() {
   return (
-    <ThemeProvider themes={themes}>
-      <AppContent />
-    </ThemeProvider>
+    <ErrorBoundary>
+      <ThemeProvider themes={themes}>
+        <AppContent />
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }

@@ -187,12 +187,8 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               onClick={handlePurchaseClick}
               disabled={!canClaim}
               delay={0.5}
-              className="w-full" style={{
-            minWidth: '120px',
-            height: '56px',
-            fontSize: '18px',
-            fontWeight: 700,
-          }}
+              className="w-full min-w-[120px] h-14 text-lg"
+              testId="claim-prize-button"
             >
               {price}
             </ThemedButton>

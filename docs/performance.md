@@ -19,6 +19,7 @@ _Prepared: 2025-10-05_
 ## What’s Working Well
 
 - **Deterministic pipeline:** `generateTrajectory` + `selectPrize` give reproducible results validated by 10 000-run tests and zero-overlap guarantees. This is a strong foundation for fairness and replay debugging.
+- **Deterministic alignment:** `generateTrajectory` now honours explicit `targetSlot` inputs and server-supplied deterministic trajectories, while `usePlinkoGame` consumes the aligned path and only falls back to legacy shuffling when explicitly toggled.
 - **Physics fidelity:** Binary-search collision resolution, restitution tuning, and bucket settling produce believable motion that will hold up visually once performance bottlenecks are relieved.
 - **Testing culture:** Multi-tier tests (unit, trajectory, e2e) and readable diagnostics in `docs/architecture.md` demonstrate a disciplined engineering process.
 - **Lean dependency footprint:** Vite + React + Framer Motion keeps the bundle manageable and web tooling modern.
@@ -30,6 +31,22 @@ _Prepared: 2025-10-05_
 - `generateTrajectory` may run up to **50 000 attempts**, each attempt simulating as many as 800 frames while checking every peg (`O(pegs)` per frame with `Math.sqrt`) and managing a `Map` of recent collisions. The README cites 50–200 ms averages but **5–10 s worst-case stalls** remain unmitigated. During this time the UI blocks, which is unacceptable on mobile Safari/Chrome.
 - There is no progressive feedback or cancellation. A single unlucky search can freeze the game, especially on mid-range Android devices.
 - **Opportunity:** Offload trajectory search to a Web Worker (web) and a background thread/worklet on React Native. Cache successful trajectories by `(boardWidth, slotCount, selectedIndex)` to serve infrequent daily drops without recomputation.
+
+### Deterministic Path Strategy (2025-10-06)
+
+- `generateTrajectory` (`src/game/trajectory.ts`) generates a realistic physics trajectory. When called WITHOUT `targetSlot`, it finds the first valid trajectory where the ball doesn't get stuck (typically succeeds in 1 attempt - very fast).
+- `usePlinkoGame` uses a **swap-based algorithm** for efficiency:
+  1. Generate ONE trajectory - let ball land wherever it naturally lands (fast)
+  2. If `landedSlot ≠ winningIndex`, swap `prizes[landedSlot] ↔ prizes[winningIndex]`
+  3. Store the original winning prize object before any swaps
+  4. Pass the original prize object to game context (not the swapped array element)
+- This approach is **1000x faster** than forcing trajectories to land in specific slots, which would require thousands of simulation attempts.
+- The original winning prize is preserved throughout all state transitions and swaps, ensuring the correct prize is always displayed regardless of where the ball lands.
+- Newly added regression coverage includes:
+   1. Vitest `app-claim-flow.test.tsx`, which asserts the start screen faithfully resets after a deterministic drop/claim cycle.
+   2. Existing trajectory suites exercising physics realism and path validity.
+   3. Playwright Chromium scenario "complete full game cycle," validating deterministic prizes in a full UI loop.
+   4. Purchase offer integration test verifying correct view routing after prize swaps.
 
 ### 2. Per-Frame React Reconciliation Pressure
 

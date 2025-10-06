@@ -28,6 +28,17 @@ export interface TrajectoryPoint {
   bucketFloorHit?: boolean; // Bucket floor collision this frame
 }
 
+export interface DeterministicTrajectoryPayload {
+  /** Complete trajectory points captured from a deterministic source (e.g., server authoritative). */
+  points: TrajectoryPoint[];
+  /** Optional landing slot supplied by upstream system; validated against computed slot. */
+  landingSlot?: number;
+  /** Optional RNG seed used to generate the precomputed path for auditing. */
+  seed?: number;
+  /** Optional provider identifier for telemetry/debugging. */
+  provider?: string;
+}
+
 export type GameState =
   | 'idle'
   | 'ready'

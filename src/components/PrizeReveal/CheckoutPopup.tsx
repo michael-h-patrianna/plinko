@@ -133,12 +133,8 @@ export function CheckoutPopup({
               onClick={handlePurchase}
               disabled={isPurchasing}
               delay={0.2}
-              className="w-full" style={{
-            minWidth: '120px',
-            height: '56px',
-            fontSize: '18px',
-            fontWeight: 700,
-          }}
+              className="w-full min-w-[120px] h-14 text-lg"
+              testId="checkout-purchase-button"
             >
               {isPurchasing ? (
                 <span className="flex items-center justify-center gap-2">

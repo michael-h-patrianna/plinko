@@ -3,7 +3,7 @@
  * Manages state transitions and prevents invalid operations
  */
 
-import type { GameState, GameContext, TrajectoryPoint, PrizeConfig } from './types';
+import type { GameContext, GameState, PrizeConfig, TrajectoryPoint } from './types';
 
 import type { DropZone } from './types';
 
@@ -72,6 +72,18 @@ export function transition(
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'ready':
+      if (event.type === 'INITIALIZE') {
+        return {
+          state: 'ready',
+          context: {
+            selectedIndex: event.payload.selectedIndex,
+            trajectory: event.payload.trajectory,
+            currentFrame: 0,
+            prize: event.payload.prize,
+            seed: event.payload.seed,
+          },
+        };
+      }
       if (event.type === 'DROP_REQUESTED') {
         return {
           state: 'countdown',

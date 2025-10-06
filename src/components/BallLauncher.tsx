@@ -23,16 +23,16 @@ export function BallLauncher({ x, y, isLaunching, isSelected = false, onClick }:
   const CHAMBER_WIDTH = 24; // Adjusted to fit smaller ball
   const CHAMBER_HEIGHT = 45;
 
+  const baseClass = onClick ? 'cursor-pointer' : 'pointer-events-none';
+
   return (
     <motion.div
-      className="absolute"
+      className={`absolute ${baseClass}`}
       onClick={onClick}
       style={{
         left: `${x}px`,
         top: `${y}px`,
         transform: 'translate(-50%, -50%)',
-        pointerEvents: onClick ? 'auto' : 'none',
-        cursor: onClick ? 'pointer' : 'default',
         zIndex: isSelected ? 25 : 20,
       }}
       animate={{

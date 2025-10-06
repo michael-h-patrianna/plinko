@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>75/75</span>
+                <span class='fraction'>76/76</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>75/75</span>
+                <span class='fraction'>76/76</span>
             </div>
         
             
@@ -166,16 +166,11 @@
 <a name='L101'></a><a href='#L101'>101</a>
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L104'></a><a href='#L104'>104</a>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -184,6 +179,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
@@ -256,6 +263,7 @@
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
@@ -270,13 +278,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
- * No win result view
- * Subdued, encouraging, not celebratory
+ * No win result view with encouraging messaging
+ * Uses subdued styling and gentle animations, not celebratory
+ * @param prize - Prize configuration with no-win messaging
+ * @param onClaim - Callback to try again
+ * @param canClaim - Whether the try again button should be enabled
  */
 &nbsp;
 import { motion } from 'framer-motion';
-import type { Prize } from '../../game/prizeTypes';
 import noWinImage from '../../assets/nowin.png';
+import type { Prize } from '../../game/prizeTypes';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../ThemedButton';
 &nbsp;
@@ -351,7 +362,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             transition={{ duration: 0.25, delay: 0.4 }}
           &gt;
             &lt;p className="text-base leading-relaxed" style={{ color: theme.colors.text.secondary }}&gt;
-              {prize.description || "Better luck next time!"}
+              {prize.description || 'Better luck next time!'}
             &lt;/p&gt;
             &lt;p className="text-sm mt-2" style={{ color: theme.colors.text.tertiary }}&gt;
               Keep trying - your big win could be just around the corner!
@@ -363,7 +374,8 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             onClick={onClaim}
             disabled={!canClaim}
             delay={0.6}
-            className="w-full"
+            className="w-full min-w-[120px] h-14 text-lg"
+            testId="claim-prize-button"
           &gt;
             Try Again
           &lt;/ThemedButton&gt;
@@ -379,7 +391,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-05T04:29:50.845Z
+                at 2025-10-06T19:17:46.282Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

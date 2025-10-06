@@ -142,13 +142,12 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         </motion.p>
 
         {/* Close button */}
-        <ThemedButton onClick={onClose} delay={0.6} testId="close-button" style={{
-            minWidth: '120px',
-            height: '56px',
-            fontSize: '18px',
-            fontWeight: 700,
-          }}
-
+        <ThemedButton
+          onClick={onClose}
+          entranceAnimation="hero"
+          delay={0.32}
+          testId="close-button"
+          className="min-w-[120px] h-14 text-lg"
         >
           Close
         </ThemedButton>

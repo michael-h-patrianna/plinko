@@ -97,6 +97,7 @@ The Plinko app reads runtime configuration from a central `AppConfig` object tha
 - The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/main.tsx`).
 - Feature flags are grouped under `featureFlags`—currently only `devToolsEnabled` and `dropPositionMechanicEnabled` are exposed.
 - Prize data is supplied by a `PrizeProvider` implementation. The default provider wraps the legacy production prize table while exposing deterministic `load`/`loadSync` APIs for host overrides.
+  - The bundled provider always generates **six** prize slots (`DEFAULT_PRODUCTION_PRIZE_COUNT`). Hosts can override the count by passing `{ count: <desired slots> }` when constructing the provider.
 
 ### Overriding in a Host Application
 

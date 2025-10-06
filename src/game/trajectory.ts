@@ -10,20 +10,20 @@
  * We simply find the right starting conditions that naturally lead to the desired outcome.
  */
 
-import type { TrajectoryPoint, DropZone } from './types';
-import { createRng } from './rng';
 import { calculateBucketZoneY } from '../utils/slotDimensions';
+import { createRng } from './rng';
+import type { DeterministicTrajectoryPayload, DropZone, TrajectoryPoint } from './types';
 
 /**
  * Get the X coordinate range for a drop zone
  */
 function getDropZoneRange(zone: DropZone, boardWidth: number): { min: number; max: number } {
   const zoneMap: Record<DropZone, { min: number; max: number }> = {
-    'left': { min: boardWidth * 0.05, max: boardWidth * 0.15 },
+    left: { min: boardWidth * 0.05, max: boardWidth * 0.15 },
     'left-center': { min: boardWidth * 0.25, max: boardWidth * 0.35 },
-    'center': { min: boardWidth * 0.45, max: boardWidth * 0.55 },
+    center: { min: boardWidth * 0.45, max: boardWidth * 0.55 },
     'right-center': { min: boardWidth * 0.65, max: boardWidth * 0.75 },
-    'right': { min: boardWidth * 0.85, max: boardWidth * 0.95 },
+    right: { min: boardWidth * 0.85, max: boardWidth * 0.95 },
   };
   return zoneMap[zone];
 }
@@ -52,6 +52,40 @@ interface SimulationParams {
   startX: number;
   startVx: number;
   bounceRandomness: number;
+}
+
+export type PrecomputedTrajectoryInput = DeterministicTrajectoryPayload;
+
+export interface GenerateTrajectoryParams {
+  boardWidth: number;
+  boardHeight: number;
+  pegRows: number;
+  slotCount: number;
+  seed?: number;
+  dropZone?: DropZone;
+  /** Explicit landing slot requested by upstream system. */
+  targetSlot?: number;
+  /** Precomputed deterministic path supplied by provider/server. */
+  precomputedTrajectory?: PrecomputedTrajectoryInput;
+  /** Override for maximum deterministic search attempts. */
+  maxAttempts?: number;
+}
+
+export interface GenerateTrajectoryResult {
+  trajectory: TrajectoryPoint[];
+  landedSlot: number;
+  /** Indicates whether the resulting slot matched the requested target slot. */
+  matchedTarget: boolean;
+  /** Count of simulation attempts performed (0 for precomputed trajectories). */
+  attempts: number;
+  /** Histogram of landed slots observed during search, useful for debugging target mismatches. */
+  slotHistogram: Record<number, number>;
+  /** Optional metadata for callers to inspect when targets are not satisfied. */
+  failure?: {
+    reason: 'invalid-precomputed-path' | 'max-attempts-exceeded' | 'target-out-of-range';
+    targetSlot?: number;
+  };
+  source: 'precomputed' | 'simulated';
 }
 
 /**
@@ -90,6 +124,25 @@ function generatePegLayout(
   }
 
   return pegs;
+}
+
+function clampSlotIndexFromX(x: number, boardWidth: number, slotCount: number): number {
+  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2;
+  const slotWidth = playableWidth / slotCount;
+  const clampedRelativeX = Math.min(Math.max(x - PHYSICS.BORDER_WIDTH, 0), playableWidth - 1e-6);
+  return Math.min(Math.max(0, Math.floor(clampedRelativeX / slotWidth)), slotCount - 1);
+}
+
+function computeLandingSlotFromTrajectory(
+  trajectory: TrajectoryPoint[],
+  boardWidth: number,
+  slotCount: number
+): number {
+  if (trajectory.length === 0) {
+    return -1;
+  }
+  const finalPoint = trajectory[trajectory.length - 1]!;
+  return clampSlotIndexFromX(finalPoint.x, boardWidth, slotCount);
 }
 
 /**
@@ -485,21 +538,67 @@ function runSimulation(
  * Uses brute-force retry to ensure ball never gets stuck
  * The caller is responsible for rearranging prizes to match the landing slot
  */
-export function generateTrajectory(params: {
-  boardWidth: number;
-  boardHeight: number;
-  pegRows: number;
-  slotCount: number;
-  seed?: number;
-  dropZone?: DropZone; // Optional drop zone constraint
-}): { trajectory: TrajectoryPoint[]; landedSlot: number } {
-  const { boardWidth, boardHeight, pegRows, slotCount, seed = Date.now(), dropZone } = params;
+export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTrajectoryResult {
+  const {
+    boardWidth,
+    boardHeight,
+    pegRows,
+    slotCount,
+    seed = Date.now(),
+    dropZone,
+    targetSlot,
+    precomputedTrajectory,
+    maxAttempts = 50000,
+  } = params;
+
+  if (slotCount <= 0) {
+    throw new Error('slotCount must be greater than zero.');
+  }
+
+  if (typeof targetSlot === 'number' && (targetSlot < 0 || targetSlot >= slotCount)) {
+    throw new Error(`Target slot ${targetSlot} is out of bounds for slot count ${slotCount}.`);
+  }
+
+  if (precomputedTrajectory) {
+    const trajectory = precomputedTrajectory.points.map((point) => ({ ...point }));
+    const computedSlot = computeLandingSlotFromTrajectory(trajectory, boardWidth, slotCount);
+    const providedSlot = precomputedTrajectory.landingSlot;
+    const effectiveTarget = typeof targetSlot === 'number' ? targetSlot : providedSlot;
+    const matchedTarget =
+      typeof effectiveTarget === 'number' ? computedSlot === effectiveTarget : computedSlot >= 0;
+
+    const slotHistogram: Record<number, number> = {};
+    if (computedSlot >= 0) {
+      slotHistogram[computedSlot] = 1;
+    }
+
+    const failure =
+      computedSlot < 0 || (typeof effectiveTarget === 'number' && computedSlot !== effectiveTarget)
+        ? {
+            reason: 'invalid-precomputed-path' as const,
+            targetSlot: effectiveTarget,
+          }
+        : undefined;
+
+    return {
+      trajectory,
+      landedSlot: computedSlot,
+      matchedTarget,
+      attempts: 0,
+      slotHistogram,
+      failure,
+      source: 'precomputed',
+    };
+  }
 
   const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
 
-  // BRUTE-FORCE: Keep trying different initialization parameters until we get a valid trajectory
-  // This ensures the ball NEVER gets stuck - we just keep trying until physics works properly
-  const maxAttempts = 50000; // Same as before to ensure high success rate
+  const slotHistogram: Record<number, number> = {};
+  let bestCandidate: {
+    trajectory: TrajectoryPoint[];
+    landedSlot: number;
+    attempts: number;
+  } | null = null;
 
   // Determine search range based on drop zone
   let searchCenterX: number;
@@ -556,16 +655,42 @@ export function generateTrajectory(params: {
       simulationSeed
     );
 
-    // Check if we got a valid landing slot (ball didn't get stuck)
     if (landedSlot >= 0 && landedSlot < slotCount) {
-      // Success! First valid trajectory - accept whatever slot it landed in
-      return { trajectory, landedSlot };
-    }
+      slotHistogram[landedSlot] = (slotHistogram[landedSlot] ?? 0) + 1;
 
-    // Ball got stuck (landedSlot === -1), try again with different initialization
+      if (!bestCandidate) {
+        bestCandidate = { trajectory, landedSlot, attempts: attempt + 1 };
+      }
+
+      if (typeof targetSlot !== 'number' || landedSlot === targetSlot) {
+        return {
+          trajectory,
+          landedSlot,
+          matchedTarget: typeof targetSlot !== 'number' ? true : landedSlot === targetSlot,
+          attempts: attempt + 1,
+          slotHistogram,
+          source: 'simulated',
+        };
+      }
+    }
   }
 
-  // This should never happen with proper parameter generation
+  if (bestCandidate) {
+    return {
+      trajectory: bestCandidate.trajectory,
+      landedSlot: bestCandidate.landedSlot,
+      matchedTarget:
+        typeof targetSlot !== 'number' ? true : bestCandidate.landedSlot === targetSlot,
+      attempts: maxAttempts,
+      slotHistogram,
+      failure:
+        typeof targetSlot === 'number'
+          ? ({ reason: 'max-attempts-exceeded', targetSlot } as const)
+          : undefined,
+      source: 'simulated',
+    };
+  }
+
   console.error(`Failed to generate valid trajectory after ${maxAttempts} attempts`);
   throw new Error(`Could not generate valid trajectory after ${maxAttempts} attempts`);
 }

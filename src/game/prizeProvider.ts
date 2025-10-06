@@ -7,7 +7,7 @@ import {
 import type { PrizeFixture } from '../tests/fixtures/prizeFixtures';
 import { validatePrizeSet } from '../utils/prizeUtils';
 import { selectPrize } from './rng';
-import type { PrizeConfig } from './types';
+import type { DeterministicTrajectoryPayload, PrizeConfig } from './types';
 
 export type PrizeProviderSource = 'default' | 'fixture' | 'remote';
 
@@ -73,11 +73,42 @@ const prizeArraySchema = z
   .min(3, 'Prize table must contain at least 3 entries.')
   .max(8, 'Prize table must contain no more than 8 entries.');
 
+const trajectoryPointSchema = z.object({
+  frame: z.number().int(),
+  x: z.number(),
+  y: z.number(),
+  rotation: z.number(),
+  pegHit: z.boolean().optional(),
+  pegHitRow: z.number().int().optional(),
+  pegHitCol: z.number().int().optional(),
+  pegsHit: z
+    .array(
+      z.object({
+        row: z.number().int(),
+        col: z.number().int(),
+      })
+    )
+    .optional(),
+  vx: z.number().optional(),
+  vy: z.number().optional(),
+  wallHit: z.enum(['left', 'right']).optional(),
+  bucketWallHit: z.enum(['left', 'right']).optional(),
+  bucketFloorHit: z.boolean().optional(),
+});
+
+const deterministicTrajectorySchema = z.object({
+  points: z.array(trajectoryPointSchema).min(1, 'Deterministic path requires at least one point.'),
+  landingSlot: z.number().int().min(0).optional(),
+  seed: z.number().int().optional(),
+  provider: z.string().min(1).optional(),
+});
+
 const basePrizeProviderResultSchema = z.object({
   prizes: prizeArraySchema,
   winningIndex: z.number().int().min(0),
   seed: z.number().int(),
   source: z.enum(['default', 'fixture', 'remote']).default('default'),
+  deterministicTrajectory: deterministicTrajectorySchema.optional(),
 });
 
 export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefine((value, ctx) => {
@@ -87,6 +118,17 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
       code: z.ZodIssueCode.custom,
       path: ['winningIndex'],
       message: `Winning index ${winningIndex} is out of bounds for prize list of length ${prizes.length}.`,
+    });
+  }
+
+  if (
+    value.deterministicTrajectory?.landingSlot !== undefined &&
+    value.deterministicTrajectory.landingSlot >= prizes.length
+  ) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['deterministicTrajectory', 'landingSlot'],
+      message: `Deterministic trajectory landing slot ${value.deterministicTrajectory.landingSlot} is out of bounds for prize list of length ${prizes.length}.`,
     });
   }
 
@@ -107,6 +149,7 @@ export interface PrizeProviderResult {
   winningIndex: number;
   seed: number;
   source: PrizeProviderSource;
+  deterministicTrajectory?: DeterministicTrajectoryPayload;
 }
 
 export interface PrizeProviderContext {
@@ -116,7 +159,6 @@ export interface PrizeProviderContext {
 
 export interface PrizeProvider {
   load(context?: PrizeProviderContext): Promise<PrizeProviderResult>;
-  loadSync?(context?: PrizeProviderContext): PrizeProviderResult;
 }
 
 export interface DefaultPrizeProviderOptions extends ProductionPrizeSetOptions {
@@ -129,6 +171,7 @@ function coercePrizeProviderResult(parsed: ParsedPrizeProviderResult): PrizeProv
     winningIndex: parsed.winningIndex,
     seed: parsed.seed,
     source: parsed.source,
+    deterministicTrajectory: parsed.deterministicTrajectory,
   };
 }
 
@@ -145,7 +188,7 @@ function buildDefaultSession(
 ): PrizeProviderResult {
   const resolvedSeed = resolveSeedValue(context?.seedOverride ?? options.seed);
   const prizeSet = createValidatedProductionPrizeSet({
-    count: options.count ?? DEFAULT_PRODUCTION_PRIZE_COUNT,
+    count: options.count,
     seed: resolvedSeed,
   }) as PrizeConfig[];
 
@@ -162,7 +205,7 @@ function buildDefaultSession(
 }
 
 export function createDefaultPrizeProvider(
-  options: DefaultPrizeProviderOptions = {}
+  options: DefaultPrizeProviderOptions = { count: DEFAULT_PRODUCTION_PRIZE_COUNT }
 ): PrizeProvider {
   return {
     load(context): Promise<PrizeProviderResult> {
@@ -174,9 +217,6 @@ export function createDefaultPrizeProvider(
           error instanceof Error ? error : new Error('Failed to load prize session');
         return Promise.reject(normalizedError);
       }
-    },
-    loadSync(context): PrizeProviderResult {
-      return buildDefaultSession(options, context);
     },
   };
 }
@@ -191,6 +231,7 @@ function buildFixtureSession(
     winningIndex: fixture.winningIndex,
     seed: resolvedSeed,
     source: 'fixture',
+    deterministicTrajectory: fixture.deterministicTrajectory,
   });
 
   return coercePrizeProviderResult(parsed);
@@ -207,9 +248,6 @@ export function createFixturePrizeProvider(fixture: PrizeFixture): PrizeProvider
           error instanceof Error ? error : new Error('Failed to load prize session');
         return Promise.reject(normalizedError);
       }
-    },
-    loadSync(context): PrizeProviderResult {
-      return buildFixtureSession(fixture, context);
     },
   };
 }

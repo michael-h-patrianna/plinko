@@ -52,7 +52,6 @@ export function useTrajectoryWorker() {
 
       // Fallback to main thread if worker not available
       if (!worker) {
-        console.log('Generating trajectory on main thread (worker not available)');
         return Promise.resolve(generateTrajectory(params));
       }
 
@@ -79,12 +78,7 @@ export function useTrajectoryWorker() {
         const handleMessage = (event: MessageEvent<TrajectoryWorkerResponse>) => {
           if (hasResponded) return;
 
-          const { type, trajectory, landedSlot, error, telemetry } = event.data;
-
-          // Log telemetry
-          if (telemetry) {
-            console.log(`Trajectory generation: ${telemetry.duration.toFixed(0)}ms`);
-          }
+          const { type, trajectory, landedSlot, error } = event.data;
 
           if (type === 'success' && trajectory && landedSlot !== undefined) {
             clearTimeout(safetyTimeout);

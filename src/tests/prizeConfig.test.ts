@@ -13,6 +13,7 @@ import {
   getPrizeByIndex,
 } from '../config/prizeTable';
 import {
+  DEFAULT_PRODUCTION_PRIZE_COUNT,
   createValidatedProductionPrizeSet,
   generateProductionPrizeSet,
   getPrizeByIndex as getProductionPrizeByIndex,
@@ -124,11 +125,10 @@ describe('Prize Set Generation', () => {
   });
 
   describe('generateProductionPrizeSet', () => {
-    it('should generate prize sets with 3-8 prizes by default', () => {
+    it('should generate prize sets with the default count when not specified', () => {
       for (let i = 0; i < 20; i++) {
         const prizes = generateProductionPrizeSet();
-        expect(prizes.length).toBeGreaterThanOrEqual(3);
-        expect(prizes.length).toBeLessThanOrEqual(8);
+        expect(prizes.length).toBe(DEFAULT_PRODUCTION_PRIZE_COUNT);
       }
     });
 
@@ -247,8 +247,7 @@ describe('Prize Set Validation', () => {
     it('should return a valid prize set', () => {
       const prizes = createValidatedProductionPrizeSet();
 
-      expect(prizes.length).toBeGreaterThanOrEqual(3);
-      expect(prizes.length).toBeLessThanOrEqual(8);
+      expect(prizes.length).toBe(DEFAULT_PRODUCTION_PRIZE_COUNT);
 
       const sum = prizes.reduce((acc, p) => acc + p.probability, 0);
       expect(sum).toBeCloseTo(1.0, 6);

@@ -1,4 +1,3 @@
-
 === CRITICAL INSTRUCTION BLOCK (CIB-001)===
 
 ## MANDATORY TOOLS
@@ -43,3 +42,101 @@ WHY: Tracks progress, maintains focus
 | 🚫 Forbidden | Project root | Keep root pristine—no scripts, screenshots, or scratch docs. |
 
 === END CIB-001 ===
+
+=== CROSS-PLATFORM REQUIREMENTS [CIB-001.5] ===
+
+## Dual Platform Architecture
+
+This is a **React web project** with future React Native portability as a requirement. Write web code that avoids RN-incompatible features.
+
+### Current Stack
+- **Web**: Framer Motion, CSS, React (current implementation)
+
+### Future Compatibility
+- **React Native**: Will use Moti, Reanimated, react-native-linear-gradient
+- Web code must avoid features that don't translate to React Native
+
+### CRITICAL Animation & Visual Constraints
+
+**✅ ALLOWED** (cross-platform safe):
+- Transforms: `translateX`, `translateY`, `scale`, `rotate`
+- Opacity animations
+- **Linear gradients ONLY** (via react-native-linear-gradient)
+- Color transitions
+- Layout animations (position, size)
+
+**❌ FORBIDDEN** (web-only, breaks React Native):
+- Blur animations or CSS filters
+- Radial/conic gradients
+- Box shadows, text shadows
+- backdrop-filter, clip-path
+- CSS pseudo-elements (:before, :after)
+- Complex CSS selectors
+
+### Implementation Strategy
+When implementing visual effects or animations:
+1. Check if feature is cross-platform compatible
+2. Use transforms + opacity only for animations
+3. Use linear gradients only (never radial/conic)
+4. No blur, filters, or shadows
+5. Abstract platform-specific code when necessary
+
+### Which Agents Must Follow This
+- **animation-specialist**: Primary enforcer of animation constraints
+- **ui-polish-specialist**: Primary enforcer of visual constraints
+- **integration-coordinator**: Ensures cross-platform strategy in architecture
+- All other agents: Aware of constraints when adding visual features
+
+=== END CIB-001.5 ===
+
+=== AGENT SELECTION GUIDE [CIB-002] ===
+
+## When to Choose Which Agent
+
+### Physics & Simulation
+**physics-engine-specialist**: trajectory, collision, physics simulation, deterministic behavior, RNG, overlap detection, numerical stability
+
+### Code Quality & Structure
+**typescript-guardian**: type safety, generics, type definitions, eliminating 'any', strict mode
+**architecture-guardian**: file organization, folder structure, asset placement, keeping root clean
+**code-reviewer**: PROACTIVE review after code changes for quality, security, best practices (use after implementation)
+
+### Testing & Validation
+**testing-architect**: writing tests, test coverage, Vitest, Playwright, E2E testing, validation strategy
+
+### Performance & Animation
+**animation-specialist**: 60 FPS optimization, GPU acceleration, smooth animations, performance profiling
+
+### UI & User Experience
+**ui-polish-specialist**: visual refinement, accessibility, theming, micro-interactions, responsive design
+
+### Game Logic
+**state-machine-specialist**: game state, state transitions, event handling, game flow logic
+
+### Problem Resolution
+**debugger**: PROACTIVE investigation of errors, test failures, unexpected behavior, root cause analysis (use when things break)
+
+### Complex Coordination
+**integration-coordinator**: multi-domain tasks, system-wide changes, orchestrating multiple agents, architecture decisions
+
+## Workflow Patterns
+
+**After Writing Code**:
+1. Relevant specialist implements feature
+2. **code-reviewer** reviews changes PROACTIVELY
+3. **testing-architect** validates with tests
+
+**When Bugs Occur**:
+1. **debugger** investigates and finds root cause
+2. Relevant specialist implements fix
+3. **testing-architect** adds regression test
+
+**Multi-Domain Work**:
+**integration-coordinator** breaks down task, delegates to specialists, ensures integration
+
+## Default Behavior
+If no specific agent matches, use general development knowledge. When in doubt, **integration-coordinator** helps determine the right specialist.
+
+=== END CIB-002 ===
+
+````

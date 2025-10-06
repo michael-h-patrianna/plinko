@@ -2,8 +2,9 @@
  * Comprehensive trajectory test - 10,000 runs with physics validation
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { generateTrajectory } from '../game/trajectory';
+import type { DeterministicTrajectoryPayload } from '../game/types';
 
 const PHYSICS = {
   BALL_RADIUS: 9,
@@ -136,7 +137,9 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
           if (landedSlot < 0 || landedSlot >= slotCount) {
             trajectoryValid = false;
             if (run < 10) {
-              console.log(`  Run ${run}: Ball landed in invalid slot ${landedSlot} (valid: 0-${slotCount - 1})`);
+              console.log(
+                `  Run ${run}: Ball landed in invalid slot ${landedSlot} (valid: 0-${slotCount - 1})`
+              );
             }
           }
         }
@@ -176,43 +179,116 @@ describe('Comprehensive Trajectory Test - 10,000 runs', () => {
     expect(maxOverlapDetected).toBeLessThanOrEqual(0.5); // Max 0.5px tolerance
   }, 60000); // 60 second timeout for this test
 
-  it(
-    'should never have ball overlapping with pegs',
-    () => {
-      const boardWidth = 375;
-      const boardHeight = 500;
-      const pegRows = 10;
-      const slotCount = 7;
+  it('aligns trajectory with requested target slot when seed is consistent', () => {
+    const baseParams = {
+      boardWidth: 375,
+      boardHeight: 500,
+      pegRows: 10,
+      slotCount: 6,
+      seed: 98765,
+    };
 
-      const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
+    const baseline = generateTrajectory(baseParams);
+    const targeted = generateTrajectory({ ...baseParams, targetSlot: baseline.landedSlot });
 
-      // Test 100 trajectories in detail
-      for (let slot = 0; slot < slotCount; slot++) {
-        for (let run = 0; run < 100 / slotCount; run++) {
-          const { trajectory } = generateTrajectory({
-            boardWidth,
-            boardHeight,
-            pegRows,
-            slotCount,
-            seed: Date.now() + run * 1000 + slot,
-          });
+    expect(targeted.matchedTarget).toBe(true);
+    expect(targeted.landedSlot).toBe(baseline.landedSlot);
+    expect(targeted.source).toBe('simulated');
+    expect(targeted.attempts).toBeGreaterThanOrEqual(1);
+  });
 
-          // Check every single frame
-          for (const point of trajectory) {
-            for (const peg of pegs) {
-              const dx = point.x - peg.x;
-              const dy = point.y - peg.y;
-              const distance = Math.sqrt(dx * dx + dy * dy);
+  it('uses precomputed trajectory payload when provided', () => {
+    const payload: DeterministicTrajectoryPayload = {
+      points: [
+        { frame: 0, x: 35, y: 60, rotation: 0 },
+        { frame: 1, x: 40, y: 140, rotation: 0 },
+        { frame: 2, x: 45, y: 260, rotation: 0 },
+        { frame: 3, x: 48, y: 420, rotation: 0 },
+        { frame: 4, x: 50, y: 480, rotation: 0 },
+      ],
+      landingSlot: 0,
+      seed: 1111,
+      provider: 'test-suite',
+    };
 
-              // Ball edge should never overlap peg edge
-              expect(distance).toBeGreaterThanOrEqual(PHYSICS.COLLISION_RADIUS - 0.5);
-            }
+    const result = generateTrajectory({
+      boardWidth: 375,
+      boardHeight: 500,
+      pegRows: 10,
+      slotCount: 6,
+      targetSlot: 0,
+      precomputedTrajectory: payload,
+    });
+
+    expect(result.source).toBe('precomputed');
+    expect(result.matchedTarget).toBe(true);
+    expect(result.landedSlot).toBe(0);
+    expect(result.slotHistogram[0]).toBe(1);
+  });
+
+  it('computes landing slot indices consistent with board layout math', () => {
+    const boardWidth = 375;
+    const slotCount = 6;
+    const playableWidth = boardWidth - 24; // border width * 2
+    const slotWidth = playableWidth / slotCount;
+    const expectedSlot = 3;
+    const xPosition = 12 + slotWidth * expectedSlot + slotWidth / 2;
+
+    const payload: DeterministicTrajectoryPayload = {
+      points: [
+        { frame: 0, x: xPosition, y: 470, rotation: 0 },
+        { frame: 1, x: xPosition, y: 480, rotation: 0 },
+      ],
+    };
+
+    const result = generateTrajectory({
+      boardWidth,
+      boardHeight: 500,
+      pegRows: 10,
+      slotCount,
+      precomputedTrajectory: payload,
+      targetSlot: expectedSlot,
+    });
+
+    const boardComputedSlot = Math.floor((xPosition - 12) / slotWidth);
+
+    expect(result.landedSlot).toBe(boardComputedSlot);
+    expect(result.matchedTarget).toBe(true);
+  });
+
+  it('should never have ball overlapping with pegs', () => {
+    const boardWidth = 375;
+    const boardHeight = 500;
+    const pegRows = 10;
+    const slotCount = 7;
+
+    const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
+
+    // Test 100 trajectories in detail
+    for (let slot = 0; slot < slotCount; slot++) {
+      for (let run = 0; run < 100 / slotCount; run++) {
+        const { trajectory } = generateTrajectory({
+          boardWidth,
+          boardHeight,
+          pegRows,
+          slotCount,
+          seed: Date.now() + run * 1000 + slot,
+        });
+
+        // Check every single frame
+        for (const point of trajectory) {
+          for (const peg of pegs) {
+            const dx = point.x - peg.x;
+            const dy = point.y - peg.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            // Ball edge should never overlap peg edge
+            expect(distance).toBeGreaterThanOrEqual(PHYSICS.COLLISION_RADIUS - 0.5);
           }
         }
       }
-    },
-    60000
-  ); // 60 second timeout for this test
+    }
+  }, 60000); // 60 second timeout for this test
 
   it('should have smooth, continuous motion without teleportation', () => {
     const { trajectory } = generateTrajectory({

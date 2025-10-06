@@ -23,7 +23,7 @@ Use the checkboxes below to track progress across priority tiers (P0–P3). Mark
 - [ ] **P0.1 Prize Provider Interface & Deterministic Outcomes**
   - [x] Inventory current prize usages and confirm prerequisites from cross-cutting prep.
   - [x] Design `PrizeProvider` interface supporting async loading and mock fallback (`src/game/prizeProvider.ts`).
-  - [ ] Refactor `createValidatedProductionPrizeSet()` to conform to the interface and remove random prize count.
+  - [x] Refactor `createValidatedProductionPrizeSet()` to conform to the interface and remove random prize count.
   - [x] Update `usePlinkoGame` to accept injected provider plus server-selected winning index.
   - [x] Replace direct RNG usage in `selectPrize()` with provider results.
   - [x] Add schema validation guards (e.g., Zod) for prize payloads.
@@ -31,13 +31,13 @@ Use the checkboxes below to track progress across priority tiers (P0–P3). Mark
   - [x] Update `README.md` and `docs/architecture.md` with provider configuration guidance.
 - [ ] **P0.2 Trajectory Generator Alignment with Target Slot**
   - [ ] Ensure deterministic test harness is in place.
-  - [ ] Extend `src/game/trajectory.ts` to accept a target slot or precomputed peg path.
-  - [ ] Update physics search to exit once the path matches target; handle fallback thresholds.
-  - [ ] Adjust `usePlinkoGame` workflow to request the deterministic path before rendering.
-  - [ ] Confirm board layout uses identical slot indices as trajectory data.
-  - [ ] Provide developer toggle to preserve random mock behaviour.
-  - [ ] Add unit, regression, and e2e tests verifying predetermined prizes display correctly.
-  - [ ] Document deterministic path strategy in `docs/performance.md`.
+  - [x] Extend `src/game/trajectory.ts` to accept a target slot or precomputed peg path.
+  - [x] Update physics search to exit once the path matches target; handle fallback thresholds.
+  - [x] Adjust `usePlinkoGame` workflow to request the deterministic path before rendering.
+  - [x] Confirm board layout uses identical slot indices as trajectory data.
+  - [x] Provide developer toggle to preserve random mock behaviour.
+  - [x] Add unit, regression, and e2e tests verifying predetermined prizes display correctly.
+  - [x] Document deterministic path strategy in `docs/performance.md`.
 - [ ] **P0.3 Environment-Safe Platform Wrappers**
   - [ ] Audit direct usages of `window`, `document`, `localStorage`, and `crypto`.
   - [ ] Create `src/utils/platform` adapters for storage, viewport, RNG, and timers.

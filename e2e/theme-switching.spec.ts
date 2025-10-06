@@ -2,7 +2,7 @@
  * E2E tests for theme switching functionality
  */
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 const THEMES = ['default', 'playFame', 'darkBlue'];
 
@@ -15,7 +15,9 @@ test.describe('Theme Switching E2E', () => {
       await expect(page.getByTestId('drop-ball-button')).toBeVisible({ timeout: 5000 });
 
       // Find theme selector (could be select or other element)
-      const themeSelector = page.locator('select, [role="combobox"], [aria-label*="theme" i]').first();
+      const themeSelector = page
+        .locator('select, [role="combobox"], [aria-label*="theme" i]')
+        .first();
       const isThemeSelectorVisible = await themeSelector.isVisible().catch(() => false);
 
       if (isThemeSelectorVisible) {
@@ -35,7 +37,7 @@ test.describe('Theme Switching E2E', () => {
       await expect(page.getByTestId('plinko-ball')).toBeVisible({ timeout: 3000 });
 
       // Wait for completion
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await expect(claimButton).toBeVisible({ timeout: 12000 });
 
       // Verify claim button exists
@@ -49,7 +51,9 @@ test.describe('Theme Switching E2E', () => {
       await expect(page.getByTestId('drop-ball-button')).toBeVisible({ timeout: 5000 });
 
       // Select theme if selector exists
-      const themeSelector = page.locator('select, [role="combobox"], [aria-label*="theme" i]').first();
+      const themeSelector = page
+        .locator('select, [role="combobox"], [aria-label*="theme" i]')
+        .first();
       const isThemeSelectorVisible = await themeSelector.isVisible().catch(() => false);
 
       if (isThemeSelectorVisible) {
@@ -80,7 +84,9 @@ test.describe('Theme Switching E2E', () => {
 
     await expect(page.getByTestId('drop-ball-button')).toBeVisible({ timeout: 5000 });
 
-    const themeSelector = page.locator('select, [role="combobox"], [aria-label*="theme" i]').first();
+    const themeSelector = page
+      .locator('select, [role="combobox"], [aria-label*="theme" i]')
+      .first();
     const isVisible = await themeSelector.isVisible().catch(() => false);
 
     if (isVisible) {
@@ -114,7 +120,7 @@ test.describe('Theme Switching E2E', () => {
       // Complete game
       await page.getByTestId('drop-ball-button').click();
 
-      const claimButton = page.getByTestId('claim-prize-button').or(page.getByText(/claim|try again/i));
+      const claimButton = page.getByTestId('claim-prize-button');
       await expect(claimButton).toBeVisible({ timeout: 12000 });
 
       await claimButton.click();

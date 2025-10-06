@@ -1,9 +1,10 @@
-import type { PrizeConfig } from '../../game/types';
+import type { DeterministicTrajectoryPayload, PrizeConfig } from '../../game/types';
 
 export interface PrizeFixture {
   name: string;
   prizes: PrizeConfig[];
   winningIndex: number;
+  deterministicTrajectory?: DeterministicTrajectoryPayload;
 }
 
 const deterministicPrizeSet: PrizeConfig[] = [
@@ -123,5 +124,6 @@ export function getPrizeFixture(
     name: fixture.name,
     winningIndex: fixture.winningIndex,
     prizes: clonePrizeSet(fixture.prizes),
+    deterministicTrajectory: fixture.deterministicTrajectory,
   };
 }

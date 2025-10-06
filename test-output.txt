@@ -1,0 +1,5 @@
+
+> plinko-popup@1.0.0 pretest
+> node scripts/cleanup-vitest.mjs
+
+[cleanup-vitest] Terminating 1 lingering Vitest processes...

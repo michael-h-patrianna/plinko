@@ -166,12 +166,12 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: timing.claimButton, duration: 0.3 }}
           >
-            <ThemedButton onClick={onClaim} disabled={!canClaim} className="w-full" style={{
-            minWidth: '120px',
-            height: '56px',
-            fontSize: '18px',
-            fontWeight: 700,
-          }}>
+            <ThemedButton
+              onClick={onClaim}
+              disabled={!canClaim}
+              className="w-full min-w-[120px] h-14 text-lg"
+              testId="claim-prize-button"
+            >
               Claim Prize
             </ThemedButton>
           </motion.div>
