@@ -14,9 +14,15 @@ if (process.env.ALLOW_VITEST_WATCH !== '1') {
   process.exit(1);
 }
 
+const env = {
+  ...process.env,
+  PLINKO_TEST_MODE: process.env.PLINKO_TEST_MODE ?? 'deterministic',
+  PLINKO_FIXTURE_SEED: process.env.PLINKO_FIXTURE_SEED ?? '123456789',
+};
+
 const child = spawn('npx', ['vitest', '--watch'], {
   stdio: 'inherit',
-  env: process.env,
+  env,
 });
 
 child.on('exit', (code, signal) => {

@@ -13,13 +13,13 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "typecheck": "tsc --noEmit",
     "pretest": "node scripts/cleanup-vitest.mjs",
-    "test": "vitest run",
+    "test": "node ./scripts/run-vitest.mjs run",
     "pretest:watch": "node scripts/cleanup-vitest.mjs",
     "test:watch": "node scripts/vitest-watch.mjs",
     "pretest:coverage": "node scripts/cleanup-vitest.mjs",
-    "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed"
+    "test:coverage": "node ./scripts/run-vitest.mjs run --coverage",
+    "test:e2e": "node ./scripts/run-playwright.mjs",
+    "test:e2e:headed": "node ./scripts/run-playwright.mjs --headed"
   },
   "dependencies": {
     "framer-motion": "^12.23.22",

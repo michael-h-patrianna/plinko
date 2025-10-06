@@ -88,6 +88,43 @@ plinko/
 └── package.json
 ```
 
+## 🛠 Configuration & Feature Flags
+
+The Plinko app reads runtime configuration from a central `AppConfig` object that can be overridden by the host shell.
+
+### Default Behaviour
+
+- The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/main.tsx`).
+- Feature flags are grouped under `featureFlags`—currently only `devToolsEnabled` and `dropPositionMechanicEnabled` are exposed.
+- Prize data creation and selection flow through the `prizeProvider`, which already wraps the legacy `createValidatedProductionPrizeSet()` and `selectPrize()` helpers.
+
+### Overriding in a Host Application
+
+```tsx
+import { AppConfigProvider } from './config/AppConfigContext';
+
+const hostOverrides = {
+  featureFlags: {
+    devToolsEnabled: false,
+  },
+  prizeProvider: {
+    createPrizeSet: () => myServerPayload.prizes,
+    selectPrize: (prizes, seed) => ({
+      selectedIndex: myServerPayload.winningIndex,
+      seedUsed: seed ?? myServerPayload.seed,
+    }),
+  },
+};
+
+root.render(
+  <AppConfigProvider value={hostOverrides}>
+    <App />
+  </AppConfigProvider>
+);
+```
+
+When the app boots it merges the overrides with the defaults, meaning hosts can gradually adopt deterministic providers without losing the demo fallback.
+
 ### Agent Folder Guidelines
 
 All LLM coding agents **must** keep generated artifacts inside their designated directories. Use this routing matrix every time you create supporting assets:

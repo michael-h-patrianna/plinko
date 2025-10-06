@@ -3,13 +3,12 @@
  * Manages state machine, animation loop, and game lifecycle
  */
 
-import { useEffect, useReducer, useRef, useMemo, useState, useCallback } from 'react';
-import type { GameState, GameContext, BallPosition, PrizeConfig, DropZone } from '../game/types';
-import { transition, initialContext, type GameEvent } from '../game/stateMachine';
-import { selectPrize } from '../game/rng';
-import { createValidatedProductionPrizeSet } from '../config/productionPrizeTable';
-import { generateTrajectory } from '../game/trajectory';
+import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import { useAppConfig } from '../config/AppConfigContext';
 import type { ChoiceMechanic } from '../dev-tools';
+import { initialContext, transition, type GameEvent } from '../game/stateMachine';
+import { generateTrajectory } from '../game/trajectory';
+import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig } from '../game/types';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
 interface FrameStore {
@@ -37,10 +36,17 @@ interface UsePlinkoGameOptions {
 }
 
 export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
-  const { seedOverride, boardWidth = 375, boardHeight = 500, pegRows = 10, choiceMechanic = 'none' } = options;
+  const {
+    seedOverride,
+    boardWidth = 375,
+    boardHeight = 500,
+    pegRows = 10,
+    choiceMechanic = 'none',
+  } = options;
+  const { prizeProvider } = useAppConfig();
 
   // Generate random prize set for each game session
-  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => createValidatedProductionPrizeSet());
+  const [prizes, setPrizes] = useState<PrizeConfig[]>(() => prizeProvider.createPrizeSet());
 
   const [gameState, dispatch] = useReducer(gameReducer, {
     state: 'idle',
@@ -82,7 +88,10 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       const finalSeed = seedOverride ?? (urlSeed ? parseInt(urlSeed, 10) : undefined);
 
       // NEW APPROACH: Generate trajectory first (random landing slot)
-      const { selectedIndex: winningPrizeIndex, seedUsed } = selectPrize(prizes, finalSeed);
+      const { selectedIndex: winningPrizeIndex, seedUsed } = prizeProvider.selectPrize(
+        prizes,
+        finalSeed
+      );
 
       const { trajectory, landedSlot } = generateTrajectory({
         boardWidth,
@@ -114,7 +123,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     } else if (gameState.state !== 'idle') {
       hasInitialized.current = false;
     }
-  }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes]);
+  }, [gameState.state, seedOverride, boardWidth, boardHeight, pegRows, prizes, prizeProvider]);
 
   // Track if animation is already running
   const landingTimeoutRef = useRef<number | null>(null);
@@ -216,52 +225,63 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     }
   };
 
-  const selectDropPosition = useCallback((dropZone: DropZone) => {
-    if (gameState.state === 'selecting-position') {
-      // Regenerate trajectory with the selected drop zone
-      // Use the existing seed from context
-      const currentSeed = gameState.context.seed || Date.now();
+  const selectDropPosition = useCallback(
+    (dropZone: DropZone) => {
+      if (gameState.state === 'selecting-position') {
+        // Regenerate trajectory with the selected drop zone
+        // Use the existing seed from context
+        const currentSeed = gameState.context.seed || Date.now();
 
-      const { trajectory, landedSlot } = generateTrajectory({
-        boardWidth,
-        boardHeight,
-        pegRows,
-        slotCount: prizes.length,
-        seed: currentSeed,
-        dropZone, // Pass the selected drop zone
-      });
+        const { trajectory, landedSlot } = generateTrajectory({
+          boardWidth,
+          boardHeight,
+          pegRows,
+          slotCount: prizes.length,
+          seed: currentSeed,
+          dropZone, // Pass the selected drop zone
+        });
 
-      // Rearrange prizes to match landed slot
-      const rearrangedPrizes = [...prizes];
-      const currentWinningIndex = gameState.context.selectedIndex;
+        // Rearrange prizes to match landed slot
+        const rearrangedPrizes = [...prizes];
+        const currentWinningIndex = gameState.context.selectedIndex;
 
-      if (landedSlot !== currentWinningIndex) {
-        const temp = rearrangedPrizes[landedSlot]!;
-        rearrangedPrizes[landedSlot] = rearrangedPrizes[currentWinningIndex]!;
-        rearrangedPrizes[currentWinningIndex] = temp;
+        if (landedSlot !== currentWinningIndex) {
+          const temp = rearrangedPrizes[landedSlot]!;
+          rearrangedPrizes[landedSlot] = rearrangedPrizes[currentWinningIndex]!;
+          rearrangedPrizes[currentWinningIndex] = temp;
+        }
+
+        setPrizes(rearrangedPrizes);
+        const prize = rearrangedPrizes[landedSlot]!;
+
+        // Dispatch position selected with new trajectory data
+        dispatch({
+          type: 'POSITION_SELECTED',
+          payload: {
+            dropZone,
+            trajectory,
+            selectedIndex: landedSlot,
+            prize,
+          },
+        });
       }
-
-      setPrizes(rearrangedPrizes);
-      const prize = rearrangedPrizes[landedSlot]!;
-
-      // Dispatch position selected with new trajectory data
-      dispatch({
-        type: 'POSITION_SELECTED',
-        payload: {
-          dropZone,
-          trajectory,
-          selectedIndex: landedSlot,
-          prize,
-        },
-      });
-    }
-  }, [gameState.state, gameState.context.seed, gameState.context.selectedIndex, prizes, boardWidth, boardHeight, pegRows]);
+    },
+    [
+      gameState.state,
+      gameState.context.seed,
+      gameState.context.selectedIndex,
+      prizes,
+      boardWidth,
+      boardHeight,
+      pegRows,
+    ]
+  );
 
   const resetGame = () => {
     // Reset frame to 0 for new game
     currentFrameRef.current = 0;
     // Generate new random prize set for next game
-    setPrizes(createValidatedProductionPrizeSet());
+    setPrizes(prizeProvider.createPrizeSet());
     dispatch({ type: 'RESET_REQUESTED' });
   };
 

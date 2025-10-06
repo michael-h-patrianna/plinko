@@ -44,3 +44,7 @@ Thumbs.db
 .temp/
 
 ddd.md
+
+
+.DS_Store
+src/.DS_Store

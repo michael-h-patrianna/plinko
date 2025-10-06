@@ -5,8 +5,9 @@
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import './styles/globals.css';
 import { App } from './App.tsx';
+import { AppConfigProvider } from './config/AppConfigContext.tsx';
+import './styles/globals.css';
 
 const rootElement = document.getElementById('root');
 
@@ -16,6 +17,8 @@ if (!rootElement) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <App />
+    <AppConfigProvider>
+      <App />
+    </AppConfigProvider>
   </StrictMode>
 );
