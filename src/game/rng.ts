@@ -3,6 +3,7 @@
  * Ensures consistent behavior across platforms and test runs
  */
 
+import { cryptoAdapter } from '../utils/platform';
 import type { PrizeConfig } from './types';
 
 /**
@@ -32,9 +33,7 @@ export function createRng(seed: number): { next: () => number } {
  * Only used in production; tests should provide explicit seeds
  */
 export function generateSeed(): number {
-  const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-  return array[0]!;
+  return cryptoAdapter.generateSecureRandomSeed();
 }
 
 /**

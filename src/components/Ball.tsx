@@ -8,7 +8,7 @@
  */
 
 import type { BallPosition, GameState, TrajectoryPoint } from '../game/types';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useTheme } from '../theme';
 
 interface BallProps {
@@ -28,6 +28,7 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
   const [trail, setTrail] = useState<TrailPoint[]>([]);
   const { theme } = useTheme();
   const [slowMoActive, setSlowMoActive] = useState(false);
+  const trailIdCounter = useRef(0);
 
   // Detect final descent for slow-mo effect (when y > 80% of board height ~400px)
   useEffect(() => {
@@ -99,11 +100,13 @@ export function Ball({ position, state, currentFrame, trajectoryPoint }: BallPro
   useEffect(() => {
     if (position && (state === 'dropping' || state === 'landed')) {
       setTrail((prevTrail) => {
-        const newTrail = [{ x: position.x, y: position.y, id: Date.now() }, ...prevTrail];
+        trailIdCounter.current += 1;
+        const newTrail = [{ x: position.x, y: position.y, id: trailIdCounter.current }, ...prevTrail];
         return newTrail.slice(0, trailLength);
       });
     } else if (state === 'idle' || state === 'ready' || state === 'countdown') {
       setTrail([]);
+      trailIdCounter.current = 0; // Reset counter when clearing trail
     }
   }, [position, state, currentFrame, trailLength]);
 

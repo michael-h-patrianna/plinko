@@ -10,6 +10,7 @@ import type { PrizeProviderResult } from '../game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '../game/stateMachine';
 import { generateTrajectory } from '../game/trajectory';
 import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig } from '../game/types';
+import { navigationAdapter, animationAdapter } from '../utils/platform';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
 interface FrameStore {
@@ -87,12 +88,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
       return seedOverride;
     }
 
-    if (typeof window === 'undefined') {
-      return undefined;
-    }
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlSeed = urlParams.get('seed');
+    const urlSeed = navigationAdapter.getParam('seed');
     if (!urlSeed) {
       return undefined;
     }
@@ -279,11 +275,11 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
         if (currentFrameIndex < gameState.context.trajectory.length - 1) {
           // Continue animation
-          animationFrameRef.current = requestAnimationFrame(animate);
+          animationFrameRef.current = animationAdapter.requestFrame(animate);
         }
       };
 
-      animationFrameRef.current = requestAnimationFrame(animate);
+      animationFrameRef.current = animationAdapter.requestFrame(animate);
 
       // Set timeout for landing based on total duration
       landingTimeoutRef.current = setTimeout(() => {
@@ -292,7 +288,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
 
       return () => {
         if (animationFrameRef.current !== null) {
-          cancelAnimationFrame(animationFrameRef.current);
+          animationAdapter.cancelFrame(animationFrameRef.current);
           animationFrameRef.current = null;
         }
         if (landingTimeoutRef.current !== null) {

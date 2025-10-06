@@ -8,6 +8,7 @@
 5. [Testing Strategy](#testing-strategy)
 6. [Component Architecture](#component-architecture)
 7. [State Management](#state-management)
+8. [Platform Abstraction](#platform-abstraction)
 
 ---
 
@@ -764,6 +765,379 @@ if (DEBUG) {
   console.log(`Overlap detected: ${overlap.toFixed(2)}px`);
 }
 ```
+
+---
+
+---
+
+## Platform Abstraction
+
+To enable future React Native portability while maintaining the current web implementation, all platform-specific browser APIs are abstracted behind a unified adapter layer located in `src/utils/platform/`.
+
+### Overview
+
+The platform abstraction system provides a consistent API across web and React Native by wrapping platform-specific implementations behind common interfaces. This allows the core game logic to remain platform-agnostic while supporting different runtime environments.
+
+**Key Design Principles:**
+- **Single API**: Same interface for web and React Native
+- **Tree-shakeable**: Unused platform code is eliminated at build time
+- **Type-safe**: Strict TypeScript interfaces with zero `any` types
+- **Runtime safe**: Helpful errors when APIs are unavailable
+- **Future-proof**: React Native ready without breaking web
+
+### Architecture
+
+```
+src/utils/platform/
+├── index.ts                 # Main exports
+├── detect.ts                # Platform detection utility
+├── crypto/
+│   ├── types.ts            # Interface definitions
+│   ├── index.web.ts        # Web: crypto.getRandomValues()
+│   ├── index.native.ts     # RN: expo-crypto
+│   └── index.ts            # Platform selector
+├── dimensions/
+│   ├── types.ts
+│   ├── index.web.ts        # Web: window.innerWidth/innerHeight
+│   ├── index.native.ts     # RN: Dimensions API
+│   └── index.ts
+├── deviceInfo/
+├── storage/
+├── animation/
+├── navigation/
+└── performance/
+```
+
+### Available Adapters
+
+#### 1. **cryptoAdapter** - Random Number Generation
+Provides cryptographically secure random number generation.
+
+**Web Implementation:** `crypto.getRandomValues()`
+**React Native:** expo-crypto or react-native-get-random-values
+
+```typescript
+import { cryptoAdapter } from '@/utils/platform';
+
+// Generate secure random seed
+const seed = cryptoAdapter.generateSecureRandomSeed();
+
+// Fill typed array with random values
+const array = new Uint32Array(10);
+cryptoAdapter.getRandomValues(array);
+```
+
+**Used in:**
+- `src/game/rng.ts` - Seed generation for deterministic RNG
+
+#### 2. **dimensionsAdapter** - Viewport Dimensions
+Provides window/screen dimensions and resize event handling.
+
+**Web Implementation:** `window.innerWidth`, `window.innerHeight`, resize events
+**React Native:** Dimensions API with change listeners
+
+```typescript
+import { dimensionsAdapter } from '@/utils/platform';
+
+// Get current dimensions
+const width = dimensionsAdapter.getWidth();
+const height = dimensionsAdapter.getHeight();
+const { width, height } = dimensionsAdapter.getDimensions();
+
+// Listen for resize events
+const cleanup = dimensionsAdapter.addChangeListener(() => {
+  console.log('Dimensions changed!');
+});
+
+// Cleanup when done
+cleanup();
+```
+
+**Used in:**
+- `src/utils/deviceDetection.ts` - Responsive layout detection
+- `src/App.tsx` - Board sizing and mobile detection
+
+#### 3. **deviceInfoAdapter** - Device Detection
+Detects device type, platform, and capabilities.
+
+**Web Implementation:** `navigator.userAgent`, `navigator.maxTouchPoints`
+**React Native:** Platform API, DeviceInfo module
+
+```typescript
+import { deviceInfoAdapter } from '@/utils/platform';
+
+const isMobile = deviceInfoAdapter.isMobileDevice();
+const hasTouch = deviceInfoAdapter.isTouchDevice();
+const platform = deviceInfoAdapter.getPlatform(); // 'web' | 'ios' | 'android'
+const userAgent = deviceInfoAdapter.getUserAgent();
+```
+
+**Used in:**
+- `src/utils/deviceDetection.ts` - Mobile/tablet/desktop detection
+- `src/App.tsx` - Responsive UI decisions
+
+#### 4. **storageAdapter** - Persistent Storage
+Provides key-value storage with async API (to match React Native's AsyncStorage).
+
+**Web Implementation:** `localStorage` (wrapped in Promises)
+**React Native:** AsyncStorage
+
+```typescript
+import { storageAdapter } from '@/utils/platform';
+
+// All methods return Promises
+await storageAdapter.setItem('theme', 'dark');
+const theme = await storageAdapter.getItem('theme'); // 'dark' or null
+await storageAdapter.removeItem('theme');
+await storageAdapter.clear();
+const keys = await storageAdapter.getAllKeys();
+```
+
+**Used in:**
+- `src/theme/ThemeContext.tsx` - Theme persistence
+
+**⚠️ Important:** Even though web's localStorage is synchronous, all storage adapter methods return Promises to maintain API consistency with React Native's AsyncStorage.
+
+#### 5. **animationAdapter** - Animation Frame Loop
+Provides animation frame scheduling for smooth 60 FPS rendering.
+
+**Web Implementation:** `requestAnimationFrame`, `cancelAnimationFrame`
+**React Native:** React Native's Animated API or Reanimated
+
+```typescript
+import { animationAdapter } from '@/utils/platform';
+
+const animate = (timestamp: number) => {
+  // Animation logic
+  frameId = animationAdapter.requestFrame(animate);
+};
+
+const frameId = animationAdapter.requestFrame(animate);
+
+// Cancel when done
+animationAdapter.cancelFrame(frameId);
+
+// Get current timestamp
+const now = animationAdapter.now();
+```
+
+**Used in:**
+- `src/hooks/usePlinkoGame.ts` - Ball trajectory animation loop
+
+#### 6. **navigationAdapter** - URL Parameters & Routing
+Provides access to URL query parameters and current route.
+
+**Web Implementation:** `URLSearchParams`, `window.location`
+**React Native:** React Navigation params
+
+```typescript
+import { navigationAdapter } from '@/utils/platform';
+
+// Get query parameter
+const seed = navigationAdapter.getParam('seed'); // '12345' or null
+
+// Get all parameters
+const params = navigationAdapter.getAllParams(); // { seed: '12345', theme: 'dark' }
+
+// Check if parameter exists
+const hasSeed = navigationAdapter.hasParam('seed');
+
+// Get current path
+const path = navigationAdapter.getCurrentPath(); // '/' or '/game'
+```
+
+**Used in:**
+- `src/hooks/usePlinkoGame.ts` - Reading `?seed=` parameter for deterministic testing
+
+#### 7. **performanceAdapter** - Performance Timing
+Provides high-resolution timing for performance measurements.
+
+**Web Implementation:** `performance.now()`, `performance.mark()`, `performance.measure()`
+**React Native:** `Date.now()` fallback or performance polyfill
+
+```typescript
+import { performanceAdapter } from '@/utils/platform';
+
+const start = performanceAdapter.now();
+
+// ... expensive operation ...
+
+const duration = performanceAdapter.now() - start;
+
+// Optional: create performance marks
+performanceAdapter.mark('trajectory-start');
+// ... work ...
+performanceAdapter.mark('trajectory-end');
+performanceAdapter.measure('trajectory', 'trajectory-start', 'trajectory-end');
+```
+
+**Used in:**
+- Performance monitoring and telemetry
+- Previously used in trajectory worker (now removed)
+
+### Platform Detection
+
+The `detect.ts` utility determines which platform is currently running:
+
+```typescript
+import { isWeb, isNative, getPlatform } from '@/utils/platform/detect';
+
+if (isWeb()) {
+  console.log('Running in browser');
+}
+
+if (isNative()) {
+  console.log('Running in React Native');
+}
+
+const platform = getPlatform(); // 'web' | 'native'
+```
+
+### Build Configuration
+
+The build system automatically selects the correct implementation:
+
+**Vite (Web):**
+```javascript
+// vite.config.ts
+export default {
+  resolve: {
+    extensions: ['.web.ts', '.ts', '.web.tsx', '.tsx', '.js']
+  }
+}
+```
+
+Vite prioritizes `.web.ts` files, so `index.web.ts` is loaded instead of `index.ts`.
+
+**Metro (React Native):**
+Metro automatically resolves `.native.ts` files when present, falling back to `.ts`.
+
+**Tree-shaking:** Unused platform code is eliminated at build time, keeping bundle sizes optimal.
+
+### Adding New Adapters
+
+To add a new platform adapter:
+
+1. **Create directory structure:**
+```bash
+mkdir src/utils/platform/myAdapter
+cd src/utils/platform/myAdapter
+```
+
+2. **Define interface in `types.ts`:**
+```typescript
+export interface MyAdapter {
+  doSomething(): string;
+}
+```
+
+3. **Implement web version in `index.web.ts`:**
+```typescript
+import type { MyAdapter } from './types';
+
+export const myAdapter: MyAdapter = {
+  doSomething(): string {
+    return window.myAPI.getValue();
+  }
+};
+```
+
+4. **Implement RN version in `index.native.ts`:**
+```typescript
+import type { MyAdapter } from './types';
+import { NativeModules } from 'react-native';
+
+export const myAdapter: MyAdapter = {
+  doSomething(): string {
+    return NativeModules.MyModule.getValue();
+  }
+};
+```
+
+5. **Create platform selector in `index.ts`:**
+```typescript
+export * from './types';
+export * from './index.web'; // Vite will pick this
+```
+
+6. **Export from main index:**
+```typescript
+// src/utils/platform/index.ts
+export * from './myAdapter';
+```
+
+### Testing
+
+**Unit Tests:** `src/tests/platform-adapters.test.ts`
+- 68 test cases covering all adapters
+- Mocks browser APIs (window, localStorage, crypto, etc.)
+- Tests success and error cases
+- Validates type safety and edge cases
+
+**Playwright Smoke Tests:** `scripts/playwright/platform-adapters-smoke.mjs`
+- 15 end-to-end tests in real browser
+- Verifies adapters work with actual browser APIs
+- Tests integration between adapters
+- Captures screenshots on failure
+
+Run tests:
+```bash
+# Unit tests
+npm test src/tests/platform-adapters.test.ts
+
+# Playwright smoke tests (requires dev server running)
+npm run dev # In one terminal
+npx playwright test scripts/playwright/platform-adapters-smoke.mjs # In another
+```
+
+### Cross-Platform Constraints
+
+To maintain React Native compatibility, avoid these web-only features:
+
+**❌ Forbidden:**
+- Blur effects (`filter: blur()`)
+- Radial/conic gradients
+- Box shadows, text shadows
+- `backdrop-filter`, `clip-path`
+- CSS pseudo-elements (`:before`, `:after`)
+- Complex CSS selectors
+
+**✅ Allowed:**
+- Linear gradients
+- Transforms (translateX, translateY, scale, rotate)
+- Opacity animations
+- Color transitions
+- Layout animations
+
+See `CLAUDE.md` (CIB-001.5) for complete constraints.
+
+### Migration Status
+
+**✅ Completed:**
+- All 7 adapters implemented for web
+- All browser API calls migrated (73 total)
+- Build configured for tree-shaking
+- TypeScript strict mode passes
+- Unit and E2E tests created
+
+**📝 React Native Ready:**
+- All `.native.ts` files include implementation guides
+- Interfaces designed for RN compatibility
+- Required dependencies documented in each adapter
+
+**Files Migrated:**
+1. `src/game/rng.ts` → cryptoAdapter
+2. `src/utils/deviceDetection.ts` → dimensionsAdapter, deviceInfoAdapter
+3. `src/App.tsx` → dimensionsAdapter, deviceInfoAdapter
+4. `src/theme/ThemeContext.tsx` → storageAdapter
+5. `src/hooks/usePlinkoGame.ts` → navigationAdapter, animationAdapter
+
+### Documentation
+
+- **Platform adapter README:** `src/utils/platform/README.md`
+- **Implementation guide:** `docs/platform-adapter-implementation.md`
+- **API audit report:** `docs/platform-api-audit.md`
+- **Each `.native.ts` file:** Contains implementation instructions for React Native
 
 ---
 

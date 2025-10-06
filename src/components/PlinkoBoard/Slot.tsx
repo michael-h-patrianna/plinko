@@ -127,7 +127,9 @@ export function Slot({
         // Use per-slot border if available, otherwise use theme default or approaching color
         ...(slotStyle?.border
           ? {
-              border: slotStyle.border,
+              borderLeft: slotStyle.border,
+              borderRight: slotStyle.border,
+              borderBottom: slotStyle.border,
               borderTop: 'none',
             }
           : {

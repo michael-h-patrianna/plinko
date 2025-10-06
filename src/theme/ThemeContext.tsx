@@ -7,6 +7,7 @@ import React, { useState, useCallback, ReactNode } from 'react';
 import { Theme } from './types';
 import { defaultTheme } from './themes/defaultTheme';
 import { ThemeContext, ThemeContextType } from './context';
+import { storageAdapter } from '../utils/platform';
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -35,7 +36,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       if (newTheme) {
         setTheme(newTheme);
         // Persist theme preference
-        localStorage.setItem('plinko-theme', themeName);
+        storageAdapter.setItem('plinko-theme', themeName);
       }
     },
     [availableThemes]
@@ -43,10 +44,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
 
   // Load saved theme on mount
   React.useEffect(() => {
-    const savedThemeName = localStorage.getItem('plinko-theme');
-    if (savedThemeName) {
-      switchTheme(savedThemeName);
-    }
+    storageAdapter.getItem('plinko-theme').then((savedThemeName) => {
+      if (savedThemeName) {
+        switchTheme(savedThemeName);
+      }
+    }).catch((error) => {
+      console.warn('Failed to load theme preference:', error);
+    });
   }, [switchTheme]);
 
   const value: ThemeContextType = {

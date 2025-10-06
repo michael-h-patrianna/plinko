@@ -16,6 +16,7 @@ import { StartScreen } from './components/StartScreen';
 import { DevToolsMenu, type ChoiceMechanic } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
+import { dimensionsAdapter, deviceInfoAdapter } from './utils/platform';
 
 /**
  * Main application content component
@@ -55,15 +56,13 @@ function AppContent() {
     choiceMechanic,
   });
 
-  // Inline viewport management instead of broken hook
+  // Inline viewport management using platform adapters
   useEffect(() => {
     const checkMobile = () => {
-      const userAgent = navigator.userAgent.toLowerCase();
-      const isMobileUA = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
-        userAgent
-      );
-      const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-      return isMobileUA || (isTouchDevice && window.innerWidth <= 768);
+      const isMobileUA = deviceInfoAdapter.isMobileDevice();
+      const isTouchDevice = deviceInfoAdapter.isTouchDevice();
+      const width = dimensionsAdapter.getWidth();
+      return isMobileUA || (isTouchDevice && width <= 768);
     };
     setIsMobile(checkMobile());
   }, []);
@@ -71,13 +70,15 @@ function AppContent() {
   useEffect(() => {
     if (isMobile) {
       const updateMobileWidth = () => {
-        const width = Math.min(window.innerWidth, 414);
+        const width = Math.min(dimensionsAdapter.getWidth(), 414);
         setViewportWidth(width);
         setLockedBoardWidth(width);
       };
       updateMobileWidth();
-      window.addEventListener('resize', updateMobileWidth);
-      return () => window.removeEventListener('resize', updateMobileWidth);
+      const cleanup = dimensionsAdapter.addChangeListener(() => {
+        updateMobileWidth();
+      });
+      return cleanup;
     }
   }, [isMobile]);
 
