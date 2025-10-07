@@ -1,0 +1,13 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "framework": "vite",
+  "env": {
+    "VITE_ENABLE_DEV_TOOLS": "true"
+  },
+  "build": {
+    "env": {
+      "VITE_ENABLE_DEV_TOOLS": "true"
+    }
+  }
+}
