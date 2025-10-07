@@ -4,25 +4,29 @@
  * Premium text reveal with character-by-character animation
  */
 
-import { motion } from 'framer-motion';
 import { useTheme } from '../../theme';
 import './YouWonText.css';
+import { useAnimationDriver } from '../../theme/animationDrivers';
 
 export function YouWonText() {
+  const driver = useAnimationDriver();
+  const AnimatedDiv = driver.createAnimatedComponent('div');
+  const AnimatedSpan = driver.createAnimatedComponent('span');
+
   const { theme } = useTheme();
   const mainText = 'YOU WON!';
 
   return (
     <div className="you-won-container">
       <div className="you-won-text-container">
-        {/* Shadow layers for depth */}
-        <motion.div
+        {/* Shadow layers for depth - Static positioning to prevent visible movement */}
+        <AnimatedDiv
           className="you-won-shadow-far"
-          initial={{ opacity: 0, scale: 1.2, y: 10 }}
+          style={{ transform: 'translateY(6px)' }}
+          initial={{ opacity: 0, scale: 1.2 }}
           animate={{
             opacity: 0.2,
             scale: 1,
-            y: 6,
           }}
           transition={{
             duration: 0.5,
@@ -30,15 +34,15 @@ export function YouWonText() {
           }}
         >
           {mainText}
-        </motion.div>
+        </AnimatedDiv>
 
-        <motion.div
+        <AnimatedDiv
           className="you-won-shadow-mid"
-          initial={{ opacity: 0, scale: 1.1, y: 5 }}
+          style={{ transform: 'translateY(3px)' }}
+          initial={{ opacity: 0, scale: 1.1 }}
           animate={{
             opacity: 0.3,
             scale: 1,
-            y: 3,
           }}
           transition={{
             duration: 0.45,
@@ -47,17 +51,17 @@ export function YouWonText() {
           }}
         >
           {mainText}
-        </motion.div>
+        </AnimatedDiv>
 
         {/* Main text with character animation */}
-        <motion.div
+        <AnimatedDiv
           className="you-won-main-text"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
         >
           {mainText.split('').map((char, index) => (
-            <motion.span
+            <AnimatedSpan
               key={index}
               className="you-won-char"
               initial={{
@@ -86,11 +90,11 @@ export function YouWonText() {
               >
                 {char === ' ' ? '\u00A0' : char}
 
-                {/* Character glow burst */}
-                <motion.span
+                {/* Character glow burst - Cross-platform: linear gradient instead of radial */}
+                <AnimatedSpan
                   className="you-won-char-glow"
                   style={{
-                    background: `radial-gradient(circle, ${theme.colors.primary.main}33, transparent 60%)`,
+                    background: `linear-gradient(135deg, ${theme.colors.primary.main}33 0%, ${theme.colors.primary.main}22 40%, transparent 80%)`,
                   }}
                   initial={{
                     opacity: 0,
@@ -108,9 +112,9 @@ export function YouWonText() {
                   }}
                 />
               </span>
-            </motion.span>
+            </AnimatedSpan>
           ))}
-        </motion.div>
+        </AnimatedDiv>
       </div>
     </div>
   );

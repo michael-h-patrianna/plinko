@@ -3,9 +3,9 @@
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.2);
+  /* Cross-platform: backdrop-filter removed, using solid background instead */
+  background: rgba(0, 0, 0, 0.5);
   border-radius: 12px;
-  backdrop-filter: blur(8px);
   position: relative;
 }
 

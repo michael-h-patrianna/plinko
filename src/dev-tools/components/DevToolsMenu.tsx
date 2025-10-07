@@ -11,9 +11,10 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../../theme';
 import { isMobileDevice } from '../../utils/deviceDetection';
+import { useAnimationDriver } from '../../theme/animationDrivers';
+import type { PerformanceMode } from '../../config/appConfig';
 
 interface DevToolsMenuProps {
   /** Current viewport width for device simulation */
@@ -26,6 +27,10 @@ interface DevToolsMenuProps {
   choiceMechanic?: ChoiceMechanic;
   /** Callback when choice mechanic changes */
   onChoiceMechanicChange?: (mechanic: ChoiceMechanic) => void;
+  /** Current performance mode */
+  performanceMode?: PerformanceMode;
+  /** Callback when performance mode changes */
+  onPerformanceModeChange?: (mode: PerformanceMode) => void;
 }
 
 const VIEWPORT_SIZES = [
@@ -42,16 +47,29 @@ const CHOICE_MECHANICS: { value: ChoiceMechanic; label: string }[] = [
   { value: 'drop-position', label: 'Drop Position' },
 ];
 
+const PERFORMANCE_MODES: { value: PerformanceMode; label: string; description: string }[] = [
+  { value: 'high-quality', label: 'High Quality', description: '60 FPS, trail, full particles' },
+  { value: 'balanced', label: 'Balanced', description: '60 FPS, reduced particles' },
+  { value: 'power-saving', label: 'Power Saving', description: '30 FPS, minimal effects' },
+];
+
 export function DevToolsMenu({
   viewportWidth,
   onViewportChange,
   viewportDisabled,
   choiceMechanic = 'none',
   onChoiceMechanicChange,
+  performanceMode = 'high-quality',
+  onPerformanceModeChange,
 }: DevToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { themeName, availableThemes, switchTheme, theme } = useTheme();
+
+  const driver = useAnimationDriver();
+  const AnimatedButton = driver.createAnimatedComponent('button');
+  const AnimatedDiv = driver.createAnimatedComponent('div');
+  const { AnimatePresence } = driver;
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -72,7 +90,7 @@ export function DevToolsMenu({
   return (
     <div className="fixed bottom-4 right-4 z-50" ref={menuRef}>
       {/* Gear Icon Button */}
-      <motion.button
+      <AnimatedButton
         onClick={() => setIsOpen(!isOpen)}
         className="rounded-full p-3 shadow-lg"
         style={{
@@ -106,12 +124,12 @@ export function DevToolsMenu({
             strokeLinejoin="round"
           />
         </svg>
-      </motion.button>
+      </AnimatedButton>
 
       {/* Popup Menu */}
       <AnimatePresence>
         {isOpen && (
-          <motion.div
+          <AnimatedDiv
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
@@ -149,7 +167,7 @@ export function DevToolsMenu({
               </label>
               <div className="flex flex-wrap gap-2">
                 {availableThemes.map((availableTheme) => (
-                  <motion.button
+                  <AnimatedButton
                     key={availableTheme.name}
                     onClick={() => switchTheme(availableTheme.name)}
                     className={`
@@ -175,7 +193,7 @@ export function DevToolsMenu({
                     whileTap={{ scale: 0.95 }}
                   >
                     {availableTheme.name}
-                  </motion.button>
+                  </AnimatedButton>
                 ))}
               </div>
             </div>
@@ -187,7 +205,7 @@ export function DevToolsMenu({
               </label>
               <div className="flex flex-col gap-2">
                 {CHOICE_MECHANICS.map(({ value, label }) => (
-                  <motion.button
+                  <AnimatedButton
                     key={value}
                     onClick={() => onChoiceMechanicChange?.(value)}
                     className={`
@@ -213,7 +231,46 @@ export function DevToolsMenu({
                     whileTap={{ scale: 0.98 }}
                   >
                     {label}
-                  </motion.button>
+                  </AnimatedButton>
+                ))}
+              </div>
+            </div>
+
+            {/* Performance Mode Section */}
+            <div className="p-4 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
+                Performance Mode
+              </label>
+              <div className="flex flex-col gap-2">
+                {PERFORMANCE_MODES.map(({ value, label, description }) => (
+                  <AnimatedButton
+                    key={value}
+                    onClick={() => onPerformanceModeChange?.(value)}
+                    className={`
+                      px-3 py-2 rounded-md text-xs font-medium transition-all text-left
+                      ${performanceMode === value ? 'shadow-md' : 'hover:opacity-80'}
+                    `}
+                    style={{
+                      background:
+                        performanceMode === value
+                          ? theme.gradients.buttonPrimary
+                          : theme.colors.surface.elevated,
+                      color:
+                        performanceMode === value
+                          ? theme.colors.primary.contrast
+                          : theme.colors.text.primary,
+                      border: `1px solid ${
+                        performanceMode === value
+                          ? theme.colors.primary.main
+                          : theme.colors.border.default
+                      }`,
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <div className="font-medium">{label}</div>
+                    <div className="text-xs opacity-70 mt-0.5">{description}</div>
+                  </AnimatedButton>
                 ))}
               </div>
             </div>
@@ -272,7 +329,7 @@ export function DevToolsMenu({
                 These tools are for development only and not part of the production app.
               </p>
             </div>
-          </motion.div>
+          </AnimatedDiv>
         )}
       </AnimatePresence>
     </div>

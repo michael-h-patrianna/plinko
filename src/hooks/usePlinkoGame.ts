@@ -5,6 +5,7 @@
 
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAppConfig } from '../config/AppConfigContext';
+import { getPerformanceSetting } from '../config/appConfig';
 import type { ChoiceMechanic } from '../dev-tools';
 import type { PrizeProviderResult } from '../game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '../game/stateMachine';
@@ -45,7 +46,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     pegRows = 10,
     choiceMechanic = 'none',
   } = options;
-  const { prizeProvider } = useAppConfig();
+  const { prizeProvider, performance } = useAppConfig();
 
   const [sessionKey, setSessionKey] = useState(0);
   const [loadError, setLoadError] = useState<Error | null>(null);
@@ -254,13 +255,21 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   // Animation loop for dropping state - only runs when state changes to 'dropping'
   useEffect(() => {
     if (gameState.state === 'dropping') {
-      const FPS = 60;
-      const frameInterval = 1000 / FPS;
-      const totalDuration = (gameState.context.trajectory.length / FPS) * 1000;
+      // PERFORMANCE: Trajectories are always generated at 60 FPS
+      // The FPS setting controls display refresh rate, not playback speed
+      const TRAJECTORY_FPS = 60;
+      const DISPLAY_FPS = getPerformanceSetting(performance, 'fps') ?? 60;
+      const frameInterval = 1000 / TRAJECTORY_FPS; // Always use trajectory's native FPS for timing
+      const totalDuration = (gameState.context.trajectory.length / TRAJECTORY_FPS) * 1000;
+
+      // Throttle rendering at lower FPS for battery savings
+      const renderInterval = 1000 / DISPLAY_FPS;
+      let lastRenderTime = 0;
 
       const animate = (timestamp: number) => {
         if (startTimestampRef.current === null) {
           startTimestampRef.current = timestamp;
+          lastRenderTime = timestamp;
         }
 
         const elapsed = timestamp - startTimestampRef.current;
@@ -269,9 +278,14 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
           gameState.context.trajectory.length - 1
         );
 
-        // Update frame in ref (not state!) and notify subscribers
-        currentFrameRef.current = currentFrameIndex;
-        frameListenersRef.current.forEach((listener) => listener());
+        // Throttle updates based on DISPLAY_FPS for battery savings
+        const timeSinceLastRender = timestamp - lastRenderTime;
+        if (timeSinceLastRender >= renderInterval) {
+          // Update frame in ref (not state!) and notify subscribers
+          currentFrameRef.current = currentFrameIndex;
+          frameListenersRef.current.forEach((listener) => listener());
+          lastRenderTime = timestamp;
+        }
 
         if (currentFrameIndex < gameState.context.trajectory.length - 1) {
           // Continue animation
@@ -300,7 +314,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
         // currentFrameRef.current = 0;
       };
     }
-  }, [gameState.state, gameState.context.trajectory.length]);
+  }, [gameState.state, gameState.context.trajectory.length, performance]);
 
   // Auto-reveal prize after landing
   useEffect(() => {

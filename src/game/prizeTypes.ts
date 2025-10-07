@@ -33,7 +33,7 @@ export interface FreeReward {
 export interface PurchaseOffer {
   offerId: string;
   title: string;
-  description: string;
+  description?: string;
 }
 
 export interface Prize {

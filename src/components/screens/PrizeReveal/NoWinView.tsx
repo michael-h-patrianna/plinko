@@ -1,0 +1,108 @@
+/**
+ * No win result view with encouraging messaging
+ * Uses subdued styling and gentle animations, not celebratory
+ * @param prize - Prize configuration with no-win messaging
+ * @param onClaim - Callback to try again
+ * @param canClaim - Whether the try again button should be enabled
+ */
+
+import noWinImage from '../../../assets/nowin.png';
+import type { Prize } from '../../../game/prizeTypes';
+import { useTheme } from '../../../theme';
+import { ThemedButton } from '../../controls/ThemedButton';
+import { useAnimation } from '../../../theme/animationDrivers/useAnimation';
+
+interface NoWinViewProps {
+  prize: Prize;
+  onClaim: () => void;
+  canClaim: boolean;
+}
+
+export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
+  const { AnimatedDiv, AnimatedH2, AnimatedImg } = useAnimation();
+  const { theme } = useTheme();
+
+  return (
+    <AnimatedDiv
+      className="absolute inset-0 z-40 flex items-center justify-center p-6"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.2 }}
+    >
+      {/* Main card - subdued colors */}
+      <AnimatedDiv
+        className="relative rounded-2xl p-8 max-w-sm w-full"
+        style={{
+          background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
+          /* RN-compatible: removed boxShadow, using border for definition */
+          border: `1px solid ${theme.colors.surface.elevated}66`,
+        }}
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{
+          scale: 1,
+          opacity: 1,
+        }}
+        transition={{
+          duration: 0.25,
+          ease: [0.34, 1.56, 0.64, 1],
+        }}
+      >
+        <div role="status" aria-live="polite" className="text-center">
+          {/* No win image */}
+          <AnimatedImg
+            src={noWinImage}
+            alt="No Win"
+            className="w-24 h-24 mx-auto mb-4"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.8 }}
+            transition={{ duration: 0.25, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+          />
+
+          <AnimatedH2
+            className="text-2xl font-bold mb-4"
+            style={{
+              color: theme.colors.text.primary,
+              /* RN-compatible: removed textShadow */
+            }}
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.25, delay: 0.3 }}
+          >
+            {prize.title}
+          </AnimatedH2>
+
+          {/* Encouraging message */}
+          <AnimatedDiv
+            className="my-6 p-4 rounded-lg"
+            style={{
+              background: `${theme.colors.surface.elevated}33`,
+              border: `1px solid ${theme.colors.text.tertiary}33`,
+            }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.25, delay: 0.4 }}
+          >
+            <p className="text-base leading-relaxed" style={{ color: theme.colors.text.secondary }}>
+              {prize.description || 'Better luck next time!'}
+            </p>
+            <p className="text-sm mt-2" style={{ color: theme.colors.text.tertiary }}>
+              Keep trying - your big win could be just around the corner!
+            </p>
+          </AnimatedDiv>
+
+          {/* Try again button */}
+          <ThemedButton
+            onClick={onClaim}
+            disabled={!canClaim}
+            delay={0.6}
+            className="w-full min-w-[120px] h-14 text-lg"
+            testId="claim-prize-button"
+          >
+            Try Again
+          </ThemedButton>
+        </div>
+      </AnimatedDiv>
+    </AnimatedDiv>
+  );
+}

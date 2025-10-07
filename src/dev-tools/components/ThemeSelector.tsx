@@ -4,9 +4,12 @@
  */
 
 import { useTheme } from '../../theme';
-import { motion } from 'framer-motion';
+import { useAnimationDriver } from '../../theme/animationDrivers';
 
 export function ThemeSelector() {
+  const driver = useAnimationDriver();
+  const AnimatedButton = driver.createAnimatedComponent('button');
+
   const { themeName, availableThemes, switchTheme, theme } = useTheme();
 
   return (
@@ -24,7 +27,7 @@ export function ThemeSelector() {
           </span>
           <div className="flex gap-2">
             {availableThemes.map((availableTheme) => (
-              <motion.button
+              <AnimatedButton
                 key={availableTheme.name}
                 onClick={() => switchTheme(availableTheme.name)}
                 className={`
@@ -50,7 +53,7 @@ export function ThemeSelector() {
                 whileTap={{ scale: 0.95 }}
               >
                 {availableTheme.name}
-              </motion.button>
+              </AnimatedButton>
             ))}
           </div>
         </div>

@@ -30,6 +30,37 @@ WHY: Tracks progress, maintains focus
    - Run ALL tests before considering task complete
    - Maintain 100% test coverage - no exceptions
 
+## TEST MEMORY MANAGEMENT
+
+**CRITICAL**: The test suite previously caused memory exhaustion by spawning 13 workers consuming 9GB+ RAM. This has been fixed but requires vigilance.
+
+### Configuration Safeguards (DO NOT MODIFY without review)
+- `maxWorkers: 4` in `vitest.config.ts` - Prevents excessive process spawning
+- `pool: 'threads'` - Uses memory-efficient threading instead of forks
+- `environment: 'node'` default - Only loads JSDOM for component tests
+- `environmentMatchGlobs` - Restricts heavy JSDOM to UI tests only
+
+### Before Changing Test Configuration
+1. **READ**: `docs/TEST_MEMORY_MANAGEMENT.md` (comprehensive guide)
+2. **MONITOR**: Run `node scripts/tools/monitor-test-memory.mjs` while testing
+3. **VERIFY**: Worker count stays ≤ 4, total memory < 2GB
+4. **DOCUMENT**: Update guide if making configuration changes
+
+### Writing Memory-Safe Tests
+- **DON'T**: Generate 1000+ data points in a single test without batching
+- **DO**: Process in batches of 100 and clear arrays between batches
+- **DON'T**: Load JSDOM for pure logic tests (use `.test.ts` not `.test.tsx`)
+- **DO**: Use component tests (`.test.tsx`) only for UI components
+- **DON'T**: Forget to cleanup timers/listeners in afterEach
+- **DO**: Call `cleanup()` from @testing-library/react in test teardown
+
+### Emergency Response
+If system becomes unresponsive during tests:
+```bash
+killall -9 node  # Force kill all Node processes
+node scripts/cleanup-vitest.mjs  # Clean up lingering workers
+```
+
 ## FOLDER USAGE RULES
 
 | Activity | Required Directory | Agent Enforcement |

@@ -43,8 +43,10 @@ Thumbs.db
 .tmp/
 .temp/
 
-ddd.md
-
+# Temporary output files
+test-output.txt
+*.bkp.*
+**/*.bkp.md
 
 .DS_Store
 src/.DS_Store

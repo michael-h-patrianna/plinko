@@ -3,9 +3,10 @@ import {
   createValidatedProductionPrizeSet,
   DEFAULT_PRODUCTION_PRIZE_COUNT,
   type ProductionPrizeSetOptions,
-} from '../config/productionPrizeTable';
+} from '../config/prizes/productionPrizeTable';
 import type { PrizeFixture } from '../tests/fixtures/prizeFixtures';
 import { validatePrizeSet } from '../utils/prizeUtils';
+import { validatePrizesOrThrow } from './prizeValidation';
 import { selectPrize } from './rng';
 import type { DeterministicTrajectoryPayload, PrizeConfig } from './types';
 
@@ -29,20 +30,35 @@ const randomRewardSchema = z
 
 const xpRewardSchema = z
   .object({
-    amount: z.number().nonnegative(),
+    amount: z.number().positive(),
     config: collectibleSchema,
   })
   .strict();
 
 const freeRewardSchema = z
   .object({
-    gc: z.number().nonnegative().optional(),
-    sc: z.number().nonnegative().optional(),
-    spins: z.number().nonnegative().optional(),
+    gc: z.number().positive().optional(),
+    sc: z.number().positive().optional(),
+    spins: z.number().positive().optional(),
     xp: xpRewardSchema.optional(),
     randomReward: randomRewardSchema.optional(),
   })
-  .strict();
+  .strict()
+  .refine(
+    (data) => {
+      // At least one reward must be present
+      return (
+        data.gc !== undefined ||
+        data.sc !== undefined ||
+        data.spins !== undefined ||
+        data.xp !== undefined ||
+        data.randomReward !== undefined
+      );
+    },
+    {
+      message: 'FreeReward must contain at least one reward (gc, sc, spins, xp, or randomReward)',
+    }
+  );
 
 const purchaseOfferSchema = z
   .object({
@@ -132,12 +148,23 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
     });
   }
 
+  // Validate probability sums
   try {
     validatePrizeSet(prizes as PrizeConfig[]);
   } catch (error: unknown) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       message: error instanceof Error ? error.message : 'Invalid prize configuration',
+    });
+  }
+
+  // Validate type-specific prize structures
+  try {
+    validatePrizesOrThrow(prizes);
+  } catch (error: unknown) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: error instanceof Error ? error.message : 'Prize validation failed',
     });
   }
 });

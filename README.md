@@ -23,10 +23,24 @@ npm install
 ### Development
 
 ```bash
+# Start dev server with dev tools enabled (default)
 npm run dev
 ```
 
 Open [http://localhost:5173](http://localhost:5173)
+
+### Build
+
+```bash
+# Production build (dev tools disabled by default)
+npm run build
+
+# Production build with dev tools enabled (for QA/staging)
+VITE_ENABLE_DEV_TOOLS=true npm run build
+
+# Preview production build
+npm run preview
+```
 
 ### Testing
 
@@ -94,10 +108,35 @@ The Plinko app reads runtime configuration from a central `AppConfig` object tha
 
 ### Default Behaviour
 
-- The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/main.tsx`).
+- The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/App.tsx`).
 - Feature flags are grouped under `featureFlags`—currently only `devToolsEnabled` and `dropPositionMechanicEnabled` are exposed.
 - Prize data is supplied by a `PrizeProvider` implementation. The default provider wraps the legacy production prize table while exposing deterministic `load`/`loadSync` APIs for host overrides.
   - The bundled provider always generates **six** prize slots (`DEFAULT_PRODUCTION_PRIZE_COUNT`). Hosts can override the count by passing `{ count: <desired slots> }` when constructing the provider.
+
+### Dev Tools
+
+Development tooling is available for testing and debugging. Dev tools are:
+- **Enabled by default** in development mode (`npm run dev`)
+- **Disabled by default** in production builds (`npm run build`)
+- **Lazy-loaded** to avoid bloating production bundles when disabled
+- **Code-split** into separate chunks for optimal tree-shaking
+
+**Features**:
+- Theme switching (test different visual themes)
+- Viewport simulation (test mobile device sizes)
+- Choice mechanic toggle (test different gameplay modes)
+
+**Enable in production** (for QA/staging):
+```bash
+# Option 1: Environment variable
+VITE_ENABLE_DEV_TOOLS=true npm run build
+
+# Option 2: .env.production.local file
+echo "VITE_ENABLE_DEV_TOOLS=true" > .env.production.local
+npm run build
+```
+
+See [docs/dev-tools.md](docs/dev-tools.md) for complete dev tools documentation.
 
 ### Overriding in a Host Application
 

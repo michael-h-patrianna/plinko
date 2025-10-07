@@ -3,26 +3,37 @@
  * With smooth state transitions using AnimatePresence
  */
 
-import { AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
-import { Countdown } from './components/Countdown';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { useEffect, useMemo, useState } from 'react';
+import { AppConfigProvider } from './config/AppConfigContext';
+import type { PerformanceMode } from './config/appConfig';
+import { Countdown } from './components/game/Countdown';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import { ScreenShake } from './components/effects/ScreenShake';
-import { PlinkoBoard } from './components/PlinkoBoard/PlinkoBoard';
-import { PopupContainer } from './components/PopupContainer';
-import { PrizeClaimed } from './components/PrizeClaimed';
-import { PrizeReveal } from './components/PrizeReveal';
-import { StartScreen } from './components/StartScreen';
-import { DevToolsMenu, type ChoiceMechanic } from './dev-tools';
+import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
+import { PopupContainer } from './components/layout/PopupContainer';
+import { PrizeClaimed } from './components/screens/PrizeClaimed';
+import { PrizeReveal } from './components/screens/PrizeReveal';
+import { StartScreen } from './components/screens/StartScreen';
+import { DevToolsLoader, type ChoiceMechanic } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
 import { dimensionsAdapter, deviceInfoAdapter } from './utils/platform';
+import { useAnimationDriver } from './theme/animationDrivers';
 
 /**
  * Main application content component
  * Manages game state, viewport sizing, and renders game screens based on current state
  */
-function AppContent() {
+function AppContent({
+  performanceMode,
+  setPerformanceMode,
+}: {
+  performanceMode: PerformanceMode;
+  setPerformanceMode: (mode: PerformanceMode) => void;
+}) {
+  const driver = useAnimationDriver();
+  const { AnimatePresence } = driver;
+
   const { theme } = useTheme();
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(375);
@@ -88,12 +99,13 @@ function AppContent() {
     }
   }, [state, viewportWidth]);
 
-  // Trigger screen shake when ball lands, reset when returning to idle
+  // Trigger screen shake when ball lands on a winning prize (not no_win)
   useEffect(() => {
     const isLanded = state === 'landed';
     const isIdle = state === 'idle';
+    const isWin = selectedPrize && selectedPrize.type !== 'no_win';
 
-    if (isLanded) {
+    if (isLanded && isWin) {
       setShakeActive(true);
       const timer = setTimeout(() => setShakeActive(false), 500);
       return () => clearTimeout(timer);
@@ -101,7 +113,7 @@ function AppContent() {
       // Reset shake state when returning to start screen
       setShakeActive(false);
     }
-  }, [state]);
+  }, [state, selectedPrize]);
 
   const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
 
@@ -132,7 +144,7 @@ function AppContent() {
         padding: isMobile ? '0' : '1rem',
       }}
     >
-      {/* DEV TOOLS - Not part of production game */}
+      {/* DEV TOOLS - Lazy loaded and conditionally rendered based on feature flag */}
       <div
         style={{
           position: 'fixed',
@@ -145,12 +157,14 @@ function AppContent() {
         }}
       >
         <div style={{ pointerEvents: 'auto' }}>
-          <DevToolsMenu
+          <DevToolsLoader
             viewportWidth={viewportWidth}
             onViewportChange={handleViewportChange}
             viewportDisabled={isViewportLocked}
             choiceMechanic={choiceMechanic}
             onChoiceMechanicChange={setChoiceMechanic}
+            performanceMode={performanceMode}
+            onPerformanceModeChange={setPerformanceMode}
           />
         </div>
       </div>
@@ -247,14 +261,21 @@ function AppContent() {
 
 /**
  * Root application component
- * Wraps the app in ThemeProvider to enable theme switching
+ * Wraps the app in AppConfigProvider and ThemeProvider
  */
 export function App() {
+  const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('high-quality');
+
+  // Memoize config object to prevent unnecessary re-renders when performanceMode hasn't changed
+  const config = useMemo(() => ({ performance: { mode: performanceMode } }), [performanceMode]);
+
   return (
     <ErrorBoundary>
-      <ThemeProvider themes={themes}>
-        <AppContent />
-      </ThemeProvider>
+      <AppConfigProvider value={config}>
+        <ThemeProvider themes={themes}>
+          <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+        </ThemeProvider>
+      </AppConfigProvider>
     </ErrorBoundary>
   );
 }

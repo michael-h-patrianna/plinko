@@ -44,22 +44,19 @@ body {
   }
 }
 
-/* Peg hit animations - EXAGGERATED for AAA quality */
+/* Peg hit animations - Cross-platform compatible (no blur) */
 @keyframes pegGlowPulse {
   0% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(0.5);
-    filter: blur(0px) brightness(1);
   }
   50% {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1.8); /* Increased from 1.2 */
-    filter: blur(4px) brightness(1.5); /* Added blur and brightness */
   }
   100% {
     opacity: 0;
     transform: translate(-50%, -50%) scale(2.5); /* Increased from 1.5 */
-    filter: blur(8px) brightness(1.8); /* Stronger blur */
   }
 }
 
@@ -132,7 +129,7 @@ button:disabled {
   }
 }
 
-/* Primary CTA Button - unified style for all primary actions */
+/* Primary CTA Button - Cross-platform compatible (no boxShadow/textShadow/pseudo-elements) */
 .btn-primary {
   padding: 1rem 2rem;
   font-size: 1.125rem;
@@ -140,36 +137,17 @@ button:disabled {
   color: white;
   border-radius: 0.75rem;
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
-  box-shadow:
-    0 0 30px rgba(245, 158, 11, 0.4),
-    0 8px 24px rgba(217, 119, 6, 0.5),
-    0 4px 12px rgba(0, 0, 0, 0.6),
-    inset 0 2px 4px rgba(255, 255, 255, 0.3),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(251, 191, 36, 0.8);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8);
+  /* Cross-platform: border instead of boxShadow for depth */
+  border: 3px solid rgba(251, 191, 36, 0.6);
+  /* Cross-platform: removed textShadow */
   transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
   cursor: pointer;
   position: relative;
   overflow: hidden;
 }
 
-/* Animated shine effect */
-.btn-primary::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
-  animation: btnShine 3s infinite;
-}
+/* Cross-platform: Pseudo-elements not supported in RN - implement in component if needed */
+/* NOTE: If shine effect is needed in RN, create actual child element in component */
 
 @keyframes btnShine {
   0% {
@@ -183,30 +161,23 @@ button:disabled {
 
 .btn-primary:hover:not(:disabled) {
   transform: scale(1.05);
-  box-shadow:
-    0 0 40px rgba(245, 158, 11, 0.6),
-    0 12px 32px rgba(217, 119, 6, 0.6),
-    0 6px 16px rgba(0, 0, 0, 0.7),
-    inset 0 2px 4px rgba(255, 255, 255, 0.4);
+  /* Cross-platform: border instead of boxShadow */
   border-color: rgba(251, 191, 36, 1);
+  border-width: 4px;
 }
 
 .btn-primary:active:not(:disabled) {
   transform: scale(0.95);
-  box-shadow:
-    0 0 20px rgba(245, 158, 11, 0.3),
-    0 4px 12px rgba(0, 0, 0, 0.5),
-    inset 0 3px 6px rgba(0, 0, 0, 0.4);
+  /* Cross-platform: opacity change instead of boxShadow */
+  opacity: 0.9;
 }
 
 .btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   background: linear-gradient(135deg, #475569 0%, #334155 100%);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  /* Cross-platform: border instead of boxShadow */
   border: 2px solid rgba(71, 85, 105, 0.3);
 }
 
-.btn-primary:disabled::before {
-  display: none;
-}
+/* Cross-platform: Pseudo-element ::before removed (not supported in RN) */

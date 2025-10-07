@@ -13,40 +13,14 @@
 import { calculateBucketZoneY } from '../utils/slotDimensions';
 import { createRng } from './rng';
 import type { DeterministicTrajectoryPayload, DropZone, TrajectoryPoint } from './types';
-
-/**
- * Get the X coordinate range for a drop zone
- */
-function getDropZoneRange(zone: DropZone, boardWidth: number): { min: number; max: number } {
-  const zoneMap: Record<DropZone, { min: number; max: number }> = {
-    left: { min: boardWidth * 0.05, max: boardWidth * 0.15 },
-    'left-center': { min: boardWidth * 0.25, max: boardWidth * 0.35 },
-    center: { min: boardWidth * 0.45, max: boardWidth * 0.55 },
-    'right-center': { min: boardWidth * 0.65, max: boardWidth * 0.75 },
-    right: { min: boardWidth * 0.85, max: boardWidth * 0.95 },
-  };
-  return zoneMap[zone];
-}
-
-// Physics constants for realistic simulation
-const PHYSICS = {
-  GRAVITY: 980, // px/s² (9.8 m/s² at 100px = 1m)
-  RESTITUTION: 0.75, // Energy retained on bounce (75%)
-  BALL_RADIUS: 9, // Ball radius in pixels
-  PEG_RADIUS: 7,
-  COLLISION_RADIUS: 16, // Ball + Peg radius (9 + 7)
-  DT: 1 / 60, // 60 FPS timestep
-  TERMINAL_VELOCITY: 600, // px/s max fall speed
-  BORDER_WIDTH: 12, // Wall thickness
-  MIN_BOUNCE_VELOCITY: 30, // Minimum velocity after collision
-};
-
-interface Peg {
-  row: number;
-  col: number;
-  x: number;
-  y: number;
-}
+import {
+  PHYSICS,
+  getDropZoneRange,
+  clampSlotIndexFromX,
+  getSlotBoundaries,
+  generatePegLayout,
+  type Peg,
+} from './boardGeometry';
 
 interface SimulationParams {
   startX: number;
@@ -88,50 +62,6 @@ export interface GenerateTrajectoryResult {
   source: 'precomputed' | 'simulated';
 }
 
-/**
- * Generate peg layout for the board
- * Uses a FIXED optimal peg count regardless of prize/slot count
- */
-function generatePegLayout(
-  boardWidth: number,
-  boardHeight: number,
-  pegRows: number,
-  _slotCount: number // Not used - kept for API compatibility
-): Peg[] {
-  const pegs: Peg[] = [];
-
-  // Use a FIXED optimal peg count (what worked for 6 prizes)
-  // This keeps peg spacing consistent regardless of prize count
-  const OPTIMAL_PEG_COLUMNS = 6;
-
-  // Add extra padding to ensure pegs don't touch walls - increased from 2px to 10px
-  const pegPadding = PHYSICS.PEG_RADIUS + 10; // Peg radius + 10px safety margin
-  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2 - pegPadding * 2;
-  const playableHeight = boardHeight * 0.65;
-  const verticalSpacing = playableHeight / (pegRows + 1);
-  const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
-
-  for (let row = 0; row < pegRows; row++) {
-    const y = verticalSpacing * (row + 1) + PHYSICS.BORDER_WIDTH + 20;
-    const isOffsetRow = row % 2 === 1;
-    const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-    const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
-
-    for (let col = 0; col < numPegs; col++) {
-      const x = PHYSICS.BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
-      pegs.push({ row, col, x, y });
-    }
-  }
-
-  return pegs;
-}
-
-function clampSlotIndexFromX(x: number, boardWidth: number, slotCount: number): number {
-  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2;
-  const slotWidth = playableWidth / slotCount;
-  const clampedRelativeX = Math.min(Math.max(x - PHYSICS.BORDER_WIDTH, 0), playableWidth - 1e-6);
-  return Math.min(Math.max(0, Math.floor(clampedRelativeX / slotWidth)), slotCount - 1);
-}
 
 function computeLandingSlotFromTrajectory(
   trajectory: TrajectoryPoint[],
@@ -406,8 +336,12 @@ function runSimulation(
       // Adjust x position relative to playable area
       const xRelative = x - PHYSICS.BORDER_WIDTH;
       const currentSlot = Math.floor(xRelative / slotWidth);
-      const slotLeftEdge = PHYSICS.BORDER_WIDTH + currentSlot * slotWidth + 3;
-      const slotRightEdge = PHYSICS.BORDER_WIDTH + (currentSlot + 1) * slotWidth - 3;
+      const { leftEdge: slotLeftEdge, rightEdge: slotRightEdge } = getSlotBoundaries(
+        currentSlot,
+        boardWidth,
+        slotCount,
+        3
+      );
 
       // Bucket wall collisions with proper physics
       if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
@@ -591,7 +525,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
     };
   }
 
-  const pegs = generatePegLayout(boardWidth, boardHeight, pegRows, slotCount);
+  const pegs = generatePegLayout({ boardWidth, boardHeight, pegRows });
 
   const slotHistogram: Record<number, number> = {};
   let bestCandidate: {

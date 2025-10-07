@@ -36,8 +36,13 @@ export function CurrencyCounter({
   const [isValueAnimating, setIsValueAnimating] = useState(false);
   const [indicators, setIndicators] = useState<CounterIndicator[]>([]);
   const nextIndicatorIdRef = useRef(0);
+  const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => {
+    // Clear any existing timers
+    timersRef.current.forEach(timer => clearTimeout(timer));
+    timersRef.current = [];
+
     const startAnimation = () => {
       const incrementCount = Math.min(Math.ceil(targetAmount / 100), 12); // Max 12 increments
       const incrementValue = Math.ceil(targetAmount / incrementCount);
@@ -63,19 +68,22 @@ export function CurrencyCounter({
         setIndicators((prev) => [...prev, { id: currentId, isAnimating: true, amount: actualIncrement }]);
         nextIndicatorIdRef.current += 1;
 
-        // Reset pop animation
-        setTimeout(() => {
+        // Reset pop animation - track timer
+        const popTimer = setTimeout(() => {
           setIsValueAnimating(false);
         }, 300);
+        timersRef.current.push(popTimer);
 
-        // Remove indicator after animation
-        setTimeout(() => {
+        // Remove indicator after animation - track timer
+        const indicatorTimer = setTimeout(() => {
           setIndicators((prev) => prev.filter((ind) => ind.id !== currentId));
         }, 800);
+        timersRef.current.push(indicatorTimer);
 
         // Continue or finish
         if (currentIncrement < incrementCount) {
-          setTimeout(incrementStep, incrementInterval);
+          const stepTimer = setTimeout(incrementStep, incrementInterval);
+          timersRef.current.push(stepTimer);
         } else {
           // Ensure final value is exact
           setCurrentValue(targetAmount);
@@ -86,11 +94,14 @@ export function CurrencyCounter({
       incrementStep();
     };
 
-    // Delay start of animation
+    // Delay start of animation - track timer
     const delayTimer = setTimeout(startAnimation, delay);
+    timersRef.current.push(delayTimer);
 
+    // Cleanup all timers on unmount or when targetAmount/delay changes
     return () => {
-      clearTimeout(delayTimer);
+      timersRef.current.forEach(timer => clearTimeout(timer));
+      timersRef.current = [];
     };
   }, [targetAmount, delay]);
 
