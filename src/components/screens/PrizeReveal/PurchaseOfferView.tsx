@@ -140,8 +140,6 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                 transition={{
                   duration: 2,
                   delay: i * 0.15,
-                  repeat: Infinity,
-                  repeatDelay: 0.5,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               />
