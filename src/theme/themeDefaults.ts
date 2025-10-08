@@ -98,22 +98,8 @@ export const defaultBorderRadius: ThemeBorderRadius = {
 };
 
 // Default effects
+// RN-COMPATIBLE: Removed shadows and backdrops (not compatible with React Native)
 export const defaultEffects: ThemeEffects = {
-  shadows: {
-    none: 'none',
-    sm: '0 1px 2px rgba(0, 0, 0, 0.05)',
-    md: '0 4px 6px rgba(0, 0, 0, 0.1)',
-    lg: '0 10px 15px rgba(0, 0, 0, 0.1)',
-    xl: '0 20px 25px rgba(0, 0, 0, 0.1)',
-    '2xl': '0 25px 50px rgba(0, 0, 0, 0.25)',
-    inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.06)',
-    glow: '0 0 20px rgba(59, 130, 246, 0.5)',
-    glowLg: '0 0 40px rgba(59, 130, 246, 0.6)',
-    button: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    buttonHover: '0 6px 20px rgba(0, 0, 0, 0.2)',
-    card: '0 4px 12px rgba(0, 0, 0, 0.08)',
-    modal: '0 20px 40px rgba(0, 0, 0, 0.3)',
-  },
   glows: {
     sm: '0 0 8px',
     md: '0 0 16px',
@@ -130,12 +116,6 @@ export const defaultEffects: ThemeEffects = {
     dashed: '1px dashed',
     dotted: '1px dotted',
   },
-  backdrops: {
-    none: 'none',
-    sm: 'blur(4px)',
-    md: 'blur(8px)',
-    lg: 'blur(16px)',
-  },
   transitions: {
     fast: 'all 150ms ease',
     normal: 'all 300ms ease',
@@ -144,6 +124,7 @@ export const defaultEffects: ThemeEffects = {
 };
 
 // Helper to create button styles
+// RN-COMPATIBLE: Removed shadow parameters
 export function createButtonStyle(
   background: string,
   color: string,
@@ -160,8 +141,6 @@ export function createButtonStyle(
     color,
     textTransform: options.textTransform || 'none',
     colorHover: options.colorHover,
-    shadow: options.shadow || defaultEffects.shadows.button,
-    shadowHover: options.shadowHover || defaultEffects.shadows.buttonHover,
     padding: options.padding || { x: '1.5rem', y: '0.75rem' },
     fontSize: options.fontSize || '1rem',
     fontWeight: options.fontWeight || 600,
@@ -171,6 +150,7 @@ export function createButtonStyle(
 }
 
 // Default button styles for Default theme
+// RN-COMPATIBLE: Removed all shadow options
 export const defaultButtons: ThemeButtons = {
   primary: createButtonStyle(
     'linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #2563eb 100%)',
@@ -178,8 +158,6 @@ export const defaultButtons: ThemeButtons = {
     'transparent',
     {
       backgroundHover: 'linear-gradient(135deg, #93c5fd 0%, #60a5fa 50%, #3b82f6 100%)',
-      shadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-      shadowHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
       textTransform: 'uppercase',
     }
   ),
@@ -189,20 +167,14 @@ export const defaultButtons: ThemeButtons = {
     'transparent',
     {
       backgroundHover: 'linear-gradient(135deg, #94a3b8 0%, #64748b 50%, #475569 100%)',
-      shadow: '0 4px 12px rgba(71, 85, 105, 0.3)',
-      shadowHover: '0 8px 24px rgba(71, 85, 105, 0.4)',
     }
   ),
   outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
     backgroundHover: 'rgba(59, 130, 246, 0.1)',
     outline: true,
-    shadow: 'none',
-    shadowHover: '0 4px 12px rgba(59, 130, 246, 0.2)',
   }),
   ghost: createButtonStyle('transparent', '#64748b', 'transparent', {
     backgroundHover: 'rgba(100, 116, 139, 0.1)',
-    shadow: 'none',
-    shadowHover: 'none',
   }),
   danger: createButtonStyle('#ef4444', '#ffffff', 'transparent', {
     backgroundHover: '#dc2626',
@@ -218,6 +190,7 @@ export const defaultButtons: ThemeButtons = {
 };
 
 // PlayFame button styles - round with specific styling
+// RN-COMPATIBLE: Removed all shadow options
 export const playFameButtons: ThemeButtons = {
   primary: createButtonStyle(
     'linear-gradient(180deg, #a852ff 0%, #8b5cf6 100%)',
@@ -226,8 +199,6 @@ export const playFameButtons: ThemeButtons = {
     {
       backgroundHover: 'linear-gradient(180deg, #c47ae5 0%, #a852ff 100%)',
       borderRadius: '9999px', // Fully rounded
-      shadow: '0 4px 16px rgba(139, 92, 246, 0.4)',
-      shadowHover: '0 8px 24px rgba(168, 82, 255, 0.5)',
       padding: { x: '2rem', y: '0.875rem' },
       fontWeight: 700,
     }
@@ -239,8 +210,6 @@ export const playFameButtons: ThemeButtons = {
     {
       backgroundHover: 'linear-gradient(180deg, #47d631 0%, #1bee02 100%)',
       borderRadius: '9999px',
-      shadow: '0 4px 16px rgba(27, 238, 2, 0.3)',
-      shadowHover: '0 8px 24px rgba(27, 238, 2, 0.4)',
       padding: { x: '2rem', y: '0.875rem' },
       fontWeight: 700,
     }
@@ -250,15 +219,12 @@ export const playFameButtons: ThemeButtons = {
     borderRadius: '9999px',
     borderWidth: '2px',
     outline: true,
-    shadow: 'none',
-    shadowHover: '0 0 20px rgba(82, 213, 255, 0.4)',
     padding: { x: '2rem', y: '0.875rem' },
     fontWeight: 700,
   }),
   ghost: createButtonStyle('transparent', '#c1aff0', 'transparent', {
     backgroundHover: 'rgba(193, 175, 240, 0.1)',
     borderRadius: '9999px',
-    shadow: 'none',
     padding: { x: '2rem', y: '0.875rem' },
   }),
   danger: createButtonStyle(
@@ -291,98 +257,86 @@ export const playFameButtons: ThemeButtons = {
 };
 
 // Default component styles
+// RN-COMPATIBLE: Removed all shadow fields
 export const defaultComponents: ComponentStyles = {
   card: {
     background: 'rgba(30, 41, 59, 0.9)',
     border: '1px solid rgba(71, 85, 105, 0.3)',
     borderWidth: '1px',
     borderRadius: defaultBorderRadius.card,
-    shadow: defaultEffects.shadows.card,
     padding: '1.5rem',
   },
   modal: {
     background: 'rgba(15, 23, 42, 0.98)',
     backdropColor: 'rgba(0, 0, 0, 0.7)',
     borderRadius: defaultBorderRadius.modal,
-    shadow: defaultEffects.shadows.modal,
     padding: '2rem',
   },
   header: {
     height: '4rem',
     background: 'rgba(15, 23, 42, 0.95)',
     borderBottom: '1px solid rgba(71, 85, 105, 0.3)',
-    shadow: defaultEffects.shadows.sm,
   },
   input: {
     background: 'rgba(30, 41, 59, 0.5)',
     border: '1px solid rgba(71, 85, 105, 0.3)',
     borderRadius: defaultBorderRadius.input,
     borderFocus: '2px solid #3b82f6',
-    shadow: 'none',
-    shadowFocus: '0 0 0 3px rgba(59, 130, 246, 0.1)',
     padding: '0.75rem 1rem',
   },
   dropdown: {
     background: 'rgba(30, 41, 59, 0.98)',
     border: '1px solid rgba(71, 85, 105, 0.3)',
     borderRadius: defaultBorderRadius.md,
-    shadow: defaultEffects.shadows.lg,
     itemHover: 'rgba(71, 85, 105, 0.2)',
   },
   tooltip: {
     background: 'rgba(15, 23, 42, 0.95)',
     color: '#e2e8f0',
     borderRadius: defaultBorderRadius.md,
-    shadow: defaultEffects.shadows.lg,
     padding: '0.5rem 0.75rem',
     fontSize: '0.875rem',
   },
 };
 
 // PlayFame component styles
+// RN-COMPATIBLE: Removed all shadow fields
 export const playFameComponents: ComponentStyles = {
   card: {
     background: 'linear-gradient(135deg, #311d58 0%, #451668 100%)',
     border: '1px solid #561d86',
     borderWidth: '1px',
     borderRadius: '1.25rem',
-    shadow: '0 8px 24px rgba(139, 92, 246, 0.2)',
     padding: '1.75rem',
   },
   modal: {
     background: 'linear-gradient(135deg, #231845 0%, #311d58 100%)',
     backdropColor: 'rgba(26, 16, 56, 0.9)',
     borderRadius: '1.5rem',
-    shadow: '0 24px 48px rgba(168, 82, 255, 0.3)',
     padding: '2.5rem',
   },
   header: {
     height: '4.5rem',
     background: 'linear-gradient(180deg, #1a1038 0%, #231845 100%)',
     borderBottom: '2px solid #561d86',
-    shadow: '0 4px 16px rgba(139, 92, 246, 0.2)',
   },
   input: {
     background: 'rgba(49, 29, 88, 0.5)',
     border: '2px solid #561d86',
     borderRadius: '9999px',
     borderFocus: '2px solid #a852ff',
-    shadow: 'none',
-    shadowFocus: '0 0 0 4px rgba(168, 82, 255, 0.2)',
     padding: '0.875rem 1.25rem',
   },
   dropdown: {
     background: 'linear-gradient(135deg, #311d58 0%, #3a1f58 100%)',
     border: '1px solid #561d86',
     borderRadius: '1rem',
-    shadow: '0 12px 32px rgba(168, 82, 255, 0.25)',
     itemHover: 'rgba(168, 82, 255, 0.15)',
   },
   tooltip: {
     background: 'linear-gradient(135deg, #451668 0%, #561d86 100%)',
     color: '#ffffff',
     borderRadius: '0.75rem',
-    shadow: '0 8px 24px rgba(168, 82, 255, 0.3)',
     padding: '0.625rem 1rem',
     fontSize: '0.875rem',
   },

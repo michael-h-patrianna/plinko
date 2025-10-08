@@ -189,22 +189,7 @@ export const playFameTheme: Theme = {
   },
 
   effects: {
-    shadows: {
-      none: 'none',
-      sm: '0 1px 3px rgba(0, 0, 0, 0.4)',
-      md: '0 4px 12px rgba(0, 0, 0, 0.5)',
-      lg: '0 8px 24px rgba(0, 0, 0, 0.6)',
-      xl: '0 12px 48px rgba(0, 0, 0, 0.7)',
-      '2xl': '0 25px 50px rgba(0, 0, 0, 0.8)',
-      inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.5)',
-      glow: '0 0 20px rgba(168, 82, 255, 0.5)',
-      glowLg: '0 0 40px rgba(168, 82, 255, 0.6)',
-      button: '0 4px 16px rgba(139, 92, 246, 0.4)',
-      buttonHover: '0 8px 24px rgba(168, 82, 255, 0.5)',
-      card: '0 8px 24px rgba(139, 92, 246, 0.2)',
-      modal: '0 24px 48px rgba(168, 82, 255, 0.3)',
-    },
-
+    // RN-COMPATIBLE: Removed shadows and backdrops
     glows: {
       sm: '0 0 8px',
       md: '0 0 16px',
@@ -221,13 +206,6 @@ export const playFameTheme: Theme = {
       thick: '4px solid',
       dashed: '1px dashed',
       dotted: '1px dotted',
-    },
-
-    backdrops: {
-      none: 'none',
-      sm: 'blur(4px)',
-      md: 'blur(8px)',
-      lg: 'blur(16px)',
     },
 
     transitions: {

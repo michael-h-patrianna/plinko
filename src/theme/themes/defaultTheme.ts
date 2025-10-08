@@ -183,22 +183,7 @@ export const defaultTheme: Theme = {
   },
 
   effects: {
-    shadows: {
-      none: 'none',
-      sm: '0 1px 3px rgba(0, 0, 0, 0.2)',
-      md: '0 4px 12px rgba(0, 0, 0, 0.3)',
-      lg: '0 8px 24px rgba(0, 0, 0, 0.4)',
-      xl: '0 12px 48px rgba(0, 0, 0, 0.5)',
-      '2xl': '0 25px 50px rgba(0, 0, 0, 0.6)',
-      inner: 'inset 0 2px 4px rgba(0, 0, 0, 0.3)',
-      glow: '0 0 20px rgba(251, 146, 60, 0.6)',
-      glowLg: '0 0 40px rgba(251, 146, 60, 0.7)',
-      button: '0 4px 16px rgba(59, 130, 246, 0.3)',
-      buttonHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
-      card: '0 8px 24px rgba(0, 0, 0, 0.3)',
-      modal: '0 24px 48px rgba(0, 0, 0, 0.5)',
-    },
-
+    // RN-COMPATIBLE: Removed shadows and backdrops
     glows: {
       sm: '0 0 8px',
       md: '0 0 16px',
@@ -215,13 +200,6 @@ export const defaultTheme: Theme = {
       thick: '4px solid',
       dashed: '1px dashed',
       dotted: '1px dotted',
-    },
-
-    backdrops: {
-      none: 'none',
-      sm: 'blur(4px)',
-      md: 'blur(8px)',
-      lg: 'blur(16px)',
     },
 
     transitions: {
@@ -329,14 +307,13 @@ export const defaultTheme: Theme = {
   // Required properties that were missing
   isDark: false,
   buttons: {
+    // RN-COMPATIBLE: Removed all shadow properties
     primary: createButtonStyle(
       'linear-gradient(135deg, rgb(96, 165, 250) 0%, rgb(59, 130, 246) 50%, rgb(37, 99, 235) 100%)',
       '#ffffff',
       'transparent',
       {
         backgroundHover: 'linear-gradient(135deg, rgb(147, 197, 253) 0%, rgb(96, 165, 250) 50%, rgb(59, 130, 246) 100%)',
-        shadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-        shadowHover: '0 8px 24px rgba(59, 130, 246, 0.4)',
         textTransform: 'uppercase',
       }
     ),
@@ -346,20 +323,14 @@ export const defaultTheme: Theme = {
       'transparent',
       {
         backgroundHover: 'linear-gradient(135deg, rgb(100, 116, 139) 0%, rgb(71, 85, 105) 50%, rgb(51, 65, 85) 100%)',
-        shadow: '0 4px 12px rgba(71, 85, 105, 0.3)',
-        shadowHover: '0 8px 24px rgba(71, 85, 105, 0.4)',
       }
     ),
     outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
       backgroundHover: 'rgba(59, 130, 246, 0.1)',
       outline: true,
-      shadow: 'none',
-      shadowHover: '0 4px 12px rgba(59, 130, 246, 0.2)',
     }),
     ghost: createButtonStyle('transparent', '#64748b', 'transparent', {
       backgroundHover: 'rgba(100, 116, 139, 0.1)',
-      shadow: 'none',
-      shadowHover: 'none',
     }),
     danger: createButtonStyle('#ef4444', '#ffffff', 'transparent', {
       backgroundHover: '#dc2626',

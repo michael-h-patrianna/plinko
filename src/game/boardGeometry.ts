@@ -47,20 +47,14 @@ export const PHYSICS = {
   /** Minimum velocity magnitude after peg collision (prevents dead stops) */
   MIN_BOUNCE_VELOCITY: 30,
 
-  /** Maximum total velocity after collision resolution (safety cap) */
-  MAX_TOTAL_SPEED: 800,
+  /** Maximum velocity component in any single direction (vx or vy) */
+  MAX_VELOCITY_COMPONENT: 750,
 
-  /** Maximum velocity component in any direction */
-  MAX_VELOCITY: 750,
-
-  /** Maximum post-collision speed after all effects applied */
-  MAX_POST_COLLISION_SPEED: 800,
-
-  /** Absolute maximum speed cap for all physics calculations */
-  ABSOLUTE_MAX_SPEED: 795,
+  /** Maximum total speed magnitude (sqrt(vx² + vy²)) */
+  MAX_SPEED: 800,
 
   /** Maximum distance ball can travel in a single frame (prevents tunneling) */
-  MAX_DIST_PER_FRAME: 13.2, // At 795px/s and 60fps
+  MAX_DIST_PER_FRAME: 13.3, // At 800px/s and 60fps
 } as const;
 
 // ============================================================================

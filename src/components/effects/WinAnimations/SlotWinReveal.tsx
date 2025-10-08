@@ -73,7 +73,7 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
               height: '120px',
               background: `linear-gradient(to top, ${color}dd 0%, ${color}66 50%, transparent 100%)`,
               transformOrigin: 'bottom center',
-              rotate: angle,
+              rotate: `${angle}deg`,
               /* RN-compatible: removed boxShadow glow */
             }}
             initial={{

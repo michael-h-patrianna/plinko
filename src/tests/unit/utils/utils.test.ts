@@ -760,22 +760,38 @@ describe('deviceDetection', () => {
   const originalWindow = globalThis.window as unknown as Window & typeof globalThis;
 
   beforeEach(() => {
-    // Reset navigator and window for each test
-    globalThis.navigator = {
-      userAgent: '',
-      maxTouchPoints: 0,
-    } as unknown as Navigator;
+    // Modern JSDOM 27+ (October 2025): Use Object.defineProperty for immutable globals
+    Object.defineProperty(globalThis, 'navigator', {
+      value: {
+        userAgent: '',
+        maxTouchPoints: 0,
+      },
+      writable: true,
+      configurable: true,
+    });
 
-    globalThis.window = {
-      innerWidth: 1024,
-      ontouchstart: undefined,
-    } as unknown as Window & typeof globalThis;
+    Object.defineProperty(globalThis, 'window', {
+      value: {
+        innerWidth: 1024,
+        ontouchstart: undefined,
+      },
+      writable: true,
+      configurable: true,
+    });
   });
 
   afterEach(() => {
-    // Restore original values
-    (globalThis as any).navigator = originalNavigator;
-    (globalThis as any).window = originalWindow;
+    // Restore original values using Object.defineProperty
+    Object.defineProperty(globalThis, 'navigator', {
+      value: originalNavigator,
+      writable: true,
+      configurable: true,
+    });
+    Object.defineProperty(globalThis, 'window', {
+      value: originalWindow,
+      writable: true,
+      configurable: true,
+    });
     vi.restoreAllMocks();
   });
 

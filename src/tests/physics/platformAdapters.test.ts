@@ -554,7 +554,12 @@ describe('Platform Adapters', () => {
     });
 
     afterEach(() => {
-      window.location = originalLocation;
+      // Modern JSDOM 27+ requires proper restoration
+      Object.defineProperty(window, 'location', {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
     });
 
     it('should get param by key', () => {

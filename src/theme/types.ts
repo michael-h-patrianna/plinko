@@ -5,6 +5,7 @@
  */
 
 // Button variants configuration
+// RN-COMPATIBLE: No shadow fields (intentionally removed for cross-platform compatibility)
 export interface ButtonStyle {
   background: string;
   backgroundHover?: string;
@@ -15,8 +16,6 @@ export interface ButtonStyle {
   color: string;
   colorHover?: string;
   textTransform?: string;
-  shadow: string;
-  shadowHover?: string;
   padding: {
     x: string;
     y: string;
@@ -43,49 +42,43 @@ export interface ThemeButtons {
 }
 
 // Component-specific styles
+// RN-COMPATIBLE: No shadow fields (intentionally removed for cross-platform compatibility)
 export interface ComponentStyles {
   card: {
     background: string;
     border: string;
     borderWidth: string;
     borderRadius: string | number;
-    shadow: string;
     padding: string;
   };
   modal: {
     background: string;
     backdropColor: string;
     borderRadius: string | number;
-    shadow: string;
     padding: string;
   };
   header: {
     height: string;
     background: string;
     borderBottom: string;
-    shadow: string;
   };
   input: {
     background: string;
     border: string;
     borderRadius: string | number;
     borderFocus: string;
-    shadow: string;
-    shadowFocus: string;
     padding: string;
   };
   dropdown: {
     background: string;
     border: string;
     borderRadius: string | number;
-    shadow: string;
     itemHover: string;
   };
   tooltip: {
     background: string;
     color: string;
     borderRadius: string | number;
-    shadow: string;
     padding: string;
     fontSize: string;
   };
@@ -277,24 +270,8 @@ export interface ThemeGradients {
 }
 
 export interface ThemeEffects {
-  // Box shadows - complete definitions
-  shadows: {
-    none: string;
-    sm: string;
-    md: string;
-    lg: string;
-    xl: string;
-    '2xl': string;
-    inner: string;
-    glow: string;
-    glowLg: string;
-    button: string;
-    buttonHover: string;
-    card: string;
-    modal: string;
-  };
-
   // Glow effects (using gradients instead of blur)
+  // RN-COMPATIBLE: Uses color values, not CSS box-shadow
   glows: {
     sm: string;
     md: string;
@@ -305,6 +282,7 @@ export interface ThemeEffects {
   };
 
   // Border styles
+  // RN-COMPATIBLE: Border style definitions
   borders: {
     none: string;
     thin: string;
@@ -314,15 +292,8 @@ export interface ThemeEffects {
     dotted: string;
   };
 
-  // Backdrop filters (for glassmorphism)
-  backdrops: {
-    none: string;
-    sm: string;
-    md: string;
-    lg: string;
-  };
-
   // Transitions
+  // RN-COMPATIBLE: Timing definitions (implementation differs between web/RN)
   transitions: {
     fast: string;
     normal: string;

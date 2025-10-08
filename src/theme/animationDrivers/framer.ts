@@ -70,7 +70,7 @@ class FramerMotionDriver implements AnimationDriver {
    * Create animated component using Framer Motion
    * Returns motion.div, motion.span, etc.
    */
-  createAnimatedComponent<T extends keyof JSX.IntrinsicElements>(
+  createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
   ): any {
     // Return the motion wrapper for the component

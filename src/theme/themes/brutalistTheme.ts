@@ -17,49 +17,43 @@ const WHITE = '#ffffff';
 const BLACK = '#000000';
 
 // Brutalist components with stark styling
+// RN-COMPATIBLE: Removed all shadow fields
 const brutalistComponents = {
   card: {
     background: WHITE,
     border: `4px solid ${BLACK}`,
     borderWidth: '4px',
     borderRadius: '0',
-    shadow: 'none',
     padding: '1.5rem',
   },
   modal: {
     background: WHITE,
     backdropColor: 'rgba(0, 0, 0, 0.9)',
     borderRadius: '0',
-    shadow: `8px 8px 0px ${BLACK}`,
     padding: '2rem',
   },
   header: {
     height: '4rem',
     background: BLACK,
     borderBottom: `4px solid ${RED}`,
-    shadow: 'none',
   },
   input: {
     background: WHITE,
     border: `3px solid ${BLACK}`,
     borderRadius: '0',
     borderFocus: `3px solid ${RED}`,
-    shadow: 'none',
-    shadowFocus: 'none',
     padding: '0.75rem 1rem',
   },
   dropdown: {
     background: WHITE,
     border: `3px solid ${BLACK}`,
     borderRadius: '0',
-    shadow: `4px 4px 0px ${BLACK}`,
     itemHover: RED,
   },
   tooltip: {
     background: BLACK,
     color: WHITE,
     borderRadius: '0',
-    shadow: 'none',
     padding: '0.5rem 0.75rem',
     fontSize: '0.875rem',
   },
@@ -244,22 +238,7 @@ export const brutalistTheme: Theme = {
   },
 
   effects: {
-    shadows: {
-      none: 'none',
-      sm: `2px 2px 0px ${BLACK}`,
-      md: `4px 4px 0px ${BLACK}`,
-      lg: `8px 8px 0px ${BLACK}`,
-      xl: `12px 12px 0px ${BLACK}`,
-      '2xl': `16px 16px 0px ${BLACK}`,
-      inner: 'none',
-      glow: 'none',
-      glowLg: 'none',
-      button: 'none',
-      buttonHover: `4px 4px 0px ${BLACK}`,
-      card: `4px 4px 0px ${BLACK}`,
-      modal: `8px 8px 0px ${BLACK}`,
-    },
-
+    // RN-COMPATIBLE: Removed shadows and backdrops
     glows: {
       sm: 'none',
       md: 'none',
@@ -276,13 +255,6 @@ export const brutalistTheme: Theme = {
       thick: '4px solid',
       dashed: '2px dashed',
       dotted: '2px dotted',
-    },
-
-    backdrops: {
-      none: 'none',
-      sm: 'none',
-      md: 'none',
-      lg: 'none',
     },
 
     transitions: {
@@ -402,10 +374,9 @@ export const brutalistTheme: Theme = {
   },
 
   buttons: {
+    // RN-COMPATIBLE: Removed all shadow properties
     primary: createButtonStyle(RED, WHITE, BLACK, {
       backgroundHover: '#a00000',
-      shadow: 'none',
-      shadowHover: `4px 4px 0px ${BLACK}`,
       textTransform: 'uppercase',
       borderWidth: '3px',
       borderRadius: '0',
@@ -414,8 +385,6 @@ export const brutalistTheme: Theme = {
     }),
     secondary: createButtonStyle(BLACK, WHITE, BLACK, {
       backgroundHover: '#333333',
-      shadow: 'none',
-      shadowHover: `4px 4px 0px ${BLACK}`,
       textTransform: 'uppercase',
       borderWidth: '3px',
       borderRadius: '0',
@@ -425,8 +394,6 @@ export const brutalistTheme: Theme = {
     outline: createButtonStyle(WHITE, BLACK, BLACK, {
       backgroundHover: '#f5f5f5',
       outline: true,
-      shadow: 'none',
-      shadowHover: `4px 4px 0px ${BLACK}`,
       textTransform: 'uppercase',
       borderWidth: '3px',
       borderRadius: '0',
@@ -435,8 +402,6 @@ export const brutalistTheme: Theme = {
     }),
     ghost: createButtonStyle('transparent', BLACK, 'transparent', {
       backgroundHover: '#f5f5f5',
-      shadow: 'none',
-      shadowHover: 'none',
       textTransform: 'uppercase',
       borderRadius: '0',
       fontWeight: 700,
@@ -444,16 +409,12 @@ export const brutalistTheme: Theme = {
     }),
     danger: createButtonStyle(RED, WHITE, BLACK, {
       backgroundHover: '#a00000',
-      shadow: 'none',
-      shadowHover: `4px 4px 0px ${BLACK}`,
       borderWidth: '3px',
       borderRadius: '0',
       fontWeight: 900,
     }),
     success: createButtonStyle(BLACK, WHITE, BLACK, {
       backgroundHover: '#333333',
-      shadow: 'none',
-      shadowHover: `4px 4px 0px ${BLACK}`,
       borderWidth: '3px',
       borderRadius: '0',
       fontWeight: 900,

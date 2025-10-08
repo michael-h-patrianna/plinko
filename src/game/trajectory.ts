@@ -138,9 +138,8 @@ function runSimulation(
     // During free fall, terminal velocity is enough
     // Only cap total speed if it's unrealistically high (e.g., from collision bugs)
     const currentSpeed = Math.sqrt(vx * vx + vy * vy);
-    const MAX_TOTAL_SPEED = 800; // px/s - safety cap for extreme cases
-    if (currentSpeed > MAX_TOTAL_SPEED) {
-      const scale = MAX_TOTAL_SPEED / currentSpeed;
+    if (currentSpeed > PHYSICS.MAX_SPEED) {
+      const scale = PHYSICS.MAX_SPEED / currentSpeed;
       vx *= scale;
       vy *= scale;
     }
@@ -254,9 +253,8 @@ function runSimulation(
           vy = newVy;
 
           // Clamp velocities to realistic maximum
-          const MAX_VELOCITY = 750;
-          vx = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vx));
-          vy = Math.max(-MAX_VELOCITY, Math.min(MAX_VELOCITY, vy));
+          vx = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vx));
+          vy = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vy));
 
           // Ensure minimum bounce
           const speed = Math.sqrt(vx * vx + vy * vy);
@@ -268,9 +266,8 @@ function runSimulation(
 
           // Final speed cap after all collision effects
           const finalSpeed = Math.sqrt(vx * vx + vy * vy);
-          const MAX_POST_COLLISION_SPEED = 800;
-          if (finalSpeed > MAX_POST_COLLISION_SPEED) {
-            const scale = MAX_POST_COLLISION_SPEED / finalSpeed;
+          if (finalSpeed > PHYSICS.MAX_SPEED) {
+            const scale = PHYSICS.MAX_SPEED / finalSpeed;
             vx *= scale;
             vy *= scale;
           }
@@ -398,9 +395,8 @@ function runSimulation(
 
     // Final velocity cap after ALL physics (collisions, walls, buckets, etc.)
     const totalSpeed = Math.sqrt(vx * vx + vy * vy);
-    const ABSOLUTE_MAX_SPEED = 795; // px/s - cap slightly below 800 to account for floating point
-    if (totalSpeed > ABSOLUTE_MAX_SPEED) {
-      const scale = ABSOLUTE_MAX_SPEED / totalSpeed;
+    if (totalSpeed > PHYSICS.MAX_SPEED) {
+      const scale = PHYSICS.MAX_SPEED / totalSpeed;
       vx *= scale;
       vy *= scale;
     }
@@ -410,9 +406,8 @@ function runSimulation(
     const actualDx = x - frameStartX;
     const actualDy = y - frameStartY;
     const actualDist = Math.sqrt(actualDx * actualDx + actualDy * actualDy);
-    const MAX_DIST_PER_FRAME = 13.2; // At 795px/s and 60fps = 13.25px max
-    if (actualDist > MAX_DIST_PER_FRAME) {
-      const scale = MAX_DIST_PER_FRAME / actualDist;
+    if (actualDist > PHYSICS.MAX_DIST_PER_FRAME) {
+      const scale = PHYSICS.MAX_DIST_PER_FRAME / actualDist;
       x = frameStartX + actualDx * scale;
       y = frameStartY + actualDy * scale;
     }

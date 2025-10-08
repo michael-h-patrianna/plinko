@@ -44,10 +44,15 @@ export function ThemedButton({
   const { theme } = useTheme();
   const buttonStyle = variant === 'primary' ? theme.buttons.primary : theme.buttons.secondary;
 
-  let animateTarget: any = { scale: 1, rotate: 0, opacity: 1, y: 0 };
+  // Animation configuration types
+  // Note: Using Record<string, unknown> for platform-specific animation properties
+  // that may differ between Framer Motion (web) and Moti (React Native)
+  type AnimationTarget = Record<string, number | number[] | string | undefined>;
+  type AnimationTransition = Record<string, number | number[] | string | undefined> | undefined;
 
-  let initialState: any = false;
-  let entranceTransition: any = undefined;
+  let animateTarget: AnimationTarget = { scale: 1, rotate: 0, opacity: 1, y: 0 };
+  let initialState: AnimationTarget | false = false;
+  let entranceTransition: AnimationTransition = undefined;
 
   switch (entranceAnimation) {
     case 'hero':

@@ -75,4 +75,4 @@ export {
 // Physics and trajectory
 export {
   generateTrajectory,
-} from './trajectory';
+} from './trajectory/index';

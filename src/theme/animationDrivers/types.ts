@@ -18,21 +18,27 @@
  */
 export interface AnimationConfig {
   /** Translate X in pixels or percentage */
-  x?: number | string;
+  x?: number | string | number[] | string[];
   /** Translate Y in pixels or percentage */
-  y?: number | string;
+  y?: number | string | number[] | string[];
   /** Scale transformation (1 = 100%) */
-  scale?: number;
+  scale?: number | number[];
+  /** Scale X transformation (1 = 100%) */
+  scaleX?: number | number[];
+  /** Scale Y transformation (1 = 100%) */
+  scaleY?: number | number[];
   /** Rotation in degrees */
-  rotate?: number | string;
+  rotate?: number | string | number[] | string[];
   /** Opacity (0-1) */
-  opacity?: number;
+  opacity?: number | number[];
   /** Background color (hex, rgb, rgba) */
-  backgroundColor?: string;
+  backgroundColor?: string | string[];
   /** Text color (hex, rgb, rgba) */
-  color?: string;
-  /** Array of values for keyframe animations */
-  [key: string]: number | string | number[] | string[] | undefined;
+  color?: string | string[];
+  /** Transition configuration for this animation */
+  transition?: TransitionConfig;
+  /** Array of values for keyframe animations and other properties */
+  [key: string]: number | string | number[] | string[] | TransitionConfig | undefined;
 }
 
 /**
@@ -64,7 +70,7 @@ export interface TransitionConfig {
   /** Delay before animation starts in seconds */
   delay?: number;
   /** Easing function or cubic bezier array */
-  ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | number[];
+  ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | number[] | string;
   /** Repeat count (Infinity for infinite) */
   repeat?: number;
   /** Repeat type */
@@ -75,6 +81,16 @@ export interface TransitionConfig {
   type?: 'spring' | 'tween' | 'inertia';
   /** Spring-specific config */
   spring?: SpringConfig;
+  /** Stiffness of the spring (can be specified at top level) */
+  stiffness?: number;
+  /** Damping of the spring (can be specified at top level) */
+  damping?: number;
+  /** Mass of the spring (can be specified at top level) */
+  mass?: number;
+  /** Keyframe timing array */
+  times?: number[];
+  /** Per-property transition overrides and other transition properties */
+  [key: string]: number | number[] | string | SpringConfig | TransitionConfig | undefined;
 }
 
 /**
@@ -112,10 +128,13 @@ export interface AnimationDriver {
    * Create animated component wrapper
    * Web: motion.div, motion.span, etc.
    * React Native: MotiView, MotiText, etc.
+   *
+   * NOTE: Returns platform-specific animated component (Framer Motion or Moti)
+   * Type is intentionally 'any' to preserve full platform API compatibility
    */
-  createAnimatedComponent<T extends keyof JSX.IntrinsicElements>(
+  createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
-  ): any; // TODO: Proper typing for cross-platform animated components
+  ): any;
 
   /**
    * Animate presence (mount/unmount animations)

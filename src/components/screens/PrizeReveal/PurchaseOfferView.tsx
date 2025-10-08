@@ -87,20 +87,24 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
             ease: [0.34, 1.56, 0.64, 1],
           }}
         >
-          {/* "200% SPECIAL DEAL" Ribbon */}
+          {/* "SPECIAL" Ribbon */}
           <AnimatedDiv
-            className="absolute -top-1 -right-8 font-bold text-sm rotate-45 z-10"
+            className="absolute font-bold uppercase rotate-45 whitespace-nowrap"
             style={{
               color: theme.colors.primary.contrast,
               background: `linear-gradient(135deg, ${theme.colors.status.error} 0%, ${theme.colors.status.error} 100%)`,
               /* RN-compatible: removed boxShadow and textShadow */
-              padding: '8px 48px',
+              padding: '4px 32px',
+              fontSize: '10px',
+              top: '12px',
+              right: '-24px',
+              zIndex: 50,
             }}
             initial={{ x: 200, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.35, delay: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
           >
-            200% SPECIAL DEAL
+            SPECIAL
           </AnimatedDiv>
 
           {/* Sparkles for offer - Cross-platform: linear gradient instead of radial */}

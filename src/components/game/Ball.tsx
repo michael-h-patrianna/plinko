@@ -171,9 +171,6 @@ function BallComponent({ position, state, currentFrame, trajectoryPoint, showTra
               willChange: 'transform, opacity',
               zIndex: zIndexTokens.ballTrail,
               transition: `all ${animationTokens.duration.fastest}ms linear`,
-              // Progressive enhancement: Add blur on web for extra smoothness
-              // Safe to use CSS-only feature since it's web-only enhancement
-              filter: 'blur(0.5px)',
             }}
           />
         );

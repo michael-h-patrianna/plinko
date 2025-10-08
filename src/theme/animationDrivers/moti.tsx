@@ -90,7 +90,7 @@ class MotiDriver implements AnimationDriver {
    * return componentMap[component] || MotiView;
    * ```
    */
-  createAnimatedComponent<T extends keyof JSX.IntrinsicElements>(
+  createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     _component: T
   ): any {
     // Placeholder: return a basic div

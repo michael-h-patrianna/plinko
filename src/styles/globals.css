@@ -1,15 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* CSS Reset and Base Styles */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@import "tailwindcss";
 
 html,
 body {

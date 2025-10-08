@@ -389,16 +389,12 @@ describe('Theme System', () => {
         });
 
         it('should have all required effect properties', () => {
-          expect(theme.effects).toHaveProperty('shadows');
+          // RN-COMPATIBLE: shadows and backdrops removed
           expect(theme.effects).toHaveProperty('glows');
           expect(theme.effects).toHaveProperty('borders');
-          expect(theme.effects).toHaveProperty('backdrops');
           expect(theme.effects).toHaveProperty('transitions');
 
           // Nested effect properties
-          expect(theme.effects.shadows).toHaveProperty('none');
-          expect(theme.effects.shadows).toHaveProperty('md');
-          expect(theme.effects.shadows).toHaveProperty('glow');
           expect(theme.effects.glows).toHaveProperty('sm');
           expect(theme.effects.borders).toHaveProperty('thin');
           expect(theme.effects.transitions).toHaveProperty('normal');

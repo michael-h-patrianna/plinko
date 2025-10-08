@@ -153,6 +153,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex }: StartSc
                     position: 'relative',
                   }}
                   onClick={() => isCombo && setExpandedPrize(isExpanded ? null : prize.id)}
+                  data-prize-index={index}
                 >
                   {winningIndex === index && (
                     <div

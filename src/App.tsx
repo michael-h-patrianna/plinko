@@ -42,6 +42,13 @@ function AppContent({
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('none');
 
   // Use game hook with the locked board width
+  const gameState = usePlinkoGame({
+    boardWidth: lockedBoardWidth,
+    boardHeight: 500,
+    pegRows: 10,
+    choiceMechanic,
+  });
+
   const {
     state,
     prizes,
@@ -60,12 +67,7 @@ function AppContent({
     canClaim,
     isLoadingPrizes,
     prizeLoadError,
-  } = usePlinkoGame({
-    boardWidth: lockedBoardWidth,
-    boardHeight: 500,
-    pegRows: 10,
-    choiceMechanic,
-  });
+  } = gameState;
 
   // Inline viewport management using platform adapters
   useEffect(() => {
@@ -165,6 +167,8 @@ function AppContent({
             onChoiceMechanicChange={setChoiceMechanic}
             performanceMode={performanceMode}
             onPerformanceModeChange={setPerformanceMode}
+            gameState={gameState}
+            isStartScreen={state === 'idle' || state === 'ready'}
           />
         </div>
       </div>
