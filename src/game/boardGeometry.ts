@@ -55,6 +55,37 @@ export const PHYSICS = {
 
   /** Maximum distance ball can travel in a single frame (prevents tunneling) */
   MAX_DIST_PER_FRAME: 13.3, // At 800px/s and 60fps
+
+  // Bucket physics constants
+  /** Velocity threshold below which ball is considered settled (px/s) */
+  SETTLEMENT_VELOCITY_THRESHOLD: 5,
+
+  /** Y-position tolerance for settlement detection (px) */
+  SETTLEMENT_Y_TOLERANCE: 2,
+
+  /** Damping factor for bucket wall collisions (0-1) */
+  BUCKET_WALL_DAMPING: 0.85,
+
+  /** Damping factor for bucket floor collisions (0-1) */
+  BUCKET_FLOOR_DAMPING: 0.6,
+
+  /** Random horizontal velocity added on floor bounce (px/s) */
+  FLOOR_BOUNCE_RANDOMNESS: 20,
+
+  /** Minimum vertical velocity after floor bounce to continue bouncing (px/s) */
+  MIN_FLOOR_BOUNCE_VELOCITY: 10,
+
+  /** Friction applied to horizontal velocity when ball stops bouncing (0-1) */
+  FLOOR_FRICTION: 0.7,
+
+  /** Slot wall thickness for collision detection (px) */
+  SLOT_WALL_THICKNESS: 3,
+
+  /** Offset from bottom of board to bucket floor (px) */
+  BUCKET_FLOOR_OFFSET: 5,
+
+  /** Y-position tolerance for bucket zone entry detection (px) */
+  BUCKET_ZONE_TOLERANCE: 5,
 } as const;
 
 // ============================================================================

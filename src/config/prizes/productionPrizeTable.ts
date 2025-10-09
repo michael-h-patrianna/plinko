@@ -218,19 +218,6 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
   },
 ];
 
-/**
- * Add backward-compatible fields to Prize for legacy components
- */
-function addBackwardCompatFields(
-  prize: Prize
-): Prize & { label: string; color: string; description?: string } {
-  return {
-    ...prize,
-    label: prize.title,
-    color: prize.slotColor,
-    description: prize.description,
-  };
-}
 
 export const DEFAULT_PRODUCTION_PRIZE_COUNT = 6;
 
@@ -275,8 +262,7 @@ export function generateProductionPrizeSet(
   }
 
   const selected = pool.slice(0, count);
-  const normalized = normalizeProbabilities(selected);
-  return normalized.map((prize) => addBackwardCompatFields(prize));
+  return normalizeProbabilities(selected);
 }
 
 /**

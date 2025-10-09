@@ -13,7 +13,7 @@ import type { PrizeConfig } from '../game/types';
  * Falls back to primary color if no match is found
  */
 export function getPrizeThemeColor(prize: PrizeConfig, theme: Theme): string {
-  const prizeColor = prize.color || prize.slotColor || '';
+  const prizeColor = prize.slotColor || '';
 
   // Map common prize colors to theme prize colors
   // This mapping works for all themes including brutalist

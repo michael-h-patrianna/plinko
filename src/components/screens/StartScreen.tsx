@@ -119,9 +119,9 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex }: StartSc
             if (isPurchaseOffer) {
               displayText = '200% Special Offer';
             } else if (isCombo) {
-              displayText = prize.label || '';
+              displayText = prize.title || '';
             } else {
-              displayText = getSlotDisplayText(prize, abbreviateNumber, true) || prize.label || '';
+              displayText = getSlotDisplayText(prize, abbreviateNumber, true) || prize.title || '';
             }
 
             return (

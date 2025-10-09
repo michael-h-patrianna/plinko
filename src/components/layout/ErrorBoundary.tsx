@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
+import { trackErrorBoundary } from '../../utils/telemetry';
 
 interface Props {
   children: ReactNode;
@@ -22,6 +23,13 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+
+    // Track error in telemetry system
+    trackErrorBoundary({
+      error: error.message,
+      componentStack: errorInfo.componentStack ?? undefined,
+      errorInfo,
+    });
   }
 
   render() {

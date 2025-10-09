@@ -4,8 +4,9 @@
  */
 
 import type { GameContext, GameState, PrizeConfig, TrajectoryPoint } from './types';
-
 import type { DropZone } from './types';
+import { trackStateTransition, trackStateError } from '../utils/telemetry';
+import { now } from '../utils/time';
 
 export type GameEvent =
   | {
@@ -44,6 +45,44 @@ export const initialContext: GameContext = {
 };
 
 /**
+ * Helper to reset game to initial state
+ */
+function resetToIdle(): { state: GameState; context: GameContext } {
+  return {
+    state: 'idle',
+    context: initialContext,
+  };
+}
+
+/**
+ * Helper to create state transition with updated context
+ */
+function transitionTo(
+  state: GameState,
+  context: GameContext
+): { state: GameState; context: GameContext } {
+  return { state, context };
+}
+
+/**
+ * Helper to initialize game with trajectory and prize data
+ */
+function initializeGame(payload: {
+  selectedIndex: number;
+  trajectory: TrajectoryPoint[];
+  prize: PrizeConfig;
+  seed: number;
+}): { state: GameState; context: GameContext } {
+  return transitionTo('ready', {
+    selectedIndex: payload.selectedIndex,
+    trajectory: payload.trajectory,
+    currentFrame: 0,
+    prize: payload.prize,
+    seed: payload.seed,
+  });
+}
+
+/**
  * State machine transition function
  * @param state - Current game state
  * @param context - Current game context
@@ -55,143 +94,116 @@ export function transition(
   context: GameContext,
   event: GameEvent
 ): { state: GameState; context: GameContext } {
+  const startTime = now();
+
+  try {
+    const result = executeTransition(state, context, event);
+
+    // Track successful transition
+    trackStateTransition({
+      fromState: state,
+      toState: result.state,
+      event: event.type,
+      duration: now() - startTime,
+    });
+
+    return result;
+  } catch (error) {
+    // Track transition error
+    trackStateError({
+      currentState: state,
+      event: event.type,
+      error: error instanceof Error ? error.message : String(error),
+    });
+    throw error;
+  }
+}
+
+/**
+ * Internal transition logic (extracted for telemetry wrapping)
+ */
+function executeTransition(
+  state: GameState,
+  context: GameContext,
+  event: GameEvent
+): { state: GameState; context: GameContext } {
   switch (state) {
     case 'idle':
       if (event.type === 'INITIALIZE') {
-        return {
-          state: 'ready',
-          context: {
-            selectedIndex: event.payload.selectedIndex,
-            trajectory: event.payload.trajectory,
-            currentFrame: 0,
-            prize: event.payload.prize,
-            seed: event.payload.seed,
-          },
-        };
+        return initializeGame(event.payload);
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'ready':
       if (event.type === 'INITIALIZE') {
-        return {
-          state: 'ready',
-          context: {
-            selectedIndex: event.payload.selectedIndex,
-            trajectory: event.payload.trajectory,
-            currentFrame: 0,
-            prize: event.payload.prize,
-            seed: event.payload.seed,
-          },
-        };
+        return initializeGame(event.payload);
       }
       if (event.type === 'DROP_REQUESTED') {
-        return {
-          state: 'countdown',
-          context: { ...context, currentFrame: 0 },
-        };
+        return transitionTo('countdown', { ...context, currentFrame: 0 });
       }
       if (event.type === 'START_POSITION_SELECTION') {
-        return {
-          state: 'selecting-position',
-          context,
-        };
+        return transitionTo('selecting-position', context);
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'selecting-position':
       if (event.type === 'POSITION_SELECTED') {
-        return {
-          state: 'countdown',
-          context: {
-            ...context,
-            dropZone: event.payload.dropZone,
-            trajectory: event.payload.trajectory,
-            selectedIndex: event.payload.selectedIndex,
-            prize: event.payload.prize,
-            currentFrame: 0,
-          },
-        };
+        return transitionTo('countdown', {
+          ...context,
+          dropZone: event.payload.dropZone,
+          trajectory: event.payload.trajectory,
+          selectedIndex: event.payload.selectedIndex,
+          prize: event.payload.prize,
+          currentFrame: 0,
+        });
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'countdown':
       if (event.type === 'COUNTDOWN_COMPLETED') {
-        return {
-          state: 'dropping',
-          context,
-        };
+        return transitionTo('dropping', context);
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'dropping':
       if (event.type === 'LANDING_COMPLETED') {
-        return {
-          state: 'landed',
-          context,
-        };
+        return transitionTo('landed', context);
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'landed':
       if (event.type === 'REVEAL_CONFIRMED') {
-        return {
-          state: 'revealed',
-          context,
-        };
+        return transitionTo('revealed', context);
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'revealed':
       if (event.type === 'CLAIM_REQUESTED') {
-        return {
-          state: 'claimed',
-          context,
-        };
+        return transitionTo('claimed', context);
       }
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'claimed':
       if (event.type === 'RESET_REQUESTED') {
-        return {
-          state: 'idle',
-          context: initialContext,
-        };
+        return resetToIdle();
       }
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 

@@ -97,9 +97,9 @@ export function Slot({
   const isVeryNarrow = width < 42;
   const isNarrow = width < 55;
 
-  // Use slotColor and title from new format, fallback to legacy fields
-  const color = prize.slotColor || prize.color || '#64748B';
-  const label = prize.title || prize.label || 'Prize';
+  // Use slotColor and title from Prize type
+  const color = prize.slotColor || '#64748B';
+  const label = prize.title || 'Prize';
 
   // Check if this prize should always use icon mode
   const prizeType = prize.type;

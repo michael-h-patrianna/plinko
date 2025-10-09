@@ -7,6 +7,7 @@
 
 import type { ReactNode } from 'react';
 import { useAnimationDriver } from '../../theme/animationDrivers';
+import { UI_SIZE } from '../../constants';
 
 interface PopupContainerProps {
   children: ReactNode;
@@ -21,7 +22,7 @@ export function PopupContainer({ children, isMobileOverlay = false }: PopupConta
     <AnimatedDiv
       className="relative w-full"
       style={{
-        minHeight: isMobileOverlay ? '100vh' : '650px',
+        minHeight: isMobileOverlay ? '100vh' : `${UI_SIZE.MIN_POPUP_HEIGHT}px`,
         overflow: isMobileOverlay ? 'hidden' : 'visible',
       }}
       initial={{ opacity: 0, scale: 0.95, y: 20 }}

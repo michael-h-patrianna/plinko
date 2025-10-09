@@ -15,12 +15,9 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/grand-prize.svg',
     slotColor: '#F97316',
     title: '500 Free SC',
-    label: '500 Free SC',
-    description: 'Sweeps Coins bonus',
     freeReward: {
       sc: 500,
     },
-    color: '#F97316',
   },
   {
     id: 'bonus_spins',
@@ -29,12 +26,9 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/bonus-spins.svg',
     slotColor: '#FB923C',
     title: '30 Free Spins',
-    label: '30 Free Spins',
-    description: 'Slot free play bundle',
     freeReward: {
       spins: 30,
     },
-    color: '#FB923C',
   },
   {
     id: 'combo_reward',
@@ -43,13 +37,10 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/combo-reward.svg',
     slotColor: '#60A5FA',
     title: 'Combo Reward',
-    label: 'Combo Reward',
-    description: 'Mixed GC + SC bundle',
     freeReward: {
       gc: 5000,
       sc: 100,
     },
-    color: '#60A5FA',
   },
   {
     id: 'special_offer',
@@ -58,14 +49,11 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/special-offer.svg',
     slotColor: '#EF4444',
     title: '200% Purchase Offer',
-    label: '200% Offer',
-    description: 'Optional purchase boost',
     purchaseOffer: {
       offerId: 'offer-fixture-200',
       title: '200% Purchase Offer',
       description: 'Unlock the premium bonus pack.',
     },
-    color: '#EF4444',
   },
   {
     id: 'consolation_gc',
@@ -74,12 +62,9 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/consolation.svg',
     slotColor: '#34D399',
     title: '5,000 GC',
-    label: '5,000 GC',
-    description: 'Gold Coin consolation prize',
     freeReward: {
       gc: 5000,
     },
-    color: '#34D399',
   },
   {
     id: 'no_win',
@@ -88,9 +73,6 @@ const deterministicPrizeSet: PrizeConfig[] = [
     slotIcon: 'fixtures/icons/no-win.svg',
     slotColor: '#64748B',
     title: 'No Win',
-    label: 'No Win',
-    description: 'Try again soon',
-    color: '#64748B',
   },
 ];
 

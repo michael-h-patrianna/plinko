@@ -19,21 +19,39 @@ function generatePegLayout(
   _slotCount: number
 ) {
   const pegs: Array<{ x: number; y: number; row: number; col: number }> = [];
-  const OPTIMAL_PEG_COLUMNS = 6; // Fixed peg count for optimal spacing
-  const pegPadding = PHYSICS.PEG_RADIUS + 10;
-  const playableWidth = boardWidth - PHYSICS.BORDER_WIDTH * 2 - pegPadding * 2;
-  const playableHeight = boardHeight * 0.65;
+  const OPTIMAL_PEG_COLUMNS = 6;
+  const CSS_BORDER = 2;
+  const PLAYABLE_HEIGHT_RATIO = 0.65;
+  const PEG_TOP_OFFSET = 20;
+
+  const internalWidth = boardWidth - CSS_BORDER * 2;
+
+  // Determine responsive sizing (matching boardGeometry.ts)
+  const SMALL_VIEWPORT_WIDTH = 360;
+  const isSmallViewport = internalWidth <= SMALL_VIEWPORT_WIDTH;
+  const pegRadius = isSmallViewport ? 6 : 7;
+  const ballRadius = isSmallViewport ? 6 : 7;
+  const extraClearance = isSmallViewport ? 8 : 10;
+
+  const minClearance = pegRadius + ballRadius + extraClearance;
+  const playableHeight = boardHeight * PLAYABLE_HEIGHT_RATIO;
   const verticalSpacing = playableHeight / (pegRows + 1);
-  const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
+
+  const leftEdge = PHYSICS.BORDER_WIDTH + minClearance;
+  const rightEdge = internalWidth - PHYSICS.BORDER_WIDTH - minClearance;
+  const pegSpanWidth = rightEdge - leftEdge;
+  const horizontalSpacing = pegSpanWidth / OPTIMAL_PEG_COLUMNS;
 
   for (let row = 0; row < pegRows; row++) {
-    const y = verticalSpacing * (row + 1) + PHYSICS.BORDER_WIDTH + 20;
+    const y = verticalSpacing * (row + 1) + PHYSICS.BORDER_WIDTH + PEG_TOP_OFFSET;
     const isOffsetRow = row % 2 === 1;
-    const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-    const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
+    const pegsInRow = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
-    for (let col = 0; col < numPegs; col++) {
-      const x = PHYSICS.BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
+    for (let col = 0; col < pegsInRow; col++) {
+      const x = isOffsetRow
+        ? leftEdge + horizontalSpacing * (col + 0.5)
+        : leftEdge + horizontalSpacing * col;
+
       pegs.push({ row, col, x, y });
     }
   }

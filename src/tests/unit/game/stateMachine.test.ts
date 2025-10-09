@@ -17,11 +17,8 @@ describe('State Machine', () => {
     prize: {
       id: 'p1',
       type: 'free',
-      label: 'Test Prize',
       title: 'Test Prize',
-      description: 'Test',
       probability: 1.0,
-      color: '#000',
       slotIcon: '',
       slotColor: '#000',
     },

@@ -192,15 +192,17 @@ export function runSimulation(config: SimulationConfig): SimulationResult {
       vy *= scale;
     }
 
-    // Also cap the actual distance moved this frame to prevent collision resolution
-    // from causing unrealistic jumps
-    const actualDx = x - frameStartX;
-    const actualDy = y - frameStartY;
-    const actualDist = Math.sqrt(actualDx * actualDx + actualDy * actualDy);
-    if (actualDist > PHYSICS.MAX_DIST_PER_FRAME) {
-      const scale = PHYSICS.MAX_DIST_PER_FRAME / actualDist;
-      x = frameStartX + actualDx * scale;
-      y = frameStartY + actualDy * scale;
+    // Cap the actual distance moved per frame EXCEPT when a collision occurred
+    // Collision resolution may need to move the ball further to ensure separation
+    if (!hitPeg) {
+      const actualDx = x - frameStartX;
+      const actualDy = y - frameStartY;
+      const actualDist = Math.sqrt(actualDx * actualDx + actualDy * actualDy);
+      if (actualDist > PHYSICS.MAX_DIST_PER_FRAME) {
+        const scale = PHYSICS.MAX_DIST_PER_FRAME / actualDist;
+        x = frameStartX + actualDx * scale;
+        y = frameStartY + actualDy * scale;
+      }
     }
 
     // Detect stuck ball (not in bucket zone and not making vertical progress)

@@ -13,6 +13,7 @@ import type { ChoiceMechanic } from '../dev-tools';
 import { usePrizeSession } from './usePrizeSession';
 import { useGameAnimation } from './useGameAnimation';
 import { useGameState } from './useGameState';
+import { useResetCoordinator } from './useResetCoordinator';
 
 interface UsePlinkoGameOptions {
   seedOverride?: number;
@@ -92,39 +93,25 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     currentFrameRef,
   });
 
-  const resetGame = useCallback(() => {
-    // AUTOMATIC RESET: After claiming prize, reset game with fresh random prize table
-    // This is called automatically when user closes prize popup to allow replay
-
-    // Reset frame to 0 for new game
-    resetFrame();
-    currentFrameRef.current = 0;
-    // Clear error state
-    // Clear winning prize state
-    setWinningPrize(null);
-    setCurrentWinningIndex(undefined);
-    // Clear prize session to prevent initialization with stale data
-    setPrizeSession(null);
-    setPrizes([]);
-    // Force fresh random seed (ignores URL ?seed= parameter for automatic reset)
-    forceFreshSeedRef.current = true;
-    // Reset winning prize lock (allows new winning prize to be set)
-    winningPrizeLockedRef.current = false;
-
-    // Reset game state machine
-    dispatch({ type: 'RESET_REQUESTED' });
-
-    // Trigger new session load with fresh seed
-    setSessionKey((key) => key + 1);
-  }, [
+  // Reset coordinator - centralized, ordered reset logic
+  const resetCoordinator = useResetCoordinator({
+    currentFrameRef,
     resetFrame,
+    dispatch,
     setWinningPrize,
     setCurrentWinningIndex,
     setPrizeSession,
     setPrizes,
     winningPrizeLockedRef,
-    dispatch,
-  ]);
+    forceFreshSeedRef,
+    setSessionKey,
+  });
+
+  const resetGame = useCallback(() => {
+    // Uses centralized reset coordinator to ensure all state is cleaned up
+    // in the correct order. See docs/RESET_ORCHESTRATION.md for details.
+    resetCoordinator.reset();
+  }, [resetCoordinator]);
 
   // Provide backwards-compatible computed values (but they're derived from refs, not state)
   // These will still cause re-renders in tests, but not in production with the subscription pattern

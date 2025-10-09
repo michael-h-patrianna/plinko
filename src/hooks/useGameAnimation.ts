@@ -8,6 +8,7 @@ import { useAppConfig } from '../config/AppConfigContext';
 import { getPerformanceSetting } from '../config/appConfig';
 import type { GameState, TrajectoryPoint } from '../game/types';
 import { animationAdapter } from '../utils/platform';
+import { GAME_TIMEOUT } from '../constants';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
 interface FrameStore {
@@ -105,7 +106,7 @@ export function useGameAnimation(options: UseGameAnimationOptions): UseGameAnima
       // Set timeout for landing based on total duration
       landingTimeoutRef.current = setTimeout(() => {
         onLandingComplete();
-      }, totalDuration + 500);
+      }, totalDuration + GAME_TIMEOUT.LANDING_COMPLETE);
 
       return () => {
         if (animationFrameRef.current !== null) {
@@ -121,7 +122,7 @@ export function useGameAnimation(options: UseGameAnimationOptions): UseGameAnima
         // currentFrameRef.current = 0;
       };
     }
-  }, [gameState, trajectory, performance, onLandingComplete]);
+  }, [gameState, trajectory, performance, onLandingComplete, currentFrameRef]);
 
   return {
     frameStore,

@@ -11,6 +11,80 @@ import type { createRng } from '../rng';
 
 type Rng = ReturnType<typeof createRng>;
 
+/**
+ * Checks if ball has settled (low velocity and on floor)
+ */
+function isBallSettled(vx: number, vy: number, y: number, bucketFloorY: number): boolean {
+  return (
+    Math.abs(vx) < PHYSICS.SETTLEMENT_VELOCITY_THRESHOLD &&
+    Math.abs(vy) < PHYSICS.SETTLEMENT_VELOCITY_THRESHOLD &&
+    y >= bucketFloorY - PHYSICS.SETTLEMENT_Y_TOLERANCE
+  );
+}
+
+/**
+ * Handles bucket wall collision physics
+ * Returns updated position and velocity
+ */
+function handleBucketWallCollision(
+  x: number,
+  vx: number,
+  slotLeftEdge: number,
+  slotRightEdge: number
+): { x: number; vx: number; wallHit?: 'left' | 'right' } {
+  if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
+    return {
+      x: slotLeftEdge + PHYSICS.BALL_RADIUS,
+      vx: Math.abs(vx) * PHYSICS.RESTITUTION * PHYSICS.BUCKET_WALL_DAMPING,
+      wallHit: 'left',
+    };
+  } else if (x + PHYSICS.BALL_RADIUS >= slotRightEdge) {
+    return {
+      x: slotRightEdge - PHYSICS.BALL_RADIUS,
+      vx: -Math.abs(vx) * PHYSICS.RESTITUTION * PHYSICS.BUCKET_WALL_DAMPING,
+      wallHit: 'right',
+    };
+  }
+  return { x, vx };
+}
+
+/**
+ * Handles bucket floor collision and bouncing physics
+ * Returns updated position, velocity, and bounce state
+ */
+function handleBucketFloorCollision(
+  y: number,
+  vx: number,
+  vy: number,
+  bucketFloorY: number,
+  rng: Rng
+): { y: number; vx: number; vy: number; floorHit: boolean } {
+  if (y < bucketFloorY) {
+    return { y, vx, vy, floorHit: false };
+  }
+
+  const newY = bucketFloorY;
+  let newVx = vx;
+  let newVy = vy;
+  let floorHit = false;
+
+  if (vy > 0) {
+    newVy = -vy * PHYSICS.RESTITUTION * PHYSICS.BUCKET_FLOOR_DAMPING;
+    floorHit = true;
+
+    // Add small random horizontal movement on bounce
+    newVx += (rng.next() - 0.5) * PHYSICS.FLOOR_BOUNCE_RANDOMNESS;
+
+    // Stop bouncing if velocity is too small
+    if (Math.abs(newVy) < PHYSICS.MIN_FLOOR_BOUNCE_VELOCITY) {
+      newVy = 0;
+      newVx *= PHYSICS.FLOOR_FRICTION;
+    }
+  }
+
+  return { y: newY, vx: newVx, vy: newVy, floorHit };
+}
+
 export interface BucketState {
   x: number;
   y: number;
@@ -53,49 +127,30 @@ export function handleBucketPhysics(params: BucketParams): BucketResult {
 
   if (y >= bucketZoneY) {
     // In bucket zone - check for bucket wall collisions
-    // Adjust x position relative to playable area
     const xRelative = x - PHYSICS.BORDER_WIDTH;
     const currentSlot = Math.floor(xRelative / slotWidth);
     const { leftEdge: slotLeftEdge, rightEdge: slotRightEdge } = getSlotBoundaries(
       currentSlot,
       boardWidth,
       slotCount,
-      3
+      PHYSICS.SLOT_WALL_THICKNESS
     );
 
-    // Bucket wall collisions with proper physics
-    if (x - PHYSICS.BALL_RADIUS <= slotLeftEdge) {
-      x = slotLeftEdge + PHYSICS.BALL_RADIUS;
-      vx = Math.abs(vx) * PHYSICS.RESTITUTION * 0.6; // Dampen in bucket
-      bucketWallHit = 'left';
-    } else if (x + PHYSICS.BALL_RADIUS >= slotRightEdge) {
-      x = slotRightEdge - PHYSICS.BALL_RADIUS;
-      vx = -Math.abs(vx) * PHYSICS.RESTITUTION * 0.6;
-      bucketWallHit = 'right';
-    }
+    // Handle bucket wall collisions
+    const wallResult = handleBucketWallCollision(x, vx, slotLeftEdge, slotRightEdge);
+    x = wallResult.x;
+    vx = wallResult.vx;
+    bucketWallHit = wallResult.wallHit;
 
-    // Bucket floor collision with bouncing
-    if (y >= bucketFloorY) {
-      y = bucketFloorY;
-      if (vy > 0) {
-        vy = -vy * PHYSICS.RESTITUTION * 0.5; // Bounce off floor with damping
-        bucketFloorHit = true;
+    // Handle bucket floor collision with bouncing
+    const floorResult = handleBucketFloorCollision(y, vx, vy, bucketFloorY, rng);
+    y = floorResult.y;
+    vx = floorResult.vx;
+    vy = floorResult.vy;
+    bucketFloorHit = floorResult.floorHit;
 
-        // Add small random horizontal movement on bounce
-        vx += (rng.next() - 0.5) * 20;
-
-        // Stop bouncing if velocity is too small
-        if (Math.abs(vy) < 30) {
-          vy = 0;
-          vx *= 0.9; // Friction on floor
-        }
-      }
-
-      // Check if ball has settled
-      if (Math.abs(vx) < 5 && Math.abs(vy) < 5 && y >= bucketFloorY - 1) {
-        settled = true;
-      }
-    }
+    // Check if ball has settled
+    settled = isBallSettled(vx, vy, y, bucketFloorY);
   }
 
   return {
@@ -117,7 +172,7 @@ export function calculateBucketDimensions(
   slotWidth: number
 ): { bucketZoneY: number; bucketFloorY: number } {
   const bucketZoneY = calculateBucketZoneY(boardHeight, slotWidth);
-  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS + 5; // +10px to match visual slot overflow, -5 original offset
+  const bucketFloorY = boardHeight - PHYSICS.BALL_RADIUS + PHYSICS.BUCKET_FLOOR_OFFSET;
   return { bucketZoneY, bucketFloorY };
 }
 
@@ -139,5 +194,5 @@ export function determineLandedSlot(
  * Checks if ball reached bucket zone (not stuck above it)
  */
 export function isInBucketZone(y: number, bucketZoneY: number): boolean {
-  return y >= bucketZoneY - 10;
+  return y >= bucketZoneY - PHYSICS.BUCKET_ZONE_TOLERANCE;
 }

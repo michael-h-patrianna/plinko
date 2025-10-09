@@ -3,6 +3,8 @@
  *
  * Comprehensive tests for all platform adapters ensuring 100% coverage
  * Tests both success and error cases with proper browser API mocking
+ *
+ * @vitest-environment jsdom
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
@@ -266,6 +268,9 @@ describe('Platform Adapters', () => {
     });
 
     it('should detect desktop device', () => {
+      // Clear cache first
+      (deviceInfoAdapter as any).cachedInfo = null;
+
       Object.defineProperty(navigator, 'userAgent', {
         writable: true,
         configurable: true,

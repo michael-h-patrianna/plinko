@@ -47,126 +47,134 @@ export function detectAndHandlePegCollisions(params: CollisionParams): Collision
   let hitPeg: Peg | null = null;
   const pegsHitThisFrame: Array<{ row: number; col: number }> = [];
 
-  // Check collisions with all pegs
+  // CRITICAL: Use continuous collision detection (CCD) to find the closest collision
+  // We must check if the MOVEMENT PATH intersects any peg, not just the end position
+  // This prevents tunneling when ball moves fast
+
+  let closestPeg: Peg | null = null;
+  let closestT = 2.0; // Initialize beyond valid range [0,1]
+
   for (const peg of pegs) {
-    // Calculate distance to peg at NEW position
-    const dx = x - peg.x;
-    const dy = y - peg.y;
-    const distSq = dx * dx + dy * dy;
+    // Check if movement path from oldState to state intersects this peg
+    // Using parametric line-circle intersection
+    const dx = state.x - oldState.x;  // Line direction vector
+    const dy = state.y - oldState.y;
+    const fx = oldState.x - peg.x;    // x1 - cx
+    const fy = oldState.y - peg.y;    // y1 - cy
 
-    // Check if we're colliding
-    if (distSq < PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS) {
-      // Skip if we recently hit this peg
-      const pegKey = `${peg.row}-${peg.col}`;
-      if (recentCollisions.has(pegKey)) {
-        const lastHit = recentCollisions.get(pegKey)!;
-        if (frame - lastHit < 10) continue;
+    const a = dx * dx + dy * dy;
+    if (a < 0.0001) continue; // No movement
+
+    const b = 2 * (fx * dx + fy * dy);
+    const c = (fx * fx + fy * fy) - PHYSICS.COLLISION_RADIUS * PHYSICS.COLLISION_RADIUS;
+
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) continue; // No intersection
+
+    // Calculate both intersection points
+    const sqrt = Math.sqrt(discriminant);
+    const t1 = (-b - sqrt) / (2 * a);
+    const t2 = (-b + sqrt) / (2 * a);
+
+    // We want the earliest intersection in range [0, 1]
+    let t = -1;
+    if (t1 >= 0 && t1 <= 1) t = t1;
+    else if (t2 >= 0 && t2 <= 1) t = t2;
+
+    if (t < 0) continue; // No intersection in movement range
+
+    // Check cooldown
+    const pegKey = `${peg.row}-${peg.col}`;
+    if (recentCollisions.has(pegKey)) {
+      const lastHit = recentCollisions.get(pegKey)!;
+      if (frame - lastHit < 10) continue;
+    }
+
+    // Track closest collision
+    if (t < closestT) {
+      closestT = t;
+      closestPeg = peg;
+    }
+  }
+
+  // Handle the closest collision if found
+  if (closestPeg !== null) {
+    const peg = closestPeg;
+
+    // Move to collision point
+    x = oldState.x + (state.x - oldState.x) * closestT;
+    y = oldState.y + (state.y - oldState.y) * closestT;
+
+    // Calculate collision normal
+    const colDx = x - peg.x;
+    const colDy = y - peg.y;
+    const colDist = Math.sqrt(colDx * colDx + colDy * colDy);
+
+    if (colDist < 0.1) {
+      // Edge case: exactly on peg center
+      x = peg.x + PHYSICS.COLLISION_RADIUS + 0.1;
+      y = peg.y;
+      vx = Math.abs(vx) * PHYSICS.RESTITUTION;
+      vy = 0;
+    } else {
+      // Normal collision
+      const nx = colDx / colDist;
+      const ny = colDy / colDist;
+
+      // Position ball at safe distance
+      x = peg.x + nx * (PHYSICS.COLLISION_RADIUS + 0.1);
+      y = peg.y + ny * (PHYSICS.COLLISION_RADIUS + 0.1);
+
+      // Reflect velocity
+      const dot = vx * nx + vy * ny;
+      vx = vx - 2 * dot * nx;
+      vy = vy - 2 * dot * ny;
+
+      // Apply restitution
+      vx *= PHYSICS.RESTITUTION;
+      vy *= PHYSICS.RESTITUTION;
+
+      // Add randomness
+      const randomAngle = (rng.next() - 0.5) * bounceRandomness;
+      const cos = Math.cos(randomAngle);
+      const sin = Math.sin(randomAngle);
+      const newVx = vx * cos - vy * sin;
+      const newVy = vx * sin + vy * cos;
+      vx = newVx;
+      vy = newVy;
+
+      // Clamp velocities
+      vx = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vx));
+      vy = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vy));
+
+      // Ensure minimum bounce
+      const speed = Math.sqrt(vx * vx + vy * vy);
+      if (speed < PHYSICS.MIN_BOUNCE_VELOCITY && speed > 0) {
+        const scale = PHYSICS.MIN_BOUNCE_VELOCITY / speed;
+        vx *= scale;
+        vy *= scale;
       }
 
-      // We have a collision!
-      // Step 1: Move ball back to old position
-      x = oldState.x;
-      y = oldState.y;
-
-      // Step 2: Find exact collision point using binary search
-      let low = 0;
-      let high = 1;
-      let mid = 0.5;
-
-      for (let i = 0; i < 10; i++) {
-        // 10 iterations for precision
-        const testX = oldState.x + oldState.vx * PHYSICS.DT * mid;
-        const testY = oldState.y + oldState.vy * PHYSICS.DT * mid;
-        const testDx = testX - peg.x;
-        const testDy = testY - peg.y;
-        const testDist = Math.sqrt(testDx * testDx + testDy * testDy);
-
-        if (testDist < PHYSICS.COLLISION_RADIUS) {
-          high = mid;
-        } else {
-          low = mid;
-        }
-        mid = (low + high) / 2;
+      // Final speed cap
+      const finalSpeed = Math.sqrt(vx * vx + vy * vy);
+      if (finalSpeed > PHYSICS.MAX_SPEED) {
+        const scale = PHYSICS.MAX_SPEED / finalSpeed;
+        vx *= scale;
+        vy *= scale;
       }
+    }
 
-      // Move to exact collision point
-      x = oldState.x + oldState.vx * PHYSICS.DT * low;
-      y = oldState.y + oldState.vy * PHYSICS.DT * low;
+    // Record collision
+    hitPeg = peg;
+    const pegKey = `${peg.row}-${peg.col}`;
+    recentCollisions.set(pegKey, frame);
 
-      // Calculate collision normal at collision point
-      const colDx = x - peg.x;
-      const colDy = y - peg.y;
-      const colDist = Math.sqrt(colDx * colDx + colDy * colDy);
-
-      if (colDist < 0.1) {
-        // Edge case: exactly on peg center
-        x = peg.x + PHYSICS.COLLISION_RADIUS + 0.1;
-        y = peg.y;
-        vx = Math.abs(vx) * PHYSICS.RESTITUTION;
-        vy = 0;
-      } else {
-        // Normal collision
-        const nx = colDx / colDist;
-        const ny = colDy / colDist;
-
-        // Position ball exactly at collision boundary with small separation
-        x = peg.x + nx * (PHYSICS.COLLISION_RADIUS + 0.1);
-        y = peg.y + ny * (PHYSICS.COLLISION_RADIUS + 0.1);
-
-        // Calculate relative velocity
-        const dot = vx * nx + vy * ny;
-
-        // Reflect velocity
-        vx = vx - 2 * dot * nx;
-        vy = vy - 2 * dot * ny;
-
-        // Apply restitution
-        vx *= PHYSICS.RESTITUTION;
-        vy *= PHYSICS.RESTITUTION;
-
-        // Add controlled randomness
-        const randomAngle = (rng.next() - 0.5) * bounceRandomness;
-        const cos = Math.cos(randomAngle);
-        const sin = Math.sin(randomAngle);
-        const newVx = vx * cos - vy * sin;
-        const newVy = vx * sin + vy * cos;
-        vx = newVx;
-        vy = newVy;
-
-        // Clamp velocities to realistic maximum
-        vx = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vx));
-        vy = Math.max(-PHYSICS.MAX_VELOCITY_COMPONENT, Math.min(PHYSICS.MAX_VELOCITY_COMPONENT, vy));
-
-        // Ensure minimum bounce
-        const speed = Math.sqrt(vx * vx + vy * vy);
-        if (speed < PHYSICS.MIN_BOUNCE_VELOCITY && speed > 0) {
-          const scale = PHYSICS.MIN_BOUNCE_VELOCITY / speed;
-          vx *= scale;
-          vy *= scale;
-        }
-
-        // Final speed cap after all collision effects
-        const finalSpeed = Math.sqrt(vx * vx + vy * vy);
-        if (finalSpeed > PHYSICS.MAX_SPEED) {
-          const scale = PHYSICS.MAX_SPEED / finalSpeed;
-          vx *= scale;
-          vy *= scale;
-        }
+    // Clean old collisions
+    if (recentCollisions.size > 10) {
+      const firstKey = recentCollisions.keys().next().value;
+      if (firstKey) {
+        recentCollisions.delete(firstKey);
       }
-
-      // Record collision
-      hitPeg = peg;
-      recentCollisions.set(pegKey, frame);
-
-      // Clean old collisions
-      if (recentCollisions.size > 10) {
-        const firstKey = recentCollisions.keys().next().value;
-        if (firstKey) {
-          recentCollisions.delete(firstKey);
-        }
-      }
-
-      break; // Only handle one collision per frame FOR PHYSICS
     }
   }
 

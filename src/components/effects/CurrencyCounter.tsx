@@ -7,6 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../theme';
 import './CurrencyCounter.css';
+import { ANIMATION_DURATION, UI_DELAY } from '../../constants';
 
 interface CounterIndicator {
   id: number;
@@ -46,7 +47,7 @@ export function CurrencyCounter({
     const startAnimation = () => {
       const incrementCount = Math.min(Math.ceil(targetAmount / 100), 12); // Max 12 increments
       const incrementValue = Math.ceil(targetAmount / incrementCount);
-      const incrementInterval = 100; // 100ms between increments
+      const incrementInterval = UI_DELAY.COUNTER_INCREMENT;
       let currentIncrement = 0;
       let previousValue = 0;
 
@@ -71,13 +72,13 @@ export function CurrencyCounter({
         // Reset pop animation - track timer
         const popTimer = setTimeout(() => {
           setIsValueAnimating(false);
-        }, 300);
+        }, ANIMATION_DURATION.NORMAL);
         timersRef.current.push(popTimer);
 
         // Remove indicator after animation - track timer
         const indicatorTimer = setTimeout(() => {
           setIndicators((prev) => prev.filter((ind) => ind.id !== currentId));
-        }, 800);
+        }, ANIMATION_DURATION.COUNTDOWN_STEP);
         timersRef.current.push(indicatorTimer);
 
         // Continue or finish

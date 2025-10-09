@@ -3,13 +3,15 @@
  * Ensures buckets look good on all screen sizes with variable prize counts
  */
 
+import { SLOT } from '../constants';
+
 /**
  * Calculate bucket height based on slot width
  * Narrower slots (more prizes or smaller screens) need taller buckets
  */
 export function calculateBucketHeight(slotWidth: number): number {
-  if (slotWidth < 40) return 105; // 8 prizes on 320px = very narrow
-  if (slotWidth < 50) return 95; // 7-8 prizes on 375px = narrow
+  if (slotWidth < SLOT.NARROW_THRESHOLD) return SLOT.NARROW_BUCKET_OFFSET; // 8 prizes on 320px = very narrow
+  if (slotWidth < SLOT.SMALL_THRESHOLD) return SLOT.SMALL_BUCKET_OFFSET; // 7-8 prizes on 375px = narrow
   return 90; // 3-6 prizes = standard
 }
 

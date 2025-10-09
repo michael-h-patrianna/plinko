@@ -4,13 +4,8 @@
 
 import type { Prize } from './prizeTypes';
 
-// Re-export Prize as PrizeConfig for backward compatibility
-export type PrizeConfig = Prize & {
-  // Legacy fields for backward compatibility
-  label?: string;
-  description?: string;
-  color?: string;
-};
+// Re-export Prize as PrizeConfig
+export type PrizeConfig = Prize;
 
 export interface TrajectoryPoint {
   frame: number;

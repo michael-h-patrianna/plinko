@@ -8,6 +8,8 @@ import { AppConfigProvider } from './config/AppConfigContext';
 import type { PerformanceMode } from './config/appConfig';
 import { Countdown } from './components/game/Countdown';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
+import { GameBoardErrorBoundary } from './components/layout/GameBoardErrorBoundary';
+import { PrizeErrorBoundary } from './components/layout/PrizeErrorBoundary';
 import { ScreenShake } from './components/effects/ScreenShake';
 import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
 import { PopupContainer } from './components/layout/PopupContainer';
@@ -19,6 +21,7 @@ import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
 import { dimensionsAdapter, deviceInfoAdapter } from './utils/platform';
 import { useAnimationDriver } from './theme/animationDrivers';
+import { ANIMATION_DURATION, VIEWPORT, LAYOUT } from './constants';
 
 /**
  * Main application content component
@@ -83,7 +86,7 @@ function AppContent({
   useEffect(() => {
     if (isMobile) {
       const updateMobileWidth = () => {
-        const width = Math.min(dimensionsAdapter.getWidth(), 414);
+        const width = Math.min(dimensionsAdapter.getWidth(), VIEWPORT.MAX_MOBILE);
         setViewportWidth(width);
         setLockedBoardWidth(width);
       };
@@ -109,7 +112,7 @@ function AppContent({
 
     if (isLanded && isWin) {
       setShakeActive(true);
-      const timer = setTimeout(() => setShakeActive(false), 500);
+      const timer = setTimeout(() => setShakeActive(false), ANIMATION_DURATION.SLOW);
       return () => clearTimeout(timer);
     } else if (isIdle) {
       // Reset shake state when returning to start screen
@@ -153,7 +156,7 @@ function AppContent({
           bottom: 0,
           right: 0,
           zIndex: 9999,
-          maxWidth: isMobile ? undefined : `calc(50vw + 400px)`,
+          maxWidth: isMobile ? undefined : `calc(50vw + ${LAYOUT.DESKTOP_MAX_WIDTH_BASE}px)`,
           width: '100%',
           pointerEvents: 'none',
         }}
@@ -179,7 +182,7 @@ function AppContent({
           style={{
             width: isMobile ? '100%' : `${lockedBoardWidth}px`,
             margin: '0 auto',
-            maxWidth: isMobile ? '414px' : undefined,
+            maxWidth: isMobile ? `${VIEWPORT.MAX_MOBILE}px` : undefined,
             height: isMobile ? '100vh' : undefined,
             display: 'flex',
             flexDirection: 'column',
@@ -188,42 +191,46 @@ function AppContent({
           }}
         >
           <PopupContainer isMobileOverlay={isMobile}>
-          {/* Start screen overlay with smooth exit */}
-          <AnimatePresence mode="wait">
-            {(state === 'idle' || state === 'ready') && (
-              <StartScreen
-                key="start-screen"
-                prizes={prizes}
-                onStart={startGame}
-                disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
-                winningIndex={winningIndex}
-              />
-            )}
-          </AnimatePresence>
+            {/* Start screen overlay with smooth exit */}
+            <PrizeErrorBoundary>
+              <AnimatePresence mode="wait">
+                {(state === 'idle' || state === 'ready') && (
+                  <StartScreen
+                    key="start-screen"
+                    prizes={prizes}
+                    onStart={startGame}
+                    disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
+                    winningIndex={winningIndex}
+                  />
+                )}
+              </AnimatePresence>
+            </PrizeErrorBoundary>
 
-          {/* Main game board with ball - animated entrance when countdown starts */}
-          <AnimatePresence mode="wait">
-            {state !== 'idle' &&
-              state !== 'ready' &&
-              state !== 'revealed' &&
-              state !== 'claimed' && (
-                <PlinkoBoard
-                  key="board"
-                  prizes={prizes}
-                  selectedIndex={selectedIndex}
-                  trajectory={trajectory}
-                  frameStore={frameStore}
-                  getBallPosition={getBallPosition}
-                  getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
-                  boardWidth={lockedBoardWidth}
-                  boardHeight={500}
-                  pegRows={10}
-                  ballState={state}
-                  isSelectingPosition={state === 'selecting-position'}
-                  onPositionSelected={selectDropPosition}
-                />
-              )}
-          </AnimatePresence>
+            {/* Main game board with ball - animated entrance when countdown starts */}
+            <GameBoardErrorBoundary onReset={resetGame}>
+              <AnimatePresence mode="wait">
+                {state !== 'idle' &&
+                  state !== 'ready' &&
+                  state !== 'revealed' &&
+                  state !== 'claimed' && (
+                    <PlinkoBoard
+                      key="board"
+                      prizes={prizes}
+                      selectedIndex={selectedIndex}
+                      trajectory={trajectory}
+                      frameStore={frameStore}
+                      getBallPosition={getBallPosition}
+                      getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
+                      boardWidth={lockedBoardWidth}
+                      boardHeight={500}
+                      pegRows={10}
+                      ballState={state}
+                      isSelectingPosition={state === 'selecting-position'}
+                      onPositionSelected={selectDropPosition}
+                    />
+                  )}
+              </AnimatePresence>
+            </GameBoardErrorBoundary>
 
           {/* Countdown overlay */}
           <AnimatePresence mode="wait">
@@ -237,26 +244,30 @@ function AppContent({
             )}
           </AnimatePresence>
 
-          {/* Prize reveal overlay with smooth entrance */}
-          <AnimatePresence mode="wait">
-            {state === 'revealed' && selectedPrize && (
-              <PrizeReveal
-                key="prize-reveal"
-                prize={selectedPrize}
-                onClaim={claimPrize}
-                onReset={resetGame}
-                canClaim={canClaim}
-              />
-            )}
-          </AnimatePresence>
+            {/* Prize reveal overlay with smooth entrance */}
+            <PrizeErrorBoundary>
+              <AnimatePresence mode="wait">
+                {state === 'revealed' && selectedPrize && (
+                  <PrizeReveal
+                    key="prize-reveal"
+                    prize={selectedPrize}
+                    onClaim={claimPrize}
+                    onReset={resetGame}
+                    canClaim={canClaim}
+                  />
+                )}
+              </AnimatePresence>
+            </PrizeErrorBoundary>
 
-          {/* Prize claimed confirmation with smooth entrance */}
-          <AnimatePresence mode="wait">
-            {state === 'claimed' && selectedPrize && (
-              <PrizeClaimed key="prize-claimed" prize={selectedPrize} onClose={resetGame} />
-            )}
-          </AnimatePresence>
-        </PopupContainer>
+            {/* Prize claimed confirmation with smooth entrance */}
+            <PrizeErrorBoundary>
+              <AnimatePresence mode="wait">
+                {state === 'claimed' && selectedPrize && (
+                  <PrizeClaimed key="prize-claimed" prize={selectedPrize} onClose={resetGame} />
+                )}
+              </AnimatePresence>
+            </PrizeErrorBoundary>
+          </PopupContainer>
         </div>
       </ScreenShake>
     </div>

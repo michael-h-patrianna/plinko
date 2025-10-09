@@ -34,11 +34,8 @@ describe('MOCK_PRIZES Configuration', () => {
     MOCK_PRIZES.forEach((prize, index) => {
       expect(prize, `Prize ${index} should have id`).toHaveProperty('id');
       expect(prize, `Prize ${index} should have type`).toHaveProperty('type');
-      expect(prize, `Prize ${index} should have label`).toHaveProperty('label');
       expect(prize, `Prize ${index} should have title`).toHaveProperty('title');
-      expect(prize, `Prize ${index} should have description`).toHaveProperty('description');
       expect(prize, `Prize ${index} should have probability`).toHaveProperty('probability');
-      expect(prize, `Prize ${index} should have color`).toHaveProperty('color');
       expect(prize, `Prize ${index} should have slotIcon`).toHaveProperty('slotIcon');
       expect(prize, `Prize ${index} should have slotColor`).toHaveProperty('slotColor');
     });
@@ -65,7 +62,6 @@ describe('MOCK_PRIZES Configuration', () => {
   it('should have valid color hex codes', () => {
     const hexColorRegex = /^#[0-9A-Fa-f]{6}$/;
     MOCK_PRIZES.forEach((prize, index) => {
-      expect(prize.color, `Prize ${index} color`).toMatch(hexColorRegex);
       expect(prize.slotColor, `Prize ${index} slotColor`).toMatch(hexColorRegex);
     });
   });
@@ -116,7 +112,7 @@ describe('Prize Set Generation', () => {
       prizes.forEach((prize, index) => {
         expect(prize, `Prize ${index}`).toHaveProperty('id');
         expect(prize, `Prize ${index}`).toHaveProperty('type');
-        expect(prize, `Prize ${index}`).toHaveProperty('label');
+        expect(prize, `Prize ${index}`).toHaveProperty('title');
         expect(prize, `Prize ${index}`).toHaveProperty('probability');
         expect(typeof prize.probability, `Prize ${index} probability type`).toBe('number');
         expect(prize.probability, `Prize ${index} probability`).toBeGreaterThan(0);
@@ -148,13 +144,11 @@ describe('Prize Set Generation', () => {
       }
     });
 
-    it('should include backward-compatible fields', () => {
+    it('should include required fields', () => {
       const prizes = generateProductionPrizeSet({ count: 5 });
       prizes.forEach((prize, index) => {
         expect(prize, `Prize ${index}`).toHaveProperty('title');
         expect(prize, `Prize ${index}`).toHaveProperty('slotColor');
-        expect((prize as any).label, `Prize ${index} label`).toBe(prize.title);
-        expect((prize as any).color, `Prize ${index} color`).toBe(prize.slotColor);
       });
     });
 
@@ -318,7 +312,7 @@ describe('Probability Normalization', () => {
 
       expect(normalized[0]!.id).toBe(prizes[0]!.id);
       expect(normalized[0]!.type).toBe(prizes[0]!.type);
-      expect(normalized[0]!.label).toBe(prizes[0]!.label);
+      expect(normalized[0]!.title).toBe(prizes[0]!.title);
       expect(normalized[1]!.id).toBe(prizes[1]!.id);
     });
   });

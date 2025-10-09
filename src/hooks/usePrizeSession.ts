@@ -8,6 +8,7 @@ import { useAppConfig } from '../config/AppConfigContext';
 import type { PrizeProviderResult } from '../game/prizeProvider';
 import type { PrizeConfig } from '../game/types';
 import { navigationAdapter } from '../utils/platform';
+import { API_TIMEOUT } from '../constants';
 
 interface UsePrizeSessionOptions {
   seedOverride?: number;
@@ -74,7 +75,7 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
 
   // Single async load effect with retry and timeout
   useEffect(() => {
-    let cancelled = false;
+    const abortController = new AbortController();
 
     // Async function for cleaner error handling
     async function loadPrizeSession() {
@@ -83,56 +84,64 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
 
       const finalSeedOverride = resolveSeedOverride();
 
-      // Constants for retry and timeout
-      const MAX_RETRIES = 3;
-      const RETRY_DELAY_MS = 1000;
-      const LOAD_TIMEOUT_MS = 10000; // 10 seconds
+      // Retry wrapper that respects abort signal
+      async function loadWithRetry(signal: AbortSignal, attempt = 1): Promise<PrizeProviderResult> {
+        if (signal.aborted) {
+          throw new Error('Operation aborted');
+        }
 
-      // Timeout wrapper
-      function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-        return Promise.race([
-          promise,
-          new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error('Provider load timeout')), timeoutMs)
-          ),
-        ]);
-      }
-
-      // Retry wrapper
-      async function loadWithRetry(attempt = 1): Promise<PrizeProviderResult> {
         try {
           const result = await prizeProvider.load({ seedOverride: finalSeedOverride });
           return result;
         } catch (err) {
-          if (attempt >= MAX_RETRIES) {
+          if (signal.aborted) {
+            throw new Error('Operation aborted');
+          }
+
+          if (attempt >= API_TIMEOUT.MAX_RETRIES) {
             throw err; // Final failure
           }
-          await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS * attempt));
-          return loadWithRetry(attempt + 1);
+
+          // Wait before retry with abort support
+          await new Promise<void>((resolve, reject) => {
+            const timeoutId = setTimeout(resolve, API_TIMEOUT.RETRY_DELAY * attempt);
+            signal.addEventListener('abort', () => {
+              clearTimeout(timeoutId);
+              reject(new Error('Operation aborted'));
+            });
+          });
+
+          return loadWithRetry(signal, attempt + 1);
         }
       }
 
       // Execute load with timeout and retry
       try {
-        const result = await withTimeout(loadWithRetry(), LOAD_TIMEOUT_MS);
-        if (cancelled) {
+        // Race between load operation and timeout
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          const timeoutId = setTimeout(() => reject(new Error('Provider load timeout')), API_TIMEOUT.LOAD_TIMEOUT);
+          abortController.signal.addEventListener('abort', () => clearTimeout(timeoutId));
+        });
+
+        const result = await Promise.race([
+          loadWithRetry(abortController.signal),
+          timeoutPromise
+        ]);
+
+        if (abortController.signal.aborted) {
           return;
         }
+
         setPrizeSession(result);
-        // DON'T set prizes here - let the initialization effect handle swapping
         setIsLoading(false);
-        // Reset forceFreshSeed ref after successful load
         forceFreshSeedRef.current = false;
       } catch (err: unknown) {
-        console.error('Failed to load prize session', err);
-        if (cancelled) {
+        if (abortController.signal.aborted) {
           return;
         }
-        setPrizeSession(null);
-        setPrizes([]);
+
         setError(err instanceof Error ? err : new Error('Failed to load prizes'));
         setIsLoading(false);
-        // Reset forceFreshSeed ref even on error
         forceFreshSeedRef.current = false;
       }
     }
@@ -140,9 +149,9 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
     loadPrizeSession();
 
     return () => {
-      cancelled = true;
+      abortController.abort();
     };
-  }, [prizeProvider, resolveSeedOverride, sessionKey]);
+  }, [prizeProvider, resolveSeedOverride, sessionKey, forceFreshSeedRef]);
 
   return {
     prizeSession,

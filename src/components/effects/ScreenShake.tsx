@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import './ScreenShake.css';
+import { UI_DELAY } from '../../constants';
 
 interface ScreenShakeProps {
   /** Trigger shake effect */
@@ -21,7 +22,7 @@ interface ScreenShakeProps {
 export function ScreenShake({
   active,
   intensity = 'medium',
-  duration = 400,
+  duration = UI_DELAY.SCREEN_SHAKE_DURATION,
   onComplete,
   children,
 }: ScreenShakeProps) {

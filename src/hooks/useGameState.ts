@@ -8,7 +8,10 @@ import type { ChoiceMechanic } from '../dev-tools';
 import type { PrizeProviderResult } from '../game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '../game/stateMachine';
 import { generateTrajectory } from '../game/trajectory';
+import { initializeTrajectoryAndPrizes } from '../game/trajectoryInitialization';
 import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint } from '../game/types';
+import { GAME_TIMEOUT } from '../constants';
+import { trackStateError } from '../utils/telemetry';
 
 interface PlinkoGameState {
   state: GameState;
@@ -90,61 +93,53 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       const winningIndex = prizeSession.winningIndex;
 
       // STEP 1: Store the winning prize BEFORE any swaps
-      // This is what the user will actually win - immutable safety net
       const actualWinningPrize = sessionPrizes[winningIndex]!;
 
-      // Guard against overwriting locked winning prize (should only happen if resetGame wasn't called properly)
+      // Guard against overwriting locked winning prize
       if (winningPrizeLockedRef.current) {
-        console.error(
-          'CRITICAL: Attempted to overwrite locked winning prize. ' +
-            'This should not happen - resetGame() should unlock before re-initialization. ' +
-            `Current session: ${prizeSession.seed}, Lock status: ${winningPrizeLockedRef.current}`
-        );
+        trackStateError({
+          currentState: gameState.state,
+          event: 'INITIALIZE',
+          error: 'Attempted to overwrite locked winning prize',
+        });
         return;
       }
       setWinningPrize(actualWinningPrize);
       winningPrizeLockedRef.current = true;
 
-      // STEP 2: Generate trajectory - let ball land wherever it naturally lands (fast - usually 1 attempt)
-      // Do NOT pass targetSlot - that causes thousands of attempts
-      let trajectoryResult;
+      // STEP 2: Initialize trajectory and swap prizes
+      let result;
       try {
-        trajectoryResult = generateTrajectory({
+        result = initializeTrajectoryAndPrizes({
           boardWidth,
           boardHeight,
           pegRows,
-          slotCount: sessionPrizes.length,
+          prizes: sessionPrizes,
+          winningIndex,
           seed: prizeSession.seed,
           precomputedTrajectory: prizeSession.deterministicTrajectory,
         });
       } catch (error) {
-        console.error('Failed to generate trajectory:', error);
-        // Reset to idle state on trajectory generation failure
+        trackStateError({
+          currentState: gameState.state,
+          event: 'INITIALIZE',
+          error: `Failed to initialize trajectory: ${error instanceof Error ? error.message : String(error)}`,
+        });
         dispatch({ type: 'RESET_REQUESTED' });
         return;
       }
 
-      const landedSlot = trajectoryResult.landedSlot;
+      // STEP 3: Update state with swapped prizes
+      setPrizes(result.swappedPrizes);
+      setCurrentWinningIndex(result.winningPrizeVisualIndex);
 
-      // STEP 3: Swap prizes array for visual display only
-      // After swap, the winning prize will be at landedSlot position visually
-      if (landedSlot !== winningIndex && landedSlot >= 0) {
-        const temp = sessionPrizes[landedSlot]!;
-        sessionPrizes[landedSlot] = sessionPrizes[winningIndex]!;
-        sessionPrizes[winningIndex] = temp;
-      }
-
-      setPrizes(sessionPrizes);
-      // Track where the winning prize is visually (for red dot indicator)
-      setCurrentWinningIndex(landedSlot);
-
-      // Initialize game state with trajectory and selectedIndex
+      // Initialize game state
       dispatch({
         type: 'INITIALIZE',
         payload: {
-          selectedIndex: landedSlot,
-          trajectory: trajectoryResult.trajectory,
-          prize: sessionPrizes[landedSlot]!,
+          selectedIndex: result.landedSlot,
+          trajectory: result.trajectory,
+          prize: result.prizeAtLandedSlot,
           seed: prizeSession.seed,
         },
       });
@@ -154,9 +149,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
     boardHeight,
     pegRows,
     gameState.state,
-    prizeSession?.seed,
-    prizeSession?.prizes.length,
-    prizeSession?.winningIndex,
+    prizeSession,
     winningPrizeLockedRef,
     setWinningPrize,
     setCurrentWinningIndex,
@@ -168,7 +161,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
     if (gameState.state === 'landed') {
       const timer = setTimeout(() => {
         dispatch({ type: 'REVEAL_CONFIRMED' });
-      }, 320);
+      }, GAME_TIMEOUT.AUTO_REVEAL);
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -215,55 +208,41 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       if (gameState.state === 'selecting-position' && prizeSession) {
         const currentSeed = gameState.context.seed || Date.now();
 
-        // Reset prizes to original session order
-        const freshPrizes = [...prizeSession.prizes];
-        const winningIndex = prizeSession.winningIndex;
-
-        // STEP 1: The winning prize is already stored in state, don't change it
-        // winningPrize remains immutable
-
-        // STEP 2: Generate new trajectory with drop zone - let ball land wherever it naturally lands
-        // Do NOT pass targetSlot - that causes thousands of attempts
-        let trajectoryResult;
+        // Re-initialize trajectory with drop zone
+        let result;
         try {
-          trajectoryResult = generateTrajectory({
+          result = initializeTrajectoryAndPrizes({
             boardWidth,
             boardHeight,
             pegRows,
-            slotCount: freshPrizes.length,
+            prizes: [...prizeSession.prizes],
+            winningIndex: prizeSession.winningIndex,
             seed: currentSeed,
             dropZone,
             precomputedTrajectory: prizeSession.deterministicTrajectory,
           });
         } catch (error) {
-          console.error('Failed to generate trajectory with drop zone:', error);
-          // Reset to ready state on trajectory generation failure
+          trackStateError({
+            currentState: gameState.state,
+            event: 'POSITION_SELECTED',
+            error: `Failed to initialize trajectory with drop zone: ${error instanceof Error ? error.message : String(error)}`,
+          });
           dispatch({ type: 'RESET_REQUESTED' });
           return;
         }
 
-        const landedSlot = trajectoryResult.landedSlot;
+        // Update state with swapped prizes
+        setPrizes(result.swappedPrizes);
+        setCurrentWinningIndex(result.winningPrizeVisualIndex);
 
-        // STEP 3: Swap prizes array for visual display only
-        // After swap, the winning prize will be at landedSlot position visually
-        if (landedSlot !== winningIndex && landedSlot >= 0) {
-          const temp = freshPrizes[landedSlot]!;
-          freshPrizes[landedSlot] = freshPrizes[winningIndex]!;
-          freshPrizes[winningIndex] = temp;
-        }
-
-        setPrizes(freshPrizes);
-        // Track where the winning prize is visually (for red dot indicator)
-        setCurrentWinningIndex(landedSlot);
-
-        // Dispatch position selected with new trajectory and selectedIndex
+        // Dispatch position selected
         dispatch({
           type: 'POSITION_SELECTED',
           payload: {
             dropZone,
-            trajectory: trajectoryResult.trajectory,
-            selectedIndex: landedSlot,
-            prize: freshPrizes[landedSlot]!,
+            trajectory: result.trajectory,
+            selectedIndex: result.landedSlot,
+            prize: result.prizeAtLandedSlot,
           },
         });
       }
@@ -274,9 +253,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       boardWidth,
       boardHeight,
       pegRows,
-      prizeSession?.seed,
-      prizeSession?.prizes.length,
-      prizeSession?.winningIndex,
+      prizeSession,
       setPrizes,
       setCurrentWinningIndex,
     ]
@@ -287,8 +264,6 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
   }, []);
 
   const claimPrize = useCallback(() => {
-    // In real app, this would call backend API
-    // TODO: Integrate with backend prize claiming endpoint
     dispatch({ type: 'CLAIM_REQUESTED' });
   }, []);
 

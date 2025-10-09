@@ -1,0 +1,258 @@
+{
+  "$schema": "https://json.schemastore.org/eslintrc",
+  "version": "1.0.0",
+  "description": "Automated quality gates configuration for CI/CD pipeline",
+
+  "performance": {
+    "enabled": true,
+    "budgets": {
+      "simulationTime": {
+        "max": 50,
+        "unit": "ms",
+        "description": "Physics simulation must complete within 50ms"
+      },
+      "frameTime": {
+        "max": 16.67,
+        "unit": "ms",
+        "description": "Target 60 FPS (16.67ms per frame)"
+      },
+      "stateTransition": {
+        "max": 5,
+        "unit": "ms",
+        "description": "State transitions must be nearly instant"
+      },
+      "componentRender": {
+        "max": 10,
+        "unit": "ms",
+        "description": "Component renders should be fast"
+      }
+    },
+    "failOn": "budget-exceeded",
+    "warnThreshold": 0.9
+  },
+
+  "testing": {
+    "enabled": true,
+    "coverage": {
+      "statements": 80,
+      "branches": 75,
+      "functions": 80,
+      "lines": 80
+    },
+    "failOn": "coverage-drop",
+    "requiredTests": {
+      "unit": true,
+      "integration": true,
+      "e2e": false
+    }
+  },
+
+  "codeQuality": {
+    "enabled": true,
+    "eslint": {
+      "maxWarnings": 0,
+      "maxErrors": 0
+    },
+    "typescript": {
+      "strict": true,
+      "noImplicitAny": true,
+      "strictNullChecks": true
+    },
+    "complexity": {
+      "maxCyclomaticComplexity": 10,
+      "maxCognitiveComplexity": 15
+    }
+  },
+
+  "bundle": {
+    "enabled": true,
+    "sizes": {
+      "main": {
+        "max": "500kb",
+        "description": "Main bundle should stay under 500kb"
+      },
+      "vendor": {
+        "max": "300kb",
+        "description": "Vendor bundle limit"
+      },
+      "total": {
+        "max": "1mb",
+        "description": "Total bundle size limit"
+      }
+    },
+    "failOn": "size-exceeded",
+    "warnThreshold": 0.9
+  },
+
+  "security": {
+    "enabled": true,
+    "audit": {
+      "level": "moderate",
+      "failOn": "high",
+      "allowedVulnerabilities": []
+    },
+    "dependencies": {
+      "allowUnlicensed": false,
+      "allowedLicenses": [
+        "MIT",
+        "Apache-2.0",
+        "BSD-2-Clause",
+        "BSD-3-Clause",
+        "ISC"
+      ]
+    }
+  },
+
+  "git": {
+    "enabled": true,
+    "hooks": {
+      "pre-commit": [
+        "lint-staged",
+        "type-check"
+      ],
+      "pre-push": [
+        "test",
+        "build"
+      ]
+    },
+    "commitMessage": {
+      "pattern": "^(feat|fix|docs|style|refactor|perf|test|chore)(\\(.+\\))?: .{1,100}$",
+      "examples": [
+        "feat(physics): add new collision detection algorithm",
+        "fix(state): prevent invalid transitions",
+        "docs(adr): add cross-platform architecture decision"
+      ]
+    }
+  },
+
+  "cicd": {
+    "enabled": true,
+    "stages": [
+      {
+        "name": "install",
+        "commands": ["npm ci"],
+        "timeout": 300
+      },
+      {
+        "name": "lint",
+        "commands": ["npm run lint"],
+        "timeout": 60
+      },
+      {
+        "name": "type-check",
+        "commands": ["npm run type-check"],
+        "timeout": 60
+      },
+      {
+        "name": "test",
+        "commands": ["npm test"],
+        "timeout": 300
+      },
+      {
+        "name": "build",
+        "commands": ["npm run build"],
+        "timeout": 300
+      },
+      {
+        "name": "performance",
+        "commands": ["npm run test:performance"],
+        "timeout": 120
+      }
+    ],
+    "failFast": true,
+    "retryCount": 0
+  },
+
+  "notifications": {
+    "enabled": true,
+    "channels": {
+      "slack": {
+        "enabled": false,
+        "webhook": "${SLACK_WEBHOOK_URL}",
+        "events": ["failure", "recovery"]
+      },
+      "email": {
+        "enabled": false,
+        "recipients": [],
+        "events": ["failure"]
+      }
+    }
+  },
+
+  "gates": {
+    "description": "Define quality gates that must pass for deployment",
+    "preDeployment": [
+      {
+        "name": "all-tests-pass",
+        "check": "test-results",
+        "condition": "pass-rate >= 100%",
+        "required": true
+      },
+      {
+        "name": "code-coverage",
+        "check": "coverage",
+        "condition": "all-metrics >= thresholds",
+        "required": true
+      },
+      {
+        "name": "no-lint-errors",
+        "check": "eslint",
+        "condition": "errors === 0",
+        "required": true
+      },
+      {
+        "name": "type-safety",
+        "check": "typescript",
+        "condition": "errors === 0",
+        "required": true
+      },
+      {
+        "name": "performance-budgets",
+        "check": "performance",
+        "condition": "all-budgets-met",
+        "required": true
+      },
+      {
+        "name": "bundle-size",
+        "check": "bundle",
+        "condition": "size <= limits",
+        "required": true
+      },
+      {
+        "name": "security-audit",
+        "check": "security",
+        "condition": "no-high-vulnerabilities",
+        "required": true
+      }
+    ],
+    "postDeployment": [
+      {
+        "name": "smoke-tests",
+        "check": "e2e",
+        "condition": "critical-paths-work",
+        "required": true
+      },
+      {
+        "name": "performance-monitoring",
+        "check": "telemetry",
+        "condition": "fps >= 55 AND load-time <= 3s",
+        "required": false
+      }
+    ]
+  },
+
+  "reporting": {
+    "enabled": true,
+    "formats": ["json", "html", "markdown"],
+    "outputs": {
+      "coverage": "coverage/",
+      "performance": "performance-reports/",
+      "bundle": "bundle-analysis/",
+      "quality": "quality-reports/"
+    },
+    "upload": {
+      "enabled": false,
+      "destination": "${REPORTS_S3_BUCKET}"
+    }
+  }
+}

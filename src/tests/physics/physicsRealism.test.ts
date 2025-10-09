@@ -36,25 +36,44 @@ const ENERGY_GAIN_TOLERANCE = 1.1; // Allow 10% energy gain (numerical errors)
 describe('Physics Realism Tests', () => {
   /**
    * Generate peg positions for collision checking
+   * MUST match the game's actual peg generation logic from boardGeometry.ts
    */
   function generatePegLayout() {
     const pegs: { x: number; y: number; row: number; col: number }[] = [];
     const OPTIMAL_PEG_COLUMNS = 6;
-    const pegPadding = PEG_RADIUS + 10; // Peg radius + 10px safety margin
-    const playableWidth = BOARD_WIDTH - BORDER_WIDTH * 2 - pegPadding * 2;
-    const playableHeight = BOARD_HEIGHT * 0.65;
+    const CSS_BORDER = 2;
+    const PLAYABLE_HEIGHT_RATIO = 0.65;
+    const PEG_TOP_OFFSET = 20;
+
+    const internalWidth = BOARD_WIDTH - CSS_BORDER * 2;
+
+    // Determine responsive sizing (matching boardGeometry.ts)
+    const SMALL_VIEWPORT_WIDTH = 360;
+    const isSmallViewport = internalWidth <= SMALL_VIEWPORT_WIDTH;
+    const pegRadius = isSmallViewport ? 6 : 7;
+    const ballRadius = isSmallViewport ? 6 : 7;
+    const extraClearance = isSmallViewport ? 8 : 10;
+
+    const minClearance = pegRadius + ballRadius + extraClearance;
+    const playableHeight = BOARD_HEIGHT * PLAYABLE_HEIGHT_RATIO;
     const verticalSpacing = playableHeight / (PEG_ROWS + 1);
-    const horizontalSpacing = playableWidth / OPTIMAL_PEG_COLUMNS;
+
+    const leftEdge = BORDER_WIDTH + minClearance;
+    const rightEdge = internalWidth - BORDER_WIDTH - minClearance;
+    const pegSpanWidth = rightEdge - leftEdge;
+    const horizontalSpacing = pegSpanWidth / OPTIMAL_PEG_COLUMNS;
 
     for (let row = 0; row < PEG_ROWS; row++) {
-      const y = verticalSpacing * (row + 1) + BORDER_WIDTH + 20;
+      const y = verticalSpacing * (row + 1) + BORDER_WIDTH + PEG_TOP_OFFSET;
       const isOffsetRow = row % 2 === 1;
-      const offset = isOffsetRow ? horizontalSpacing / 2 : 0;
-      const numPegs = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
+      const pegsInRow = isOffsetRow ? OPTIMAL_PEG_COLUMNS : OPTIMAL_PEG_COLUMNS + 1;
 
-      for (let col = 0; col < numPegs; col++) {
-        const x = BORDER_WIDTH + pegPadding + horizontalSpacing * col + offset;
-        pegs.push({ x, y, row, col });
+      for (let col = 0; col < pegsInRow; col++) {
+        const x = isOffsetRow
+          ? leftEdge + horizontalSpacing * (col + 0.5)
+          : leftEdge + horizontalSpacing * col;
+
+        pegs.push({ row, col, x, y });
       }
     }
 

@@ -335,7 +335,7 @@ describe('StartScreen Component', () => {
   it('should render all prizes', () => {
     render(<StartScreen prizes={MOCK_PRIZES} onStart={mockOnStart} disabled={false} />);
     MOCK_PRIZES.forEach((prize: any) => {
-      expect(screen.getByText(prize.label!)).toBeInTheDocument();
+      expect(screen.getByText(prize.title!)).toBeInTheDocument();
     });
   });
 
@@ -376,7 +376,7 @@ describe('StartScreen Component', () => {
       ...MOCK_PRIZES[0]!,
       id: 'combo',
       type: 'free' as const,
-      label: 'Combo Prize',
+      title: 'Combo Prize',
       freeReward: {
         sc: 100,
         gc: 500,
@@ -533,9 +533,9 @@ describe('Slot Component', () => {
     expect(slot.style.width).toBe('50px');
   });
 
-  it('should render prize label', () => {
+  it('should render prize title', () => {
     render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
-    expect(screen.getByText(mockPrize.label!)).toBeInTheDocument();
+    expect(screen.getByText(mockPrize.title!)).toBeInTheDocument();
   });
 
   it('should mark winning slot with data-active', () => {
