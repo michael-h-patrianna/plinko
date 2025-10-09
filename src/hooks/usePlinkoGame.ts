@@ -94,18 +94,23 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   });
 
   // Reset coordinator - centralized, ordered reset logic
-  const resetCoordinator = useResetCoordinator({
-    currentFrameRef,
+  // Uses stable references to prevent unnecessary re-renders
+  const resetCoordinator = useResetCoordinator(
+    {
+      currentFrameRef,
+      winningPrizeLockedRef,
+      forceFreshSeedRef,
+    },
     resetFrame,
     dispatch,
-    setWinningPrize,
-    setCurrentWinningIndex,
-    setPrizeSession,
-    setPrizes,
-    winningPrizeLockedRef,
-    forceFreshSeedRef,
-    setSessionKey,
-  });
+    {
+      setWinningPrize,
+      setCurrentWinningIndex,
+      setPrizeSession,
+      setPrizes,
+      setSessionKey,
+    }
+  );
 
   const resetGame = useCallback(() => {
     // Uses centralized reset coordinator to ensure all state is cleaned up

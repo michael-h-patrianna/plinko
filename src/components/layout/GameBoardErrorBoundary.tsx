@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { trackErrorBoundary } from '../../utils/telemetry';
+import { colorTokens, spacingTokens, borderRadiusTokens, typographyTokens, opacityTokens } from '../../theme/tokens';
 
 interface Props {
   children: ReactNode;
@@ -15,6 +16,8 @@ interface State {
 /**
  * Error boundary for game board section
  * Provides user-friendly error message and recovery option when game board fails
+ *
+ * CROSS-PLATFORM COMPATIBLE: Uses only linear gradients, no shadows or blur
  */
 export class GameBoardErrorBoundary extends Component<Props, State> {
   state: State = {
@@ -34,7 +37,7 @@ export class GameBoardErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Call optional error callback
+    // Call optional error callback (can be used to trigger toast notifications)
     this.props.onError?.(error);
   }
 
@@ -48,11 +51,12 @@ export class GameBoardErrorBoundary extends Component<Props, State> {
       return (
         <div
           style={{
-            padding: '2rem',
+            padding: `${spacingTokens[8]}px`,
             textAlign: 'center',
-            backgroundColor: 'rgba(220, 38, 38, 0.1)',
-            borderRadius: '8px',
-            margin: '1rem',
+            background: `linear-gradient(135deg, ${colorTokens.red[900]}${Math.round(opacityTokens[10] * 255).toString(16)} 0%, ${colorTokens.red[800]}${Math.round(opacityTokens[15] * 255).toString(16)} 100%)`,
+            border: `2px solid ${colorTokens.red[600]}`,
+            borderRadius: `${borderRadiusTokens.lg}px`,
+            margin: `${spacingTokens[4]}px`,
             minHeight: '300px',
             display: 'flex',
             flexDirection: 'column',
@@ -60,36 +64,68 @@ export class GameBoardErrorBoundary extends Component<Props, State> {
             alignItems: 'center',
           }}
         >
-          <h3 style={{ color: '#dc2626', marginBottom: '0.5rem' }}>Game Board Error</h3>
-          <p style={{ color: '#666', fontSize: '0.875rem', marginBottom: '1rem' }}>
+          <h3
+            style={{
+              color: colorTokens.red[400],
+              fontSize: typographyTokens.fontSize.lg,
+              fontWeight: typographyTokens.fontWeight.semibold,
+              marginBottom: `${spacingTokens[2]}px`,
+            }}
+          >
+            Game Board Error
+          </h3>
+          <p
+            style={{
+              color: colorTokens.gray[400],
+              fontSize: typographyTokens.fontSize.sm,
+              marginBottom: `${spacingTokens[4]}px`,
+            }}
+          >
             The game board encountered an error. Try resetting the game.
           </p>
           {this.props.onReset && (
             <button
               onClick={this.handleReset}
               style={{
-                padding: '0.5rem 1rem',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
+                padding: `${spacingTokens[2]}px ${spacingTokens[4]}px`,
+                background: `linear-gradient(135deg, ${colorTokens.red[600]} 0%, ${colorTokens.red[700]} 100%)`,
+                color: colorTokens.white,
+                border: `2px solid ${colorTokens.red[500]}`,
+                borderRadius: `${borderRadiusTokens.md}px`,
                 cursor: 'pointer',
-                fontSize: '0.875rem',
+                fontSize: typographyTokens.fontSize.sm,
+                fontWeight: typographyTokens.fontWeight.medium,
               }}
             >
               Reset Game
             </button>
           )}
           {import.meta.env.DEV && (
-            <details style={{ marginTop: '1rem', fontSize: '0.75rem', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', color: '#dc2626' }}>Error Details</summary>
+            <details
+              style={{
+                marginTop: `${spacingTokens[4]}px`,
+                fontSize: typographyTokens.fontSize.xs,
+                textAlign: 'left',
+              }}
+            >
+              <summary
+                style={{
+                  cursor: 'pointer',
+                  color: colorTokens.red[400],
+                  fontWeight: typographyTokens.fontWeight.medium,
+                }}
+              >
+                Error Details
+              </summary>
               <pre
                 style={{
-                  marginTop: '0.5rem',
-                  padding: '0.5rem',
-                  backgroundColor: '#fff',
-                  borderRadius: '4px',
+                  marginTop: `${spacingTokens[2]}px`,
+                  padding: `${spacingTokens[2]}px`,
+                  backgroundColor: colorTokens.gray[900],
+                  border: `1px solid ${colorTokens.gray[700]}`,
+                  borderRadius: `${borderRadiusTokens.sm}px`,
                   overflow: 'auto',
+                  color: colorTokens.gray[300],
                 }}
               >
                 {this.state.error?.stack}

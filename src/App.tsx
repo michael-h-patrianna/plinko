@@ -3,13 +3,14 @@
  * With smooth state transitions using AnimatePresence
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { AppConfigProvider } from './config/AppConfigContext';
 import type { PerformanceMode } from './config/appConfig';
 import { Countdown } from './components/game/Countdown';
 import { ErrorBoundary } from './components/layout/ErrorBoundary';
 import { GameBoardErrorBoundary } from './components/layout/GameBoardErrorBoundary';
 import { PrizeErrorBoundary } from './components/layout/PrizeErrorBoundary';
+import { ToastProvider, useToast } from './components/feedback';
 import { ScreenShake } from './components/effects/ScreenShake';
 import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
 import { PopupContainer } from './components/layout/PopupContainer';
@@ -38,11 +39,29 @@ function AppContent({
   const { AnimatePresence } = driver;
 
   const { theme } = useTheme();
+  const { showToast } = useToast();
   const [isMobile, setIsMobile] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(375);
   const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
   const [shakeActive, setShakeActive] = useState(false);
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('none');
+
+  // Error handlers for toast notifications
+  const handleGameBoardError = useCallback(() => {
+    showToast({
+      message: 'Game board error. Please reset the game.',
+      severity: 'error',
+      duration: 6000,
+    });
+  }, [showToast]);
+
+  const handlePrizeError = useCallback(() => {
+    showToast({
+      message: 'Unable to load prizes. Please refresh the page.',
+      severity: 'error',
+      duration: 6000,
+    });
+  }, [showToast]);
 
   // Use game hook with the locked board width
   const gameState = usePlinkoGame({
@@ -192,7 +211,7 @@ function AppContent({
         >
           <PopupContainer isMobileOverlay={isMobile}>
             {/* Start screen overlay with smooth exit */}
-            <PrizeErrorBoundary>
+            <PrizeErrorBoundary onError={handlePrizeError}>
               <AnimatePresence mode="wait">
                 {(state === 'idle' || state === 'ready') && (
                   <StartScreen
@@ -207,7 +226,7 @@ function AppContent({
             </PrizeErrorBoundary>
 
             {/* Main game board with ball - animated entrance when countdown starts */}
-            <GameBoardErrorBoundary onReset={resetGame}>
+            <GameBoardErrorBoundary onReset={resetGame} onError={handleGameBoardError}>
               <AnimatePresence mode="wait">
                 {state !== 'idle' &&
                   state !== 'ready' &&
@@ -245,7 +264,7 @@ function AppContent({
           </AnimatePresence>
 
             {/* Prize reveal overlay with smooth entrance */}
-            <PrizeErrorBoundary>
+            <PrizeErrorBoundary onError={handlePrizeError}>
               <AnimatePresence mode="wait">
                 {state === 'revealed' && selectedPrize && (
                   <PrizeReveal
@@ -260,7 +279,7 @@ function AppContent({
             </PrizeErrorBoundary>
 
             {/* Prize claimed confirmation with smooth entrance */}
-            <PrizeErrorBoundary>
+            <PrizeErrorBoundary onError={handlePrizeError}>
               <AnimatePresence mode="wait">
                 {state === 'claimed' && selectedPrize && (
                   <PrizeClaimed key="prize-claimed" prize={selectedPrize} onClose={resetGame} />
@@ -276,7 +295,7 @@ function AppContent({
 
 /**
  * Root application component
- * Wraps the app in AppConfigProvider and ThemeProvider
+ * Wraps the app in AppConfigProvider, ThemeProvider, and ToastProvider
  */
 export function App() {
   const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('high-quality');
@@ -288,7 +307,9 @@ export function App() {
     <ErrorBoundary>
       <AppConfigProvider value={config}>
         <ThemeProvider themes={themes}>
-          <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+          <ToastProvider position="top-right" maxToasts={3}>
+            <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+          </ToastProvider>
         </ThemeProvider>
       </AppConfigProvider>
     </ErrorBoundary>

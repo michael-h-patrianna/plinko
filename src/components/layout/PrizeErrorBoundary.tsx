@@ -1,5 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { trackErrorBoundary } from '../../utils/telemetry';
+import { colorTokens, spacingTokens, borderRadiusTokens, typographyTokens, opacityTokens } from '../../theme/tokens';
 
 interface Props {
   children: ReactNode;
@@ -14,6 +15,8 @@ interface State {
 /**
  * Error boundary for prize-related sections
  * Provides user-friendly error message when prize loading or display fails
+ *
+ * CROSS-PLATFORM COMPATIBLE: Uses only linear gradients, no shadows or blur
  */
 export class PrizeErrorBoundary extends Component<Props, State> {
   state: State = {
@@ -33,7 +36,7 @@ export class PrizeErrorBoundary extends Component<Props, State> {
       errorInfo,
     });
 
-    // Call optional error callback
+    // Call optional error callback (can be used to trigger toast notifications)
     this.props.onError?.(error);
   }
 
@@ -42,27 +45,58 @@ export class PrizeErrorBoundary extends Component<Props, State> {
       return (
         <div
           style={{
-            padding: '2rem',
+            padding: `${spacingTokens[8]}px`,
             textAlign: 'center',
-            backgroundColor: 'rgba(220, 38, 38, 0.1)',
-            borderRadius: '8px',
-            margin: '1rem',
+            background: `linear-gradient(135deg, ${colorTokens.red[900]}${Math.round(opacityTokens[10] * 255).toString(16)} 0%, ${colorTokens.red[800]}${Math.round(opacityTokens[15] * 255).toString(16)} 100%)`,
+            border: `2px solid ${colorTokens.red[600]}`,
+            borderRadius: `${borderRadiusTokens.lg}px`,
+            margin: `${spacingTokens[4]}px`,
           }}
         >
-          <h3 style={{ color: '#dc2626', marginBottom: '0.5rem' }}>Prize Display Error</h3>
-          <p style={{ color: '#666', fontSize: '0.875rem' }}>
+          <h3
+            style={{
+              color: colorTokens.red[400],
+              fontSize: typographyTokens.fontSize.lg,
+              fontWeight: typographyTokens.fontWeight.semibold,
+              marginBottom: `${spacingTokens[2]}px`,
+            }}
+          >
+            Prize Display Error
+          </h3>
+          <p
+            style={{
+              color: colorTokens.gray[400],
+              fontSize: typographyTokens.fontSize.sm,
+            }}
+          >
             Unable to display prizes. Please refresh the page to try again.
           </p>
           {import.meta.env.DEV && (
-            <details style={{ marginTop: '1rem', fontSize: '0.75rem', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', color: '#dc2626' }}>Error Details</summary>
+            <details
+              style={{
+                marginTop: `${spacingTokens[4]}px`,
+                fontSize: typographyTokens.fontSize.xs,
+                textAlign: 'left',
+              }}
+            >
+              <summary
+                style={{
+                  cursor: 'pointer',
+                  color: colorTokens.red[400],
+                  fontWeight: typographyTokens.fontWeight.medium,
+                }}
+              >
+                Error Details
+              </summary>
               <pre
                 style={{
-                  marginTop: '0.5rem',
-                  padding: '0.5rem',
-                  backgroundColor: '#fff',
-                  borderRadius: '4px',
+                  marginTop: `${spacingTokens[2]}px`,
+                  padding: `${spacingTokens[2]}px`,
+                  backgroundColor: colorTokens.gray[900],
+                  border: `1px solid ${colorTokens.gray[700]}`,
+                  borderRadius: `${borderRadiusTokens.sm}px`,
                   overflow: 'auto',
+                  color: colorTokens.gray[300],
                 }}
               >
                 {this.state.error?.stack}
