@@ -13,6 +13,7 @@ describe('State Machine', () => {
       { frame: 0, x: 100, y: 0, rotation: 0 },
       { frame: 1, x: 110, y: 10, rotation: 5 },
     ],
+    trajectoryCache: null,
     currentFrame: 0,
     prize: {
       id: 'p1',
@@ -32,6 +33,7 @@ describe('State Machine', () => {
         payload: {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
+          trajectoryCache: mockContext.trajectoryCache!,
           prize: mockContext.prize!,
           seed: mockContext.seed,
         },
@@ -167,6 +169,7 @@ describe('State Machine', () => {
         payload: {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
+          trajectoryCache: mockContext.trajectoryCache!,
           prize: mockContext.prize!,
           seed: mockContext.seed,
         },

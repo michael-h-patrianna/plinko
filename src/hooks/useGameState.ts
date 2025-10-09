@@ -141,6 +141,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
           trajectory: result.trajectory,
           prize: result.prizeAtLandedSlot,
           seed: prizeSession.seed,
+          trajectoryCache: result.trajectoryCache,
         },
       });
     }
@@ -243,6 +244,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
             trajectory: result.trajectory,
             selectedIndex: result.landedSlot,
             prize: result.prizeAtLandedSlot,
+            trajectoryCache: result.trajectoryCache,
           },
         });
       }
@@ -315,6 +317,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
           trajectory: trajectoryResult.trajectory,
           prize: prizeSession.prizes[targetSlotIndex]!,
           seed: currentSeed + targetSlotIndex,
+          trajectoryCache: trajectoryResult.cache,
         },
       });
 

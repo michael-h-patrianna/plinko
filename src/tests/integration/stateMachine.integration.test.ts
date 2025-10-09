@@ -14,6 +14,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { transition, initialContext } from '../../game/stateMachine';
 import type { GameContext, GameState, PrizeConfig } from '../../game/types';
 import * as telemetry from '../../utils/telemetry';
+import { generateTrajectoryCache } from '../../game/trajectoryCache';
 
 // Mock telemetry to avoid side effects
 vi.mock('../../utils/telemetry', () => ({
@@ -41,6 +42,7 @@ describe('State Machine Integration Tests', () => {
   const mockContext: GameContext = {
     selectedIndex: 2,
     trajectory: mockTrajectory,
+    trajectoryCache: generateTrajectoryCache(mockTrajectory),
     currentFrame: 0,
     prize: mockPrize,
     seed: 12345,
@@ -65,6 +67,7 @@ describe('State Machine Integration Tests', () => {
         payload: {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
+          trajectoryCache: mockContext.trajectoryCache!,
           prize: mockContext.prize!,
           seed: mockContext.seed,
         },
@@ -186,6 +189,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: mockTrajectory,
           prize: mockPrize,
           seed: 99999,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
       state = initResult.state;
@@ -229,6 +233,7 @@ describe('State Machine Integration Tests', () => {
         payload: {
           selectedIndex: mockContext.selectedIndex,
           trajectory: mockContext.trajectory,
+          trajectoryCache: mockContext.trajectoryCache!,
           prize: mockContext.prize!,
           seed: mockContext.seed,
         },
@@ -260,6 +265,7 @@ describe('State Machine Integration Tests', () => {
         payload: {
           dropZone: 'left',
           trajectory: newTrajectory,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
           selectedIndex: 1,
           prize: mockPrize,
         },
@@ -313,6 +319,7 @@ describe('State Machine Integration Tests', () => {
         payload: {
           dropZone: 'right',
           trajectory: newTrajectory,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
           selectedIndex: 4,
           prize: mockPrize,
         },
@@ -445,6 +452,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: mockTrajectory,
           prize: mockPrize,
           seed: 12345,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -466,6 +474,7 @@ describe('State Machine Integration Tests', () => {
       const context: GameContext = {
         selectedIndex: 3,
         trajectory: mockTrajectory,
+        trajectoryCache: generateTrajectoryCache(mockTrajectory),
         currentFrame: 150,
         prize: mockPrize,
         seed: 54321,
@@ -501,6 +510,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: mockTrajectory,
           prize: mockPrize,
           seed: 123,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -533,7 +543,7 @@ describe('State Machine Integration Tests', () => {
       let context = initialContext;
 
       const transitions = [
-        { type: 'INITIALIZE' as const, payload: { selectedIndex: 0, trajectory: mockTrajectory, prize: mockPrize, seed: 123 } },
+        { type: 'INITIALIZE' as const, payload: { selectedIndex: 0, trajectory: mockTrajectory, prize: mockPrize, seed: 123, trajectoryCache: generateTrajectoryCache(mockTrajectory) } },
         { type: 'DROP_REQUESTED' as const },
         { type: 'COUNTDOWN_COMPLETED' as const },
         { type: 'LANDING_COMPLETED' as const },
@@ -578,6 +588,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: newTrajectory,
           prize: newPrize,
           seed: 99999,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -592,6 +603,7 @@ describe('State Machine Integration Tests', () => {
       const originalContext: GameContext = {
         selectedIndex: 0,
         trajectory: mockTrajectory,
+        trajectoryCache: generateTrajectoryCache(mockTrajectory),
         currentFrame: 50,
         prize: mockPrize,
         seed: 111,
@@ -613,6 +625,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: newTrajectory,
           prize: newPrize,
           seed: 222,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -634,6 +647,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: [],
           prize: mockPrize,
           seed: 123,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -649,6 +663,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: mockTrajectory,
           prize: mockPrize,
           seed: 123,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 
@@ -663,6 +678,7 @@ describe('State Machine Integration Tests', () => {
           trajectory: mockTrajectory,
           prize: mockPrize,
           seed: 0,
+          trajectoryCache: generateTrajectoryCache(mockTrajectory),
         },
       });
 

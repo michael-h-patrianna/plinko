@@ -16,7 +16,7 @@ import { ThemedButton } from '../../../components/controls/ThemedButton';
 import { ViewportSelector, ThemeSelector } from '../../../dev-tools';
 import { PopupContainer } from '../../../components/layout/PopupContainer';
 import { MOCK_PRIZES } from '../../../config/prizes/prizeTable';
-import type { BallPosition, TrajectoryPoint, PrizeConfig } from '../../../game/types';
+import type { BallPosition, PrizeConfig } from '../../../game/types';
 
 // ============================================================================
 // Ball Component Tests
@@ -28,18 +28,8 @@ describe('Ball Component', () => {
     rotation: 45,
   };
 
-  const mockTrajectoryPoint: TrajectoryPoint = {
-    frame: 10,
-    x: 100,
-    y: 200,
-    rotation: 45,
-    vx: 50,
-    vy: 100,
-    pegHit: false,
-  };
-
-  // PERFORMANCE NOTE: Ball component now uses frameStore subscription and direct DOM manipulation
-  // Tests verify initial render state only - animation updates happen via refs, not React props
+  // PERFORMANCE NOTE: Ball component now uses trajectory cache for performance
+  // Tests verify initial render state only - animation updates happen via refs and cache lookups
 
   it('should not render during idle state', () => {
     const { container} = render(<Ball position={null} state="idle" currentFrame={0} />);
@@ -62,7 +52,6 @@ describe('Ball Component', () => {
         position={mockPosition}
         state="dropping"
         currentFrame={10}
-        trajectoryPoint={mockTrajectoryPoint}
       />
     );
     expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
@@ -74,7 +63,6 @@ describe('Ball Component', () => {
         position={mockPosition}
         state="landed"
         currentFrame={100}
-        trajectoryPoint={mockTrajectoryPoint}
       />
     );
     expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
@@ -86,7 +74,6 @@ describe('Ball Component', () => {
         position={mockPosition}
         state="dropping"
         currentFrame={10}
-        trajectoryPoint={mockTrajectoryPoint}
       />
     );
     const ball = screen.getByTestId('plinko-ball');
@@ -99,7 +86,6 @@ describe('Ball Component', () => {
         position={mockPosition}
         state="dropping"
         currentFrame={10}
-        trajectoryPoint={mockTrajectoryPoint}
         showTrail={true}
       />
     );
@@ -114,7 +100,6 @@ describe('Ball Component', () => {
         position={mockPosition}
         state="dropping"
         currentFrame={10}
-        trajectoryPoint={mockTrajectoryPoint}
         showTrail={false}
       />
     );

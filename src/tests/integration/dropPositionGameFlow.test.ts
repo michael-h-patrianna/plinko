@@ -20,6 +20,7 @@ describe('Drop Position Game Flow Integration', () => {
   const mockContext: GameContext = {
     selectedIndex: 0,
     trajectory: mockTrajectory.trajectory,
+    trajectoryCache: mockTrajectory.cache,
     currentFrame: 0,
     prize: {
       id: 'test-prize',
@@ -53,6 +54,7 @@ describe('Drop Position Game Flow Integration', () => {
         payload: {
           dropZone,
           trajectory: mockContext.trajectory,
+          trajectoryCache: mockContext.trajectoryCache!,
           selectedIndex: mockContext.selectedIndex,
           prize: mockContext.prize!,
         },
@@ -88,6 +90,7 @@ describe('Drop Position Game Flow Integration', () => {
         payload: {
           dropZone: 'left',
           trajectory: context.trajectory,
+          trajectoryCache: context.trajectoryCache!,
           selectedIndex: context.selectedIndex,
           prize: context.prize!,
         },
@@ -211,6 +214,7 @@ describe('Drop Position Game Flow Integration', () => {
         const contextWithZone: GameContext = {
           ...mockContext,
           trajectory: zoneTrajectory.trajectory,
+          trajectoryCache: zoneTrajectory.cache,
           selectedIndex: zoneTrajectory.landedSlot,
           dropZone,
         };
@@ -225,6 +229,7 @@ describe('Drop Position Game Flow Integration', () => {
           payload: {
             dropZone,
             trajectory: context.trajectory,
+            trajectoryCache: context.trajectoryCache!,
             selectedIndex: context.selectedIndex,
             prize: context.prize!,
           },
@@ -263,6 +268,7 @@ describe('Drop Position Game Flow Integration', () => {
       const contextWithZone: GameContext = {
         ...mockContext,
         trajectory: zoneTrajectory.trajectory,
+        trajectoryCache: zoneTrajectory.cache,
         selectedIndex: zoneTrajectory.landedSlot,
         dropZone,
       };
@@ -273,6 +279,7 @@ describe('Drop Position Game Flow Integration', () => {
         payload: {
           dropZone,
           trajectory: contextWithZone.trajectory,
+          trajectoryCache: contextWithZone.trajectoryCache!,
           selectedIndex: contextWithZone.selectedIndex,
           prize: contextWithZone.prize!,
         },

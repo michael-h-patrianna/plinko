@@ -59,6 +59,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
   // Game state machine
   const {
     state,
+    context,
     trajectory,
     selectedIndex,
     startGame,
@@ -130,6 +131,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     selectedIndex,
     winningIndex: currentWinningIndex,
     trajectory,
+    trajectoryCache: context.trajectoryCache,
     frameStore,
     getBallPosition,
     getCurrentTrajectoryPoint,

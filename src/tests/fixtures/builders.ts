@@ -82,6 +82,7 @@ export interface TrajectoryFixture {
   params: BoardConfig & { seed: number; dropZone?: DropZone };
   landedSlot: number;
   trajectory: TrajectoryPoint[];
+  cache: import('../../game/types').TrajectoryCache;
 }
 
 export class TrajectoryFixtureBuilder {
@@ -134,6 +135,7 @@ export class TrajectoryFixtureBuilder {
       params,
       landedSlot: result.landedSlot,
       trajectory: result.trajectory,
+      cache: result.cache,
     };
   }
 
@@ -293,6 +295,7 @@ export interface GameStateFixture {
   context: {
     selectedIndex: number;
     trajectory: TrajectoryPoint[];
+    trajectoryCache: import('../../game/types').TrajectoryCache | null;
     currentFrame: number;
     prize: PrizeConfig | null;
     seed: number;
@@ -305,6 +308,7 @@ export class GameStateFixtureBuilder {
   private context = {
     selectedIndex: -1,
     trajectory: [] as TrajectoryPoint[],
+    trajectoryCache: null as import('../../game/types').TrajectoryCache | null,
     currentFrame: 0,
     prize: null as PrizeConfig | null,
     seed: 0,

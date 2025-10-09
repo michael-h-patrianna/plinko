@@ -101,7 +101,7 @@ function PegComponent({ row, col, x, y, hitFrames = [], frameStore, shouldReset 
 
   return (
     <>
-      {/* Expanding pulse ring when hit - no blur, React Native compatible */}
+      {/* Expanding pulse ring when hit - GPU accelerated */}
       {isFlashing && (
         <div
           key={flashKey}
@@ -111,10 +111,13 @@ function PegComponent({ row, col, x, y, hitFrames = [], frameStore, shouldReset 
             top: `${y}px`,
             width: '14px',
             height: '14px',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translate3d(-50%, -50%, 0)',
             border: `2px solid ${theme.colors.game.peg.highlight}`,
             animation: 'pulseRing 300ms ease-out',
             zIndex: 15,
+            // GPU ACCELERATION
+            willChange: 'transform, opacity',
+            backfaceVisibility: 'hidden',
           }}
         />
       )}
@@ -127,7 +130,7 @@ function PegComponent({ row, col, x, y, hitFrames = [], frameStore, shouldReset 
           top: `${y}px`,
           width: '14px',
           height: '14px',
-          transform: 'translate(-50%, -50%)',
+          transform: 'translate3d(-50%, -50%, 0)',
           background: isFlashing
             ? theme.gradients.pegActive // Active/hit state gradient
             : theme.gradients.pegDefault, // Default state gradient
@@ -138,6 +141,9 @@ function PegComponent({ row, col, x, y, hitFrames = [], frameStore, shouldReset 
           borderRadius: theme.colors.game.peg.borderRadius || '50%',
           transition: theme.effects.transitions.fast || 'background 150ms ease-out',
           zIndex: 10,
+          // GPU ACCELERATION
+          willChange: 'background',
+          backfaceVisibility: 'hidden',
         }}
         data-testid={`peg-${row}-${col}`}
         data-peg-hit={isFlashing}
@@ -146,17 +152,17 @@ function PegComponent({ row, col, x, y, hitFrames = [], frameStore, shouldReset 
       <style>{`
         @keyframes pulseRing {
           0% {
-            transform: translate(-50%, -50%) scale(1);
+            transform: translate3d(-50%, -50%, 0) scale(1);
             opacity: 1;
             border-width: 3px;
           }
           40% {
-            transform: translate(-50%, -50%) scale(2);
+            transform: translate3d(-50%, -50%, 0) scale(2);
             opacity: 0.7;
             border-width: 2px;
           }
           100% {
-            transform: translate(-50%, -50%) scale(4);
+            transform: translate3d(-50%, -50%, 0) scale(4);
             opacity: 0;
             border-width: 1px;
           }

@@ -23,6 +23,22 @@ export interface TrajectoryPoint {
   bucketFloorHit?: boolean; // Bucket floor collision this frame
 }
 
+/**
+ * Pre-calculated trajectory cache for performance optimization
+ * Uses typed arrays for minimal memory overhead (~2.5 KB per 200 frames)
+ * Frame-drop-safe: indexed by frame number, not time-based
+ */
+export interface TrajectoryCache {
+  /** Speed magnitude for each frame (sqrt(vx² + vy²)) */
+  speeds: Float32Array;
+  /** Squash/stretch scale X for each frame */
+  scalesX: Float32Array;
+  /** Squash/stretch scale Y for each frame */
+  scalesY: Float32Array;
+  /** Trail length for each frame (10/16/20 based on speed) */
+  trailLengths: Uint8Array;
+}
+
 export interface DeterministicTrajectoryPayload {
   /** Complete trajectory points captured from a deterministic source (e.g., server authoritative). */
   points: TrajectoryPoint[];
@@ -49,6 +65,7 @@ export type DropZone = 'left' | 'left-center' | 'center' | 'right-center' | 'rig
 export interface GameContext {
   selectedIndex: number;
   trajectory: TrajectoryPoint[];
+  trajectoryCache: TrajectoryCache | null; // Pre-calculated cache for performance
   currentFrame: number;
   prize: PrizeConfig | null;
   seed: number;

@@ -13,7 +13,7 @@
  */
 
 import { useEffect, useMemo, useState } from 'react';
-import type { GameState, PrizeConfig, TrajectoryPoint } from '../../../game/types';
+import type { GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '../../../game/types';
 import { useTheme } from '../../../theme';
 import { getPrizeThemeColor } from '../../../theme/prizeColorMapper';
 import { calculateBucketZoneY } from '../../../utils/slotDimensions';
@@ -48,6 +48,7 @@ interface PlinkoBoardProps {
   prizes: PrizeConfig[];
   selectedIndex: number;
   trajectory?: TrajectoryPoint[];
+  trajectoryCache?: TrajectoryCache | null;
   frameStore?: FrameStore;
   getBallPosition?: () => { x: number; y: number; rotation: number } | null;
   getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
@@ -66,6 +67,7 @@ export function PlinkoBoard({
   prizes,
   selectedIndex,
   trajectory,
+  trajectoryCache,
   frameStore,
   getBallPosition,
   getCurrentTrajectoryPoint,
@@ -350,7 +352,7 @@ export function PlinkoBoard({
           showTrail={showTrail}
           frameStore={frameStore}
           getBallPosition={getBallPosition}
-          getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
+          trajectoryCache={trajectoryCache}
         />
 
         {/* Ball Landing Impact - triggers when ball lands */}

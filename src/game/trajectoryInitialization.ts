@@ -5,7 +5,7 @@
  */
 
 import { generateTrajectory } from './trajectory';
-import type { DropZone, PrizeConfig, TrajectoryPoint, DeterministicTrajectoryPayload } from './types';
+import type { DropZone, PrizeConfig, TrajectoryPoint, TrajectoryCache, DeterministicTrajectoryPayload } from './types';
 import { swapPrizesForDisplay } from './prizeSwapping';
 
 export interface TrajectoryInitOptions {
@@ -22,6 +22,8 @@ export interface TrajectoryInitOptions {
 export interface TrajectoryInitResult {
   /** Generated trajectory points */
   trajectory: TrajectoryPoint[];
+  /** Pre-calculated cache for performance optimization */
+  trajectoryCache: TrajectoryCache;
   /** Slot where ball landed */
   landedSlot: number;
   /** Prizes swapped for visual display */
@@ -60,7 +62,7 @@ export function initializeTrajectoryAndPrizes(
     precomputedTrajectory,
   });
 
-  const { trajectory, landedSlot } = trajectoryResult;
+  const { trajectory, landedSlot, cache } = trajectoryResult;
 
   // STEP 2: Swap prizes for visual display
   const { swappedPrizes, winningPrizeVisualIndex } = swapPrizesForDisplay(
@@ -74,6 +76,7 @@ export function initializeTrajectoryAndPrizes(
 
   return {
     trajectory,
+    trajectoryCache: cache,
     landedSlot,
     swappedPrizes,
     winningPrizeVisualIndex,

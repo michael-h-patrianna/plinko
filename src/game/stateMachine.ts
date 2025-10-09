@@ -3,7 +3,7 @@
  * Manages state transitions and prevents invalid operations
  */
 
-import type { GameContext, GameState, PrizeConfig, TrajectoryPoint } from './types';
+import type { GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from './types';
 import type { DropZone } from './types';
 import { trackStateTransition, trackStateError } from '../utils/telemetry';
 import { now } from '../utils/time';
@@ -14,6 +14,7 @@ export type GameEvent =
       payload: {
         selectedIndex: number;
         trajectory: TrajectoryPoint[];
+        trajectoryCache: TrajectoryCache;
         prize: PrizeConfig;
         seed: number;
         dropZone?: DropZone;
@@ -26,6 +27,7 @@ export type GameEvent =
       payload: {
         dropZone: DropZone;
         trajectory: TrajectoryPoint[];
+        trajectoryCache: TrajectoryCache;
         selectedIndex: number;
         prize: PrizeConfig;
       };
@@ -39,6 +41,7 @@ export type GameEvent =
 export const initialContext: GameContext = {
   selectedIndex: -1,
   trajectory: [],
+  trajectoryCache: null,
   currentFrame: 0,
   prize: null,
   seed: 0,
@@ -70,12 +73,14 @@ function transitionTo(
 function initializeGame(payload: {
   selectedIndex: number;
   trajectory: TrajectoryPoint[];
+  trajectoryCache: TrajectoryCache;
   prize: PrizeConfig;
   seed: number;
 }): { state: GameState; context: GameContext } {
   return transitionTo('ready', {
     selectedIndex: payload.selectedIndex,
     trajectory: payload.trajectory,
+    trajectoryCache: payload.trajectoryCache,
     currentFrame: 0,
     prize: payload.prize,
     seed: payload.seed,
@@ -155,6 +160,7 @@ function executeTransition(
           ...context,
           dropZone: event.payload.dropZone,
           trajectory: event.payload.trajectory,
+          trajectoryCache: event.payload.trajectoryCache,
           selectedIndex: event.payload.selectedIndex,
           prize: event.payload.prize,
           currentFrame: 0,

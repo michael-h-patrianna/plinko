@@ -11,7 +11,7 @@
  */
 
 import { memo, useSyncExternalStore } from 'react';
-import type { GameState, TrajectoryPoint, BallPosition } from '../../../../game/types';
+import type { GameState, BallPosition, TrajectoryCache } from '../../../../game/types';
 import { Ball } from '../../Ball';
 import { BallLauncher } from '../../BallLauncher';
 
@@ -27,7 +27,7 @@ interface BallRendererProps {
   showTrail: boolean;
   frameStore?: FrameStore;
   getBallPosition?: () => BallPosition | null;
-  getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
+  trajectoryCache?: TrajectoryCache | null; // Pre-calculated cache for performance
 }
 
 export const BallRenderer = memo(function BallRenderer({
@@ -36,7 +36,7 @@ export const BallRenderer = memo(function BallRenderer({
   showTrail,
   frameStore,
   getBallPosition,
-  getCurrentTrajectoryPoint,
+  trajectoryCache,
 }: BallRendererProps) {
   // Don't render anything during position selection
   if (isSelectingPosition) {
@@ -53,9 +53,8 @@ export const BallRenderer = memo(function BallRenderer({
     frameStore?.getSnapshot ?? dummyGetSnapshot
   );
 
-  // Get current ball position and trajectory point
+  // Get current ball position
   const ballPosition = getBallPosition?.() ?? null;
-  const currentTrajectoryPoint = getCurrentTrajectoryPoint?.() ?? null;
 
   // Render launcher during countdown
   if (ballState === 'countdown' && ballPosition) {
@@ -70,7 +69,7 @@ export const BallRenderer = memo(function BallRenderer({
   }
 
   // Render launching animation at frame 0
-  if (ballState === 'dropping' && currentTrajectoryPoint?.frame === 0 && ballPosition) {
+  if (ballState === 'dropping' && currentFrame === 0 && ballPosition) {
     return (
       <BallLauncher
         x={ballPosition.x}
@@ -82,7 +81,7 @@ export const BallRenderer = memo(function BallRenderer({
   }
 
   // Hide ball at frame 0 to prevent overlap with BallLauncher
-  if (ballState === 'dropping' && currentTrajectoryPoint?.frame === 0) {
+  if (ballState === 'dropping' && currentFrame === 0) {
     return null;
   }
 
@@ -94,7 +93,7 @@ export const BallRenderer = memo(function BallRenderer({
       position={ballPosition}
       state={ballState}
       currentFrame={currentFrame}
-      trajectoryPoint={currentTrajectoryPoint}
+      trajectoryCache={trajectoryCache}
       showTrail={showTrail}
     />
   );

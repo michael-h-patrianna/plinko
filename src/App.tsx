@@ -78,6 +78,7 @@ function AppContent({
     selectedIndex,
     winningIndex,
     trajectory,
+    trajectoryCache,
     frameStore,
     getBallPosition,
     getCurrentTrajectoryPoint,
@@ -237,6 +238,7 @@ function AppContent({
                       prizes={prizes}
                       selectedIndex={selectedIndex}
                       trajectory={trajectory}
+                      trajectoryCache={trajectoryCache}
                       frameStore={frameStore}
                       getBallPosition={getBallPosition}
                       getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}

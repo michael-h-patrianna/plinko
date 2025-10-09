@@ -11,8 +11,9 @@
  */
 
 import { clampSlotIndexFromX, generatePegLayout, getDropZoneRange } from '../boardGeometry';
-import type { DeterministicTrajectoryPayload, DropZone, TrajectoryPoint } from '../types';
+import type { DeterministicTrajectoryPayload, DropZone, TrajectoryPoint, TrajectoryCache } from '../types';
 import { runSimulation, type SimulationParams } from './simulation';
+import { generateTrajectoryCache } from '../trajectoryCache';
 
 export type PrecomputedTrajectoryInput = DeterministicTrajectoryPayload;
 
@@ -46,6 +47,8 @@ export interface GenerateTrajectoryResult {
     targetSlot?: number;
   };
   source: 'precomputed' | 'simulated';
+  /** Pre-calculated cache for performance optimization (generated during simulation). */
+  cache: TrajectoryCache;
 }
 
 function computeLandingSlotFromTrajectory(
@@ -116,6 +119,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
       slotHistogram,
       failure,
       source: 'precomputed',
+      cache: generateTrajectoryCache(trajectory),
     };
   }
 
@@ -198,6 +202,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
           attempts: attempt + 1,
           slotHistogram,
           source: 'simulated',
+          cache: generateTrajectoryCache(trajectory),
         };
       }
     }
@@ -216,6 +221,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
           ? ({ reason: 'max-attempts-exceeded', targetSlot } as const)
           : undefined,
       source: 'simulated',
+      cache: generateTrajectoryCache(bestCandidate.trajectory),
     };
   }
 
