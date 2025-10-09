@@ -66,17 +66,10 @@ export const BOARD_DIMENSIONS = {
 
 /**
  * Physics constants (dimensions)
+ * @deprecated Use PHYSICS from '../game/boardGeometry' instead
+ * This is kept temporarily for backwards compatibility but will be removed
  */
-export const PHYSICS_DIMENSIONS = {
-  /** Ball radius in pixels */
-  BALL_RADIUS: 9,
-  /** Peg radius in pixels */
-  PEG_RADIUS: 7,
-  /** Collision detection radius (ball + peg) */
-  COLLISION_RADIUS: 16,
-  /** Border wall width */
-  BORDER_WIDTH: 12,
-} as const;
+export { PHYSICS as PHYSICS_DIMENSIONS } from '../game/boardGeometry';
 
 /**
  * Media query helpers

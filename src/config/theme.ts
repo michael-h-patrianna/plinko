@@ -63,10 +63,12 @@ export const theme = {
       easeInOut: 'cubic-bezier(0.65, 0, 0.35, 1)',
       bounce: 'cubic-bezier(0.68, -0.55, 0.265, 1.55)',
     },
+    // Duration values imported from timing.ts for consistency
+    // Use CURRENCY_COUNTER, UI_TRANSITIONS, etc. from timing.ts for precise values
     duration: {
-      fast: 150,
-      normal: 300,
-      slow: 500,
+      fast: 200,    // Matches UI_TRANSITIONS.QUICK (0.2s)
+      normal: 300,  // Matches UI_TRANSITIONS.MEDIUM (0.3s)
+      slow: 500,    // Matches UI_TRANSITIONS.EXTRA_LONG (0.5s)
     },
   },
 } as const;

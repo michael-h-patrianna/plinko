@@ -30,6 +30,22 @@ interface SimulationParams {
 
 export type PrecomputedTrajectoryInput = DeterministicTrajectoryPayload;
 
+/**
+ * Cap velocity to prevent unrealistic speeds
+ * @param vx Horizontal velocity
+ * @param vy Vertical velocity
+ * @returns Capped velocity components
+ */
+function capVelocity(vx: number, vy: number): { vx: number; vy: number } {
+  const speed = Math.sqrt(vx * vx + vy * vy);
+  if (speed > PHYSICS.MAX_SPEED) {
+    const scale = PHYSICS.MAX_SPEED / speed;
+    return { vx: vx * scale, vy: vy * scale };
+  }
+  return { vx, vy };
+}
+
+
 export interface GenerateTrajectoryParams {
   boardWidth: number;
   boardHeight: number;
@@ -134,15 +150,8 @@ function runSimulation(
     // Terminal velocity (limit downward velocity)
     vy = Math.min(vy, PHYSICS.TERMINAL_VELOCITY);
 
-    // Enforce realistic velocity limits only after collisions (not during free fall)
-    // During free fall, terminal velocity is enough
-    // Only cap total speed if it's unrealistically high (e.g., from collision bugs)
-    const currentSpeed = Math.sqrt(vx * vx + vy * vy);
-    if (currentSpeed > PHYSICS.MAX_SPEED) {
-      const scale = PHYSICS.MAX_SPEED / currentSpeed;
-      vx *= scale;
-      vy *= scale;
-    }
+    // Enforce realistic velocity limits
+    ({ vx, vy } = capVelocity(vx, vy));
 
     // Air resistance
     vx *= 0.998;
@@ -265,12 +274,7 @@ function runSimulation(
           }
 
           // Final speed cap after all collision effects
-          const finalSpeed = Math.sqrt(vx * vx + vy * vy);
-          if (finalSpeed > PHYSICS.MAX_SPEED) {
-            const scale = PHYSICS.MAX_SPEED / finalSpeed;
-            vx *= scale;
-            vy *= scale;
-          }
+          ({ vx, vy } = capVelocity(vx, vy));
         }
 
         // Record collision
@@ -394,12 +398,7 @@ function runSimulation(
     rotation += (vx / PHYSICS.BALL_RADIUS) * PHYSICS.DT * 60;
 
     // Final velocity cap after ALL physics (collisions, walls, buckets, etc.)
-    const totalSpeed = Math.sqrt(vx * vx + vy * vy);
-    if (totalSpeed > PHYSICS.MAX_SPEED) {
-      const scale = PHYSICS.MAX_SPEED / totalSpeed;
-      vx *= scale;
-      vy *= scale;
-    }
+    ({ vx, vy } = capVelocity(vx, vy));
 
     // Also cap the actual distance moved this frame to prevent collision resolution
     // from causing unrealistic jumps
@@ -544,22 +543,22 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
     searchRangeX = 2.5; // Small range around center
   }
 
+  // Pattern functions for exploring trajectory space efficiently
+  const offsetPatterns = [
+    () => 0,                                            // Dead center of zone
+    (range: number) => range * 0.3,                     // Slightly right
+    (range: number) => -range * 0.3,                    // Slightly left
+    (range: number) => range * 0.6,                     // More right
+    (range: number) => -range * 0.6,                    // More left
+    (range: number, attempt: number) => Math.sin(attempt * 0.618) * range * 0.8,  // Sine wave
+    (range: number, attempt: number) => Math.cos(attempt * 1.414) * range * 0.8,  // Cosine wave
+  ];
+
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     // Microscopic variations that are imperceptible but change entire trajectory
     // Use different patterns to explore the space efficiently
-    const pattern = attempt % 7;
-    let microOffset: number;
-    if (pattern === 0)
-      microOffset = 0; // Dead center of zone
-    else if (pattern === 1)
-      microOffset = searchRangeX * 0.3; // Slightly right
-    else if (pattern === 2)
-      microOffset = -searchRangeX * 0.3; // Slightly left
-    else if (pattern === 3) microOffset = searchRangeX * 0.6;
-    else if (pattern === 4) microOffset = -searchRangeX * 0.6;
-    else if (pattern === 5)
-      microOffset = Math.sin(attempt * 0.618) * searchRangeX * 0.8; // Sine wave pattern
-    else microOffset = Math.cos(attempt * 1.414) * searchRangeX * 0.8; // Cosine wave pattern
+    const pattern = attempt % offsetPatterns.length;
+    const microOffset = offsetPatterns[pattern]!(searchRangeX, attempt);
 
     const startX = searchCenterX + microOffset;
     const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest

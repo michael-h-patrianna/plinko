@@ -75,8 +75,6 @@ export const GAME = {
   IMPACT_FLASH: 0.15,
   /** Slot border animation */
   SLOT_BORDER: 0.2,
-  /** Screen shake duration in milliseconds */
-  SCREEN_SHAKE_MS: 500,
 } as const;
 
 /**
@@ -234,7 +232,7 @@ export const BUTTON = {
  */
 export const SCREEN_SHAKE = {
   /** Default screen shake duration in milliseconds */
-  DEFAULT_DURATION_MS: 400,
+  DEFAULT_DURATION_MS: 500,
 } as const;
 
 /**

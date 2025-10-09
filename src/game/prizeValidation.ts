@@ -49,6 +49,53 @@ function invalidResult(errors: PrizeValidationError[]): ValidationResult {
 }
 
 /**
+ * Generic validation check function type
+ */
+type ValidationCheck = (value: unknown) => string | null;
+
+/**
+ * Create a validator from a set of validation checks
+ */
+function createValidator(
+  value: unknown,
+  checks: ValidationCheck[],
+  fieldName: string,
+  prizeId?: string
+): PrizeValidationError | null {
+  for (const check of checks) {
+    const error = check(value);
+    if (error) {
+      return new PrizeValidationError(error.replace('{field}', fieldName), fieldName, prizeId);
+    }
+  }
+  return null;
+}
+
+/**
+ * Reusable validation checks
+ */
+const isString: ValidationCheck = (value) =>
+  typeof value !== 'string' ? `{field} must be a string, got ${typeof value}` : null;
+
+const isNonEmpty: ValidationCheck = (value) =>
+  typeof value === 'string' && value.trim().length === 0 ? '{field} cannot be empty' : null;
+
+const isNumber: ValidationCheck = (value) =>
+  typeof value !== 'number' ? `{field} must be a number, got ${typeof value}` : null;
+
+const isFinite: ValidationCheck = (value) =>
+  typeof value === 'number' && !Number.isFinite(value) ? '{field} must be a finite number' : null;
+
+const isNonNegative: ValidationCheck = (value) =>
+  typeof value === 'number' && value < 0 ? `{field} must be non-negative, got ${value}` : null;
+
+const isPositive: ValidationCheck = (value) =>
+  typeof value === 'number' && value <= 0 ? `{field} must be positive, got ${value}` : null;
+
+const isInRange01: ValidationCheck = (value) =>
+  typeof value === 'number' && value > 1 ? `{field} must be between 0 and 1, got ${value}` : null;
+
+/**
  * Validate a string field is non-empty
  */
 function validateNonEmptyString(
@@ -56,45 +103,7 @@ function validateNonEmptyString(
   fieldName: string,
   prizeId?: string
 ): PrizeValidationError | null {
-  if (typeof value !== 'string') {
-    return new PrizeValidationError(
-      `${fieldName} must be a string, got ${typeof value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  if (value.trim().length === 0) {
-    return new PrizeValidationError(`${fieldName} cannot be empty`, fieldName, prizeId);
-  }
-  return null;
-}
-
-/**
- * Validate a number field is non-negative
- */
-function validateNonNegativeNumber(
-  value: unknown,
-  fieldName: string,
-  prizeId?: string
-): PrizeValidationError | null {
-  if (typeof value !== 'number') {
-    return new PrizeValidationError(
-      `${fieldName} must be a number, got ${typeof value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  if (!Number.isFinite(value)) {
-    return new PrizeValidationError(`${fieldName} must be a finite number`, fieldName, prizeId);
-  }
-  if (value < 0) {
-    return new PrizeValidationError(
-      `${fieldName} must be non-negative, got ${value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  return null;
+  return createValidator(value, [isString, isNonEmpty], fieldName, prizeId);
 }
 
 /**
@@ -105,24 +114,7 @@ function validatePositiveNumber(
   fieldName: string,
   prizeId?: string
 ): PrizeValidationError | null {
-  if (typeof value !== 'number') {
-    return new PrizeValidationError(
-      `${fieldName} must be a number, got ${typeof value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  if (!Number.isFinite(value)) {
-    return new PrizeValidationError(`${fieldName} must be a finite number`, fieldName, prizeId);
-  }
-  if (value <= 0) {
-    return new PrizeValidationError(
-      `${fieldName} must be positive, got ${value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  return null;
+  return createValidator(value, [isNumber, isFinite, isPositive], fieldName, prizeId);
 }
 
 /**
@@ -133,17 +125,7 @@ function validateProbability(
   fieldName: string,
   prizeId?: string
 ): PrizeValidationError | null {
-  const numberError = validateNonNegativeNumber(value, fieldName, prizeId);
-  if (numberError) return numberError;
-
-  if ((value as number) > 1) {
-    return new PrizeValidationError(
-      `${fieldName} must be between 0 and 1, got ${value}`,
-      fieldName,
-      prizeId
-    );
-  }
-  return null;
+  return createValidator(value, [isNumber, isFinite, isNonNegative, isInRange01], fieldName, prizeId);
 }
 
 /**
