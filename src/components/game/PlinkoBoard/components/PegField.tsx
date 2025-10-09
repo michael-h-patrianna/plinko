@@ -12,7 +12,7 @@ interface PegFieldProps {
   boardWidth: number;
   boardHeight: number;
   pegRows: number;
-  currentTrajectoryPoint: TrajectoryPoint | null;
+  getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
   ballState: GameState;
   isSelectingPosition: boolean;
 }
@@ -21,10 +21,12 @@ export const PegField = memo(function PegField({
   boardWidth,
   boardHeight,
   pegRows,
-  currentTrajectoryPoint,
+  getCurrentTrajectoryPoint,
   ballState,
   isSelectingPosition,
 }: PegFieldProps) {
+  // Get current trajectory point only when needed for rendering
+  const currentTrajectoryPoint = getCurrentTrajectoryPoint?.();
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
     return generatePegLayout({

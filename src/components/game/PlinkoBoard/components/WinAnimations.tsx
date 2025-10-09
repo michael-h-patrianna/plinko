@@ -4,7 +4,7 @@
  */
 
 import { memo } from 'react';
-import type { PrizeConfig } from '../../../../game/types';
+import type { PrizeConfig, BallPosition } from '../../../../game/types';
 import { BallLandingImpact } from '../../../effects/WinAnimations/BallLandingImpact';
 import { SlotAnticipation } from '../../../effects/WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../../../effects/WinAnimations/SlotWinReveal';
@@ -15,7 +15,7 @@ interface WinAnimationsProps {
   showLandingImpact: boolean;
   showAnticipation: boolean;
   showWinReveal: boolean;
-  ballPosition: { x: number; y: number; rotation: number } | null;
+  getBallPosition?: () => BallPosition | null;
   selectedIndex: number;
   winningSlot: {
     prize: PrizeConfig;
@@ -30,7 +30,7 @@ export const WinAnimations = memo(function WinAnimations({
   showLandingImpact,
   showAnticipation,
   showWinReveal,
-  ballPosition,
+  getBallPosition,
   selectedIndex,
   winningSlot,
   bucketZoneY,
@@ -44,6 +44,7 @@ export const WinAnimations = memo(function WinAnimations({
   }
 
   const color = getPrizeThemeColor(winningSlot.prize, theme);
+  const ballPosition = getBallPosition?.();
 
   return (
     <>

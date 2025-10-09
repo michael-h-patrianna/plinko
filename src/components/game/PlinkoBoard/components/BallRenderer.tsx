@@ -1,33 +1,61 @@
 /**
- * BallRenderer component - handles ball and launcher rendering logic
- * Shows appropriate launcher states during countdown and dropping
- * Renders ball during active gameplay
+ * BallRenderer component - handles ball rendering with performance optimization
+ * Subscribes to frameStore directly to avoid PlinkoBoard re-renders
+ *
+ * PERFORMANCE STRATEGY:
+ * - This component subscribes to frameStore independently
+ * - Calculates ball position on each frame
+ * - Passes position to Ball component which handles visual rendering
+ * - Keeps PlinkoBoard from re-rendering 60 FPS
+ * - Ball component stays unchanged (preserves all visual logic)
  */
 
-import { memo } from 'react';
-import type { GameState, TrajectoryPoint } from '../../../../game/types';
+import { memo, useSyncExternalStore } from 'react';
+import type { GameState, TrajectoryPoint, BallPosition } from '../../../../game/types';
 import { Ball } from '../../Ball';
 import { BallLauncher } from '../../BallLauncher';
+
+interface FrameStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => number;
+  getCurrentFrame: () => number;
+}
 
 interface BallRendererProps {
   isSelectingPosition: boolean;
   ballState: GameState;
-  ballPosition: { x: number; y: number; rotation: number } | null;
-  currentTrajectoryPoint: TrajectoryPoint | null;
   showTrail: boolean;
+  frameStore?: FrameStore;
+  getBallPosition?: () => BallPosition | null;
+  getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
 }
 
 export const BallRenderer = memo(function BallRenderer({
   isSelectingPosition,
   ballState,
-  ballPosition,
-  currentTrajectoryPoint,
   showTrail,
+  frameStore,
+  getBallPosition,
+  getCurrentTrajectoryPoint,
 }: BallRendererProps) {
   // Don't render anything during position selection
   if (isSelectingPosition) {
     return null;
   }
+
+  // Subscribe to frameStore to get updates (this is the key optimization)
+  // This component re-renders 60 FPS, but PlinkoBoard does NOT
+  const dummySubscribe = () => () => {};
+  const dummyGetSnapshot = () => 0;
+  const currentFrame = useSyncExternalStore(
+    frameStore?.subscribe ?? dummySubscribe,
+    frameStore?.getSnapshot ?? dummyGetSnapshot,
+    frameStore?.getSnapshot ?? dummyGetSnapshot
+  );
+
+  // Get current ball position and trajectory point
+  const ballPosition = getBallPosition?.() ?? null;
+  const currentTrajectoryPoint = getCurrentTrajectoryPoint?.() ?? null;
 
   // Render launcher during countdown
   if (ballState === 'countdown' && ballPosition) {
@@ -58,13 +86,14 @@ export const BallRenderer = memo(function BallRenderer({
     return null;
   }
 
-  // Render ball for all other states
+  // Render Ball component with calculated position
+  // Ball handles all visual rendering (trail, glow, squash/stretch)
   return (
     <Ball
       key={`ball-${showTrail ? 'trail' : 'no-trail'}`}
       position={ballPosition}
       state={ballState}
-      currentFrame={currentTrajectoryPoint?.frame ?? 0}
+      currentFrame={currentFrame}
       trajectoryPoint={currentTrajectoryPoint}
       showTrail={showTrail}
     />

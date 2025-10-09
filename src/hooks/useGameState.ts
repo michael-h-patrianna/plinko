@@ -274,12 +274,16 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
   const regenerateTrajectoryForSlot = useCallback(
     (targetSlotIndex: number) => {
       if (!prizeSession) {
-        console.error('[DevTools] Cannot regenerate trajectory: no prize session');
+        if (import.meta.env.DEV) {
+          console.error('[DevTools] Cannot regenerate trajectory: no prize session');
+        }
         return;
       }
 
       if (gameState.state !== 'ready') {
-        console.error(`[DevTools] Can only regenerate trajectory in 'ready' state, current: ${gameState.state}`);
+        if (import.meta.env.DEV) {
+          console.error(`[DevTools] Can only regenerate trajectory in 'ready' state, current: ${gameState.state}`);
+        }
         return;
       }
 
@@ -297,7 +301,9 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
           targetSlot: targetSlotIndex, // Force it to land at this slot
         });
       } catch (error) {
-        console.error('[DevTools] Failed to generate targeted trajectory:', error);
+        if (import.meta.env.DEV) {
+          console.error('[DevTools] Failed to generate targeted trajectory:', error);
+        }
         return;
       }
 
@@ -312,7 +318,9 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
         },
       });
 
-      console.log(`[DevTools] Regenerated trajectory to target slot ${targetSlotIndex}`);
+      if (import.meta.env.DEV) {
+        console.log(`[DevTools] Regenerated trajectory to target slot ${targetSlotIndex}`);
+      }
     },
     [gameState.state, gameState.context.seed, prizeSession, boardWidth, boardHeight, pegRows]
   );

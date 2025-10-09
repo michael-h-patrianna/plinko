@@ -15,7 +15,7 @@
  * @param comboBadgeNumber - Badge number for combo rewards
  */
 
-import { useRef } from 'react';
+import { useRef, memo } from 'react';
 import type { PrizeConfig } from '../../../game/types';
 import { calculateBucketHeight } from '../../../utils/slotDimensions';
 import { getSlotDisplayText } from '../../../game/prizeTypes';
@@ -39,7 +39,11 @@ interface SlotProps {
   comboBadgeNumber?: number;
 }
 
-export function Slot({
+/**
+ * Memoized Slot component to prevent unnecessary re-renders during 60 FPS animations
+ * Only re-renders when its own props change, not when parent state updates
+ */
+const SlotComponent = memo(function Slot({
   index,
   prize,
   x,
@@ -345,4 +349,10 @@ export function Slot({
       )}
     </AnimatedDiv>
   );
-}
+});
+
+// Display name for React DevTools
+SlotComponent.displayName = 'Slot';
+
+// Export the memoized component
+export { SlotComponent as Slot };

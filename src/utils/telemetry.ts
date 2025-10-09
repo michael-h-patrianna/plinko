@@ -29,7 +29,8 @@ export type TelemetryEventType =
   // Error Events
   | 'error.boundary_caught'
   | 'error.state_invalid'
-  | 'error.physics_violation';
+  | 'error.physics_violation'
+  | 'error.platform_adapter';
 
 export interface BaseTelemetryEvent {
   type: TelemetryEventType;
@@ -174,6 +175,16 @@ export interface ErrorPhysicsViolationEvent extends BaseTelemetryEvent {
   };
 }
 
+export interface ErrorPlatformAdapterEvent extends BaseTelemetryEvent {
+  type: 'error.platform_adapter';
+  data: {
+    adapter: 'dimensions' | 'deviceInfo' | 'navigation' | 'storage' | 'animation' | 'crypto' | 'performance';
+    operation: string;
+    error: string;
+    context?: unknown;
+  };
+}
+
 // ============================================================================
 // UNIFIED TELEMETRY EVENT TYPE
 // ============================================================================
@@ -191,7 +202,8 @@ export type TelemetryEvent =
   | AnimationLagEvent
   | ErrorBoundaryCaughtEvent
   | ErrorStateInvalidEvent
-  | ErrorPhysicsViolationEvent;
+  | ErrorPhysicsViolationEvent
+  | ErrorPlatformAdapterEvent;
 
 // ============================================================================
 // TELEMETRY SERVICE
@@ -391,4 +403,11 @@ export function trackSimulationPerformance(data: SimulationDurationEvent['data']
  */
 export function trackErrorBoundary(data: ErrorBoundaryCaughtEvent['data']): void {
   telemetry.track({ type: 'error.boundary_caught', data });
+}
+
+/**
+ * Track platform adapter error
+ */
+export function trackPlatformError(data: ErrorPlatformAdapterEvent['data']): void {
+  telemetry.track({ type: 'error.platform_adapter', data });
 }

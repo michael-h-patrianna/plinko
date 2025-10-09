@@ -42,11 +42,13 @@ The reset must happen in this exact order:
 
 ### Phase 2: State Cleanup
 ```
-3. Dispatch RESET_REQUESTED to state machine
+3. Dispatch RESET_REQUESTED to state machine (transitions to 'idle')
 4. Clear winningPrize state (setWinningPrize(null))
 5. Clear currentWinningIndex state (setCurrentWinningIndex(undefined))
 ```
 **Why second**: Clears derived state before clearing source data
+
+**State Machine Integration**: The `RESET_REQUESTED` event is handled by the state machine (see `src/game/stateMachine.ts` and ADR 003). The state machine validates the transition and updates game state to `idle`. This is ONE PART of the complete reset flow - the coordinator ensures all other cleanup happens in the correct order.
 
 ### Phase 3: Session Cleanup
 ```
@@ -255,8 +257,15 @@ if (state === 'revealed' || state === 'claimed') {
 
 ## References
 
-- State Machine: `/src/game/stateMachine.ts`
+### Code
+- Reset Coordinator: `/src/hooks/useResetCoordinator.ts`
+- State Machine: `/src/game/stateMachine.ts` (handles RESET_REQUESTED event)
 - Main Game Hook: `/src/hooks/usePlinkoGame.ts`
 - Prize Session Hook: `/src/hooks/usePrizeSession.ts`
 - Game State Hook: `/src/hooks/useGameState.ts`
 - Animation Hook: `/src/hooks/useGameAnimation.ts`
+
+### Documentation
+- **ADR 003: State Machine Pattern** - Defines RESET_REQUESTED event and state transitions
+- **ADR 005: Reset Coordinator** - Architectural decision for centralized reset
+- **ADR 001: Cross-Platform Architecture** - Context for platform-agnostic reset design

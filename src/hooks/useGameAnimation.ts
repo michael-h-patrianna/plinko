@@ -118,8 +118,13 @@ export function useGameAnimation(options: UseGameAnimationOptions): UseGameAnima
           landingTimeoutRef.current = null;
         }
         startTimestampRef.current = null;
-        // Don't reset frame on cleanup - keep ball at last position
-        // currentFrameRef.current = 0;
+
+        // INTENTIONAL: Frame is NOT reset on cleanup
+        // WHY: Ball should remain visible at its final position during state transition
+        // to landed/revealed states. The frame will be reset by resetCoordinator when
+        // the user starts a new game. Resetting here would cause the ball to disappear
+        // or jump to start position, creating a jarring UX.
+        // See: docs/adr/005-reset-coordinator.md
       };
     }
   }, [gameState, trajectory, performance, onLandingComplete, currentFrameRef]);

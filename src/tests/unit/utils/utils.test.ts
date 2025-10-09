@@ -15,6 +15,7 @@ import {
 } from '../../../utils/deviceDetection';
 import { abbreviateNumber } from '../../../utils/formatNumber';
 import { calculateBucketHeight, calculateBucketZoneY } from '../../../utils/slotDimensions';
+import { deviceInfoAdapter } from '../../../utils/platform/deviceInfo';
 import type { PrizeConfig } from '../../../game/types';
 
 describe('prizeUtils', () => {
@@ -778,6 +779,9 @@ describe('deviceDetection', () => {
       writable: true,
       configurable: true,
     });
+
+    // Clear device info cache before each test
+    (deviceInfoAdapter as any).cachedInfo = null;
   });
 
   afterEach(() => {
@@ -792,6 +796,8 @@ describe('deviceDetection', () => {
       writable: true,
       configurable: true,
     });
+    // Clear device info cache to prevent test pollution
+    (deviceInfoAdapter as any).cachedInfo = null;
     vi.restoreAllMocks();
   });
 
@@ -810,16 +816,30 @@ describe('deviceDetection', () => {
         value: 'Mozilla/5.0 (iPad; CPU OS 14_0 like Mac OS X)',
         configurable: true,
       });
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
+        value: 5,
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.window, 'innerWidth', {
+        value: 768,
+        configurable: true,
+      });
 
+      // iPad is detected as tablet, but should be mobile if touch + narrow width
       expect(isMobileDevice()).toBe(true);
     });
 
     it('should return true for Android user agent', () => {
       Object.defineProperty(globalThis.navigator, 'userAgent', {
-        value: 'Mozilla/5.0 (Linux; Android 10)',
+        value: 'Mozilla/5.0 (Linux; Android 11; SM-G991B) Mobile',
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
+        value: 5,
         configurable: true,
       });
 
+      // Android with "Mobile" in UA should be detected as mobile
       expect(isMobileDevice()).toBe(true);
     });
 
@@ -963,6 +983,10 @@ describe('deviceDetection', () => {
         value: 0,
         configurable: true,
       });
+      Object.defineProperty(globalThis.window, 'innerWidth', {
+        value: 1920,
+        configurable: true,
+      });
 
       expect(isMobileDevice()).toBe(false);
     });
@@ -970,6 +994,10 @@ describe('deviceDetection', () => {
     it('should return false for empty user agent', () => {
       Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: '',
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.window, 'innerWidth', {
+        value: 1920,
         configurable: true,
       });
 
@@ -983,6 +1011,10 @@ describe('deviceDetection', () => {
       });
       Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
         value: 0,
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.window, 'innerWidth', {
+        value: 1920,
         configurable: true,
       });
       // Explicitly ensure ontouchstart is not in window
@@ -1010,6 +1042,10 @@ describe('deviceDetection', () => {
     it('should return window width for desktop device', () => {
       Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
+        value: 0,
         configurable: true,
       });
       Object.defineProperty(globalThis.window, 'innerWidth', {
@@ -1077,6 +1113,10 @@ describe('deviceDetection', () => {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
         configurable: true,
       });
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
+        value: 0,
+        configurable: true,
+      });
       Object.defineProperty(globalThis.window, 'innerWidth', {
         value: 3840,
         configurable: true,
@@ -1088,6 +1128,10 @@ describe('deviceDetection', () => {
     it('should handle zero width gracefully', () => {
       Object.defineProperty(globalThis.navigator, 'userAgent', {
         value: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+        configurable: true,
+      });
+      Object.defineProperty(globalThis.navigator, 'maxTouchPoints', {
+        value: 0,
         configurable: true,
       });
       Object.defineProperty(globalThis.window, 'innerWidth', {

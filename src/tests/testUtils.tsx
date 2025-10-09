@@ -4,14 +4,14 @@
 
 import { ReactElement, ReactNode } from 'react';
 import { render, RenderOptions } from '@testing-library/react';
-import { ThemeProvider } from '../theme';
+import { ThemeProvider, themes } from '../theme';
 
 /**
  * Custom render function that wraps components with ThemeProvider
  */
 function customRender(ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) {
   function Wrapper({ children }: { children: ReactNode }) {
-    return <ThemeProvider>{children}</ThemeProvider>;
+    return <ThemeProvider themes={themes}>{children}</ThemeProvider>;
   }
 
   return render(ui, { wrapper: Wrapper, ...options });

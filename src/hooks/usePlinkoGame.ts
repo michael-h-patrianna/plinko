@@ -118,8 +118,8 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     resetCoordinator.reset();
   }, [resetCoordinator]);
 
-  // Provide backwards-compatible computed values (but they're derived from refs, not state)
-  // These will still cause re-renders in tests, but not in production with the subscription pattern
+  // Computed values derived from refs for convenience
+  // Used by components that need current ball position/trajectory
   const ballPosition = getBallPosition();
   const currentTrajectoryPoint = getCurrentTrajectoryPoint();
 

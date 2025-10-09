@@ -514,18 +514,22 @@ describe('Hook Interactions Integration Tests', () => {
       );
 
       const { result: resetResult } = renderHook(() =>
-        useResetCoordinator({
-          currentFrameRef,
-          resetFrame: animationResult.current.resetFrame,
-          dispatch: gameResult.current.dispatch,
-          setWinningPrize: prizeResult.current.setWinningPrize,
-          setCurrentWinningIndex: prizeResult.current.setCurrentWinningIndex,
-          setPrizeSession: prizeResult.current.setPrizeSession,
-          setPrizes: prizeResult.current.setPrizes,
-          winningPrizeLockedRef: prizeResult.current.winningPrizeLockedRef,
-          forceFreshSeedRef,
-          setSessionKey: vi.fn(),
-        })
+        useResetCoordinator(
+          {
+            currentFrameRef,
+            winningPrizeLockedRef: prizeResult.current.winningPrizeLockedRef,
+            forceFreshSeedRef,
+          },
+          animationResult.current.resetFrame,
+          gameResult.current.dispatch,
+          {
+            setWinningPrize: prizeResult.current.setWinningPrize,
+            setCurrentWinningIndex: prizeResult.current.setCurrentWinningIndex,
+            setPrizeSession: prizeResult.current.setPrizeSession,
+            setPrizes: prizeResult.current.setPrizes,
+            setSessionKey: vi.fn(),
+          }
+        )
       );
 
       // Perform reset
@@ -551,18 +555,22 @@ describe('Hook Interactions Integration Tests', () => {
       });
 
       const { result: resetResult } = renderHook(() =>
-        useResetCoordinator({
-          currentFrameRef,
-          resetFrame: failingResetFrame,
-          dispatch: vi.fn(),
-          setWinningPrize: vi.fn(),
-          setCurrentWinningIndex: vi.fn(),
-          setPrizeSession: vi.fn(),
-          setPrizes: vi.fn(),
-          winningPrizeLockedRef: { current: true },
-          forceFreshSeedRef,
-          setSessionKey: vi.fn(),
-        })
+        useResetCoordinator(
+          {
+            currentFrameRef,
+            winningPrizeLockedRef: { current: true },
+            forceFreshSeedRef,
+          },
+          failingResetFrame,
+          vi.fn(),
+          {
+            setWinningPrize: vi.fn(),
+            setCurrentWinningIndex: vi.fn(),
+            setPrizeSession: vi.fn(),
+            setPrizes: vi.fn(),
+            setSessionKey: vi.fn(),
+          }
+        )
       );
 
       // Reset should not throw - errors are caught and tracked internally
@@ -641,18 +649,22 @@ describe('Hook Interactions Integration Tests', () => {
 
       // 4. Reset game
       const { result: resetResult } = renderHook(() =>
-        useResetCoordinator({
-          currentFrameRef,
-          resetFrame: animationResult.current.resetFrame,
-          dispatch: gameResult.current.dispatch,
-          setWinningPrize: prizeResult.current.setWinningPrize,
-          setCurrentWinningIndex: prizeResult.current.setCurrentWinningIndex,
-          setPrizeSession: prizeResult.current.setPrizeSession,
-          setPrizes: prizeResult.current.setPrizes,
-          winningPrizeLockedRef: prizeResult.current.winningPrizeLockedRef,
-          forceFreshSeedRef,
-          setSessionKey: vi.fn(),
-        })
+        useResetCoordinator(
+          {
+            currentFrameRef,
+            winningPrizeLockedRef: prizeResult.current.winningPrizeLockedRef,
+            forceFreshSeedRef,
+          },
+          animationResult.current.resetFrame,
+          gameResult.current.dispatch,
+          {
+            setWinningPrize: prizeResult.current.setWinningPrize,
+            setCurrentWinningIndex: prizeResult.current.setCurrentWinningIndex,
+            setPrizeSession: prizeResult.current.setPrizeSession,
+            setPrizes: prizeResult.current.setPrizes,
+            setSessionKey: vi.fn(),
+          }
+        )
       );
 
       act(() => {

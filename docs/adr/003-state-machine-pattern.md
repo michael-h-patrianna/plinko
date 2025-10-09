@@ -134,6 +134,28 @@ trackStateTransition({
 | revealed | RESET_REQUESTED | idle | Cancel claim |
 | claimed | RESET_REQUESTED | idle | Play again |
 
+**Note on RESET_REQUESTED**: This event is handled from any state and always returns to `idle`. The actual reset orchestration (clearing refs, resetting animations, clearing prize data) is coordinated by the Reset Coordinator (see ADR 005). The state machine only handles the state transition itself.
+
+### Reset Flow Integration
+
+The state machine's `RESET_REQUESTED` event integrates with the Reset Coordinator:
+
+```
+User Action (resetGame)
+  ↓
+resetCoordinator.reset()
+  ↓
+1. Reset animation frame (currentFrameRef = 0)
+2. Batch state updates (flushSync):
+   - dispatch({ type: 'RESET_REQUESTED' }) ← State machine handles this
+   - Clear prize data
+   - Clear session data
+3. Release locks (winningPrizeLockedRef)
+4. Trigger re-initialization (sessionKey++)
+```
+
+The state machine is ONE PART of the reset flow, handling only the state transition. See `docs/RESET_ORCHESTRATION.md` for the complete reset sequence.
+
 ### Helper Functions
 ```typescript
 // Centralized reset logic
@@ -287,6 +309,7 @@ dispatch({ type: 'REVEAL_CONFIRMED' });
 ## Related ADRs
 - ADR 001: Cross-Platform Architecture
 - ADR 002: Physics Engine Design
+- **ADR 005: Reset Coordinator** - Orchestrates complete game reset including state machine RESET_REQUESTED event. See [reset flow diagram](../RESET_ORCHESTRATION.md) for integration details.
 
 ## Lessons Learned
 

@@ -18,7 +18,7 @@ export interface SlotData {
 interface SlotListProps {
   slots: SlotData[];
   selectedIndex: number;
-  currentTrajectoryPoint: TrajectoryPoint | null;
+  getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
   ballState: GameState;
   boardWidth: number;
   bucketZoneY: number;
@@ -27,11 +27,13 @@ interface SlotListProps {
 export const SlotList = memo(function SlotList({
   slots,
   selectedIndex,
-  currentTrajectoryPoint,
+  getCurrentTrajectoryPoint,
   ballState,
   boardWidth,
   bucketZoneY,
 }: SlotListProps) {
+  // Get current trajectory point only when needed for rendering
+  const currentTrajectoryPoint = getCurrentTrajectoryPoint?.();
 
   return (
     <>

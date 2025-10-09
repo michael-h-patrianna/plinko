@@ -7,22 +7,35 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useResetCoordinator, type ResetContext } from '../../../hooks/useResetCoordinator';
+import { useResetCoordinator } from '../../../hooks/useResetCoordinator';
 
 // Mock react-dom's flushSync to avoid DOM dependencies in tests
 vi.mock('react-dom', () => ({
   flushSync: (fn: () => void) => fn(),
 }));
 
+interface MockDependencies {
+  currentFrameRef: React.MutableRefObject<number>;
+  winningPrizeLockedRef: React.MutableRefObject<boolean>;
+  forceFreshSeedRef: React.MutableRefObject<boolean>;
+  resetFrame: ReturnType<typeof vi.fn>;
+  dispatch: ReturnType<typeof vi.fn>;
+  setWinningPrize: ReturnType<typeof vi.fn>;
+  setCurrentWinningIndex: ReturnType<typeof vi.fn>;
+  setPrizeSession: ReturnType<typeof vi.fn>;
+  setPrizes: ReturnType<typeof vi.fn>;
+  setSessionKey: ReturnType<typeof vi.fn>;
+}
+
 describe('useResetCoordinator', () => {
-  let mockContext: ResetContext;
+  let mockDeps: MockDependencies;
   let callOrder: string[];
 
   beforeEach(() => {
     callOrder = [];
 
-    // Create mock context with all required dependencies
-    mockContext = {
+    // Create mock dependencies for new signature
+    mockDeps = {
       currentFrameRef: { current: 42 },
       resetFrame: vi.fn(() => callOrder.push('resetFrame')),
       dispatch: vi.fn(() => callOrder.push('dispatch')),
@@ -38,7 +51,22 @@ describe('useResetCoordinator', () => {
 
   describe('Reset Sequence', () => {
     it('should execute reset sequence in correct order', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
@@ -57,113 +85,278 @@ describe('useResetCoordinator', () => {
     });
 
     it('should reset currentFrameRef to 0', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.currentFrameRef.current).toBe(0);
+      expect(mockDeps.currentFrameRef.current).toBe(0);
     });
 
     it('should call resetFrame to cleanup animation timers', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.resetFrame).toHaveBeenCalledOnce();
+      expect(mockDeps.resetFrame).toHaveBeenCalledOnce();
     });
 
     it('should dispatch RESET_REQUESTED event', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.dispatch).toHaveBeenCalledWith({ type: 'RESET_REQUESTED' });
+      expect(mockDeps.dispatch).toHaveBeenCalledWith({ type: 'RESET_REQUESTED' });
     });
 
     it('should clear winning prize state', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.setWinningPrize).toHaveBeenCalledWith(null);
+      expect(mockDeps.setWinningPrize).toHaveBeenCalledWith(null);
     });
 
     it('should clear current winning index', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.setCurrentWinningIndex).toHaveBeenCalledWith(undefined);
+      expect(mockDeps.setCurrentWinningIndex).toHaveBeenCalledWith(undefined);
     });
 
     it('should clear prize session', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.setPrizeSession).toHaveBeenCalledWith(null);
+      expect(mockDeps.setPrizeSession).toHaveBeenCalledWith(null);
     });
 
     it('should clear prizes array', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.setPrizes).toHaveBeenCalledWith([]);
+      expect(mockDeps.setPrizes).toHaveBeenCalledWith([]);
     });
 
     it('should release winning prize lock', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.winningPrizeLockedRef.current).toBe(false);
+      expect(mockDeps.winningPrizeLockedRef.current).toBe(false);
     });
 
     it('should set forceFreshSeed flag', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.forceFreshSeedRef.current).toBe(true);
+      expect(mockDeps.forceFreshSeedRef.current).toBe(true);
     });
 
     it('should increment session key', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.setSessionKey).toHaveBeenCalledWith(expect.any(Function));
+      expect(mockDeps.setSessionKey).toHaveBeenCalledWith(expect.any(Function));
 
       // Verify the increment function works correctly
-      const incrementFn = vi.mocked(mockContext.setSessionKey).mock.calls[0]![0] as (prev: number) => number;
+      const incrementFn = vi.mocked(mockDeps.setSessionKey).mock.calls[0]![0] as (prev: number) => number;
       expect(incrementFn(5)).toBe(6);
     });
   });
 
   describe('Concurrency Guards', () => {
     it('should prevent concurrent resets', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       // Call reset twice rapidly (in separate acts since they're synchronous)
       act(() => {
@@ -176,14 +369,29 @@ describe('useResetCoordinator', () => {
 
       // Second call should be blocked, so callbacks called twice (once per successful reset)
       // Note: Both resets complete since they're sequential, not concurrent
-      expect(mockContext.resetFrame).toHaveBeenCalledTimes(2);
-      expect(mockContext.dispatch).toHaveBeenCalledTimes(2);
+      expect(mockDeps.resetFrame).toHaveBeenCalledTimes(2);
+      expect(mockDeps.dispatch).toHaveBeenCalledTimes(2);
     });
 
     it('should report resetting status correctly', () => {
       // Since reset is synchronous, we can't catch it mid-reset
       // Instead, verify it starts as false
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       // Should not be resetting initially
       expect(result.current.isResetting()).toBe(false);
@@ -197,7 +405,22 @@ describe('useResetCoordinator', () => {
     });
 
     it('should allow reset after previous reset completes', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
@@ -211,21 +434,33 @@ describe('useResetCoordinator', () => {
       });
 
       // Second reset should execute
-      expect(mockContext.resetFrame).toHaveBeenCalledTimes(2);
+      expect(mockDeps.resetFrame).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('Error Handling', () => {
     it('should handle errors gracefully without throwing', () => {
-      const errorContext = {
-        ...mockContext,
-        resetFrame: vi.fn(() => {
-          callOrder.push('resetFrame');
-          throw new Error('Animation cleanup failed');
-        }),
-      };
+      const errorResetFrame = vi.fn(() => {
+        callOrder.push('resetFrame');
+        throw new Error('Animation cleanup failed');
+      });
 
-      const { result } = renderHook(() => useResetCoordinator(errorContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        errorResetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       // Reset should not throw
       expect(() => {
@@ -236,14 +471,26 @@ describe('useResetCoordinator', () => {
     });
 
     it('should not leave resetInProgress flag stuck on error', () => {
-      const errorContext = {
-        ...mockContext,
-        resetFrame: vi.fn(() => {
-          throw new Error('Test error');
-        }),
-      };
+      const errorResetFrame = vi.fn(() => {
+        throw new Error('Test error');
+      });
 
-      const { result } = renderHook(() => useResetCoordinator(errorContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        errorResetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
@@ -257,7 +504,22 @@ describe('useResetCoordinator', () => {
 
   describe('Idempotence', () => {
     it('should be safe to call reset multiple times', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       // Call reset multiple times
       act(() => {
@@ -267,36 +529,51 @@ describe('useResetCoordinator', () => {
       });
 
       // Should not crash and refs should be in consistent state
-      expect(mockContext.currentFrameRef.current).toBe(0);
-      expect(mockContext.winningPrizeLockedRef.current).toBe(false);
-      expect(mockContext.forceFreshSeedRef.current).toBe(true);
+      expect(mockDeps.currentFrameRef.current).toBe(0);
+      expect(mockDeps.winningPrizeLockedRef.current).toBe(false);
+      expect(mockDeps.forceFreshSeedRef.current).toBe(true);
     });
 
     it('should reset refs to same values each time', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      const frame1 = mockContext.currentFrameRef.current;
-      const locked1 = mockContext.winningPrizeLockedRef.current;
-      const fresh1 = mockContext.forceFreshSeedRef.current;
+      const frame1 = mockDeps.currentFrameRef.current;
+      const locked1 = mockDeps.winningPrizeLockedRef.current;
+      const fresh1 = mockDeps.forceFreshSeedRef.current;
 
       // Reset again
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.currentFrameRef.current).toBe(frame1);
-      expect(mockContext.winningPrizeLockedRef.current).toBe(locked1);
-      expect(mockContext.forceFreshSeedRef.current).toBe(fresh1);
+      expect(mockDeps.currentFrameRef.current).toBe(frame1);
+      expect(mockDeps.winningPrizeLockedRef.current).toBe(locked1);
+      expect(mockDeps.forceFreshSeedRef.current).toBe(fresh1);
     });
   });
 
   describe('Integration', () => {
     it('should work with realistic ref values', () => {
-      const realisticContext: ResetContext = {
+      const realisticDeps: MockDependencies = {
         currentFrameRef: { current: 1234 },
         resetFrame: vi.fn(),
         dispatch: vi.fn(),
@@ -309,19 +586,49 @@ describe('useResetCoordinator', () => {
         setSessionKey: vi.fn(),
       };
 
-      const { result } = renderHook(() => useResetCoordinator(realisticContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: realisticDeps.currentFrameRef,
+          winningPrizeLockedRef: realisticDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: realisticDeps.forceFreshSeedRef,
+        },
+        realisticDeps.resetFrame,
+        realisticDeps.dispatch,
+        {
+          setWinningPrize: realisticDeps.setWinningPrize,
+          setCurrentWinningIndex: realisticDeps.setCurrentWinningIndex,
+          setPrizeSession: realisticDeps.setPrizeSession,
+          setPrizes: realisticDeps.setPrizes,
+          setSessionKey: realisticDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(realisticContext.currentFrameRef.current).toBe(0);
-      expect(realisticContext.winningPrizeLockedRef.current).toBe(false);
-      expect(realisticContext.forceFreshSeedRef.current).toBe(true);
+      expect(realisticDeps.currentFrameRef.current).toBe(0);
+      expect(realisticDeps.winningPrizeLockedRef.current).toBe(false);
+      expect(realisticDeps.forceFreshSeedRef.current).toBe(true);
     });
 
     it('should handle rapid state transitions', () => {
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       // Simulate rapid game loop: reset -> play -> reset -> play
       act(() => {
@@ -329,68 +636,143 @@ describe('useResetCoordinator', () => {
       });
 
       // Simulate game play (modify refs)
-      mockContext.currentFrameRef.current = 500;
-      mockContext.winningPrizeLockedRef.current = true;
-      mockContext.forceFreshSeedRef.current = false;
+      mockDeps.currentFrameRef.current = 500;
+      mockDeps.winningPrizeLockedRef.current = true;
+      mockDeps.forceFreshSeedRef.current = false;
 
       // Reset again
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.currentFrameRef.current).toBe(0);
-      expect(mockContext.winningPrizeLockedRef.current).toBe(false);
-      expect(mockContext.forceFreshSeedRef.current).toBe(true);
+      expect(mockDeps.currentFrameRef.current).toBe(0);
+      expect(mockDeps.winningPrizeLockedRef.current).toBe(false);
+      expect(mockDeps.forceFreshSeedRef.current).toBe(true);
     });
   });
 
   describe('Edge Cases', () => {
     it('should handle zero frame value', () => {
-      mockContext.currentFrameRef.current = 0;
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      mockDeps.currentFrameRef.current = 0;
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.currentFrameRef.current).toBe(0);
+      expect(mockDeps.currentFrameRef.current).toBe(0);
     });
 
     it('should handle negative frame value', () => {
-      mockContext.currentFrameRef.current = -1;
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      mockDeps.currentFrameRef.current = -1;
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.currentFrameRef.current).toBe(0);
+      expect(mockDeps.currentFrameRef.current).toBe(0);
     });
 
     it('should handle already unlocked winning prize', () => {
-      mockContext.winningPrizeLockedRef.current = false;
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      mockDeps.winningPrizeLockedRef.current = false;
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.winningPrizeLockedRef.current).toBe(false);
+      expect(mockDeps.winningPrizeLockedRef.current).toBe(false);
     });
 
     it('should handle already set forceFreshSeed', () => {
-      mockContext.forceFreshSeedRef.current = true;
-      const { result } = renderHook(() => useResetCoordinator(mockContext));
+      mockDeps.forceFreshSeedRef.current = true;
+      const { result } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();
       });
 
-      expect(mockContext.forceFreshSeedRef.current).toBe(true);
+      expect(mockDeps.forceFreshSeedRef.current).toBe(true);
     });
 
     it('should not crash on unmount during reset', () => {
-      const { result, unmount } = renderHook(() => useResetCoordinator(mockContext));
+      const { result, unmount } = renderHook(() => useResetCoordinator(
+        {
+          currentFrameRef: mockDeps.currentFrameRef,
+          winningPrizeLockedRef: mockDeps.winningPrizeLockedRef,
+          forceFreshSeedRef: mockDeps.forceFreshSeedRef,
+        },
+        mockDeps.resetFrame,
+        mockDeps.dispatch,
+        {
+          setWinningPrize: mockDeps.setWinningPrize,
+          setCurrentWinningIndex: mockDeps.setCurrentWinningIndex,
+          setPrizeSession: mockDeps.setPrizeSession,
+          setPrizes: mockDeps.setPrizes,
+          setSessionKey: mockDeps.setSessionKey,
+        }
+      ));
 
       act(() => {
         result.current.reset();

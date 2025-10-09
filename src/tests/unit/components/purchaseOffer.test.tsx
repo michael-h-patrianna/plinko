@@ -8,6 +8,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../../App';
 import { AppConfigProvider } from '../../../config/AppConfigContext';
+import { ThemeProvider, themes } from '../../../theme';
+import { ToastProvider } from '../../../components/feedback';
 import { createFixturePrizeProvider } from '../../../game/prizeProvider';
 import { getPrizeFixture } from '../../fixtures/prizeFixtures';
 
@@ -27,17 +29,21 @@ describe('Purchase Offer Prize Display', () => {
     expect(fixture.prizes[3]?.type).toBe('purchase');
 
     render(
-      <AppConfigProvider
-        value={{
-          featureFlags: {
-            devToolsEnabled: false,
-            dropPositionMechanicEnabled: false,
-          },
-          prizeProvider,
-        }}
-      >
-        <App />
-      </AppConfigProvider>
+      <ThemeProvider themes={themes}>
+        <ToastProvider position="top-right" maxToasts={3}>
+          <AppConfigProvider
+            value={{
+              featureFlags: {
+                devToolsEnabled: false,
+                dropPositionMechanicEnabled: false,
+              },
+              prizeProvider,
+            }}
+          >
+            <App />
+          </AppConfigProvider>
+        </ToastProvider>
+      </ThemeProvider>
     );
 
     // Wait for start button to be available
@@ -69,17 +75,21 @@ describe('Purchase Offer Prize Display', () => {
     expect(winningPrize?.purchaseOffer).toBeDefined();
 
     render(
-      <AppConfigProvider
-        value={{
-          featureFlags: {
-            devToolsEnabled: false,
-            dropPositionMechanicEnabled: false,
-          },
-          prizeProvider,
-        }}
-      >
-        <App />
-      </AppConfigProvider>
+      <ThemeProvider themes={themes}>
+        <ToastProvider position="top-right" maxToasts={3}>
+          <AppConfigProvider
+            value={{
+              featureFlags: {
+                devToolsEnabled: false,
+                dropPositionMechanicEnabled: false,
+              },
+              prizeProvider,
+            }}
+          >
+            <App />
+          </AppConfigProvider>
+        </ToastProvider>
+      </ThemeProvider>
     );
 
     // Wait for start button
@@ -103,17 +113,21 @@ describe('Purchase Offer Prize Display', () => {
     const prizeProvider = createFixturePrizeProvider(fixture);
 
     render(
-      <AppConfigProvider
-        value={{
-          featureFlags: {
-            devToolsEnabled: false,
-            dropPositionMechanicEnabled: false,
-          },
-          prizeProvider,
-        }}
-      >
-        <App />
-      </AppConfigProvider>
+      <ThemeProvider themes={themes}>
+        <ToastProvider position="top-right" maxToasts={3}>
+          <AppConfigProvider
+            value={{
+              featureFlags: {
+                devToolsEnabled: false,
+                dropPositionMechanicEnabled: false,
+              },
+              prizeProvider,
+            }}
+          >
+            <App />
+          </AppConfigProvider>
+        </ToastProvider>
+      </ThemeProvider>
     );
 
     // Wait for start button

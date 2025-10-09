@@ -155,3 +155,6 @@ export const Peg = memo(PegComponent, (prev, next) => {
     prev.y === next.y
   );
 });
+
+// Display name for React DevTools
+Peg.displayName = 'Peg';

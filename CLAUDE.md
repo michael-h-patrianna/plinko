@@ -16,6 +16,9 @@ WHEN: Any task with 3+ steps
 WHY: Tracks progress, maintains focus
 ```
 
+## MANDATORY CODE STYLE AND ARCHITECTURE RULES
+Coding agents must follow styleguide.md - No exceptions!
+
 ## MANDATORY EXECUTION PROTOCOL
 1. Always complete all tasks fully. Do not simplify approaches, do not skip tasks.
 2. Always keep tests up to date and maintain 100% test coverage.
