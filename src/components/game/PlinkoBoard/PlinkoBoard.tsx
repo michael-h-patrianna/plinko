@@ -65,6 +65,7 @@ interface PlinkoBoardProps {
 export function PlinkoBoard({
   prizes,
   selectedIndex,
+  trajectory,
   frameStore,
   getBallPosition,
   getCurrentTrajectoryPoint,
@@ -92,12 +93,12 @@ export function PlinkoBoard({
   // Internal content width = declared width - CSS borders on both sides
   const internalWidth = boardWidth - CSS_BORDER * 2;
 
-  // PERFORMANCE OPTIMIZATION: Removed useSyncExternalStore from PlinkoBoard
-  // BallRenderer now subscribes to frameStore independently
-  // This eliminates 60 FPS re-renders of PlinkoBoard and all its children (pegs, slots)
+  // PERFORMANCE OPTIMIZATION: No frameStore subscription needed in PlinkoBoard
+  // - BallRenderer subscribes for ball position updates (60 FPS)
+  // - Pegs subscribe individually and only affected pegs animate (see Peg component)
+  // This eliminates 60 FPS re-renders of PlinkoBoard and non-affected pegs
 
-  // Get current values for pegs/slots - only needed for their rendering, NOT for ball
-  // BallRenderer handles ball position internally
+  // Get current values for slots - only used for initial rendering, not frame updates
   const currentTrajectoryPoint = getCurrentTrajectoryPoint
     ? getCurrentTrajectoryPoint()
     : currentTrajectoryPointProp ?? null;
@@ -158,6 +159,27 @@ export function PlinkoBoard({
       cssBorder: CSS_BORDER,
     });
   }, [boardHeight, boardWidth, pegRows, CSS_BORDER]);
+
+  // Pre-calculate hit frames for each peg from trajectory
+  // Maps "row-col" to array of frame numbers when hit occurs
+  const pegHitFrames = useMemo(() => {
+    if (!trajectory || trajectory.length === 0) return new Map<string, number[]>();
+
+    const hitMap = new Map<string, number[]>();
+
+    trajectory.forEach((point, frameIndex) => {
+      if (point.pegsHit && point.pegsHit.length > 0) {
+        point.pegsHit.forEach((pegHit) => {
+          const key = `${pegHit.row}-${pegHit.col}`;
+          const frames = hitMap.get(key) || [];
+          frames.push(frameIndex);
+          hitMap.set(key, frames);
+        });
+      }
+    });
+
+    return hitMap;
+  }, [trajectory]);
 
   // Generate slot positions and assign combo badge numbers
   const slots = useMemo(() => {
@@ -239,20 +261,19 @@ export function PlinkoBoard({
         {/* Pegs */}
         <div style={{ opacity: isSelectingPosition ? 0.1 : 1, transition: 'opacity 0.3s ease' }}>
           {pegs.map((peg) => {
-            // Check if this peg is in the pegsHit array
-            const isActive =
-              currentTrajectoryPoint?.pegsHit?.some(
-                (hit) => hit.row === peg.row && hit.col === peg.col
-              ) ?? false;
+            // Get pre-calculated hit frames for this peg
+            const pegKey = `${peg.row}-${peg.col}`;
+            const hitFrames = pegHitFrames.get(pegKey);
 
             return (
               <Peg
-                key={`peg-${peg.row}-${peg.col}`}
+                key={pegKey}
                 row={peg.row}
                 col={peg.col}
                 x={peg.x}
                 y={peg.y}
-                isActive={isActive}
+                hitFrames={hitFrames}
+                frameStore={frameStore}
                 shouldReset={ballState === 'idle'}
               />
             );

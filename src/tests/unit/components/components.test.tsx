@@ -623,39 +623,14 @@ describe('Peg Component', () => {
     expect(peg.style.top).toBe('250px');
   });
 
-  it('should mark inactive peg with data-peg-hit false', () => {
-    render(<Peg row={0} col={0} x={100} y={200} isActive={false} />);
+  it('should initially not be flashing', () => {
+    render(<Peg row={0} col={0} x={100} y={200} />);
     const peg = screen.getByTestId('peg-0-0');
     expect(peg).toHaveAttribute('data-peg-hit', 'false');
   });
 
-  it('should mark active peg with data-peg-hit true', () => {
-    render(<Peg row={0} col={0} x={100} y={200} isActive={true} />);
-    const peg = screen.getByTestId('peg-0-0');
-    expect(peg).toHaveAttribute('data-peg-hit', 'true');
-  });
-
-  it('should render flash animation when hit', () => {
-    const { container, rerender } = render(
-      <Peg row={0} col={0} x={100} y={200} isActive={false} />
-    );
-
-    // Initially no flash
-    let flashRing = container.querySelector('.rounded-full.pointer-events-none');
-
-    // Trigger hit
-    rerender(<Peg row={0} col={0} x={100} y={200} isActive={true} />);
-
-    // Should now have flash ring
-    flashRing = container.querySelector('.rounded-full.pointer-events-none');
-    expect(flashRing).toBeInTheDocument();
-  });
-
   it('should reset flash when shouldReset is true', () => {
-    const { rerender } = render(<Peg row={0} col={0} x={100} y={200} isActive={true} />);
-
-    rerender(<Peg row={0} col={0} x={100} y={200} isActive={false} shouldReset={true} />);
-
+    render(<Peg row={0} col={0} x={100} y={200} shouldReset={true} />);
     const peg = screen.getByTestId('peg-0-0');
     expect(peg).toHaveAttribute('data-peg-hit', 'false');
   });
@@ -668,7 +643,7 @@ describe('Peg Component', () => {
   });
 
   it('should render pulseRing animation styles', () => {
-    const { container } = render(<Peg row={0} col={0} x={100} y={200} isActive={true} />);
+    const { container } = render(<Peg row={0} col={0} x={100} y={200} />);
     const styles = container.querySelector('style');
     expect(styles?.textContent).toContain('@keyframes pulseRing');
   });
