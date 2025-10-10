@@ -2,20 +2,31 @@
  * Prize slot component at bottom of board with bucket physics visualization
  * Shows prize information and animates when ball approaches or impacts walls/floor
  * Adapts display mode based on slot width (icon-only, text, or icon+text)
+ *
+ * PERFORMANCE OPTIMIZATION (IMPERATIVE UPDATE STRATEGY):
+ * - No frameStore subscription (eliminates 300-480+ React re-renders per second)
+ * - Static component that renders once during board setup
+ * - Visual state controlled imperatively via BallAnimationDriver.updateSlotHighlight()
+ * - Border colors driven by data-approaching attribute (CSS transitions handle animation)
+ * - Collision effects managed by driver (no React state, only DOM manipulation)
+ *
+ * ARCHITECTURE:
+ * - Component renders static DOM structure with data attributes
+ * - Driver queries slots by data-testid and updates data-approaching imperatively
+ * - CSS transitions provide smooth border color changes
+ * - No React state, no re-renders, only DOM manipulation
+ *
  * @param index - Slot index (0-based)
  * @param prize - Prize configuration with rewards and display settings
  * @param x - X position in pixels
  * @param width - Width of slot in pixels
  * @param isWinning - Whether this is the winning slot
- * @param isApproaching - Whether ball is approaching this slot
- * @param wallImpact - Which bucket wall was hit ('left', 'right', or null)
- * @param floorImpact - Whether ball hit the bucket floor
  * @param prizeCount - Total number of prize slots (for responsive sizing)
  * @param boardWidth - Board width in pixels (for compact mode determination)
  * @param comboBadgeNumber - Badge number for combo rewards
  */
 
-import { useRef, memo } from 'react';
+import { memo } from 'react';
 import type { PrizeConfig } from '../../../game/types';
 import { calculateBucketHeight } from '../../../utils/slotDimensions';
 import { getSlotDisplayText } from '../../../game/prizeTypes';
@@ -31,17 +42,14 @@ interface SlotProps {
   x: number;
   width: number;
   isWinning?: boolean;
-  isApproaching?: boolean;
-  wallImpact?: 'left' | 'right' | null;
-  floorImpact?: boolean;
   prizeCount?: number;
   boardWidth?: number;
   comboBadgeNumber?: number;
 }
 
 /**
- * Memoized Slot component to prevent unnecessary re-renders during 60 FPS animations
- * Only re-renders when its own props change, not when parent state updates
+ * Memoized Slot component - static rendering, no re-renders during animation
+ * Visual state controlled imperatively via BallAnimationDriver (data attributes)
  */
 const SlotComponent = memo(function Slot({
   index,
@@ -49,9 +57,6 @@ const SlotComponent = memo(function Slot({
   x,
   width,
   isWinning = false,
-  isApproaching = false,
-  wallImpact = null,
-  floorImpact = false,
   prizeCount = 5,
   boardWidth = 375,
   comboBadgeNumber,
@@ -59,31 +64,6 @@ const SlotComponent = memo(function Slot({
   const { theme } = useTheme();
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
-  const { AnimatePresence } = driver;
-
-  // Stable keys for impact animations - increment counter when impact triggers
-  const leftImpactKeyRef = useRef(0);
-  const rightImpactKeyRef = useRef(0);
-  const floorImpactKeyRef = useRef(0);
-
-  // Track previous impact states to detect new impacts
-  const prevWallImpactRef = useRef<'left' | 'right' | null>(null);
-  const prevFloorImpactRef = useRef(false);
-
-  // Increment keys when impacts change from null/false to active
-  if (wallImpact === 'left' && prevWallImpactRef.current !== 'left') {
-    leftImpactKeyRef.current += 1;
-  }
-  if (wallImpact === 'right' && prevWallImpactRef.current !== 'right') {
-    rightImpactKeyRef.current += 1;
-  }
-  if (floorImpact && !prevFloorImpactRef.current) {
-    floorImpactKeyRef.current += 1;
-  }
-
-  // Update previous states
-  prevWallImpactRef.current = wallImpact;
-  prevFloorImpactRef.current = floorImpact;
 
   // Calculate responsive bucket dimensions based on slot width
   // Narrower slots (8 prizes on small screens) need taller buckets to fit text
@@ -128,7 +108,7 @@ const SlotComponent = memo(function Slot({
 
   return (
     <AnimatedDiv
-      className="absolute flex flex-col items-center justify-end text-center"
+      className="absolute flex flex-col items-center justify-end text-center slot-container"
       style={{
         left: `${x}px`,
         bottom: '-10px',
@@ -140,7 +120,7 @@ const SlotComponent = memo(function Slot({
           `
           linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
         `,
-        // Use per-slot border if available, otherwise use theme default or approaching color
+        // Use per-slot border if available, otherwise borders controlled by CSS via data-approaching
         ...(slotStyle?.border
           ? {
               borderLeft: slotStyle.border,
@@ -149,18 +129,95 @@ const SlotComponent = memo(function Slot({
               borderTop: 'none',
             }
           : {
-              borderLeft: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
-              borderRight: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
-              borderBottom: `${borderWidth} solid ${isApproaching ? color : theme.colors.game.slot.border || theme.colors.border.default}`,
+              borderLeft: `${borderWidth} solid var(--slot-border-color)`,
+              borderRight: `${borderWidth} solid var(--slot-border-color)`,
+              borderBottom: `${borderWidth} solid var(--slot-border-color)`,
               borderTop: 'none',
             }),
         borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
         /* RN-compatible: removed boxShadow, depth created by gradient + border */
         transition: theme.effects.transitions.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
+        // CSS variables for border color (controlled by data-approaching)
+        '--slot-border-color': theme.colors.game.slot.border || theme.colors.border.default,
+        '--slot-border-color-active': color,
+      } as React.CSSProperties}
       data-testid={`slot-${index}`}
       data-active={isWinning}
+      data-approaching="false"
+      data-wall-impact="none"
+      data-floor-impact="false"
+      data-slot-color={color}
     >
+      <style>
+        {`
+          /* Border color transitions controlled by data-approaching attribute */
+          .slot-container[data-approaching="false"] {
+            --slot-border-color: ${theme.colors.game.slot.border || theme.colors.border.default};
+          }
+          .slot-container[data-approaching="true"] {
+            --slot-border-color: ${color};
+          }
+
+          /* Wall impact flash animations - triggered by data-wall-impact attribute */
+          [data-wall-impact="left"] .slot-wall-impact-left {
+            animation: wallFlashLeft 200ms ease-out;
+          }
+          [data-wall-impact="right"] .slot-wall-impact-right {
+            animation: wallFlashRight 200ms ease-out;
+          }
+
+          /* Floor impact flash animation - triggered by data-floor-impact attribute */
+          [data-floor-impact="true"] .slot-floor-impact {
+            animation: floorFlash 200ms ease-out;
+          }
+
+          /* Keyframe animations for impact effects */
+          @keyframes wallFlashLeft {
+            0% {
+              opacity: 0;
+              transform: scaleY(0.5);
+            }
+            50% {
+              opacity: 1;
+              transform: scaleY(1);
+            }
+            100% {
+              opacity: 0;
+              transform: scaleY(0.8);
+            }
+          }
+
+          @keyframes wallFlashRight {
+            0% {
+              opacity: 0;
+              transform: scaleY(0.5);
+            }
+            50% {
+              opacity: 1;
+              transform: scaleY(1);
+            }
+            100% {
+              opacity: 0;
+              transform: scaleY(0.8);
+            }
+          }
+
+          @keyframes floorFlash {
+            0% {
+              opacity: 0;
+              transform: scaleX(0.5);
+            }
+            50% {
+              opacity: 1;
+              transform: scaleX(1);
+            }
+            100% {
+              opacity: 0;
+              transform: scaleX(0.8);
+            }
+          }
+        `}
+      </style>
       {/* Shine effect */}
       <div
         className="absolute top-0 left-0 right-0"
@@ -171,59 +228,39 @@ const SlotComponent = memo(function Slot({
         }}
       />
 
+      {/* Impact flash effects - controlled by data attributes */}
       {/* Wall impact flash - left */}
-      <AnimatePresence>
-        {wallImpact === 'left' && (
-          <AnimatedDiv
-            key={`left-impact-${index}-${leftImpactKeyRef.current}`}
-            className="absolute left-0 top-0 bottom-0 pointer-events-none"
-            style={{
-              width: '6px',
-              background: `linear-gradient(to right, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
-            }}
-            initial={{ opacity: 0, scaleY: 0.5 }}
-            animate={{ opacity: [0, 1, 0], scaleY: [0.5, 1, 0.8] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-          />
-        )}
-      </AnimatePresence>
+      <div
+        className="absolute left-0 top-0 bottom-0 pointer-events-none slot-wall-impact-left"
+        style={{
+          width: '6px',
+          background: `linear-gradient(to right, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
+          opacity: 0,
+          transform: 'scaleY(0.5)',
+        }}
+      />
 
       {/* Wall impact flash - right */}
-      <AnimatePresence>
-        {wallImpact === 'right' && (
-          <AnimatedDiv
-            key={`right-impact-${index}-${rightImpactKeyRef.current}`}
-            className="absolute right-0 top-0 bottom-0 pointer-events-none"
-            style={{
-              width: '6px',
-              background: `linear-gradient(to left, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
-            }}
-            initial={{ opacity: 0, scaleY: 0.5 }}
-            animate={{ opacity: [0, 1, 0], scaleY: [0.5, 1, 0.8] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-          />
-        )}
-      </AnimatePresence>
+      <div
+        className="absolute right-0 top-0 bottom-0 pointer-events-none slot-wall-impact-right"
+        style={{
+          width: '6px',
+          background: `linear-gradient(to left, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
+          opacity: 0,
+          transform: 'scaleY(0.5)',
+        }}
+      />
 
       {/* Floor impact flash */}
-      <AnimatePresence>
-        {floorImpact && (
-          <AnimatedDiv
-            key={`floor-impact-${index}-${floorImpactKeyRef.current}`}
-            className="absolute bottom-0 left-0 right-0 pointer-events-none"
-            style={{
-              height: '6px',
-              background: `linear-gradient(to top, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
-            }}
-            initial={{ opacity: 0, scaleX: 0.5 }}
-            animate={{ opacity: [0, 1, 0], scaleX: [0.5, 1, 0.8] }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-          />
-        )}
-      </AnimatePresence>
+      <div
+        className="absolute bottom-0 left-0 right-0 pointer-events-none slot-floor-impact"
+        style={{
+          height: '6px',
+          background: `linear-gradient(to top, ${color}ff 0%, ${color}aa 40%, transparent 100%)`,
+          opacity: 0,
+          transform: 'scaleX(0.5)',
+        }}
+      />
 
       {/* Prize display - icon-based for narrow slots, text for wider slots */}
       <div
@@ -354,5 +391,20 @@ const SlotComponent = memo(function Slot({
 // Display name for React DevTools
 SlotComponent.displayName = 'Slot';
 
-// Export the memoized component
-export { SlotComponent as Slot };
+/**
+ * Memoized Slot component - only re-renders when necessary
+ * PERFORMANCE: Static component with no state, animations controlled via data attributes
+ */
+export const Slot = memo(SlotComponent, (prev, next) => {
+  // Only re-render if core props changed
+  return (
+    prev.index === next.index &&
+    prev.prize === next.prize &&
+    prev.x === next.x &&
+    prev.width === next.width &&
+    prev.isWinning === next.isWinning &&
+    prev.prizeCount === next.prizeCount &&
+    prev.boardWidth === next.boardWidth &&
+    prev.comboBadgeNumber === next.comboBadgeNumber
+  );
+});

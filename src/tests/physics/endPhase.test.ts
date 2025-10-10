@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../../game/trajectory';
+import type { TrajectoryPoint } from '../../game/types';
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;
@@ -26,9 +27,9 @@ describe('End Phase Trajectory Analysis', () => {
       const lastPegRowY = BOARD_HEIGHT * 0.65;
 
       // Find frames after last peg row
-      const endPhaseFrames = trajectory.filter((p: any) => p.y >= lastPegRowY);
+      const endPhaseFrames = trajectory.filter((p: TrajectoryPoint) => p.y >= lastPegRowY);
       const afterLastPeg = endPhaseFrames[0];
-      const finalFrame = trajectory[trajectory.length - 1]!;
+      const finalFrame = trajectory[trajectory.length - 1]!
 
       // Calculate landed slot position
       const slotWidth = BOARD_WIDTH / SLOT_COUNT;

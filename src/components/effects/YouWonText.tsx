@@ -4,8 +4,8 @@
  * Premium text reveal with character-by-character animation
  */
 
+import { useMemo } from 'react';
 import { useTheme } from '../../theme';
-import './YouWonText.css';
 import { useAnimationDriver } from '../../theme/animationDrivers';
 
 export function YouWonText() {
@@ -16,13 +16,54 @@ export function YouWonText() {
   const { theme } = useTheme();
   const mainText = 'YOU WON!';
 
+  // Responsive font size - scales down for narrow viewports
+  const fontSize = useMemo(() => {
+    const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+    if (viewportWidth < 360) {
+      // Scale from 32px at 320px to 42px at 360px
+      return Math.max(32, Math.min(42, 32 + (viewportWidth - 320) * 0.25));
+    }
+    return 48; // Default size for >= 360px
+  }, []);
+
+  const letterSpacing = useMemo(() => {
+    return fontSize < 42 ? '2px' : '4px';
+  }, [fontSize]);
+
   return (
-    <div className="you-won-container">
-      <div className="you-won-text-container">
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '80px',
+        padding: '20px',
+        position: 'relative',
+      }}
+    >
+      <div
+        style={{
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '60px',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {/* Shadow layers for depth - Static positioning to prevent visible movement */}
         <AnimatedDiv
-          className="you-won-shadow-far"
-          style={{ transform: 'translateY(6px)' }}
+          style={{
+            position: 'absolute',
+            fontSize: `${fontSize}px`,
+            fontWeight: 900,
+            letterSpacing,
+            color: 'rgba(0, 0, 0, 0.08)',
+            zIndex: 0,
+            whiteSpace: 'nowrap',
+            transform: 'translateY(6px)',
+          }}
           initial={{ opacity: 0, scale: 1.2 }}
           animate={{
             opacity: 0.2,
@@ -37,8 +78,16 @@ export function YouWonText() {
         </AnimatedDiv>
 
         <AnimatedDiv
-          className="you-won-shadow-mid"
-          style={{ transform: 'translateY(3px)' }}
+          style={{
+            position: 'absolute',
+            fontSize: `${fontSize}px`,
+            fontWeight: 900,
+            letterSpacing,
+            color: 'rgba(0, 0, 0, 0.15)',
+            zIndex: 1,
+            whiteSpace: 'nowrap',
+            transform: 'translateY(3px)',
+          }}
           initial={{ opacity: 0, scale: 1.1 }}
           animate={{
             opacity: 0.3,
@@ -55,7 +104,14 @@ export function YouWonText() {
 
         {/* Main text with character animation */}
         <AnimatedDiv
-          className="you-won-main-text"
+          style={{
+            position: 'relative',
+            fontSize: `${fontSize}px`,
+            fontWeight: 900,
+            letterSpacing,
+            zIndex: 3,
+            whiteSpace: 'nowrap',
+          }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.2 }}
@@ -63,18 +119,22 @@ export function YouWonText() {
           {mainText.split('').map((char, index) => (
             <AnimatedSpan
               key={index}
-              className="you-won-char"
+              style={{
+                display: 'inline-block',
+                transformOrigin: 'center center',
+                position: 'relative',
+              }}
               initial={{
                 opacity: 0,
                 y: 30,
                 scale: 0.5,
-                rotateY: -90,
+                rotate: -90, // Using rotate instead of rotateY for better RN compatibility
               }}
               animate={{
                 opacity: 1,
                 y: 0,
                 scale: 1,
-                rotateY: 0,
+                rotate: 0,
               }}
               transition={{
                 duration: 0.6,
@@ -83,8 +143,9 @@ export function YouWonText() {
               }}
             >
               <span
-                className="you-won-char-inner"
                 style={{
+                  display: 'inline-block',
+                  position: 'relative',
                   color: theme.colors.primary.light,
                 }}
               >
@@ -92,9 +153,13 @@ export function YouWonText() {
 
                 {/* Character glow burst - Cross-platform: linear gradient instead of radial */}
                 <AnimatedSpan
-                  className="you-won-char-glow"
                   style={{
+                    position: 'absolute',
+                    inset: '-8px',
                     background: `linear-gradient(135deg, ${theme.colors.primary.main}33 0%, ${theme.colors.primary.main}22 40%, transparent 80%)`,
+                    borderRadius: '50%',
+                    pointerEvents: 'none',
+                    zIndex: -1,
                   }}
                   initial={{
                     opacity: 0,

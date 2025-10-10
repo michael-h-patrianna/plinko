@@ -29,10 +29,14 @@ const DevToolsStartScreenOverlay = lazy(() =>
 );
 
 // Type for the game state returned by usePlinkoGame
+// JUSTIFIED 'any' USAGE: Prize type is not imported to avoid circular dependencies
+// The actual type checking is done at the hook level where Prize type is available
 interface GameState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   prizes: Array<any>;
   state: string;
   _internal: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setWinningPrize: (prize: any) => void;
     setCurrentWinningIndex: (index: number) => void;
     regenerateTrajectoryForSlot: (targetSlotIndex: number) => void;

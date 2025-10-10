@@ -17,11 +17,22 @@ import {
   borderWidthTokens,
   spacingTokens,
 } from '../../theme/tokens';
+import { GradientText } from '../ui/GradientText';
 
 interface CountdownProps {
   onComplete: () => void;
   boardHeight?: number;
   pegRows?: number;
+}
+
+/**
+ * Extract color array from CSS gradient string
+ * If extraction fails, returns fallback colors
+ */
+function extractGradientColors(gradientString: string, fallback: string[]): string[] {
+  // Match hex colors, rgb/rgba, or named colors from gradient string
+  const colorMatches = gradientString.match(/#[0-9A-Fa-f]{6}|#[0-9A-Fa-f]{3}|rgba?\([^)]+\)/g);
+  return colorMatches && colorMatches.length > 0 ? colorMatches : fallback;
 }
 
 export function Countdown({ onComplete, boardHeight = sizeTokens.board.height, pegRows = 10 }: CountdownProps) {
@@ -146,23 +157,26 @@ export function Countdown({ onComplete, boardHeight = sizeTokens.board.height, p
 
         {/* Main number */}
         <AnimatedDiv
-          className="text-9xl font-black relative z-10"
-          style={{
-            /* RN-compatible: removed textShadow, using gradient for visual impact */
-            background:
-              count === 0
-                ? theme.gradients.buttonSuccess ||
-                  `linear-gradient(135deg, ${theme.colors.status.success} 0%, ${theme.colors.status.success} 100%)`
-                : theme.gradients.prizeYellow || theme.gradients.ballMain,
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
+          className="relative z-10"
           initial={{ y: spacingTokens[8] }}
           animate={{ y: 0 }}
           transition={{ duration: animationTokens.duration.medium / 1000, ease: [0.22, 1, 0.36, 1] }}
         >
-          {displayText}
+          <GradientText
+            gradient={{
+              colors:
+                count === 0
+                  ? [theme.colors.status.success, theme.colors.status.success]
+                  : extractGradientColors(
+                      theme.gradients.prizeYellow || theme.gradients.ballMain,
+                      [theme.colors.game.ball.primary, theme.colors.game.ball.primary]
+                    ),
+              angle: 135,
+            }}
+            className="text-9xl font-black"
+          >
+            {displayText}
+          </GradientText>
         </AnimatedDiv>
 
         {/* Particle burst */}

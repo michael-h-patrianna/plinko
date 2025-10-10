@@ -288,14 +288,14 @@ describe('PrizeProvider', () => {
 
     it('returns normalized error from fixture provider on validation failure', async () => {
       // Test intentionally uses invalid data to verify error handling
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const invalidFixture: any = {
+      const invalidFixture = {
         prizes: [],
         winningIndex: 0,
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      const provider = createFixturePrizeProvider(invalidFixture);
+      // Type assertion to bypass type checking for intentional error test
+      // We intentionally pass invalid data to test error handling
+      const provider = createFixturePrizeProvider(invalidFixture as unknown as Parameters<typeof createFixturePrizeProvider>[0]);
 
       await expect(provider.load()).rejects.toThrow(Error);
     });

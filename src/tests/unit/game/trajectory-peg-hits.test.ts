@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { generateTrajectory } from '../../../game/trajectory';
+import type { TrajectoryPoint } from '../../../game/types';
 
 const VIEWPORT_SIZES = [320, 360, 375, 414];
 
@@ -20,10 +21,10 @@ describe('Trajectory Peg Hit Recording', () => {
         });
 
         // Count frames with peg hits
-        const framesWithPegHits = trajectory.filter((point: any) => point.pegHit === true);
+        const framesWithPegHits = trajectory.filter((point: TrajectoryPoint) => point.pegHit === true);
         const uniquePegsHit = new Set<string>();
 
-        framesWithPegHits.forEach((point: any) => {
+        framesWithPegHits.forEach((point: TrajectoryPoint) => {
           if (point.pegHitRow !== undefined && point.pegHitCol !== undefined) {
             const pegKey = `${point.pegHitRow}-${point.pegHitCol}`;
             uniquePegsHit.add(pegKey);
@@ -61,7 +62,7 @@ describe('Trajectory Peg Hit Recording', () => {
         });
 
         // Check each frame has the required fields
-        trajectory.forEach((point: any) => {
+        trajectory.forEach((point: TrajectoryPoint) => {
           expect(point).toHaveProperty('pegHit');
           expect(typeof point.pegHit).toBe('boolean');
 
@@ -123,7 +124,7 @@ describe('Trajectory Peg Hit Recording', () => {
         });
 
         // Each frame should only hit ONE peg (or none)
-        trajectory.forEach((point: any) => {
+        trajectory.forEach((point: TrajectoryPoint) => {
           if (point.pegHit === true) {
             // Should have exactly one peg defined
             expect(point.pegHitRow).toBeDefined();
@@ -155,7 +156,7 @@ describe('Trajectory Peg Hit Recording', () => {
 
         const pegHits: Array<{ frame: number; row: number; col: number }> = [];
 
-        trajectory.forEach((point: any, frameIndex: number) => {
+        trajectory.forEach((point: TrajectoryPoint, frameIndex: number) => {
           if (
             point.pegHit === true &&
             point.pegHitRow !== undefined &&

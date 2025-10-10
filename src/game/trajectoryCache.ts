@@ -11,6 +11,7 @@
  */
 
 import type { TrajectoryPoint, TrajectoryCache } from './types';
+import { sizeTokens } from '../theme/tokens';
 
 /**
  * Generate pre-calculated cache for a trajectory
@@ -40,13 +41,13 @@ export function generateTrajectoryCache(trajectory: TrajectoryPoint[]): Trajecto
     const speed = Math.sqrt(vx * vx + vy * vy);
     speeds[i] = speed;
 
-    // Calculate trail length based on speed
+    // Calculate trail length based on speed (capped at maxTrailLength token)
     if (speed < 100) {
       trailLengths[i] = 10;
     } else if (speed < 300) {
       trailLengths[i] = 16;
     } else {
-      trailLengths[i] = 20;
+      trailLengths[i] = sizeTokens.ball.maxTrailLength;
     }
 
     // Calculate squash/stretch scales

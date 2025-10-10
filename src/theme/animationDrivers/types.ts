@@ -38,7 +38,7 @@ export interface AnimationConfig {
   /** Transition configuration for this animation */
   transition?: TransitionConfig;
   /** Array of values for keyframe animations and other properties */
-  [key: string]: number | string | number[] | string[] | TransitionConfig | undefined;
+  [key: string]: number | string | number[] | string[] | TransitionConfig | boolean | undefined;
 }
 
 /**
@@ -90,7 +90,7 @@ export interface TransitionConfig {
   /** Keyframe timing array */
   times?: number[];
   /** Per-property transition overrides and other transition properties */
-  [key: string]: number | number[] | string | SpringConfig | TransitionConfig | undefined;
+  [key: string]: number | number[] | string | boolean | SpringConfig | TransitionConfig | undefined;
 }
 
 /**
@@ -129,11 +129,18 @@ export interface AnimationDriver {
    * Web: motion.div, motion.span, etc.
    * React Native: MotiView, MotiText, etc.
    *
-   * NOTE: Returns platform-specific animated component (Framer Motion or Moti)
-   * Type is intentionally 'any' to preserve full platform API compatibility
+   * JUSTIFIED 'any' USAGE: This must return 'any' because:
+   * 1. Return type is platform-specific (Framer Motion on web, Moti on React Native)
+   * 2. Each platform has different props APIs that cannot be unified in a type-safe way
+   * 3. TypeScript cannot represent union of component types from different libraries
+   * 4. Using 'unknown' would break JSX usage (cannot use unknown as JSX element)
+   * 5. This is an abstraction boundary where type safety is intentionally relaxed
+   *
+   * Type safety is enforced at usage sites through component prop validation.
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any;
 
   /**

@@ -1,303 +1,85 @@
-# Dev Tools Documentation
+# Developer Tools
 
 ## Overview
 
-This document describes the development tooling available in the Plinko application and how to configure them for different environments.
+The developer tooling lives under `src/dev-tools/` and provides guarded controls for QA, prototyping, and local debugging. The menu is feature-flagged through `AppConfigProvider` so production builds remain clean by default. This guide explains the available controls, how they integrate with the rest of the app, and how to enable them in different environments.
 
-## Available Dev Tools
+## Feature summary
 
-### 1. DevToolsMenu
-**Location**: `src/dev-tools/components/DevToolsMenu.tsx`
+The main entry point is `DevToolsLoader`, a lazy-loaded wrapper that renders `DevToolsMenu` only when the `devToolsEnabled` flag is `true`.
 
-A comprehensive settings menu for local development and testing that provides:
+`DevToolsMenu` exposes four control groups:
 
-- **Theme Switching**: Test different visual themes instantly
-- **Viewport Simulation**: Simulate different mobile device sizes (iPhone SE, Galaxy S8, iPhone 12, iPhone 14 Pro Max)
-- **Choice Mechanic Toggle**: Switch between different game mechanics (Classic vs Drop Position)
+1. **Theme switching** – cycles through registered themes (`src/theme/themes/*`). Changes are persisted via `storageAdapter` so the selection survives reloads.
+2. **Choice mechanic toggle** – switches between the classic deterministic mode (`none`) and the drop-position mechanic (`drop-position`). When drop-position is enabled, `useGameState` pauses the countdown and waits for the user to select a drop zone before dropping the ball.
+3. **Performance mode selector** – surfaces the same `PerformanceMode` values as `AppConfig` (`high-quality`, `balanced`, `power-saving`). The selection updates the config provider, which feeds into the ball animation driver and win effects. See [`docs/power-saving-mode.md`](./power-saving-mode.md).
+4. **Viewport presets** – desktop-only buttons that lock the game container to common device widths (iPhone SE, Galaxy S8, iPhone 12, iPhone 14 Pro Max). During gameplay the viewport selector is disabled to prevent geometry mismatches mid-drop.
 
-**Features**:
-- Gear icon button in bottom-right corner
-- Popup menu with organized sections
-- Disabled state during gameplay to prevent physics conflicts
-- Desktop-only viewport controls (mobile uses actual device width)
+The menu itself is animated using the cross-platform animation driver (`useAnimationDriver`). All motion primitives comply with the same constraints as the production UI (transforms + opacity only).
 
-### 2. ThemeSelector
-**Location**: `src/dev-tools/components/ThemeSelector.tsx`
+## Enabling the tools
 
-Standalone theme selection component for testing visual themes.
+Dev tools are controlled by `featureFlags.devToolsEnabled` in `AppConfig`:
 
-### 3. ViewportSelector
-**Location**: `src/dev-tools/components/ViewportSelector.tsx`
+```ts
+import { AppConfigProvider, createDefaultAppConfig } from '@/config/appConfig';
 
-Standalone viewport size selection for device simulation.
+const config = createDefaultAppConfig();
+// Toggle flag as needed
+config.featureFlags.devToolsEnabled = true;
 
-## Configuration
-
-### Environment Variables
-
-Dev tools are controlled by feature flags that respect environment variables:
-
-#### Development Mode (default)
-```bash
-# Dev tools are ENABLED by default
-npm run dev
+<AppConfigProvider value={config}>
+  <App />
+</AppConfigProvider>
 ```
 
-#### Production Mode (default)
-```bash
-# Dev tools are DISABLED by default
-npm run build
-npm run preview
-```
+### Default behaviour
 
-#### Production with Dev Tools Enabled (QA/Staging)
-```bash
-# Create .env.production.local file
-echo "VITE_ENABLE_DEV_TOOLS=true" > .env.production.local
+| Build type | Flag default | Notes |
+| --- | --- | --- |
+| `npm run dev` | `true` | Menu is visible immediately. |
+| `npm run build` | `false` | Menu is stripped from the main bundle unless re-enabled via environment variable. |
+| Production with `VITE_ENABLE_DEV_TOOLS=true` | `true` | Use for QA/staging bundles. |
 
-# Build and preview
-npm run build
-npm run preview
-```
-
-### Feature Flags
-
-Dev tools are controlled by the `featureFlags.devToolsEnabled` flag in `src/config/appConfig.ts`:
-
-```typescript
-interface FeatureFlags {
-  devToolsEnabled: boolean;
-  dropPositionMechanicEnabled: boolean;
-}
-```
-
-**Default Behavior**:
-- **Development** (`npm run dev`): `devToolsEnabled = true`
-- **Production** (`npm run build`): `devToolsEnabled = false`
-- **Production with override**: `devToolsEnabled = VITE_ENABLE_DEV_TOOLS === 'true'`
-
-## Implementation Architecture
-
-### Lazy Loading
-
-Dev tools are lazy-loaded to ensure they don't bloat the production bundle when disabled:
-
-```typescript
-// src/dev-tools/DevToolsLoader.tsx
-const DevToolsMenu = lazy(() =>
-  import('./components/DevToolsMenu').then((module) => ({
-    default: module.DevToolsMenu,
-  }))
-);
-```
-
-**Benefits**:
-1. Separate chunk created at build time
-2. Only loaded when feature flag is enabled
-3. Tree-shaken from production builds when flag is disabled
-4. Wrapped in Suspense boundary for loading states
-
-### Conditional Rendering
-
-Dev tools check the feature flag before rendering:
-
-```typescript
-export function DevToolsLoader(props: DevToolsLoaderProps) {
-  const { featureFlags } = useAppConfig();
-
-  if (!featureFlags.devToolsEnabled) {
-    return null; // Don't render anything
-  }
-
-  return (
-    <Suspense fallback={null}>
-      <DevToolsMenu {...props} />
-    </Suspense>
-  );
-}
-```
-
-## Usage in Application Code
-
-### Correct Usage
-
-Always import `DevToolsLoader` instead of `DevToolsMenu` directly:
-
-```typescript
-// ✅ CORRECT
-import { DevToolsLoader } from './dev-tools';
-
-function App() {
-  return <DevToolsLoader {...props} />;
-}
-```
-
-### Incorrect Usage
-
-Don't import `DevToolsMenu` directly in production code:
-
-```typescript
-// ❌ WRONG - bypasses lazy loading and feature flags
-import { DevToolsMenu } from './dev-tools/components/DevToolsMenu';
-
-function App() {
-  return <DevToolsMenu {...props} />;
-}
-```
-
-## QA Environment Setup
-
-For staging/QA environments where you want dev tools in a production build:
-
-### Option 1: Environment File
-
-Create `.env.production.local` (gitignored):
-```bash
-VITE_ENABLE_DEV_TOOLS=true
-```
-
-### Option 2: Build Command
+Set the environment variable via CLI or `.env.production.local`:
 
 ```bash
+# One-off build
 VITE_ENABLE_DEV_TOOLS=true npm run build
+
+# Persist for local QA builds
+printf "VITE_ENABLE_DEV_TOOLS=true\n" > .env.production.local
 ```
 
-### Option 3: CI/CD Configuration
+## Integration tips
 
-In your CI/CD pipeline (GitHub Actions, etc.):
-```yaml
-- name: Build for QA
-  run: npm run build
-  env:
-    VITE_ENABLE_DEV_TOOLS: true
-```
-
-## Bundle Analysis
-
-### Verify Dev Tools Exclusion
-
-To verify dev tools are excluded from production builds:
-
-```bash
-# Build for production
-npm run build
-
-# Check the dist folder
-ls -lh dist/assets/
-
-# Dev tools should be in a separate chunk (only loaded when flag is enabled)
-# Example: DevToolsMenu-abc123.js
-```
-
-### Expected Bundle Behavior
-
-**Development Build**:
-- Dev tools chunk is loaded immediately
-- DevToolsMenu visible in bottom-right corner
-
-**Production Build (dev tools disabled)**:
-- Dev tools chunk is NOT loaded
-- No gear icon visible
-- Smaller main bundle size
-
-**Production Build (dev tools enabled via env var)**:
-- Dev tools chunk is loaded
-- DevToolsMenu visible in bottom-right corner
-- Slightly larger bundle, but still code-split
+- Always import `DevToolsLoader` instead of `DevToolsMenu` directly. The loader handles lazy loading and feature-flag checks.
+- `DevToolsMenu` props come from `usePlinkoGame` and config providers: viewport width, choice mechanic setter, and performance setter.
+- When adding new dev-only controls, keep them in `src/dev-tools/components/` and extend the menu sections. Double-check the RN compatibility of any styling (no shadows/filters).
+- Expose new controls by adding optional callbacks/values to `DevToolsMenuProps` and wiring them from `DevToolsLoader` or higher-level components (`App.tsx`).
 
 ## Testing
 
-### Manual Testing
+Manual QA checklist:
 
-1. **Development Mode**:
-   ```bash
-   npm run dev
-   ```
-   - Verify gear icon appears in bottom-right
-   - Verify all dev tools functions work
+- Toggle each theme and ensure the selection is persisted after a reload.
+- Switch performance modes and confirm the win animations/ball trail respond accordingly.
+- Enable drop-position mechanic, verify countdown pauses, and confirm the chosen drop zone influences the trajectory.
+- Attempt to change viewport during a drop; the selector should be disabled with a warning.
 
-2. **Production Mode (disabled)**:
-   ```bash
-   npm run build
-   npm run preview
-   ```
-   - Verify NO gear icon appears
-   - Verify game works normally
+Automation ideas:
 
-3. **Production Mode (enabled)**:
-   ```bash
-   VITE_ENABLE_DEV_TOOLS=true npm run build
-   npm run preview
-   ```
-   - Verify gear icon appears
-   - Verify all dev tools functions work
+- Component tests with `renderWithProviders` to verify the menu renders the expected sections when the flag is enabled.
+- Playwright smoke tests to ensure the flag gating works (menu absent in production preview, present when env var is set).
 
-### Automated Testing
+## Security & deployment
 
-Dev tools can be tested directly in unit tests:
+- Dev tools never expose secrets or mutate production-only state.
+- Keep the flag disabled for end-user builds unless QA explicitly needs it.
+- When the menu is disabled, the lazy-loaded chunk is not requested, so bundle size for production remains unaffected.
 
-```typescript
-import { DevToolsMenu } from './dev-tools';
+## Related documentation
 
-describe('DevToolsMenu', () => {
-  it('renders theme selector', () => {
-    // Test implementation
-  });
-});
-```
-
-## Security Considerations
-
-1. **No Sensitive Data**: Dev tools should never expose sensitive information
-2. **Production Disabled**: Always disabled by default in production
-3. **Explicit Override**: Requires explicit environment variable to enable in production
-4. **No Authentication Bypass**: Dev tools don't provide access to restricted features
-
-## Future Enhancements
-
-Potential future additions to dev tooling:
-
-- Performance profiler overlay
-- Physics debug visualization
-- Network request inspector
-- State machine visualization
-- Error log viewer
-- Local storage inspector
-
-## Troubleshooting
-
-### Dev Tools Not Appearing in Development
-
-**Issue**: Gear icon doesn't appear when running `npm run dev`
-
-**Solution**:
-1. Check console for errors
-2. Verify `AppConfigProvider` is wrapping the app
-3. Clear browser cache and reload
-4. Restart dev server
-
-### Dev Tools Appearing in Production
-
-**Issue**: Dev tools visible in production build
-
-**Solution**:
-1. Verify you're building in production mode (`npm run build`)
-2. Check for `VITE_ENABLE_DEV_TOOLS=true` in environment
-3. Remove any `.env.production.local` files
-4. Clear `dist` folder and rebuild
-
-### Lazy Loading Errors
-
-**Issue**: Errors related to dynamic imports
-
-**Solution**:
-1. Ensure Vite config supports dynamic imports (default)
-2. Check network tab for 404s on chunk files
-3. Verify correct base URL in Vite config
-4. Clear build cache and rebuild
-
-## Related Documentation
-
-- [Build Configuration](./build-configuration.md) - Build process and optimization
-- [Environment Variables](./environment-variables.md) - All available env vars
-- [Testing Guide](./testing-guide.md) - Testing dev tools and features
+- [`docs/architecture.md`](./architecture.md) – project layout and layering, including dev tools boundaries.
+- [`docs/power-saving-mode.md`](./power-saving-mode.md) – details on performance presets surfaced in the menu.
+- [`docs/theming.md`](./theming.md) – explains how the theme switcher works under the hood.

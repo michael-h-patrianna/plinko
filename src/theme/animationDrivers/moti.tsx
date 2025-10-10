@@ -92,6 +92,7 @@ class MotiDriver implements AnimationDriver {
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     _component: T
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     // Placeholder: return a basic div
     // This will throw an error if used in actual RN context

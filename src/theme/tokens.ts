@@ -10,6 +10,7 @@
  * All values in this file maintain cross-platform compatibility for future React Native port.
  */
 
+import type { CSSProperties } from 'react';
 import { hexToRgba } from '../utils/formatting/colorUtils';
 
 // Re-export for backwards compatibility
@@ -423,6 +424,12 @@ export const sizeTokens = {
     glowMid: 24,
     glowOuter: 36,
     trail: 8, // Half the ball size - clearly distinguishable from ball
+    /**
+     * Maximum trail length - Pool size for pre-rendered trail elements
+     * This determines the maximum number of trail points that can be rendered simultaneously.
+     * Used by BallAnimationDriver to create a fixed pool of trail divs that are recycled.
+     */
+    maxTrailLength: 20,
   },
 
   // Peg sizes
@@ -570,6 +577,159 @@ export const componentTokens = {
 } as const;
 
 // ===========================
+// LAYOUT TOKENS
+// ===========================
+
+/**
+ * Layout-specific token collections for container and positioning patterns.
+ * These tokens centralize layout values used across the application.
+ */
+export const layoutTokens = {
+  /**
+   * Main container layout settings for different viewport sizes
+   */
+  container: {
+    /** Padding for mobile viewports */
+    mobilePadding: spacingTokens[0],
+    /** Padding for desktop viewports */
+    desktopPadding: spacingTokens[4],
+  },
+
+  /**
+   * DevTools positioning and sizing configuration
+   */
+  devTools: {
+    /** Fixed position bottom offset */
+    bottom: 0,
+    /** Fixed position right offset */
+    right: 0,
+    /** z-index for DevTools overlay */
+    zIndex: 9999,
+    /** Width setting for DevTools container */
+    width: '100%',
+    /** Base value for desktop maxWidth calculation (used in calc(50vw + Xpx)) */
+    desktopMaxWidthBase: 400,
+  },
+
+  /**
+   * Game container layout settings
+   */
+  gameContainer: {
+    /** Margin setting for centered layout */
+    margin: '0 auto',
+    /** Maximum width for mobile viewports */
+    mobileMaxWidth: 414,
+    /** Height setting for mobile viewports */
+    mobileHeight: '100vh',
+    /** Display mode */
+    display: 'flex',
+    /** Flex direction */
+    flexDirection: 'column' as const,
+    /** Justify content for mobile */
+    mobileJustifyContent: 'center' as const,
+    /** Transition duration for width changes (milliseconds) */
+    transitionDuration: animationTokens.duration.medium,
+    /** Transition easing function */
+    transitionEasing: animationTokens.easing.easeInOut,
+  },
+} as const;
+
+// ===========================
+// COMMON STYLE PATTERNS
+// ===========================
+
+/**
+ * Reusable style pattern tokens for commonly used inline styles.
+ * These patterns combine base tokens to reduce inline style verbosity.
+ */
+export const stylePatternTokens = {
+  /**
+   * Flexbox centering patterns
+   */
+  flexCenter: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as const,
+
+  flexCenterColumn: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as const,
+
+  flexStart: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'flex-start',
+  } as const,
+
+  flexBetween: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  } as const,
+
+  /**
+   * Absolute positioning patterns
+   */
+  absoluteFill: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  } as const,
+
+  absoluteCenter: {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+  } as const,
+
+  /**
+   * Common overlay/backdrop styles
+   */
+  overlay: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none' as const,
+  },
+
+  /**
+   * Text truncation patterns
+   */
+  textTruncate: {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  } as const,
+
+  textClamp: (lines: number) => ({
+    display: '-webkit-box',
+    WebkitLineClamp: lines,
+    WebkitBoxOrient: 'vertical' as const,
+    overflow: 'hidden',
+  }),
+
+  /**
+   * Transform origins for animations
+   */
+  transformOrigins: {
+    center: 'center center',
+    top: 'center top',
+    bottom: 'center bottom',
+    left: 'left center',
+    right: 'right center',
+  } as const,
+} as const;
+
+// ===========================
 // HELPER FUNCTIONS
 // ===========================
 
@@ -601,6 +761,61 @@ export function getBorderRadius(key: keyof typeof borderRadiusTokens, web: boole
 }
 
 // ===========================
+// LAYOUT HELPER FUNCTIONS
+// ===========================
+
+/**
+ * Get container padding based on viewport type
+ * @param isMobile - Whether the viewport is mobile
+ * @returns Padding value (0 for mobile, 1rem for desktop)
+ */
+export function getContainerPadding(isMobile: boolean): string {
+  return isMobile ? '0' : '1rem';
+}
+
+/**
+ * Get DevTools container styles based on viewport type
+ * @param isMobile - Whether the viewport is mobile
+ * @param maxWidthBase - Base value for desktop maxWidth calculation (default: 400)
+ * @returns Style object for DevTools container
+ */
+export function getDevToolsStyles(isMobile: boolean, maxWidthBase: number = layoutTokens.devTools.desktopMaxWidthBase): CSSProperties {
+  return {
+    position: 'fixed',
+    bottom: layoutTokens.devTools.bottom,
+    right: layoutTokens.devTools.right,
+    zIndex: layoutTokens.devTools.zIndex,
+    maxWidth: isMobile ? undefined : `calc(50vw + ${maxWidthBase}px)`,
+    width: layoutTokens.devTools.width,
+    pointerEvents: 'none',
+  };
+}
+
+/**
+ * Get game container styles based on viewport and board settings
+ * @param isMobile - Whether the viewport is mobile
+ * @param lockedBoardWidth - The locked board width in pixels
+ * @param isViewportLocked - Whether the viewport is locked (disables transition)
+ * @returns Style object for game container
+ */
+export function getGameContainerStyles(
+  isMobile: boolean,
+  lockedBoardWidth: number,
+  isViewportLocked: boolean
+): CSSProperties {
+  return {
+    width: isMobile ? '100%' : `${lockedBoardWidth}px`,
+    margin: layoutTokens.gameContainer.margin,
+    maxWidth: isMobile ? `${layoutTokens.gameContainer.mobileMaxWidth}px` : undefined,
+    height: isMobile ? layoutTokens.gameContainer.mobileHeight : undefined,
+    display: layoutTokens.gameContainer.display,
+    flexDirection: layoutTokens.gameContainer.flexDirection,
+    justifyContent: isMobile ? layoutTokens.gameContainer.mobileJustifyContent : undefined,
+    transition: isViewportLocked ? 'none' : `width ${layoutTokens.gameContainer.transitionDuration}ms ${layoutTokens.gameContainer.transitionEasing}`,
+  };
+}
+
+// ===========================
 // TYPE EXPORTS
 // ===========================
 
@@ -617,3 +832,5 @@ export type SizeToken = typeof sizeTokens;
 export type BreakpointToken = typeof breakpointTokens;
 export type SemanticToken = typeof semanticTokens;
 export type ComponentToken = typeof componentTokens;
+export type LayoutToken = typeof layoutTokens;
+export type StylePatternToken = typeof stylePatternTokens;

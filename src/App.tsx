@@ -19,10 +19,12 @@ import { PrizeReveal } from './components/screens/PrizeReveal';
 import { StartScreen } from './components/screens/StartScreen';
 import { DevToolsLoader, type ChoiceMechanic } from './dev-tools';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
+import { useAppUIState } from './hooks/useAppUIState';
 import { ThemeProvider, themes, useTheme } from './theme';
-import { dimensionsAdapter, deviceInfoAdapter } from './utils/platform';
 import { useAnimationDriver } from './theme/animationDrivers';
-import { ANIMATION_DURATION, VIEWPORT, LAYOUT } from './constants';
+import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from './theme/tokens';
+import { LAYOUT } from './constants';
+import { prewarmTrailCache } from './animation/trailOptimization';
 
 /**
  * Main application content component
@@ -40,11 +42,7 @@ function AppContent({
 
   const { theme } = useTheme();
   const { showToast } = useToast();
-  const [isMobile, setIsMobile] = useState(false);
-  const [viewportWidth, setViewportWidth] = useState(375);
-  const [lockedBoardWidth, setLockedBoardWidth] = useState(375);
-  const [shakeActive, setShakeActive] = useState(false);
-  const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('none');
+  const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('drop-position');
 
   // Error handlers for toast notifications
   const handleGameBoardError = useCallback(() => {
@@ -63,9 +61,12 @@ function AppContent({
     });
   }, [showToast]);
 
-  // Use game hook with the locked board width
+  // Track board width for game initialization
+  const [boardWidthForGame, setBoardWidthForGame] = useState(375);
+
+  // Use game hook
   const gameState = usePlinkoGame({
-    boardWidth: lockedBoardWidth,
+    boardWidth: boardWidthForGame,
     boardHeight: 500,
     pegRows: 10,
     choiceMechanic,
@@ -80,6 +81,7 @@ function AppContent({
     trajectory,
     trajectoryCache,
     frameStore,
+    currentFrameRef,
     getBallPosition,
     getCurrentTrajectoryPoint,
     startGame,
@@ -87,100 +89,73 @@ function AppContent({
     completeCountdown,
     claimPrize,
     resetGame,
+    onLandingComplete,
     canClaim,
     isLoadingPrizes,
     prizeLoadError,
   } = gameState;
 
-  // Inline viewport management using platform adapters
+  // Initialize UI state with viewport and shake management
+  const uiState = useAppUIState({
+    gameState: state,
+    selectedPrize,
+    onViewportChangeRequiresReset: (newWidth) => {
+      setBoardWidthForGame(newWidth);
+      if (
+        state === 'ready' ||
+        state === 'revealed' ||
+        state === 'claimed'
+      ) {
+        resetGame();
+      }
+    },
+  });
+
+  const { isMobile, viewportWidth, lockedBoardWidth, isViewportLocked, shakeActive } = uiState;
+
+  // Sync board width with locked board width
   useEffect(() => {
-    const checkMobile = () => {
-      const isMobileUA = deviceInfoAdapter.isMobileDevice();
-      const isTouchDevice = deviceInfoAdapter.isTouchDevice();
-      const width = dimensionsAdapter.getWidth();
-      return isMobileUA || (isTouchDevice && width <= 768);
-    };
-    setIsMobile(checkMobile());
-  }, []);
+    setBoardWidthForGame(lockedBoardWidth);
+  }, [lockedBoardWidth]);
 
-  useEffect(() => {
-    if (isMobile) {
-      const updateMobileWidth = () => {
-        const width = Math.min(dimensionsAdapter.getWidth(), VIEWPORT.MAX_MOBILE);
-        setViewportWidth(width);
-        setLockedBoardWidth(width);
-      };
-      updateMobileWidth();
-      const cleanup = dimensionsAdapter.addChangeListener(() => {
-        updateMobileWidth();
-      });
-      return cleanup;
-    }
-  }, [isMobile]);
+  // Memoize computed style objects to prevent recreation on every render
+  const devToolsContainerStyle = useMemo(
+    () => getDevToolsStyles(isMobile, LAYOUT.DESKTOP_MAX_WIDTH_BASE),
+    [isMobile]
+  );
 
-  useEffect(() => {
-    if (state === 'dropping') {
-      setLockedBoardWidth(viewportWidth);
-    }
-  }, [state, viewportWidth]);
+  const gameContainerStyle = useMemo(
+    () => getGameContainerStyles(isMobile, lockedBoardWidth, isViewportLocked),
+    [isMobile, lockedBoardWidth, isViewportLocked]
+  );
 
-  // Trigger screen shake when ball lands on a winning prize (not no_win)
-  useEffect(() => {
-    const isLanded = state === 'landed';
-    const isIdle = state === 'idle';
-    const isWin = selectedPrize && selectedPrize.type !== 'no_win';
-
-    if (isLanded && isWin) {
-      setShakeActive(true);
-      const timer = setTimeout(() => setShakeActive(false), ANIMATION_DURATION.SLOW);
-      return () => clearTimeout(timer);
-    } else if (isIdle) {
-      // Reset shake state when returning to start screen
-      setShakeActive(false);
-    }
-  }, [state, selectedPrize]);
-
-  const isViewportLocked = state === 'countdown' || state === 'dropping' || state === 'landed';
+  const containerPadding = useMemo(() => getContainerPadding(isMobile), [isMobile]);
 
   /**
    * Handles viewport width changes when user selects different device size
    * Resets game if viewport changes during certain states to ensure physics accuracy
+   * PERFORMANCE: Memoized to prevent DevToolsLoader re-renders on every App render
    * @param newWidth - The new viewport width in pixels
    */
-  const handleViewportChange = (newWidth: number) => {
-    const canChange =
-      state === 'idle' || state === 'ready' || state === 'revealed' || state === 'claimed';
-    if (canChange) {
-      setViewportWidth(newWidth);
-      if (state === 'ready' || state === 'revealed' || state === 'claimed') {
-        setLockedBoardWidth(newWidth);
-        resetGame();
-      } else {
-        setLockedBoardWidth(newWidth);
-      }
-    }
-  };
+  const handleViewportChange = useCallback(
+    (newWidth: number) => {
+      const shouldReset =
+        state === 'ready' || state === 'revealed' || state === 'claimed';
+      uiState.handleViewportChange(newWidth, shouldReset);
+    },
+    [state, uiState]
+  );
 
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
       style={{
         background: theme.gradients.backgroundMain,
-        padding: isMobile ? '0' : '1rem',
+        padding: containerPadding,
       }}
     >
       {/* DEV TOOLS - Lazy loaded and conditionally rendered based on feature flag */}
-      <div
-        style={{
-          position: 'fixed',
-          bottom: 0,
-          right: 0,
-          zIndex: 9999,
-          maxWidth: isMobile ? undefined : `calc(50vw + ${LAYOUT.DESKTOP_MAX_WIDTH_BASE}px)`,
-          width: '100%',
-          pointerEvents: 'none',
-        }}
-      >
+      <div style={devToolsContainerStyle}>
         <div style={{ pointerEvents: 'auto' }}>
           <DevToolsLoader
             viewportWidth={viewportWidth}
@@ -198,18 +173,7 @@ function AppContent({
 
       {/* Game container with screen shake */}
   <ScreenShake active={shakeActive} intensity="high" duration={400}>
-        <div
-          style={{
-            width: isMobile ? '100%' : `${lockedBoardWidth}px`,
-            margin: '0 auto',
-            maxWidth: isMobile ? `${VIEWPORT.MAX_MOBILE}px` : undefined,
-            height: isMobile ? '100vh' : undefined,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: isMobile ? 'center' : undefined,
-            transition: isViewportLocked ? 'none' : 'width 0.3s ease-in-out',
-          }}
-        >
+        <div style={gameContainerStyle}>
           <PopupContainer isMobileOverlay={isMobile}>
             {/* Start screen overlay with smooth exit */}
             <PrizeErrorBoundary onError={handlePrizeError}>
@@ -240,6 +204,7 @@ function AppContent({
                       trajectory={trajectory}
                       trajectoryCache={trajectoryCache}
                       frameStore={frameStore}
+                      currentFrameRef={currentFrameRef}
                       getBallPosition={getBallPosition}
                       getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
                       boardWidth={lockedBoardWidth}
@@ -248,6 +213,7 @@ function AppContent({
                       ballState={state}
                       isSelectingPosition={state === 'selecting-position'}
                       onPositionSelected={selectDropPosition}
+                      onLandingComplete={onLandingComplete}
                     />
                   )}
               </AnimatePresence>
@@ -301,6 +267,12 @@ function AppContent({
  */
 export function App() {
   const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('high-quality');
+
+  // Pre-warm trail optimization cache on app initialization
+  // This eliminates first-frame computation cost by pre-computing all trail lookup tables (1-20 points)
+  useEffect(() => {
+    prewarmTrailCache(20);
+  }, []);
 
   // Memoize config object to prevent unnecessary re-renders when performanceMode hasn't changed
   const config = useMemo(() => ({ performance: { mode: performanceMode } }), [performanceMode]);

@@ -1,4 +1,5 @@
 import { createDefaultPrizeProvider, type PrizeProvider } from '../game/prizeProvider';
+import { sizeTokens } from '../theme/tokens';
 
 export interface FeatureFlags {
   /** Controls whether developer tooling renders in production bundles. */
@@ -30,12 +31,20 @@ export interface PerformanceConfig {
   overrides?: {
     /** Animation frame rate (FPS). Default: 60 for high-quality, 30 for power-saving */
     fps?: number;
+    /** FPS cap for ball drop animation (30 or 60). Default: 60 */
+    fpsCap?: 30 | 60;
     /** Show ball trail effect. Default: true for high-quality, false for power-saving */
     showTrail?: boolean;
+    /** Maximum trail length (number of trail points). Default: 20 */
+    maxTrailLength?: number;
     /** Particle count multiplier (0-1). Default: 1 for high-quality, 0.5 for power-saving */
     particleMultiplier?: number;
     /** Enable infinite animations. Default: true for high-quality, false for power-saving */
     enableInfiniteAnimations?: boolean;
+    /** Peg flash duration in milliseconds. Default: 300 */
+    pegFlashDurationMs?: number;
+    /** Enable animation stats logging (debug). Default: false */
+    logAnimationStats?: boolean;
   };
 }
 
@@ -126,21 +135,33 @@ export function getPerformanceSetting<K extends keyof Required<PerformanceConfig
   const presets: Record<PerformanceMode, Required<PerformanceConfig>['overrides']> = {
     'high-quality': {
       fps: 60,
+      fpsCap: 60,
       showTrail: true,
+      maxTrailLength: sizeTokens.ball.maxTrailLength, // Use token for consistency
       particleMultiplier: 1.0,
       enableInfiniteAnimations: true,
+      pegFlashDurationMs: 300,
+      logAnimationStats: false,
     },
     balanced: {
       fps: 60,
+      fpsCap: 60,
       showTrail: true,
+      maxTrailLength: 16,
       particleMultiplier: 0.7,
       enableInfiniteAnimations: false,
+      pegFlashDurationMs: 300,
+      logAnimationStats: false,
     },
     'power-saving': {
       fps: 30,
+      fpsCap: 30,
       showTrail: false,
+      maxTrailLength: 10,
       particleMultiplier: 0.5,
       enableInfiniteAnimations: false,
+      pegFlashDurationMs: 300,
+      logAnimationStats: false,
     },
   };
 

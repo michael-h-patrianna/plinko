@@ -14,7 +14,7 @@ export type GameEvent =
       payload: {
         selectedIndex: number;
         trajectory: TrajectoryPoint[];
-        trajectoryCache: TrajectoryCache;
+        trajectoryCache: TrajectoryCache | null;
         prize: PrizeConfig;
         seed: number;
         dropZone?: DropZone;
@@ -27,7 +27,7 @@ export type GameEvent =
       payload: {
         dropZone: DropZone;
         trajectory: TrajectoryPoint[];
-        trajectoryCache: TrajectoryCache;
+        trajectoryCache: TrajectoryCache | null;
         selectedIndex: number;
         prize: PrizeConfig;
       };
@@ -73,7 +73,7 @@ function transitionTo(
 function initializeGame(payload: {
   selectedIndex: number;
   trajectory: TrajectoryPoint[];
-  trajectoryCache: TrajectoryCache;
+  trajectoryCache: TrajectoryCache | null;
   prize: PrizeConfig;
   seed: number;
 }): { state: GameState; context: GameContext } {

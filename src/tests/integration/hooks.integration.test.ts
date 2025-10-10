@@ -331,13 +331,8 @@ describe('Hook Interactions Integration Tests', () => {
         expect(gameResult.current.state).toBe('ready');
       });
 
-      const onLandingComplete = vi.fn();
-
       const { result: animationResult } = renderHook(() =>
         useGameAnimation({
-          gameState: gameResult.current.state,
-          trajectory: gameResult.current.trajectory,
-          onLandingComplete,
           currentFrameRef,
         })
       );
@@ -370,9 +365,6 @@ describe('Hook Interactions Integration Tests', () => {
 
       const { result: animationResult, rerender } = renderHook(() =>
         useGameAnimation({
-          gameState: 'idle', // idle state, no animation running
-          trajectory: [],
-          onLandingComplete: vi.fn(),
           currentFrameRef,
         })
       );
@@ -437,9 +429,6 @@ describe('Hook Interactions Integration Tests', () => {
 
       renderHook(() =>
         useGameAnimation({
-          gameState: gameResult.current.state,
-          trajectory: gameResult.current.trajectory,
-          onLandingComplete,
           currentFrameRef,
         })
       );
@@ -506,9 +495,6 @@ describe('Hook Interactions Integration Tests', () => {
 
       const { result: animationResult } = renderHook(() =>
         useGameAnimation({
-          gameState: gameResult.current.state,
-          trajectory: gameResult.current.trajectory,
-          onLandingComplete: vi.fn(),
           currentFrameRef,
         })
       );
@@ -629,9 +615,6 @@ describe('Hook Interactions Integration Tests', () => {
 
       const { result: animationResult } = renderHook(() =>
         useGameAnimation({
-          gameState: gameResult.current.state,
-          trajectory: gameResult.current.trajectory,
-          onLandingComplete: vi.fn(),
           currentFrameRef,
         })
       );

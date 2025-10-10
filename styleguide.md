@@ -32,6 +32,88 @@
 - Centralize layout tokens (spacing, radii, gradients) in the theme system, even when applying inline styles. Inline styles are acceptable for dynamic values but mirror them in Tailwind or CSS variables for consistency.
 - Apply memoization or `React.memo` to heavy child components, especially those rendering grids, lists, or SVG/Canvas primitives.
 
+#### Style Pattern Tokens & Utilities (NEW)
+
+To reduce inline style verbosity and improve consistency, use the new **style pattern tokens** and **utility functions**:
+
+**Style Pattern Tokens** (`stylePatternTokens` from `theme/tokens.ts`):
+```tsx
+import { stylePatternTokens } from '../theme/tokens';
+
+// Flexbox patterns
+<div style={stylePatternTokens.flexCenter}>Centered content</div>
+<div style={stylePatternTokens.flexCenterColumn}>Column layout</div>
+<div style={stylePatternTokens.flexBetween}>Space between</div>
+
+// Positioning patterns
+<div style={stylePatternTokens.absoluteFill}>Full overlay</div>
+<div style={stylePatternTokens.absoluteCenter}>Centered overlay</div>
+<div style={stylePatternTokens.overlay}>Non-interactive overlay</div>
+
+// Text patterns
+<div style={stylePatternTokens.textTruncate}>Truncated text...</div>
+<div style={stylePatternTokens.textClamp(3)}>Max 3 lines</div>
+```
+
+**Utility Functions** (`theme/themeUtils.tsx`):
+```tsx
+import {
+  createOverlayBackground,
+  createCardBackground,
+  createGradientText,
+  createFlexLayout,
+  createAbsoluteOverlay,
+  createTransform,
+  createResponsiveFontSize
+} from '../theme/themeUtils';
+
+// Semi-transparent backgrounds
+<div style={{ background: createOverlayBackground('#000000', 0.5) }}>
+  Dark overlay
+</div>
+
+// Card backgrounds with theme integration
+<div style={createCardBackground(theme.colors.surface.primary, 0.8)}>
+  Semi-transparent card
+</div>
+
+// Gradient text (cross-platform safe)
+<h1 style={createGradientText(theme.gradients.buttonPrimary)}>
+  Gradient Title
+</h1>
+
+// Flexbox layouts with gap
+<div style={createFlexLayout('center', 'space-between', '12px', 'column')}>
+  Flex container
+</div>
+
+// Absolute overlays
+<div style={createAbsoluteOverlay({ top: 0, left: 0 }, 10)}>
+  Positioned overlay
+</div>
+
+// Transform combinations
+<div style={createTransform({ translateX: '50%', scale: 1.2, rotate: 45 })}>
+  Transformed element
+</div>
+
+// Responsive font sizes
+<div style={{
+  fontSize: createResponsiveFontSize(containerWidth, {
+    min: 10, max: 16, minWidth: 300, maxWidth: 600
+  })
+}}>
+  Responsive text
+</div>
+```
+
+**Benefits:**
+- Reduces inline style duplication across components
+- Maintains consistency with theme tokens
+- Cross-platform compatible (React Native ready)
+- Better type safety and autocomplete
+- Easier to refactor and maintain
+
 ## Coding Standards
 
 - **TypeScript everywhere:** Use strict types, discriminated unions, and generics. Avoid `any`; prefer helper types to keep state machine context and events precise.

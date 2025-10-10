@@ -3,13 +3,13 @@
  * Handles state transitions, trajectory management, and prize swapping logic
  */
 
-import { useCallback, useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ChoiceMechanic } from '../dev-tools';
 import type { PrizeProviderResult } from '../game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '../game/stateMachine';
 import { generateTrajectory } from '../game/trajectory';
 import { initializeTrajectoryAndPrizes } from '../game/trajectoryInitialization';
-import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint } from '../game/types';
+import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '../game/types';
 import { GAME_TIMEOUT } from '../constants';
 import { trackStateError } from '../utils/telemetry';
 
@@ -80,19 +80,65 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
   // Track which session has been initialized by its seed (not a boolean)
   const initializedSessionId = useRef<number | null>(null);
 
-  // Initialization effect - runs once per unique session
+  // Stabilize setState functions to prevent effect re-runs
+  // These are passed from parent and may have unstable references
+  // Using useCallback here doesn't actually stabilize them, so we use refs instead
+  const setWinningPrizeRef = useRef(setWinningPrize);
+  const setCurrentWinningIndexRef = useRef(setCurrentWinningIndex);
+  const setPrizesRef = useRef(setPrizes);
+
+  // Keep refs up to date
+  useEffect(() => {
+    setWinningPrizeRef.current = setWinningPrize;
+    setCurrentWinningIndexRef.current = setCurrentWinningIndex;
+    setPrizesRef.current = setPrizes;
+  });
+
+  // Store initialization result to coordinate between effects
+  // This ensures trajectory initialization completes before state machine dispatch
+  const [initializationResult, setInitializationResult] = useState<{
+    selectedIndex: number;
+    trajectory: TrajectoryPoint[];
+    prize: PrizeConfig;
+    seed: number;
+    trajectoryCache: TrajectoryCache | null;
+    swappedPrizes: PrizeConfig[];
+    winningPrizeVisualIndex: number;
+  } | null>(null);
+
+  /**
+   * INITIALIZATION SEQUENCE:
+   *
+   * Effect 1 (Session Detection & Prize Locking):
+   * - Detects new prize session by comparing seeds
+   * - Locks winning prize BEFORE any swaps occur
+   * - Guards against overwriting locked prizes
+   *
+   * Effect 2 (Trajectory Initialization):
+   * - Generates trajectory and performs prize swapping
+   * - Updates prizes array and visual index
+   * - Stores result for state machine dispatch
+   *
+   * Effect 3 (State Machine Dispatch):
+   * - Dispatches INITIALIZE event to state machine
+   * - Only runs after trajectory initialization completes
+   */
+
+  // Effect 1: Session detection and prize locking
+  // Purpose: Lock winning prize when new session detected
   useEffect(() => {
     if (
       prizeSession &&
       gameState.state === 'idle' &&
       initializedSessionId.current !== prizeSession.seed
     ) {
+      // Mark this session as initialized
       initializedSessionId.current = prizeSession.seed;
 
       const sessionPrizes = [...prizeSession.prizes];
       const winningIndex = prizeSession.winningIndex;
 
-      // STEP 1: Store the winning prize BEFORE any swaps
+      // Store the winning prize BEFORE any swaps
       const actualWinningPrize = sessionPrizes[winningIndex]!;
 
       // Guard against overwriting locked winning prize
@@ -104,10 +150,27 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
         });
         return;
       }
-      setWinningPrize(actualWinningPrize);
-      winningPrizeLockedRef.current = true;
 
-      // STEP 2: Initialize trajectory and swap prizes
+      // Lock the winning prize
+      setWinningPrizeRef.current(actualWinningPrize);
+      winningPrizeLockedRef.current = true;
+    }
+  }, [prizeSession, gameState.state, winningPrizeLockedRef]);
+
+  // Effect 2: Trajectory initialization
+  // Purpose: Generate trajectory and swap prizes when new session is locked
+  useEffect(() => {
+    if (
+      prizeSession &&
+      gameState.state === 'idle' &&
+      initializedSessionId.current === prizeSession.seed &&
+      winningPrizeLockedRef.current &&
+      !initializationResult // Only run if not already initialized
+    ) {
+      const sessionPrizes = [...prizeSession.prizes];
+      const winningIndex = prizeSession.winningIndex;
+
+      // Initialize trajectory and swap prizes
       let result;
       try {
         result = initializeTrajectoryAndPrizes({
@@ -129,33 +192,50 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
         return;
       }
 
-      // STEP 3: Update state with swapped prizes
-      setPrizes(result.swappedPrizes);
-      setCurrentWinningIndex(result.winningPrizeVisualIndex);
+      // Update prizes array with swapped prizes
+      setPrizesRef.current(result.swappedPrizes);
+      setCurrentWinningIndexRef.current(result.winningPrizeVisualIndex);
 
-      // Initialize game state
-      dispatch({
-        type: 'INITIALIZE',
-        payload: {
-          selectedIndex: result.landedSlot,
-          trajectory: result.trajectory,
-          prize: result.prizeAtLandedSlot,
-          seed: prizeSession.seed,
-          trajectoryCache: result.trajectoryCache,
-        },
+      // Store result for state machine dispatch
+      setInitializationResult({
+        selectedIndex: result.landedSlot,
+        trajectory: result.trajectory,
+        prize: result.prizeAtLandedSlot,
+        seed: prizeSession.seed,
+        trajectoryCache: result.trajectoryCache,
+        swappedPrizes: result.swappedPrizes,
+        winningPrizeVisualIndex: result.winningPrizeVisualIndex,
       });
     }
   }, [
+    prizeSession,
+    gameState.state,
     boardWidth,
     boardHeight,
     pegRows,
-    gameState.state,
-    prizeSession,
     winningPrizeLockedRef,
-    setWinningPrize,
-    setCurrentWinningIndex,
-    setPrizes,
+    initializationResult,
   ]);
+
+  // Effect 3: State machine dispatch
+  // Purpose: Dispatch INITIALIZE event after trajectory is ready
+  useEffect(() => {
+    if (gameState.state === 'idle' && initializationResult) {
+      dispatch({
+        type: 'INITIALIZE',
+        payload: {
+          selectedIndex: initializationResult.selectedIndex,
+          trajectory: initializationResult.trajectory,
+          prize: initializationResult.prize,
+          seed: initializationResult.seed,
+          trajectoryCache: initializationResult.trajectoryCache,
+        },
+      });
+
+      // Clear initialization result after dispatch
+      setInitializationResult(null);
+    }
+  }, [gameState.state, initializationResult]);
 
   // Auto-reveal prize after landing
   useEffect(() => {

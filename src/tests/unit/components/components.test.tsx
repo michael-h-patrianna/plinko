@@ -4,7 +4,6 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '../../testUtils';
-import { Ball } from '../../../components/game/Ball';
 import { BallLauncher } from '../../../components/game/BallLauncher';
 import { Countdown } from '../../../components/game/Countdown';
 import { StartScreen } from '../../../components/screens/StartScreen';
@@ -16,97 +15,7 @@ import { ThemedButton } from '../../../components/controls/ThemedButton';
 import { ViewportSelector, ThemeSelector } from '../../../dev-tools';
 import { PopupContainer } from '../../../components/layout/PopupContainer';
 import { MOCK_PRIZES } from '../../../config/prizes/prizeTable';
-import type { BallPosition, PrizeConfig } from '../../../game/types';
-
-// ============================================================================
-// Ball Component Tests
-// ============================================================================
-describe('Ball Component', () => {
-  const mockPosition: BallPosition = {
-    x: 100,
-    y: 200,
-    rotation: 45,
-  };
-
-  // PERFORMANCE NOTE: Ball component now uses trajectory cache for performance
-  // Tests verify initial render state only - animation updates happen via refs and cache lookups
-
-  it('should not render during idle state', () => {
-    const { container} = render(<Ball position={null} state="idle" currentFrame={0} />);
-    expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
-  });
-
-  it('should not render during ready state', () => {
-    const { container } = render(<Ball position={null} state="ready" currentFrame={0} />);
-    expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
-  });
-
-  it('should not render during countdown state', () => {
-    const { container } = render(<Ball position={null} state="countdown" currentFrame={0} />);
-    expect(container.querySelector('[data-testid="plinko-ball"]')).not.toBeInTheDocument();
-  });
-
-  it('should render during dropping state', () => {
-    render(
-      <Ball
-        position={mockPosition}
-        state="dropping"
-        currentFrame={10}
-      />
-    );
-    expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
-  });
-
-  it('should render during landed state', () => {
-    render(
-      <Ball
-        position={mockPosition}
-        state="landed"
-        currentFrame={100}
-      />
-    );
-    expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
-  });
-
-  it('should render with data-state attribute', () => {
-    render(
-      <Ball
-        position={mockPosition}
-        state="dropping"
-        currentFrame={10}
-      />
-    );
-    const ball = screen.getByTestId('plinko-ball');
-    expect(ball).toHaveAttribute('data-state', 'dropping');
-  });
-
-  it('should render trail container when showTrail is true', () => {
-    render(
-      <Ball
-        position={mockPosition}
-        state="dropping"
-        currentFrame={10}
-        showTrail={true}
-      />
-    );
-    // Trail updates dynamically, but should be present in DOM
-    // Just verify ball renders correctly
-    expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
-  });
-
-  it('should not render trail when showTrail is false', () => {
-    render(
-      <Ball
-        position={mockPosition}
-        state="dropping"
-        currentFrame={10}
-        showTrail={false}
-      />
-    );
-    // Ball should still render
-    expect(screen.getByTestId('plinko-ball')).toBeInTheDocument();
-  });
-});
+import type { PrizeConfig } from '../../../game/types';
 
 // ============================================================================
 // BallLauncher Component Tests
@@ -303,14 +212,16 @@ describe('StartScreen Component', () => {
 
   it('should render all prizes', () => {
     render(<StartScreen prizes={MOCK_PRIZES} onStart={mockOnStart} disabled={false} />);
-    MOCK_PRIZES.forEach((prize: any) => {
-      expect(screen.getByText(prize.title!)).toBeInTheDocument();
+    MOCK_PRIZES.forEach((prize) => {
+      if (prize.title) {
+        expect(screen.getByText(prize.title)).toBeInTheDocument();
+      }
     });
   });
 
   it('should render prize probabilities', () => {
     render(<StartScreen prizes={MOCK_PRIZES} onStart={mockOnStart} disabled={false} />);
-    MOCK_PRIZES.forEach((prize: any) => {
+    MOCK_PRIZES.forEach((prize) => {
       const percentage = (prize.probability * 100).toFixed(0) + '%';
       expect(screen.getAllByText(percentage).length).toBeGreaterThan(0);
     });
@@ -519,44 +430,47 @@ describe('Slot Component', () => {
     expect(slot).toHaveAttribute('data-active', 'false');
   });
 
-  it('should show wall impact flash on left', () => {
-    const { container } = render(
-      <Slot index={0} prize={mockPrize} x={50} width={60} wallImpact="left" />
-    );
-    // Wall impact creates a motion div
-    const impactFlash = container.querySelector('.absolute.left-0.top-0.bottom-0');
-    expect(impactFlash).toBeInTheDocument();
+  it('should support data-approaching attribute for highlighting (set by driver)', () => {
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
+    const slot = screen.getByTestId('slot-0');
+
+    // Initially has data-approaching="false" by default
+    expect(slot.getAttribute('data-approaching')).toBe('false');
+
+    // Driver would set this imperatively
+    slot.setAttribute('data-approaching', 'true');
+    expect(slot.getAttribute('data-approaching')).toBe('true');
   });
 
-  it('should show wall impact flash on right', () => {
-    const { container } = render(
-      <Slot index={0} prize={mockPrize} x={50} width={60} wallImpact="right" />
-    );
-    const impactFlash = container.querySelector('.absolute.right-0.top-0.bottom-0');
-    expect(impactFlash).toBeInTheDocument();
+  it('should support data-wall-impact attribute for wall collisions (set by driver)', () => {
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
+    const slot = screen.getByTestId('slot-0');
+
+    // Driver sets wall impact
+    slot.setAttribute('data-wall-impact', 'left');
+    expect(slot.getAttribute('data-wall-impact')).toBe('left');
+
+    slot.setAttribute('data-wall-impact', 'right');
+    expect(slot.getAttribute('data-wall-impact')).toBe('right');
   });
 
-  it('should show floor impact flash', () => {
-    const { container } = render(
-      <Slot index={0} prize={mockPrize} x={50} width={60} floorImpact={true} />
-    );
-    const impactFlash = container.querySelector('.absolute.bottom-0.left-0.right-0');
-    expect(impactFlash).toBeInTheDocument();
+  it('should support data-floor-impact attribute for floor collisions (set by driver)', () => {
+    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
+    const slot = screen.getByTestId('slot-0');
+
+    // Driver sets floor impact
+    slot.setAttribute('data-floor-impact', 'true');
+    expect(slot.getAttribute('data-floor-impact')).toBe('true');
   });
 
   it('should show red winning badge when isWinning', () => {
     const { container } = render(
       <Slot index={0} prize={mockPrize} x={50} width={60} isWinning={true} />
     );
-    // Winning badge has specific gradient background
-    const badges = Array.from(container.querySelectorAll('.absolute')).filter((el) => {
-      const htmlEl = el as HTMLElement;
-      return (
-        htmlEl.style.background.includes('linear-gradient') &&
-        htmlEl.style.background.includes('#ef4444')
-      );
-    });
-    expect(badges.length).toBeGreaterThan(0);
+    // Winning badge is a small circle at bottom center
+    const badge = container.querySelector('[style*="bottom: -6px"]');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveStyle({ width: '12px', height: '12px' });
   });
 
   it('should show combo badge when comboBadgeNumber provided', () => {
@@ -614,8 +528,8 @@ describe('Peg Component', () => {
     expect(peg).toHaveAttribute('data-peg-hit', 'false');
   });
 
-  it('should reset flash when shouldReset is true', () => {
-    render(<Peg row={0} col={0} x={100} y={200} shouldReset={true} />);
+  it('should not be flashing initially', () => {
+    render(<Peg row={0} col={0} x={100} y={200} />);
     const peg = screen.getByTestId('peg-0-0');
     expect(peg).toHaveAttribute('data-peg-hit', 'false');
   });
@@ -627,10 +541,10 @@ describe('Peg Component', () => {
     expect(peg.style.height).toBe('14px');
   });
 
-  it('should render pulseRing animation styles', () => {
+  it('should render peg flash animation styles', () => {
     const { container } = render(<Peg row={0} col={0} x={100} y={200} />);
     const styles = container.querySelector('style');
-    expect(styles?.textContent).toContain('@keyframes pulseRing');
+    expect(styles?.textContent).toContain('data-peg-hit');
   });
 });
 

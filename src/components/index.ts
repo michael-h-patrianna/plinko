@@ -4,7 +4,6 @@
  */
 
 // Game components
-export { Ball } from './game/Ball';
 export { BallLauncher } from './game/BallLauncher';
 export { Countdown } from './game/Countdown';
 export { PlinkoBoard } from './game/PlinkoBoard/PlinkoBoard';
@@ -26,6 +25,10 @@ export { RewardItem } from './screens/PrizeReveal/RewardItem';
 // Control components
 export { DropPositionControls } from './controls/DropPositionControls';
 export { ThemedButton } from './controls/ThemedButton';
+
+// UI components
+export { GradientText } from './ui/GradientText';
+export type { GradientTextProps, GradientConfig } from './ui/GradientText';
 
 // Effect components
 export { ScreenShake } from './effects/ScreenShake';

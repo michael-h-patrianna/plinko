@@ -1,424 +1,128 @@
-# Board Geometry Module
+# Board Geometry Reference
 
-## Overview
+`src/game/boardGeometry.ts` is the single source of truth for Plinko board dimensions, physics constants, responsive sizing, and helper utilities shared by the physics engine and the renderer. This document summarises the available constants and helpers, explains how they interact with other game modules, and highlights the constraints that keep the implementation portable between React web and React Native.
 
-The `boardGeometry.ts` module is the **single source of truth** for all Plinko board dimensions, physics constants, and geometric calculations. It ensures consistency across:
+## Why this module matters
 
-- Trajectory simulation (`trajectory.ts`)
-- Visual rendering (`PlinkoBoard.tsx`, `Ball.tsx`, `Peg.tsx`, `Slot.tsx`)
-- Collision detection (physics engine)
-- Test fixtures
+- Every simulation step (`src/game/trajectory/simulation.ts`) reads constants from here.
+- UI components render pegs, slots, and drop zones using the same helpers, guaranteeing visual/physics alignment.
+- Reset orchestration and dev tools depend on geometry helpers when re-computing trajectories or highlighting slots.
+- New board layouts (different slot counts, row counts) must go through this module to stay deterministic.
 
-## Cross-Platform Compatibility
+## Constants
 
-This module is designed to work on **both web and React Native**:
-- All calculations use standard JavaScript math
-- No DOM-specific APIs
-- No CSS-specific features
-- Compatible with React Native's coordinate system
+### `PHYSICS`
 
-## Architecture
+The core physics constants shared by the simulation and collision code:
 
-```
-src/game/boardGeometry.ts
-├── Constants
-│   ├── PHYSICS          → Physics simulation parameters
-│   ├── BOARD            → Board layout configuration
-│   ├── RESPONSIVE       → Responsive sizing breakpoints
-│   ├── DROP_ZONE_*      → Drop zone definitions
-│
-├── Peg Layout
-│   └── generatePegLayout()  → Creates staggered peg pattern
-│
-├── Slot Calculations
-│   ├── calculateSlotDimensions()  → Computes slot geometry
-│   ├── clampSlotIndexFromX()      → Maps X coordinate to slot
-│   ├── getSlotBoundaries()        → Returns slot wall positions
-│
-├── Drop Zones
-│   ├── getDropZoneRange()   → Returns X coordinate range
-│   └── getDropZoneCenter()  → Returns center X coordinate
-│
-├── Validation
-│   ├── validateSlotIndex()
-│   ├── validateBoardDimensions()
-│   └── validatePegRows()
-│
-└── Geometry Helpers
-    ├── distance()        → Euclidean distance
-    ├── isInCircle()      → Point-in-circle test
-    └── isInRect()        → Point-in-rectangle test
-```
+| Constant | Default | Purpose |
+| --- | --- | --- |
+| `GRAVITY` | `980` | px/s²; matches 9.8 m/s² at 100px = 1m scale |
+| `RESTITUTION` | `0.75` | Energy retained on bounce |
+| `BALL_RADIUS` | `9` | Ball radius in pixels |
+| `PEG_RADIUS` | `7` | Peg radius in pixels |
+| `COLLISION_RADIUS` | `16` | Ball + peg radius; used for continuous collision detection |
+| `DT` | `1 / 60` | Simulation timestep (60 FPS) |
+| `TERMINAL_VELOCITY` | `600` | Downward velocity clamp |
+| `MAX_VELOCITY_COMPONENT` | `750` | Axis-aligned velocity clamp for collision response |
+| `MAX_SPEED` | `800` | Total velocity magnitude cap |
+| `MAX_DIST_PER_FRAME` | `13.3` | Prevents tunnelling when no collision occurs |
+| `BORDER_WIDTH` | `12` | Inner wall thickness |
+| `MIN_BOUNCE_VELOCITY` | `30` | Ensures the ball never “sticks” on a peg |
+| Bucket tuning | See source (`SETTLEMENT_*`, `BUCKET_*`) | Keep bucket physics deterministic |
 
-## Key Concepts
+> Changing these values requires re-running the deterministic regression tests (`npm test -- trajectory-comprehensive.test.ts`) and verifying visual assets.
 
-### 1. Physics Constants (`PHYSICS`)
+### `BOARD`
 
-These constants define the core physics simulation behavior:
+Layout defaults used for rendering and trajectory generation:
 
-```typescript
-PHYSICS.GRAVITY           // 980 px/s² (scale: 100px = 1m)
-PHYSICS.RESTITUTION       // 0.75 (75% energy retained on bounce)
-PHYSICS.BALL_RADIUS       // 9 pixels
-PHYSICS.PEG_RADIUS        // 7 pixels
-PHYSICS.COLLISION_RADIUS  // 16 pixels (BALL + PEG)
-PHYSICS.BORDER_WIDTH      // 12 pixels (wall thickness)
+- `DEFAULT_WIDTH` / `DEFAULT_HEIGHT` – baseline board size.
+- `DEFAULT_PEG_ROWS` – 10 rows by default.
+- `OPTIMAL_PEG_COLUMNS` – fixed at 6 to maintain spacing regardless of prize count.
+- `PEG_TOP_OFFSET` and `PEG_WALL_CLEARANCE` – control how far pegs sit from the border.
+
+### `RESPONSIVE`
+
+Breakpoints for small viewports (≤360px). Peg and ball radii shrink to keep clearances consistent on mobile.
+
+### Drop zones
+
+`DROP_ZONE_RANGES` and `DROP_ZONE_POSITIONS` define the five droppable lanes (`left`, `left-center`, `center`, `right-center`, `right`). These values are used by the choice mechanic (`useGameState`) and dev tools when previewing the alternate gameplay mode.
+
+## Peg layout helpers
+
+```ts
+export function generatePegLayout({
+  boardWidth,
+  boardHeight,
+  pegRows,
+  cssBorder = BOARD.CSS_BORDER,
+}: PegLayoutParams): Peg[];
 ```
 
-**CRITICAL**: These values are tuned for realistic ball behavior. Changing them affects:
-- Bounce dynamics
-- Collision detection accuracy
-- Visual appearance
-- Game feel
+- Alternates offset rows to create the classic Plinko pattern.
+- Keeps clearance between pegs, walls, and the ball based on responsive sizes.
+- Returns `{ row, col, x, y }` tuples consumed by both the renderer and physics simulation.
 
-### 2. Board Layout (`BOARD`)
+### Validation utilities
 
-Board dimensions and peg layout:
+- `validateBoardDimensions(width, height)` – throws if the board is too small.
+- `validatePegRows(pegRows)` – recommended range 5–20.
+- `validateSlotIndex(index, slotCount)` – prevents out-of-range slot lookups.
 
-```typescript
-BOARD.DEFAULT_WIDTH            // 375px (standard mobile width)
-BOARD.DEFAULT_HEIGHT           // 500px
-BOARD.OPTIMAL_PEG_COLUMNS      // 6 columns (FIXED)
-BOARD.PLAYABLE_HEIGHT_RATIO    // 0.65 (65% of height for pegs)
+> Run these validations before calculating trajectories or building custom boards to catch configuration mistakes early.
+
+## Slot geometry
+
+```ts
+export function calculateSlotDimensions(boardWidth, boardHeight, slotCount, cssBorder = BOARD.CSS_BORDER): SlotDimensions;
 ```
 
-**IMPORTANT**: `OPTIMAL_PEG_COLUMNS` is **fixed at 6** regardless of prize count. This ensures consistent peg spacing and ball behavior across different prize configurations.
+Returns:
 
-### 3. Responsive Sizing (`RESPONSIVE`)
+- `slotWidth` and `playableWidth`
+- `bucketZoneY` / `bucketHeight` / `bucketFloorY`
 
-Adapts peg/ball sizes for different viewport widths:
+Internally this calls the shared utility `src/utils/slotDimensions.ts` to keep bucket sizing consistent with the visual layout.
 
-```typescript
-// Small viewports (≤ 360px)
-RESPONSIVE.SMALL_PEG_RADIUS     // 6px
-RESPONSIVE.SMALL_BALL_RADIUS    // 6px
-RESPONSIVE.SMALL_CLEARANCE      // 8px
+Other helpers:
 
-// Normal viewports (> 360px)
-RESPONSIVE.NORMAL_PEG_RADIUS    // 7px
-RESPONSIVE.NORMAL_BALL_RADIUS   // 7px
-RESPONSIVE.NORMAL_CLEARANCE     // 10px
-```
+- `clampSlotIndexFromX(x, boardWidth, slotCount)` – safely maps an X coordinate to a slot index.
+- `getSlotBoundaries(slotIndex, boardWidth, slotCount, wallThickness = 3)` – used by bucket physics and slot highlighting to compute wall positions.
+- `getDropZoneRange(zone, boardWidth)` / `getDropZoneCenter(zone, boardWidth)` – convenience wrappers for dev tools and the choice mechanic.
 
-### 4. Drop Zones
+## Geometry helpers
 
-Five predefined drop positions:
+- `distance(x1, y1, x2, y2)` – Euclidean distance used across the physics code.
+- `isInCircle(pointX, pointY, circleX, circleY, radius)` – quick inclusion test for peg collisions.
+- `isInRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight)` – used for hit-testing drop zones.
 
-| Zone | Position (% of width) | Range |
-|------|----------------------|-------|
-| `left` | 10% | 5% - 15% |
-| `left-center` | 30% | 25% - 35% |
-| `center` | 50% | 45% - 55% |
-| `right-center` | 70% | 65% - 75% |
-| `right` | 90% | 85% - 95% |
+## Integration points
 
-## API Reference
+- `src/game/trajectory/simulation.ts` reads `PHYSICS` constants, calls `generatePegLayout`, and relies on slot helpers to clamp positions.
+- `src/game/trajectory/bucket.ts` uses `getSlotBoundaries` and `calculateBucketDimensions` to simulate wall/floor collisions.
+- UI components render pegs and slots using the same helpers to avoid visual drift.
+- Dev tools and reset logic depend on `getDropZoneRange` when regenerating deterministic trajectories for the choice mechanic.
 
-### Peg Layout
+## Cross-platform considerations
 
-#### `generatePegLayout(params: PegLayoutParams): Peg[]`
-
-Generates complete peg layout with staggered pattern.
-
-**Parameters:**
-```typescript
-{
-  boardWidth: number;     // Total board width (px)
-  boardHeight: number;    // Total board height (px)
-  pegRows: number;        // Number of peg rows
-  cssBorder?: number;     // CSS border thickness (default: 2)
-}
-```
-
-**Returns:**
-```typescript
-Array<{
-  row: number;    // Row index (0-based)
-  col: number;    // Column index within row (0-based)
-  x: number;      // Absolute X position (px)
-  y: number;      // Absolute Y position (px)
-}>
-```
-
-**Pattern:**
-- Row 0 (non-offset): 7 pegs
-- Row 1 (offset): 6 pegs
-- Row 2 (non-offset): 7 pegs
-- Row 3 (offset): 6 pegs
-- ... alternating
-
-**Example:**
-```typescript
-const pegs = generatePegLayout({
-  boardWidth: 375,
-  boardHeight: 500,
-  pegRows: 10,
-});
-// Returns 65 pegs total (5 rows × 7 pegs + 5 rows × 6 pegs)
-```
-
-### Slot Calculations
-
-#### `calculateSlotDimensions(boardWidth, boardHeight, slotCount, cssBorder?): SlotDimensions`
-
-Computes comprehensive slot geometry.
-
-**Returns:**
-```typescript
-{
-  slotCount: number;        // Number of slots
-  slotWidth: number;        // Width of each slot (px)
-  playableWidth: number;    // Total width minus borders (px)
-  bucketZoneY: number;      // Y position where slots start (px)
-  bucketHeight: number;     // Height of slot buckets (px)
-  bucketFloorY: number;     // Y position of slot floor (px)
-}
-```
-
-**Example:**
-```typescript
-const dims = calculateSlotDimensions(375, 500, 6);
-console.log(dims.slotWidth);      // ~58.5px
-console.log(dims.playableWidth);  // ~351px
-console.log(dims.bucketZoneY);    // ~410px
-```
-
-#### `clampSlotIndexFromX(x, boardWidth, slotCount): number`
-
-Converts X coordinate to slot index (0-based).
-
-**Example:**
-```typescript
-const slot = clampSlotIndexFromX(187.5, 375, 6);
-// Returns 3 (middle slot for centered position)
-```
-
-**Behavior:**
-- Always returns valid index (0 to slotCount-1)
-- Clamps positions outside playable area
-- Accounts for border width
-
-#### `getSlotBoundaries(slotIndex, boardWidth, slotCount, wallThickness?): { leftEdge, rightEdge }`
-
-Returns slot wall positions for collision detection.
-
-**Parameters:**
-- `slotIndex`: Slot index (0-based)
-- `wallThickness`: Wall inset in pixels (default: 3)
-
-**Example:**
-```typescript
-const { leftEdge, rightEdge } = getSlotBoundaries(2, 375, 6);
-// Returns absolute X positions for slot walls
-```
-
-### Drop Zones
-
-#### `getDropZoneRange(zone, boardWidth): { min, max }`
-
-Returns X coordinate range for a drop zone.
-
-**Example:**
-```typescript
-const { min, max } = getDropZoneRange('center', 375);
-// min: 168.75px (45% of 375)
-// max: 206.25px (55% of 375)
-```
-
-#### `getDropZoneCenter(zone, boardWidth): number`
-
-Returns center X coordinate of a drop zone.
-
-**Example:**
-```typescript
-const centerX = getDropZoneCenter('left-center', 375);
-// Returns 112.5px (30% of 375)
-```
-
-### Validation
-
-#### `validateSlotIndex(slotIndex, slotCount): void`
-
-Throws if slot index is out of bounds.
-
-```typescript
-validateSlotIndex(7, 6);  // Throws: "Slot index 7 is out of bounds..."
-```
-
-#### `validateBoardDimensions(width, height): void`
-
-Throws if dimensions are invalid or too small.
-
-```typescript
-validateBoardDimensions(100, 500);  // Throws: "Board dimensions too small..."
-```
-
-#### `validatePegRows(pegRows): void`
-
-Throws if peg row count is outside recommended range (5-20).
-
-```typescript
-validatePegRows(3);  // Throws: "...out of recommended range (5-20)"
-```
-
-### Geometry Helpers
-
-#### `distance(x1, y1, x2, y2): number`
-
-Calculates Euclidean distance between two points.
-
-```typescript
-const dist = distance(0, 0, 3, 4);  // Returns 5
-```
-
-#### `isInCircle(pointX, pointY, circleX, circleY, radius): boolean`
-
-Tests if point is inside or on circle boundary.
-
-```typescript
-const inside = isInCircle(5, 5, 0, 0, 10);  // true
-```
-
-#### `isInRect(pointX, pointY, rectX, rectY, rectWidth, rectHeight): boolean`
-
-Tests if point is inside or on rectangle boundary.
-
-```typescript
-const inside = isInRect(5, 5, 0, 0, 10, 10);  // true
-```
-
-## Usage Guidelines
-
-### DO ✅
-
-1. **Always import from boardGeometry** for any geometry calculations
-2. **Use constants** instead of magic numbers
-3. **Call validation functions** before calculations
-4. **Test with different board sizes** (320px to 768px width)
-5. **Document any new geometric calculations** in this module
-
-### DON'T ❌
-
-1. **Don't hardcode** physics constants in components
-2. **Don't duplicate** peg layout logic
-3. **Don't assume** specific slot counts
-4. **Don't use** viewport-specific units (vh, vw, etc.)
-5. **Don't modify** `OPTIMAL_PEG_COLUMNS` without thorough testing
-
-## Common Patterns
-
-### Pattern 1: Rendering Pegs
-
-```typescript
-import { generatePegLayout } from '../game/boardGeometry';
-
-function MyBoard({ boardWidth, boardHeight, pegRows }) {
-  const pegs = useMemo(() =>
-    generatePegLayout({ boardWidth, boardHeight, pegRows }),
-    [boardWidth, boardHeight, pegRows]
-  );
-
-  return pegs.map((peg) => (
-    <Peg key={`${peg.row}-${peg.col}`} x={peg.x} y={peg.y} />
-  ));
-}
-```
-
-### Pattern 2: Slot Detection
-
-```typescript
-import { clampSlotIndexFromX } from '../game/boardGeometry';
-
-function detectLandingSlot(ballX: number, boardWidth: number, slotCount: number) {
-  return clampSlotIndexFromX(ballX, boardWidth, slotCount);
-}
-```
-
-### Pattern 3: Collision Detection
-
-```typescript
-import { PHYSICS, isInCircle } from '../game/boardGeometry';
-
-function checkPegCollision(ballX, ballY, pegX, pegY) {
-  return isInCircle(
-    ballX, ballY,
-    pegX, pegY,
-    PHYSICS.COLLISION_RADIUS
-  );
-}
-```
-
-## Migration Guide
-
-If you have existing code with hardcoded values:
-
-### Before
-```typescript
-const BORDER_WIDTH = 8;  // ❌ Hardcoded
-const BALL_RADIUS = 9;   // ❌ Hardcoded
-const pegRadius = boardWidth <= 360 ? 6 : 7;  // ❌ Duplicated logic
-```
-
-### After
-```typescript
-import { PHYSICS, RESPONSIVE } from '../game/boardGeometry';
-
-const BORDER_WIDTH = PHYSICS.BORDER_WIDTH;  // ✅ From module
-const BALL_RADIUS = PHYSICS.BALL_RADIUS;     // ✅ From module
-const pegRadius = boardWidth <= RESPONSIVE.SMALL_VIEWPORT_WIDTH
-  ? RESPONSIVE.SMALL_PEG_RADIUS
-  : RESPONSIVE.NORMAL_PEG_RADIUS;  // ✅ From module
-```
+- All geometry calculations are pure TypeScript with no DOM access – safe for React Native.
+- Units are plain numbers (pixels). When porting to RN, convert to density-independent pixels in the rendering layer.
+- Avoid hardcoding geometry outside this module; import constants/helpers instead to keep physics and UI aligned.
 
 ## Testing
 
-Comprehensive test suite in `src/tests/boardGeometry.test.ts`:
+Related specs live in `src/tests/boardGeometry.test.ts` and integration suites under `src/tests/physics/`. When adjusting constants or helper logic:
 
-- ✅ Constant values
-- ✅ Peg layout generation
-- ✅ Slot calculations
-- ✅ Drop zone ranges
-- ✅ Validation functions
-- ✅ Geometry helpers
-- ✅ Integration tests
+1. Run unit tests: `npm test -- boardGeometry.test.ts`.
+2. Run deterministic regression: `npm test -- trajectory-100.test.ts` (quick) and `npm test -- trajectory-comprehensive.test.ts` (full sweep).
+3. Capture screenshots if board dimensions change (see `screenshots/`).
 
-Run tests:
-```bash
-npm test -- boardGeometry.test.ts
-```
+## Extending the module
 
-## Troubleshooting
+When adding new geometry helpers or responsive behaviours:
 
-### Issue: Pegs touching walls
-
-**Cause**: Insufficient clearance calculation
-
-**Solution**: Check `RESPONSIVE.NORMAL_CLEARANCE` and ensure `generatePegLayout` adds proper padding.
-
-### Issue: Ball escapes board
-
-**Cause**: Slot boundaries extend beyond playable area
-
-**Solution**: Use `getSlotBoundaries()` which accounts for `PHYSICS.BORDER_WIDTH`
-
-### Issue: Wrong slot detected
-
-**Cause**: X coordinate not clamped properly
-
-**Solution**: Always use `clampSlotIndexFromX()` instead of manual division
-
-## Future Enhancements
-
-Potential additions (maintain backwards compatibility):
-
-- [ ] Circular board support
-- [ ] Variable peg column counts (advanced mode)
-- [ ] Peg pattern presets (dense, sparse, triangular)
-- [ ] Slot boundary curve detection (for angled walls)
-
-## Related Documentation
-
-- [Physics Engine](./physics-engine.md)
-- [Trajectory Generation](./trajectory-generation.md)
-- [Cross-Platform Strategy](./cross-platform.md)
-- [Testing Guide](./testing-guide.md)
+- Export them here so both physics and UI benefit.
+- Document new utilities in this file.
+- Update the physics documentation (`docs/physics-and-trajectory.md`) if the change affects simulation behaviour.

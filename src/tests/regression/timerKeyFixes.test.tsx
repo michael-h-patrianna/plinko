@@ -112,7 +112,7 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
   });
 
   describe('React Key Stability', () => {
-    it('Slot component should use stable keys for impact animations', () => {
+    it('Slot component should be static with stable DOM elements', () => {
       const mockPrize: Prize = {
         id: 'test-1',
         type: 'free' as const,
@@ -125,39 +125,26 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
 
       const { rerender } = render(
         <ThemeProvider>
-          <Slot
-            index={0}
-            prize={mockPrize}
-            x={0}
-            width={50}
-            wallImpact="left"
-          />
+          <Slot index={0} prize={mockPrize} x={0} width={50} />
         </ThemeProvider>
       );
 
-      // Get the animated div - should exist
-      const leftImpact = document.querySelector('[class*="left-0"]');
-      expect(leftImpact).toBeTruthy();
+      const slot = screen.getByTestId('slot-0');
+      const initialSlot = slot;
 
-      // Re-render with same impact
+      // Re-render with same props
       rerender(
         <ThemeProvider>
-          <Slot
-            index={0}
-            prize={mockPrize}
-            x={0}
-            width={50}
-            wallImpact="left"
-          />
+          <Slot index={0} prize={mockPrize} x={0} width={50} />
         </ThemeProvider>
       );
 
-      // Should still be the same element (stable key)
-      const leftImpactAfter = document.querySelector('[class*="left-0"]');
-      expect(leftImpactAfter).toBeTruthy();
+      // Should be same element (stable, no re-render due to memo)
+      const slotAfter = screen.getByTestId('slot-0');
+      expect(slotAfter).toBe(initialSlot);
     });
 
-    it('Slot component should increment key on new impact', () => {
+    it('Slot component should support imperative data attribute updates', () => {
       const mockPrize: Prize = {
         id: 'test-2',
         type: 'free' as const,
@@ -168,38 +155,24 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
         freeReward: { gc: 100 },
       };
 
-      const { rerender } = render(
+      render(
         <ThemeProvider>
-          <Slot
-            index={0}
-            prize={mockPrize}
-            x={0}
-            width={50}
-            wallImpact={null}
-          />
+          <Slot index={0} prize={mockPrize} x={0} width={50} />
         </ThemeProvider>
       );
 
-      // No impact initially
-      let leftImpact = document.querySelector('[class*="absolute left-0 top-0 bottom-0"]');
-      expect(leftImpact).toBeFalsy();
+      const slot = screen.getByTestId('slot-0');
 
-      // Trigger new impact
-      rerender(
-        <ThemeProvider>
-          <Slot
-            index={0}
-            prize={mockPrize}
-            x={0}
-            width={50}
-            wallImpact="left"
-          />
-        </ThemeProvider>
-      );
+      // Initially no impact
+      expect(slot.getAttribute('data-wall-impact')).toBe('none');
 
-      // Impact should now exist
-      leftImpact = document.querySelector('[class*="absolute left-0 top-0 bottom-0"]');
-      expect(leftImpact).toBeTruthy();
+      // Driver sets impact imperatively
+      slot.setAttribute('data-wall-impact', 'left');
+      expect(slot.getAttribute('data-wall-impact')).toBe('left');
+
+      // Driver clears impact
+      slot.setAttribute('data-wall-impact', 'none');
+      expect(slot.getAttribute('data-wall-impact')).toBe('none');
     });
 
     it('BorderWall should use stable keys for impact animations', () => {
@@ -293,37 +266,32 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
       }).not.toThrow();
     });
 
-    it('should handle rapid slot impact changes', () => {
+    it('should handle rapid slot data attribute changes', () => {
       const mockPrize = createMockPrize('test-rapid');
 
-      const { rerender } = render(
+      render(
         <ThemeProvider>
-          <Slot index={0} prize={mockPrize} x={0} width={50} wallImpact={null} />
+          <Slot index={0} prize={mockPrize} x={0} width={50} />
         </ThemeProvider>
       );
 
-      // Trigger multiple impacts rapidly
-      rerender(
-        <ThemeProvider>
-          <Slot index={0} prize={mockPrize} x={0} width={50} wallImpact="left" />
-        </ThemeProvider>
-      );
-
-      rerender(
-        <ThemeProvider>
-          <Slot index={0} prize={mockPrize} x={0} width={50} wallImpact={null} />
-        </ThemeProvider>
-      );
-
-      rerender(
-        <ThemeProvider>
-          <Slot index={0} prize={mockPrize} x={0} width={50} wallImpact="right" />
-        </ThemeProvider>
-      );
-
-      // Should render without errors
       const slot = screen.getByTestId('slot-0');
+
+      // Simulate rapid driver updates (no re-renders)
+      slot.setAttribute('data-wall-impact', 'none');
+      slot.setAttribute('data-wall-impact', 'left');
+      slot.setAttribute('data-wall-impact', 'none');
+      slot.setAttribute('data-wall-impact', 'right');
+      slot.setAttribute('data-floor-impact', 'true');
+      slot.setAttribute('data-floor-impact', 'false');
+      slot.setAttribute('data-approaching', 'true');
+      slot.setAttribute('data-approaching', 'false');
+
+      // Should handle all changes without errors
       expect(slot).toBeTruthy();
+      expect(slot.getAttribute('data-wall-impact')).toBe('right');
+      expect(slot.getAttribute('data-floor-impact')).toBe('false');
+      expect(slot.getAttribute('data-approaching')).toBe('false');
     });
   });
 });

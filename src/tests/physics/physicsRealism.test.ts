@@ -280,8 +280,8 @@ describe('Physics Realism Tests', () => {
 
       // Find collision frames
       const collisionFrames = trajectory
-        .map((point: any, index: number) => ({ point, index }))
-        .filter(({ point }: any) => point.pegHit);
+        .map((point: TrajectoryPoint, index: number) => ({ point, index }))
+        .filter(({ point }) => point.pegHit);
 
       expect(collisionFrames.length).toBeGreaterThan(0);
 

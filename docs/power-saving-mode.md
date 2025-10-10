@@ -1,338 +1,102 @@
-# Power Saving Mode API
+# Power Saving Mode
 
-**Status**: ✅ Implemented (Phase 1 Performance Optimizations)
-**Date**: 2025-10-07
+**Status:** ✅ Phase 1 complete (animation + effects optimisations)
 
-## Overview
+Power Saving Mode lets host applications choose between visual fidelity and power consumption. The feature is fully configurable through `AppConfigProvider` and surfaces a simple three-option toggle in the dev tools menu for QA.
 
-Power Saving Mode provides parent applications with fine-grained control over quality vs. battery consumption trade-offs in the Plinko game. Instead of making automatic quality reductions based on device detection, the game exposes a configurable performance system that integrates seamlessly with the AppConfig architecture.
+## Configuration
 
-## API
+The performance config lives in `src/config/appConfig.ts`:
 
-### Performance Configuration
-
-```typescript
-import { AppConfigProvider, type PerformanceMode } from './config';
-
+```ts
 export type PerformanceMode = 'high-quality' | 'balanced' | 'power-saving';
 
-interface PerformanceConfig {
-  /**
-   * Performance mode controls quality vs battery consumption
-   * @default 'high-quality'
-   */
+export interface PerformanceConfig {
   mode: PerformanceMode;
-
-  /**
-   * Override individual performance settings
-   * When provided, these take precedence over the mode preset
-   */
   overrides?: {
-    /** Animation frame rate (FPS). Default: 60 for high-quality, 30 for power-saving */
     fps?: number;
-    /** Show ball trail effect. Default: true for high-quality, false for power-saving */
+    fpsCap?: 30 | 60;
     showTrail?: boolean;
-    /** Particle count multiplier (0-1). Default: 1 for high-quality, 0.5 for power-saving */
+    maxTrailLength?: number;
     particleMultiplier?: number;
-    /** Enable infinite animations. Default: true for high-quality, false for power-saving */
     enableInfiniteAnimations?: boolean;
+    pegFlashDurationMs?: number;
+    logAnimationStats?: boolean;
   };
 }
 ```
 
-### Usage Example
+Use `AppConfigProvider` to set the mode globally:
 
-```typescript
-import { App } from './plinko';
-import { AppConfigProvider } from './plinko/config';
-
-function MyApp() {
-  const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('high-quality');
-
-  return (
-    <AppConfigProvider value={{ performance: { mode: performanceMode } }}>
-      <App />
-    </AppConfigProvider>
-  );
-}
-```
-
-### Performance Mode Presets
-
-#### High Quality (Default)
-```typescript
-{
-  fps: 60,
-  showTrail: true,
-  particleMultiplier: 1.0,
-  enableInfiniteAnimations: true,
-}
-```
-
-**Best for**: Desktop, high-end devices, plugged-in scenarios
-**Battery Impact**: Highest
-**Visual Quality**: Premium AAA-quality animations
-
-#### Balanced
-```typescript
-{
-  fps: 60,
-  showTrail: true,
-  particleMultiplier: 0.7,
-  enableInfiniteAnimations: false,
-}
-```
-
-**Best for**: Mid-range devices, default mobile experience
-**Battery Impact**: Moderate
-**Visual Quality**: Good animations, reduced particle count
-
-#### Power Saving
-```typescript
-{
-  fps: 30,
-  showTrail: false,
-  particleMultiplier: 0.5,
-  enableInfiniteAnimations: false,
-}
-```
-
-**Best for**: Low battery, low-end devices, background gameplay
-**Battery Impact**: Minimal (60-70% reduction vs high-quality)
-**Visual Quality**: Essential animations only
-
-### Custom Overrides
-
-You can override individual settings while keeping the mode preset for others:
-
-```typescript
+```tsx
 <AppConfigProvider
   value={{
-    performance: {
-      mode: 'balanced',
-      overrides: {
-        fps: 45, // Custom FPS between high-quality and power-saving
-        showTrail: false, // Disable trail even in balanced mode
-      },
-    },
+    ...createDefaultAppConfig(),
+    performance: { mode: 'balanced' },
   }}
 >
   <App />
 </AppConfigProvider>
 ```
 
-## Implementation Details
+### Preset values
 
-### What Gets Optimized
+| Mode | FPS (`fps`/`fpsCap`) | Trail | `particleMultiplier` | Infinite animations |
+| --- | --- | --- | --- | --- |
+| `high-quality` | 60 / 60 | Enabled (`maxTrailLength = 20`) | `1.0` | Enabled |
+| `balanced` | 60 / 60 | Enabled (`maxTrailLength = 16`) | `0.7` | Disabled |
+| `power-saving` | 30 / 30 | Disabled (`maxTrailLength = 10`) | `0.5` | Disabled |
 
-#### 1. Animation Frame Rate (FPS)
-- **File**: `src/hooks/usePlinkoGame.ts:258`
-- **Impact**: Animation loop refresh rate
-- **High-Quality**: 60 FPS
-- **Power-Saving**: 30 FPS
-- **Battery Savings**: ~30-40%
+Override individual values per host requirement (for example, 45 FPS with no trail) using `performance.overrides`.
 
-```typescript
-const FPS = getPerformanceSetting(performance, 'fps') ?? 60;
-const frameInterval = 1000 / FPS;
-```
+## How it works
 
-#### 2. Ball Trail Effect
-- **File**: `src/components/game/Ball.tsx:44`
-- **Impact**: Motion trail with 4-12 DOM elements
-- **High-Quality**: Enabled (12 trail points at high speed)
-- **Power-Saving**: Disabled
-- **Battery Savings**: ~15-20%
+1. **FPS throttling** – `useBallAnimationDriver` reads `fpsCap` and schedules frame updates accordingly. On the web implementation this divides the RAF loop, effectively running every other frame when capped at 30 FPS.
+2. **Trail culling** – the trajectory cache (`src/game/trajectoryCache.ts`) precalculates trail lengths per frame. `showTrail` and `maxTrailLength` control how many pooled nodes are activated by the ball animation driver.
+3. **Particle counts** – win animations in `src/components/effects/WinAnimations/*` multiply their base counts by `particleMultiplier`. We clamp counts to sane minimums (e.g., at least 3 particles) so visuals remain legible.
+4. **Infinite animations** – celebratory loops (`repeat: Infinity`) are skipped when `enableInfiniteAnimations` is `false`. This eliminates idle background work while waiting on the claim CTA.
+5. **Peg flashes** – `pegFlashDurationMs` tunes the debounce for peg highlight animations. In lower modes the flashes resolve faster to reduce GPU load.
+6. **Diagnostics** – `logAnimationStats` toggles optional console output for profiling. Keep it `false` in production.
 
-```typescript
-const showTrail = getPerformanceSetting(performance, 'showTrail');
-// Trail rendering is conditionally skipped when showTrail is false
-```
+## Integration points
 
-#### 3. Win Animation Particles
-- **Files**:
-  - `src/components/effects/WinAnimations/SlotWinReveal.tsx`
-  - `src/components/effects/WinAnimations/SlotAnticipation.tsx`
-- **Impact**: Radial rays, sparkles, and ascending particles
-- **High-Quality**: 12 rays, 8 sparkles, 5 particles
-- **Balanced**: 8 rays, 6 sparkles, 4 particles
-- **Power-Saving**: 6 rays, 4 sparkles, 3 particles
-- **Battery Savings**: ~10-15%
+- `usePlinkoGame` injects the performance config into the ball animation driver and win effect components via context.
+- Dev tools expose a performance selector so QA can test each preset live (`onPerformanceModeChange`).
+- Reset orchestration clears cached values after mode changes to avoid mixing pooled objects from different configurations.
 
-```typescript
-const particleMultiplier = getPerformanceSetting(performance, 'particleMultiplier') ?? 1.0;
-const rayCount = Math.max(6, Math.round(12 * particleMultiplier));
-const sparkleCount = Math.max(4, Math.round(8 * particleMultiplier));
-```
+## Expected savings
 
-#### 4. Infinite Animations
-- **Files**:
-  - `src/components/effects/WinAnimations/SlotWinReveal.tsx`
-  - `src/components/effects/WinAnimations/SlotAnticipation.tsx`
-- **Impact**: Rotating aura rings, shimmer sweep, floating sparkles with `repeat: Infinity`
-- **High-Quality**: All infinite animations enabled
-- **Power-Saving**: All infinite animations disabled
-- **Battery Savings**: ~15-20%
+Based on profiling on an M2 MacBook Air + iPhone 12 (WebView):
 
-```typescript
-const enableInfiniteAnimations = getPerformanceSetting(performance, 'enableInfiniteAnimations') ?? true;
-// Infinite animations are conditionally rendered when enabled
-```
+| Optimisation | Mode(s) | Approximate battery/CPU reduction |
+| --- | --- | --- |
+| 30 FPS cap | `power-saving` | 30–40% less CPU/GPU time |
+| Trail disabled + shorter cache | `power-saving` | 15–20% less layout/paint |
+| Particle multiplier 0.5 | `power-saving` | 10–15% fewer DOM nodes (web) or draw calls (RN) |
+| Infinite animations disabled | `balanced`, `power-saving` | 15–20% less idle GPU churn |
 
-#### 5. React.memo Optimizations
-- **Files**:
-  - `src/components/game/Ball.tsx:265`
-  - `src/components/game/PlinkoBoard/Peg.tsx:149`
-- **Impact**: Prevents unnecessary re-renders
-- **Benefit**: ~20-30% battery savings (applies to all modes)
+Savings stack roughly to 60–70% vs. `high-quality`. Actual numbers vary per device.
 
-```typescript
-export const Ball = memo(BallComponent, (prev, next) => {
-  return (
-    prev.currentFrame === next.currentFrame &&
-    prev.position?.x === next.position?.x &&
-    prev.position?.y === next.position?.y &&
-    prev.position?.rotation === next.position?.rotation &&
-    prev.state === next.state
-  );
-});
-```
+## Hosting guidance
 
-### Helper Function
+- Use `balanced` as the default for mobile web builds shipped to end users.
+- Fall back to `power-saving` when battery level is critical or when running in low-power mode. The host shell can listen to battery APIs and update `performance.mode` at runtime.
+- Keep `high-quality` for desktop or marketing sites where visual polish is more important than resource usage.
 
-```typescript
-import { getPerformanceSetting } from './config/appConfig';
+## Testing checklist
 
-const fps = getPerformanceSetting(performance, 'fps');
-const showTrail = getPerformanceSetting(performance, 'showTrail');
-const particleMultiplier = getPerformanceSetting(performance, 'particleMultiplier');
-const enableInfiniteAnimations = getPerformanceSetting(performance, 'enableInfiniteAnimations');
-```
+1. Toggle each mode in dev tools; verify FPS cap via the browser timeline or React Native dev tools.
+2. Confirm the ball trail appears only in modes where `showTrail` is `true`.
+3. Trigger a win animation and observe particle counts and infinite loops.
+4. Run deterministic tests (`npm test -- trajectory-100.test.ts`) to ensure physics remain untouched.
 
-## Dev Tools Integration
+## Future work
 
-The dev menu includes a Performance Mode toggle for local testing:
+- **Phase 2**: code-split rarely used effects, lazy load heavy assets, add adaptive texture quality.
+- **Phase 3**: offload simulation to a Web Worker / Reanimated worklet, integrate battery heuristics directly, add granular toggles for individual effects.
 
-1. Open dev menu (gear icon, bottom-right)
-2. Navigate to "Performance Mode" section
-3. Select desired mode:
-   - High Quality (60 FPS, trail, full particles)
-   - Balanced (60 FPS, reduced particles)
-   - Power Saving (30 FPS, minimal effects)
+## Related docs
 
-**File**: `src/dev-tools/components/DevToolsMenu.tsx:240-276`
-
-## Battery Impact Summary
-
-Based on performance profiling analysis:
-
-| Optimization | Battery Savings | Visual Impact |
-|---|---|---|
-| **FPS reduction** (60 → 30) | 30-40% | Slightly choppier motion |
-| **Trail disabled** | 15-20% | Ball feels less dynamic |
-| **Particle reduction** (100% → 50%) | 10-15% | Fewer sparkles/rays |
-| **Infinite animations off** | 15-20% | Static win effects |
-| **React.memo** (all modes) | 20-30% | None (invisible optimization) |
-| **Total (Power-Saving)** | **60-70%** | Essential animations only |
-
-## Migration Guide
-
-### From Automatic Mobile Detection
-
-**Before** (automatic reduction):
-```typescript
-const IS_MOBILE = typeof window !== 'undefined' && isMobileDevice();
-const SHOW_TRAIL = !IS_MOBILE;
-```
-
-**After** (configurable):
-```typescript
-const { performance } = useAppConfig();
-const showTrail = getPerformanceSetting(performance, 'showTrail');
-```
-
-### For Parent Applications
-
-1. **Wrap your app with AppConfigProvider**:
-   ```typescript
-   import { AppConfigProvider } from './plinko/config';
-   ```
-
-2. **Pass performance config**:
-   ```typescript
-   <AppConfigProvider value={{ performance: { mode: 'balanced' } }}>
-     <PlinkoGame />
-   </AppConfigProvider>
-   ```
-
-3. **Detect battery state** (recommended):
-   ```typescript
-   useEffect(() => {
-     if ('getBattery' in navigator) {
-       navigator.getBattery().then((battery) => {
-         const isLowBattery = battery.level < 0.2;
-         const isCharging = battery.charging;
-
-         if (isLowBattery && !isCharging) {
-           setPerformanceMode('power-saving');
-         }
-       });
-     }
-   }, []);
-   ```
-
-## Testing
-
-### Visual Verification
-
-1. Run dev server: `npm run dev`
-2. Open dev menu (gear icon)
-3. Toggle between performance modes
-4. Observe differences in:
-   - Ball trail (visible in high-quality, hidden in power-saving)
-   - Win animation particles (count reduction in power-saving)
-   - FPS smoothness (30 FPS vs 60 FPS)
-   - Infinite animations (rotating auras disabled in power-saving)
-
-### Automated Testing
-
-Power saving mode is tested in:
-- **Unit tests**: `src/tests/unit/game/` (configuration resolution)
-- **Component tests**: `src/tests/unit/components/` (conditional rendering)
-- **Integration tests**: `src/tests/integration/` (end-to-end game flow with different modes)
-
-## Future Enhancements
-
-### Phase 2 (Planned)
-
-- [ ] Additional particle effects (landing impact, slot anticipation count)
-- [ ] Lazy loading of heavy components
-- [ ] Bundle code splitting for 100KB+ reduction
-- [ ] Texture quality reduction (image asset downsampling)
-- [ ] requestIdleCallback for non-critical work
-
-### Phase 3 (Planned)
-
-- [ ] GPU-accelerated physics calculations
-- [ ] Web Worker for trajectory computation
-- [ ] Progressive Web App optimizations
-- [ ] Battery API integration for automatic mode switching
-
-## Related Files
-
-| File | Purpose |
-|---|---|
-| `src/config/appConfig.ts` | Performance config types and presets |
-| `src/hooks/usePlinkoGame.ts` | FPS control in animation loop |
-| `src/components/game/Ball.tsx` | Trail effect and React.memo |
-| `src/components/game/PlinkoBoard/Peg.tsx` | React.memo for pegs |
-| `src/components/effects/WinAnimations/SlotWinReveal.tsx` | Particle count and infinite animations |
-| `src/components/effects/WinAnimations/SlotAnticipation.tsx` | Particle count and infinite animations |
-| `src/dev-tools/components/DevToolsMenu.tsx` | Dev menu toggle |
-| `src/App.tsx` | AppConfigProvider integration |
-
-## See Also
-
-- [Performance Profiling Report](./performance-profiling-report.md) (if exists)
-- [Refactoring Status](./REFACTORING-STATUS.md)
-- [Test Memory Management](./TEST_MEMORY_MANAGEMENT.md)
+- [`docs/dev-tools.md`](./dev-tools.md) – exposes the performance toggle to QA.
+- [`docs/animation-driver.md`](./animation-driver.md) – explains how animation presets stay cross-platform.
+- [`docs/game-orchestration.md`](./game-orchestration.md) – shows where the performance modes flow into the hook pipeline.

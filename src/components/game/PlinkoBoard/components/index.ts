@@ -4,7 +4,6 @@
  */
 
 export { PegField } from './PegField';
-export { SlotList, type SlotData } from './SlotList';
 export { WinAnimations } from './WinAnimations';
 export { DropPositionUI } from './DropPositionUI';
-export { BallRenderer } from './BallRenderer';
+export { OptimizedBallRenderer } from './OptimizedBallRenderer';

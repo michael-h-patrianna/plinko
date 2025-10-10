@@ -12,7 +12,7 @@
  * @param ballState - Current game state (idle, countdown, dropping, landed, etc.)
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '../../../game/types';
 import { useTheme } from '../../../theme';
 import { getPrizeThemeColor } from '../../../theme/prizeColorMapper';
@@ -34,14 +34,16 @@ import { BorderWall } from './BorderWall';
 import { ComboLegend } from './ComboLegend';
 import { Peg } from './Peg';
 import { Slot } from './Slot';
-import { BallRenderer } from './components/BallRenderer';
+import { OptimizedBallRenderer } from './components/OptimizedBallRenderer';
 import { useAppConfig } from '../../../config/AppConfigContext';
 import { getPerformanceSetting } from '../../../config/appConfig';
+import { useWinAnimationState } from '../../../hooks/useWinAnimationState';
 
 interface FrameStore {
   subscribe: (listener: () => void) => () => void;
   getSnapshot: () => number;
   getCurrentFrame: () => number;
+  notifyListeners: () => void;
 }
 
 interface PlinkoBoardProps {
@@ -50,6 +52,7 @@ interface PlinkoBoardProps {
   trajectory?: TrajectoryPoint[];
   trajectoryCache?: TrajectoryCache | null;
   frameStore?: FrameStore;
+  currentFrameRef?: React.MutableRefObject<number>;
   getBallPosition?: () => { x: number; y: number; rotation: number } | null;
   getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
   // Legacy props for backwards compatibility with tests
@@ -61,6 +64,7 @@ interface PlinkoBoardProps {
   ballState: GameState;
   isSelectingPosition?: boolean;
   onPositionSelected?: (zone: DropZone) => void;
+  onLandingComplete?: () => void;
 }
 
 export function PlinkoBoard({
@@ -69,6 +73,7 @@ export function PlinkoBoard({
   trajectory,
   trajectoryCache,
   frameStore,
+  currentFrameRef,
   getBallPosition,
   getCurrentTrajectoryPoint,
   ballPosition: ballPositionProp,
@@ -79,6 +84,7 @@ export function PlinkoBoard({
   ballState,
   isSelectingPosition = false,
   onPositionSelected,
+  onLandingComplete,
 }: PlinkoBoardProps) {
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
@@ -113,12 +119,10 @@ export function PlinkoBoard({
     return { playableWidth, slotWidth };
   }, [internalWidth, slotCount, BORDER_WIDTH]);
 
-  // Animation state for win reveal and landing effects
-  const [showWinReveal, setShowWinReveal] = useState(false);
-  const [showLandingImpact, setShowLandingImpact] = useState(false);
-  const [showAnticipation, setShowAnticipation] = useState(false);
+  // Win animation state machine - manages landing-impact -> anticipation -> win-reveal sequence
+  const { showLandingImpact, showAnticipation, showWinReveal } = useWinAnimationState(ballState);
 
-  // Drop position selection state
+  // Drop position selection state (separate concern from animations)
   const [selectedDropIndex, setSelectedDropIndex] = useState(2); // Center by default
 
   const DROP_ZONES: Array<{ zone: DropZone; position: number }> = [
@@ -128,29 +132,6 @@ export function PlinkoBoard({
     { zone: 'right-center', position: DROP_ZONE_POSITIONS['right-center'] },
     { zone: 'right', position: DROP_ZONE_POSITIONS.right },
   ];
-
-  // Trigger landing impact and anticipation, then win reveal when ball lands
-  useEffect(() => {
-    if (ballState === 'landed' && currentTrajectoryPoint) {
-      // Immediately show landing impact and anticipation
-      setShowLandingImpact(true);
-      setShowAnticipation(true);
-
-      // Show win reveal after short delay (to let anticipation build)
-      const revealTimer = setTimeout(() => {
-        setShowWinReveal(true);
-        setShowAnticipation(false); // Stop anticipation when reveal starts
-      }, 600);
-
-      return () => {
-        clearTimeout(revealTimer);
-      };
-    } else {
-      setShowWinReveal(false);
-      setShowLandingImpact(false);
-      setShowAnticipation(false);
-    }
-  }, [ballState, currentTrajectoryPoint]);
 
   // Generate peg layout - staggered pattern like real Plinko
   const pegs = useMemo(() => {
@@ -222,6 +203,30 @@ export function PlinkoBoard({
     return calculateBucketZoneY(boardHeight, dimensions.slotWidth);
   }, [boardHeight, dimensions.slotWidth]);
 
+  // PERFORMANCE: Memoize mapped slot elements to prevent Slot re-renders
+  // Slots are now static - collision detection moved to OptimizedBallRenderer (imperative updates)
+  // This eliminates 60 FPS re-renders of PlinkoBoard and Slots during ball drop
+  const slotElements = useMemo(() => {
+    return slots.map((slot) => {
+      // Only show winning state during drop and end phase, not when idle
+      const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
+
+      return (
+        <Slot
+          key={`slot-${slot.index}`}
+          index={slot.index}
+          prize={slot.prize}
+          x={slot.x}
+          width={slot.width}
+          isWinning={isWinning}
+          prizeCount={slotCount}
+          boardWidth={boardWidth}
+          comboBadgeNumber={slot.comboBadgeNumber}
+        />
+      );
+    });
+  }, [slots, slotCount, ballState, selectedIndex, boardWidth]);
+
   return (
     <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
       <AnimatedDiv
@@ -260,13 +265,10 @@ export function PlinkoBoard({
         <BorderWall side="top" width={BORDER_WIDTH} hasImpact={false} boardWidth={boardWidth} />
 
 
-        {/* Pegs */}
+        {/* Pegs - static rendering, flash state controlled imperatively by BallAnimationDriver */}
         <div style={{ opacity: isSelectingPosition ? 0.1 : 1, transition: 'opacity 0.3s ease' }}>
           {pegs.map((peg) => {
-            // Get pre-calculated hit frames for this peg
             const pegKey = `${peg.row}-${peg.col}`;
-            const hitFrames = pegHitFrames.get(pegKey);
-
             return (
               <Peg
                 key={pegKey}
@@ -274,52 +276,31 @@ export function PlinkoBoard({
                 col={peg.col}
                 x={peg.x}
                 y={peg.y}
-                hitFrames={hitFrames}
-                frameStore={frameStore}
-                shouldReset={ballState === 'idle'}
               />
             );
           })}
         </div>
 
-        {/* Slots */}
-        {slots.map((slot) => {
-          // Check if ball is directly above this slot (tighter detection for snappy lighting)
-          const isApproaching =
-            ballState === 'dropping' && currentTrajectoryPoint
-              ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
-              : false;
+        {/* Slots - memoized to prevent unnecessary re-renders */}
+        {slotElements}
 
-          // Only show winning state during drop and end phase, not when idle
-          const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
-
-          // Determine if ball is in this slot (bucket zone)
-          const isInThisSlot =
-            currentTrajectoryPoint && currentTrajectoryPoint.y >= bucketZoneY
-              ? Math.abs(currentTrajectoryPoint.x - (slot.x + slot.width / 2)) < slot.width / 2
-              : false;
-
-          // Pass collision data if ball is in this slot
-          const wallImpact = isInThisSlot ? currentTrajectoryPoint?.bucketWallHit : null;
-          const floorImpact = isInThisSlot && currentTrajectoryPoint?.bucketFloorHit;
-
-          return (
-            <Slot
-              key={`slot-${slot.index}`}
-              index={slot.index}
-              prize={slot.prize}
-              x={slot.x}
-              width={slot.width}
-              isWinning={isWinning}
-              isApproaching={isApproaching}
-              wallImpact={wallImpact}
-              floorImpact={floorImpact}
-              prizeCount={slotCount}
-              boardWidth={boardWidth}
-              comboBadgeNumber={slot.comboBadgeNumber}
-            />
-          );
-        })}
+        {/* Slot Anticipation Overlay - static div updated imperatively by driver */}
+        {/* Shows highlighted border on slot under ball during drop */}
+        <div
+          data-testid="slot-anticipation-overlay"
+          className="absolute pointer-events-none"
+          style={{
+            display: 'none', // Hidden by default, shown by driver
+            bottom: '-10px',
+            borderLeft: '3px solid transparent',
+            borderRight: '3px solid transparent',
+            borderBottom: '3px solid transparent',
+            borderTop: 'none',
+            borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
+            zIndex: 20, // Above slots but below ball
+            transition: 'all 0.1s ease-out', // Smooth position/color changes
+          }}
+        />
 
         {/* SELECTION MODE: Drop position launchers - 5 options when selecting */}
         {isSelectingPosition && DROP_ZONES.map((dropZone, index) => (
@@ -344,15 +325,23 @@ export function PlinkoBoard({
           />
         )}
 
-        {/* Ball Renderer - handles ball, trail, and launcher animations */}
-        {/* PERFORMANCE: This component subscribes to frameStore independently */}
-        <BallRenderer
+        {/* Optimized Ball Renderer - uses driver for direct DOM manipulation */}
+        {/* PERFORMANCE: Bypasses React reconciliation + drives imperative peg/slot updates */}
+        <OptimizedBallRenderer
           isSelectingPosition={isSelectingPosition}
           ballState={ballState}
           showTrail={showTrail}
           frameStore={frameStore}
+          currentFrameRef={currentFrameRef}
           getBallPosition={getBallPosition}
           trajectoryCache={trajectoryCache}
+          trajectoryLength={trajectory?.length}
+          onLandingComplete={onLandingComplete}
+          pegHitFrames={pegHitFrames}
+          slots={slots.map((slot) => ({ x: slot.x, width: slot.width }))}
+          slotHighlightColor={theme.colors.game.ball.primary}
+          bucketZoneY={bucketZoneY}
+          getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
         />
 
         {/* Ball Landing Impact - triggers when ball lands */}

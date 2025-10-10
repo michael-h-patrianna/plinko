@@ -84,13 +84,9 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     setPrizes,
   });
 
-  // Animation loop
+  // Frame store for animation synchronization
+  // NOTE: Actual animation loop is now in ballAnimationDriver (consolidated to single RAF loop)
   const { frameStore, resetFrame } = useGameAnimation({
-    gameState: state,
-    trajectory,
-    onLandingComplete: () => {
-      dispatch({ type: 'LANDING_COMPLETED' });
-    },
     currentFrameRef,
   });
 
@@ -119,6 +115,10 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     resetCoordinator.reset();
   }, [resetCoordinator]);
 
+  const onLandingComplete = useCallback(() => {
+    dispatch({ type: 'LANDING_COMPLETED' });
+  }, [dispatch]);
+
   // Computed values derived from refs for convenience
   // Used by components that need current ball position/trajectory
   const ballPosition = getBallPosition();
@@ -133,6 +133,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     trajectory,
     trajectoryCache: context.trajectoryCache,
     frameStore,
+    currentFrameRef,
     getBallPosition,
     getCurrentTrajectoryPoint,
     ballPosition,
@@ -142,6 +143,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     completeCountdown,
     claimPrize,
     resetGame,
+    onLandingComplete,
     canClaim: state === 'revealed',
     isLoadingPrizes: isLoadingSession,
     prizeLoadError: loadError,

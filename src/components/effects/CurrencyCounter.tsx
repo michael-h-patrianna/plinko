@@ -1,12 +1,12 @@
 /**
  * Currency counter with pop animation and floating increment indicators
  * Adapted from animations library TextEffectsCounterIncrement
- * Uses setTimeout/setInterval pattern compatible with React Native
+ * Uses animation driver for cross-platform compatibility
  */
 
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../theme';
-import './CurrencyCounter.css';
+import { useAnimationDriver } from '../../theme/animationDrivers';
 import { ANIMATION_DURATION, UI_DELAY } from '../../constants';
 
 interface CounterIndicator {
@@ -33,6 +33,8 @@ export function CurrencyCounter({
   delay = 0,
 }: CurrencyCounterProps) {
   const { theme } = useTheme();
+  const driver = useAnimationDriver();
+  const AnimatedSpan = driver.createAnimatedComponent('span');
   const [currentValue, setCurrentValue] = useState(0);
   const [isValueAnimating, setIsValueAnimating] = useState(false);
   const [indicators, setIndicators] = useState<CounterIndicator[]>([]);
@@ -107,29 +109,127 @@ export function CurrencyCounter({
   }, [targetAmount, delay]);
 
   return (
-    <div className="currency-counter">
-      {icon && <div className="currency-counter__icon">{icon}</div>}
-      <div className="currency-counter__content">
-        <div className="currency-counter__value-wrapper">
-          <span
-            className={`currency-counter__value ${isValueAnimating ? 'currency-counter__value--popping' : ''}`}
-            style={{ color: theme.colors.text.primary }}
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '12px',
+        padding: '12px 20px',
+        background: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: '12px',
+        position: 'relative',
+      }}
+    >
+      {icon && (
+        <div
+          style={{
+            width: '48px',
+            height: '48px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          {icon}
+        </div>
+      )}
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+        }}
+      >
+        <div
+          style={{
+            position: 'relative',
+            minHeight: '36px',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          {/* Animated value with pop effect */}
+          <AnimatedSpan
+            style={{
+              position: 'relative',
+              fontSize: '32px',
+              lineHeight: 1,
+              fontWeight: 900,
+              letterSpacing: '1px',
+              color: theme.colors.text.primary,
+              transformOrigin: 'center bottom',
+            }}
+            animate={
+              isValueAnimating
+                ? {
+                    scale: [1, 1.15, 1],
+                  }
+                : {
+                    scale: 1,
+                  }
+            }
+            transition={{
+              duration: 0.3,
+              ease: [0.34, 1.56, 0.64, 1], // cubic-bezier for bounce
+              times: [0, 0.5, 1],
+            }}
           >
             {currentValue.toLocaleString()}
-          </span>
+          </AnimatedSpan>
 
           {/* Floating increment indicators */}
           {indicators.map((indicator) => (
-            <span
+            <AnimatedSpan
               key={indicator.id}
-              className={`currency-counter__indicator ${indicator.isAnimating ? 'currency-counter__indicator--animating' : ''}`}
-              style={{ color: theme.colors.status.success }}
+              style={{
+                position: 'absolute',
+                right: '-24px',
+                top: '-8px',
+                color: theme.colors.status.success,
+                fontWeight: 700,
+                fontSize: '16px',
+                pointerEvents: 'none',
+              }}
+              initial={{
+                y: 8,
+                scale: 0.8,
+                opacity: 0,
+              }}
+              animate={
+                indicator.isAnimating
+                  ? {
+                      y: [-4, -16, -28],
+                      scale: [1, 1, 0.9],
+                      opacity: [1, 1, 0],
+                    }
+                  : {
+                      y: -28,
+                      scale: 0.9,
+                      opacity: 0,
+                    }
+              }
+              transition={{
+                duration: 0.8,
+                ease: [0.25, 0.46, 0.45, 0.94],
+                times: [0.2, 0.5, 1],
+              }}
             >
               +{indicator.amount}
-            </span>
+            </AnimatedSpan>
           ))}
         </div>
-        <span className="currency-counter__label">{label}</span>
+        <span
+          style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            color: 'rgba(255, 255, 255, 0.7)',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+          }}
+        >
+          {label}
+        </span>
       </div>
     </div>
   );

@@ -72,6 +72,7 @@ class FramerMotionDriver implements AnimationDriver {
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): any {
     // Return the motion wrapper for the component
     return motion[component as keyof typeof motion] || motion.div;
