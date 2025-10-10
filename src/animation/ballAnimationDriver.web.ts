@@ -476,10 +476,9 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     if (!boardEl) return;
 
     // Calculate shake amount based on intensity
-    // Enhanced: Increased max shake from 4px to 8px for more dramatic effect
-    // Also add vertical shake for more impact
-    const horizontalShake = intensity * 8;
-    const verticalShake = intensity * 4;
+    // Subtle but noticeable shake: 3-6px horizontal, 2-3px vertical
+    const horizontalShake = intensity * 6;
+    const verticalShake = intensity * 3;
 
     // Apply shake animation using keyframes with both horizontal and vertical movement
     const animation = boardEl.animate(

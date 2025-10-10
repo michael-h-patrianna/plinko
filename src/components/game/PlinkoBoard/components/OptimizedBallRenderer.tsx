@@ -344,9 +344,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         if (newLeftHits.length > 0) {
           // Left wall was hit! Trigger flash via driver with ball Y position
           driver.updateWallFlash('left', true, position.y);
-          // Trigger screen shake based on speed (intensity 0-1)
+          // Trigger screen shake - always minimum 0.5 intensity, max 1.0 for high speeds
           const speed = cached.speed || 0;
-          const shakeIntensity = Math.min(speed / 600, 1); // Max intensity at 600 px/s
+          const shakeIntensity = Math.max(0.5, Math.min(speed / 400, 1)); // Min 0.5, max at 400 px/s
           driver.triggerScreenShake(shakeIntensity);
           // Update last checked frame
           lastCheckedWallFrameRef.current.left = currentFrame;
@@ -361,9 +361,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         if (newRightHits.length > 0) {
           // Right wall was hit! Trigger flash via driver with ball Y position
           driver.updateWallFlash('right', true, position.y);
-          // Trigger screen shake based on speed
+          // Trigger screen shake - always minimum 0.5 intensity, max 1.0 for high speeds
           const speed = cached.speed || 0;
-          const shakeIntensity = Math.min(speed / 600, 1); // Max intensity at 600 px/s
+          const shakeIntensity = Math.max(0.5, Math.min(speed / 400, 1)); // Min 0.5, max at 400 px/s
           driver.triggerScreenShake(shakeIntensity);
           // Update last checked frame
           lastCheckedWallFrameRef.current.right = currentFrame;

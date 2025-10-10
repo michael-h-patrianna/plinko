@@ -78,52 +78,46 @@ function PegComponent({ row, col, x, y }: PegProps) {
     >
       <style>
         {`
-          /* CSS variable for dynamic flash color (set imperatively by driver) */
-          [data-testid^="peg-"] {
-            --peg-flash-color: ${theme.colors.game.peg.highlight};
-          }
-
           /* Peg background transition controlled by data-peg-hit attribute */
-          [data-peg-hit="false"] {
+          [data-testid="peg-${row}-${col}"][data-peg-hit="false"] {
             background: ${theme.gradients.pegDefault};
             transition: ${theme.effects.transitions.fast || 'background 150ms ease-out, box-shadow 150ms ease-out'};
           }
 
           /* Bright light-up flash using highlight color - much brighter and more visible */
-          [data-peg-hit="true"] {
-            background: var(--peg-flash-color) !important;
+          [data-testid="peg-${row}-${col}"][data-peg-hit="true"] {
+            background: ${theme.colors.game.peg.highlight} !important;
             transition: ${theme.effects.transitions.fast || 'background 150ms ease-out, box-shadow 150ms ease-out, transform 150ms ease-out'};
-            animation: pegShake 150ms ease-out;
+            animation: pegShake-${row}-${col} 150ms ease-out;
             /* Add strong glow effect for extra brightness and visibility */
-            box-shadow: 0 0 16px var(--peg-flash-color), 0 0 8px var(--peg-flash-color), 0 0 4px var(--peg-flash-color);
+            box-shadow: 0 0 16px ${theme.colors.game.peg.highlight}, 0 0 8px ${theme.colors.game.peg.highlight}, 0 0 4px ${theme.colors.game.peg.highlight};
             /* Scale up slightly for emphasis */
             transform: translate3d(-50%, -50%, 0) scale(1.2);
           }
 
           /* Ripple effect on adjacent pegs (subtle scale pulse) */
-          [data-peg-ripple="true"] {
-            animation: pegRipple 150ms ease-out 50ms;
+          [data-testid="peg-${row}-${col}"][data-peg-ripple="true"] {
+            animation: pegRipple-${row}-${col} 150ms ease-out 50ms;
           }
 
           /* Pulse ring animation - triggered by data-peg-hit="true" */
-          /* Ring now uses the dynamic flash color */
-          [data-peg-hit="true"]::after {
+          [data-testid="peg-${row}-${col}"][data-peg-hit="true"]::after {
             content: '';
             position: absolute;
             left: 50%;
             top: 50%;
             width: 14px;
             height: 14px;
-            border: 2px solid var(--peg-flash-color);
+            border: 2px solid ${theme.colors.game.peg.highlight};
             border-radius: 50%;
             transform: translate(-50%, -50%);
-            animation: pegPulse 300ms ease-out;
+            animation: pegPulse-${row}-${col} 300ms ease-out;
             pointer-events: none;
             z-index: 5;
           }
 
           /* CROSS-PLATFORM COMPATIBLE: Shake animation using translate only */
-          @keyframes pegShake {
+          @keyframes pegShake-${row}-${col} {
             0% {
               transform: translate3d(-50%, -50%, 0) translate(0, 0) scale(1);
             }
@@ -145,7 +139,7 @@ function PegComponent({ row, col, x, y }: PegProps) {
           }
 
           /* CROSS-PLATFORM COMPATIBLE: Ripple animation using scale only */
-          @keyframes pegRipple {
+          @keyframes pegRipple-${row}-${col} {
             0% {
               transform: translate3d(-50%, -50%, 0) scale(1);
             }
@@ -157,7 +151,7 @@ function PegComponent({ row, col, x, y }: PegProps) {
             }
           }
 
-          @keyframes pegPulse {
+          @keyframes pegPulse-${row}-${col} {
             0% {
               transform: translate(-50%, -50%) scale(1);
               opacity: 1;
