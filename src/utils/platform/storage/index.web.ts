@@ -1,55 +1,58 @@
 /**
- * Storage Platform Adapter - Web Implementation
+ * Storage Platform Adapter - Web Implementation (Refactored)
  *
- * Uses localStorage with Promise-based API for consistency with React Native
+ * Uses shared platform utilities for consistent error handling
  */
 
+import { PlatformAdapter, requireFeature } from '../shared';
 import type { StorageAdapter } from './types';
 
-class WebStorageAdapter implements StorageAdapter {
+class WebStorageAdapter extends PlatformAdapter implements StorageAdapter {
+  private storage: Storage;
+
+  constructor() {
+    super('WebStorage');
+    this.storage = requireFeature('localStorage', () => window.localStorage);
+  }
+
   async getItem(key: string): Promise<string | null> {
-    try {
-      return localStorage.getItem(key);
-    } catch (error) {
-      console.error('[Storage] Error getting item:', error);
-      return null;
-    }
+    return this.executeAsync(
+      'getItem',
+      async () => this.storage.getItem(key),
+      { defaultValue: null }
+    );
   }
 
   async setItem(key: string, value: string): Promise<void> {
-    try {
-      localStorage.setItem(key, value);
-    } catch (error) {
-      console.error('[Storage] Error setting item:', error);
-      throw error;
-    }
+    return this.executeAsync(
+      'setItem',
+      async () => this.storage.setItem(key, value),
+      { rethrow: true }
+    );
   }
 
   async removeItem(key: string): Promise<void> {
-    try {
-      localStorage.removeItem(key);
-    } catch (error) {
-      console.error('[Storage] Error removing item:', error);
-      throw error;
-    }
+    return this.executeAsync(
+      'removeItem',
+      async () => this.storage.removeItem(key),
+      { rethrow: true }
+    );
   }
 
   async clear(): Promise<void> {
-    try {
-      localStorage.clear();
-    } catch (error) {
-      console.error('[Storage] Error clearing storage:', error);
-      throw error;
-    }
+    return this.executeAsync(
+      'clear',
+      async () => this.storage.clear(),
+      { rethrow: true }
+    );
   }
 
   async getAllKeys(): Promise<string[]> {
-    try {
-      return Object.keys(localStorage);
-    } catch (error) {
-      console.error('[Storage] Error getting keys:', error);
-      return [];
-    }
+    return this.executeAsync(
+      'getAllKeys',
+      async () => Object.keys(this.storage),
+      { defaultValue: [] }
+    );
   }
 }
 

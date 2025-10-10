@@ -10,9 +10,9 @@
  */
 
 import { lazy, Suspense, useMemo } from 'react';
-import { useAppConfig } from '../config/AppConfigContext';
+import { useAppConfig } from '@config/AppConfigContext';
 import type { ChoiceMechanic } from './components/DevToolsMenu';
-import type { PerformanceMode } from '../config/appConfig';
+import type { PerformanceMode } from '@config/appConfig';
 
 // Lazy load the DevToolsMenu - this creates a separate chunk
 const DevToolsMenu = lazy(() =>

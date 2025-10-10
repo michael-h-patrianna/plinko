@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { deviceInfoAdapter } from '../../../utils/platform/deviceInfo/index.web';
+import { deviceInfoAdapter } from '@utils/platform/deviceInfo/index.web';
 
 describe('DeviceInfo Adapter (Web)', () => {
   describe('API Interface', () => {

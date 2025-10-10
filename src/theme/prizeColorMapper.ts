@@ -5,7 +5,7 @@
  */
 
 import type { Theme } from './types';
-import type { PrizeConfig } from '../game/types';
+import type { PrizeConfig } from '@game/types';
 
 /**
  * Maps a prize color to a theme color

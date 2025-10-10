@@ -8,9 +8,9 @@
  */
 
 import { useMemo } from 'react';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
-import { useAppConfig } from '../../../config/AppConfigContext';
-import { getPerformanceSetting } from '../../../config/appConfig';
+import { useAnimationDriver } from '@theme/animationDrivers';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
 
 interface SlotAnticipationProps {
   x: number;

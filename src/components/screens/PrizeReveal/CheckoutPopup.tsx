@@ -11,7 +11,7 @@
 import { useState } from 'react';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 interface CheckoutPopupProps {
   isOpen: boolean;

@@ -4,11 +4,11 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { AppConfigProvider } from '../../../config/AppConfigContext';
+import { AppConfigProvider } from '@config/AppConfigContext';
 import { ThemeProvider } from '../../../theme';
-import { usePlinkoGame } from '../../../hooks/usePlinkoGame';
+import { usePlinkoGame } from '@hooks/usePlinkoGame';
 import type { ReactNode } from 'react';
-import type { PrizeProvider } from '../../../game/prizeProvider';
+import type { PrizeProvider } from '@game/prizeProvider';
 
 type UsePlinkoGameReturn = ReturnType<typeof usePlinkoGame>;
 

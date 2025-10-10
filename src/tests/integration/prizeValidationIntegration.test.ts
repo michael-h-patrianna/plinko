@@ -5,7 +5,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { ZodError } from 'zod';
-import { validatePrizeProviderPayload } from '../../game/prizeProvider';
+import { validatePrizeProviderPayload } from '@game/prizeProvider';
 
 describe('Prize Validation Integration', () => {
   describe('Invalid Prize Configurations - Provider Level', () => {

@@ -4,12 +4,12 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '../../testUtils';
-import { CheckoutPopup } from '../../../components/screens/PrizeReveal/CheckoutPopup';
-import { FreeRewardView } from '../../../components/screens/PrizeReveal/FreeRewardView';
-import { PurchaseOfferView } from '../../../components/screens/PrizeReveal/PurchaseOfferView';
-import { NoWinView } from '../../../components/screens/PrizeReveal/NoWinView';
-import { RewardItem } from '../../../components/screens/PrizeReveal/RewardItem';
-import type { PrizeConfig } from '../../../game/types';
+import { CheckoutPopup } from '@components/screens/PrizeReveal/CheckoutPopup';
+import { FreeRewardView } from '@components/screens/PrizeReveal/FreeRewardView';
+import { PurchaseOfferView } from '@components/screens/PrizeReveal/PurchaseOfferView';
+import { NoWinView } from '@components/screens/PrizeReveal/NoWinView';
+import { RewardItem } from '@components/screens/PrizeReveal/RewardItem';
+import type { PrizeConfig } from '@game/types';
 
 // ============================================================================
 // CheckoutPopup Component Tests

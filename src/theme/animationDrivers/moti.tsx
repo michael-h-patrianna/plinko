@@ -31,10 +31,12 @@ import type {
  * Placeholder AnimatePresence component
  * Will be replaced with actual Moti AnimatePresence in RN
  */
-const PlaceholderAnimatePresence: React.FC<{
+const PlaceholderAnimatePresence = ({
+  children,
+}: {
   children: React.ReactNode;
   mode?: 'wait' | 'sync' | 'popLayout';
-}> = ({ children }) => {
+}) => {
   return <>{children}</>;
 };
 

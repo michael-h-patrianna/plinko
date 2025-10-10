@@ -11,19 +11,19 @@ import {
   createValidatedPrizeSet,
   generateRandomPrizeSet,
   getPrizeByIndex,
-} from '../../../config/prizes/prizeTable';
+} from '@config/prizes/prizeTable';
 import {
   DEFAULT_PRODUCTION_PRIZE_COUNT,
   createValidatedProductionPrizeSet,
   generateProductionPrizeSet,
   getPrizeByIndex as getProductionPrizeByIndex,
-} from '../../../config/prizes/productionPrizeTable';
-import type { PrizeConfig } from '../../../game/types';
+} from '@config/prizes/productionPrizeTable';
+import type { PrizeConfig } from '@game/types';
 import {
   getPrizeByIndex as getPrizeByIndexUtil,
   normalizeProbabilities,
   validatePrizeSet,
-} from '../../../utils/prizeUtils';
+} from '@utils/prizeUtils';
 
 describe('MOCK_PRIZES Configuration', () => {
   it('should have exactly 6 prizes', () => {

@@ -4,8 +4,8 @@
  * Builder pattern to reduce duplication in test fixture creation
  */
 
-import { generateTrajectory } from '../../game/trajectory';
-import type { DropZone, PrizeConfig, TrajectoryPoint } from '../../game/types';
+import { generateTrajectory } from '@game/trajectory';
+import type { DropZone, PrizeConfig, TrajectoryPoint } from '@game/types';
 import { getDeterministicSeed, type DeterministicSeedName } from './seedFixtures';
 
 // ============================================================================

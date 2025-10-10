@@ -1,4 +1,4 @@
-import type { DeterministicTrajectoryPayload, PrizeConfig } from '../../game/types';
+import type { DeterministicTrajectoryPayload, PrizeConfig } from '@game/types';
 
 export interface PrizeFixture {
   name: string;

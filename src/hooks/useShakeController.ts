@@ -4,9 +4,9 @@
  */
 
 import { useEffect, useReducer, useCallback } from 'react';
-import type { GameState, PrizeConfig } from '../game/types';
+import type { GameState, PrizeConfig } from '@game/types';
 import { ANIMATION_DURATION } from '../constants';
-import { trackStateTransition } from '../utils/telemetry';
+import { trackStateTransition } from '@utils/telemetry';
 
 // ============================================================================
 // Types

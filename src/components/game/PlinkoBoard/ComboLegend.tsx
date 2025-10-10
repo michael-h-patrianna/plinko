@@ -4,12 +4,12 @@
  * @param slots - Array of slot data with prizes and combo badge numbers
  */
 
-import type { PrizeConfig } from '../../../game/types';
-import { getSlotDisplayText } from '../../../game/prizeTypes';
-import { abbreviateNumber } from '../../../utils/formatNumber';
+import type { PrizeConfig } from '@game/types';
+import { getSlotDisplayText } from '@game/prizeTypes';
+import { abbreviateNumber } from '@utils/formatNumber';
 import { useTheme } from '../../../theme';
-import { getPrizeThemeColor } from '../../../theme/prizeColorMapper';
-import { hexToRgba } from '../../../utils/formatting/colorUtils';
+import { getPrizeThemeColor } from '@theme/prizeColorMapper';
+import { hexToRgba } from '@utils/formatting/colorUtils';
 
 interface ComboLegendProps {
   slots: Array<{

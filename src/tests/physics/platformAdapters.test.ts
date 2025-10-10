@@ -10,13 +10,13 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Import all adapters
-import { cryptoAdapter } from '../../utils/platform/crypto';
-import { dimensionsAdapter } from '../../utils/platform/dimensions';
-import { deviceInfoAdapter } from '../../utils/platform/deviceInfo';
-import { storageAdapter } from '../../utils/platform/storage';
-import { animationAdapter } from '../../utils/platform/animation';
-import { navigationAdapter } from '../../utils/platform/navigation';
-import { performanceAdapter } from '../../utils/platform/performance';
+import { cryptoAdapter } from '@utils/platform/crypto';
+import { dimensionsAdapter } from '@utils/platform/dimensions';
+import { deviceInfoAdapter } from '@utils/platform/deviceInfo';
+import { storageAdapter } from '@utils/platform/storage';
+import { animationAdapter } from '@utils/platform/animation';
+import { navigationAdapter } from '@utils/platform/navigation';
+import { performanceAdapter } from '@utils/platform/performance';
 
 describe('Platform Adapters', () => {
   describe('cryptoAdapter', () => {

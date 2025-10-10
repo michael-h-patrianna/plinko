@@ -11,7 +11,7 @@
 
 import { AnimatePresence } from 'framer-motion';
 import { Toast, type ToastProps } from './Toast';
-import { spacingTokens, zIndexTokens } from '../../theme/tokens';
+import { spacingTokens, zIndexTokens } from '@theme/tokens';
 
 export interface ToastContainerProps {
   toasts: ToastProps[];

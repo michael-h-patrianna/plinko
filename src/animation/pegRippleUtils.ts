@@ -14,8 +14,8 @@
  * - Works on web and React Native
  */
 
-import type { Peg } from '../game/boardGeometry';
-import { distance } from '../game/boardGeometry';
+import type { Peg } from '@game/boardGeometry';
+import { distance } from '@game/boardGeometry';
 
 /**
  * Adjacency radius for ripple effects (in pixels)

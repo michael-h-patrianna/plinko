@@ -6,10 +6,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { Peg } from '../../../components/game/PlinkoBoard/Peg';
-import { ScreenShake } from '../../../components/effects/ScreenShake';
-import { CurrencyCounter } from '../../../components/effects/CurrencyCounter';
-import { YouWonText } from '../../../components/effects/YouWonText';
+import { Peg } from '@components/game/PlinkoBoard/Peg';
+import { ScreenShake } from '@components/effects/ScreenShake';
+import { CurrencyCounter } from '@components/effects/CurrencyCounter';
+import { YouWonText } from '@components/effects/YouWonText';
 
 // Mock animation driver props interface for test mocks only
 interface MockAnimatedComponentProps {

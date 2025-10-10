@@ -7,12 +7,12 @@
  */
 
 import { useState } from 'react';
-import type { Prize } from '../../../game/prizeTypes';
+import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
 import { CheckoutPopup } from './CheckoutPopup';
 import { RewardItem } from './RewardItem';
-import { useAnimation } from '../../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 
 interface PurchaseOfferViewProps {
   prize: Prize;

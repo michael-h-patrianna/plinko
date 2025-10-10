@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateTrajectory } from '../../../game/trajectory';
+import { generateTrajectory } from '@game/trajectory';
 
 const VIEWPORT_SIZES = [
   { width: 320, label: 'iPhone SE' },

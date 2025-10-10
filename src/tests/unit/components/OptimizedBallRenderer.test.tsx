@@ -7,8 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { OptimizedBallRenderer } from '../../../components/game/PlinkoBoard/components/OptimizedBallRenderer';
-import type { TrajectoryCache } from '../../../game/types';
+import { OptimizedBallRenderer } from '@components/game/PlinkoBoard/components/OptimizedBallRenderer';
+import type { TrajectoryCache } from '@game/types';
 
 // Mock the animation driver
 vi.mock('../../../animation/useBallAnimationDriver', () => ({

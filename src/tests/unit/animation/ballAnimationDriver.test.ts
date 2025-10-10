@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createWebBallAnimationDriver, WebBallAnimationDriver } from '../../../animation/ballAnimationDriver.web';
-import type { BallTransform, TrailFrame } from '../../../animation/ballAnimationDriver';
+import { createWebBallAnimationDriver, WebBallAnimationDriver } from '@/animation/ballAnimationDriver.web';
+import type { BallTransform, TrailFrame } from '@/animation/ballAnimationDriver';
 
 // Mock animation adapter
 vi.mock('../../../utils/platform/animation', () => ({

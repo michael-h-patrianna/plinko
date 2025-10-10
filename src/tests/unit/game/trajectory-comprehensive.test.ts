@@ -3,8 +3,8 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { generateTrajectory } from '../../../game/trajectory';
-import type { DeterministicTrajectoryPayload } from '../../../game/types';
+import { generateTrajectory } from '@game/trajectory';
+import type { DeterministicTrajectoryPayload } from '@game/types';
 
 const PHYSICS = {
   BALL_RADIUS: 9,

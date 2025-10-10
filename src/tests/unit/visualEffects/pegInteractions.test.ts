@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { buildPegAdjacencyMap, getAdjacentPegs, RIPPLE_RADIUS } from '../../../animation/pegRippleUtils';
-import type { Peg } from '../../../game/boardGeometry';
+import { buildPegAdjacencyMap, getAdjacentPegs, RIPPLE_RADIUS } from '@/animation/pegRippleUtils';
+import type { Peg } from '@game/boardGeometry';
 
 describe('Peg Interaction Visual Effects', () => {
   describe('Progressive Brightness by Row', () => {

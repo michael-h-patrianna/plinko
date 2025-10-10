@@ -8,7 +8,7 @@
  * IMPORTANT: All board geometry must be cross-platform compatible (web + React Native)
  */
 
-import { calculateBucketHeight, calculateBucketZoneY } from '../utils/slotDimensions';
+import { calculateBucketHeight, calculateBucketZoneY } from '@utils/slotDimensions';
 
 // ============================================================================
 // PHYSICS CONSTANTS

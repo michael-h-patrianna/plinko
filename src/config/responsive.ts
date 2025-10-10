@@ -66,10 +66,10 @@ export const BOARD_DIMENSIONS = {
 
 /**
  * Physics constants (dimensions)
- * @deprecated Use PHYSICS from '../game/boardGeometry' instead
+ * @deprecated Use PHYSICS from '@game/boardGeometry' instead
  * This is kept temporarily for backwards compatibility but will be removed
  */
-export { PHYSICS as PHYSICS_DIMENSIONS } from '../game/boardGeometry';
+export { PHYSICS as PHYSICS_DIMENSIONS } from '@game/boardGeometry';
 
 /**
  * Media query helpers

@@ -5,7 +5,7 @@
 
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ErrorBoundary } from '../../../components/layout/ErrorBoundary';
+import { ErrorBoundary } from '@components/layout/ErrorBoundary';
 
 // Component that throws an error
 function ThrowError({ shouldThrow }: { shouldThrow: boolean }) {

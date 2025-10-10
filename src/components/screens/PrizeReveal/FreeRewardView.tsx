@@ -12,12 +12,12 @@ import gcIcon from '../../../assets/gc.png';
 import randomRewardIcon from '../../../assets/random_reward.png';
 import scIcon from '../../../assets/sc.png';
 import xpIcon from '../../../assets/xp.png';
-import type { Prize } from '../../../game/prizeTypes';
+import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
 import { CurrencyCounter } from '../../effects/CurrencyCounter';
 import { YouWonText } from '../../effects/YouWonText';
-import { useAnimation } from '../../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 
 interface FreeRewardViewProps {
   prize: Prize;

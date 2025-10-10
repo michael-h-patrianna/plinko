@@ -10,7 +10,7 @@ import {
   getAnimationDriver,
   framerDriver,
   motiDriver,
-} from '../../../theme/animationDrivers';
+} from '@theme/animationDrivers';
 
 describe('Animation Driver Abstraction', () => {
   describe('Framer Motion Driver', () => {

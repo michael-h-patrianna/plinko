@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { calculateBucketHeight } from '../../../utils/slotDimensions';
+import { calculateBucketHeight } from '@utils/slotDimensions';
 
 describe('Slot Animation Visual Effects', () => {
   describe('Slot Breathing Animation (Idle State)', () => {

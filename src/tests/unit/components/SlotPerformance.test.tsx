@@ -5,9 +5,9 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { Slot } from '../../../components/game/PlinkoBoard/Slot';
+import { Slot } from '@components/game/PlinkoBoard/Slot';
 import { ThemeProvider } from '../../../theme';
-import type { Prize } from '../../../game/prizeTypes';
+import type { Prize } from '@game/prizeTypes';
 
 describe('Slot Performance Optimization', () => {
   const mockPrize: Prize = {

@@ -6,7 +6,7 @@
 import { memo } from 'react';
 import { BallLauncher } from '../../BallLauncher';
 import { DropPositionControls } from '../../../controls/DropPositionSelector';
-import { DROP_ZONE_POSITIONS, type DropZone, PHYSICS } from '../../../../game/boardGeometry';
+import { DROP_ZONE_POSITIONS, type DropZone, PHYSICS } from '@game/boardGeometry';
 
 interface DropPositionUIProps {
   isSelectingPosition: boolean;

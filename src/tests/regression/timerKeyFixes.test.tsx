@@ -5,11 +5,11 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
-import { CurrencyCounter } from '../../components/effects/CurrencyCounter';
-import { Slot } from '../../components/game/PlinkoBoard/Slot';
-import { BorderWall } from '../../components/game/PlinkoBoard/BorderWall';
+import { CurrencyCounter } from '@components/effects/CurrencyCounter';
+import { Slot } from '@components/game/PlinkoBoard/Slot';
+import { BorderWall } from '@components/game/PlinkoBoard/BorderWall';
 import { ThemeProvider } from '../../theme';
-import type { Prize } from '../../game/prizeTypes';
+import type { Prize } from '@game/prizeTypes';
 
 describe('P2.5: Timer & Key Issues Regression Tests', () => {
   beforeEach(() => {

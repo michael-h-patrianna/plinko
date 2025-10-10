@@ -7,8 +7,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useShakeController } from '../../../hooks/useShakeController';
-import type { GameState, PrizeConfig } from '../../../game/types';
+import { useShakeController } from '@hooks/useShakeController';
+import type { GameState, PrizeConfig } from '@game/types';
 import { ANIMATION_DURATION } from '../../../constants';
 
 // Mock telemetry

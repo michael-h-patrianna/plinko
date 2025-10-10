@@ -10,9 +10,9 @@
 
 import { useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import type { GameEvent } from '../game/stateMachine';
-import type { PrizeProviderResult } from '../game/prizeProvider';
-import type { PrizeConfig } from '../game/types';
+import type { GameEvent } from '@game/stateMachine';
+import type { PrizeProviderResult } from '@game/prizeProvider';
+import type { PrizeConfig } from '@game/types';
 
 /**
  * Hook providing centralized reset orchestration

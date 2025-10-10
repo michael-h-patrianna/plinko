@@ -6,9 +6,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateTrajectoryCache, getCachedValues } from '../../../game/trajectoryCache';
-import { generateTrajectory } from '../../../game/trajectory';
-import type { TrajectoryPoint, TrajectoryCache } from '../../../game/types';
+import { generateTrajectoryCache, getCachedValues } from '@game/trajectoryCache';
+import { generateTrajectory } from '@game/trajectory';
+import type { TrajectoryPoint, TrajectoryCache } from '@game/types';
 
 describe('Trajectory Cache Consistency', () => {
   const BOARD_WIDTH = 310;

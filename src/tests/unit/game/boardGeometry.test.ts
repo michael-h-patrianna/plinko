@@ -22,7 +22,7 @@ import {
   distance,
   isInCircle,
   isInRect,
-} from '../../../game/boardGeometry';
+} from '@game/boardGeometry';
 
 describe('boardGeometry - Constants', () => {
   describe('PHYSICS', () => {

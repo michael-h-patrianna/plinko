@@ -3,9 +3,9 @@ import {
   createValidatedProductionPrizeSet,
   DEFAULT_PRODUCTION_PRIZE_COUNT,
   type ProductionPrizeSetOptions,
-} from '../config/prizes/productionPrizeTable';
-import type { PrizeFixture } from '../tests/fixtures/prizeFixtures';
-import { validatePrizeSet } from '../utils/prizeUtils';
+} from '@config/prizes/productionPrizeTable';
+import type { PrizeFixture } from '@tests/fixtures/prizeFixtures';
+import { validatePrizeSet } from '@utils/prizeUtils';
 import { validatePrizesOrThrow } from './prizeValidation';
 import { selectPrize } from './rng';
 import type { DeterministicTrajectoryPayload, PrizeConfig } from './types';

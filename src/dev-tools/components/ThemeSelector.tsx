@@ -4,7 +4,7 @@
  */
 
 import { useTheme } from '../../theme';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 export function ThemeSelector() {
   const driver = useAnimationDriver();

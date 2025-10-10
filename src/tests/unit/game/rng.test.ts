@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { selectPrize, createRng, generateSeed } from '../../../game/rng';
-import { MOCK_PRIZES } from '../../../config/prizes/prizeTable';
+import { selectPrize, createRng, generateSeed } from '@game/rng';
+import { MOCK_PRIZES } from '@config/prizes/prizeTable';
 
 describe('RNG System', () => {
   describe('createRng', () => {

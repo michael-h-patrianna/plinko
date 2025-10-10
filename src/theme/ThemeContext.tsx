@@ -7,7 +7,7 @@ import React, { useState, useCallback, ReactNode } from 'react';
 import { Theme } from './types';
 import { defaultTheme } from './themes/defaultTheme';
 import { ThemeContext, ThemeContextType } from './context';
-import { storageAdapter } from '../utils/platform';
+import { storageAdapter } from '@utils/platform';
 
 interface ThemeProviderProps {
   children: ReactNode;

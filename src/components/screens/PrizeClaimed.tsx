@@ -5,10 +5,10 @@
  * @param onClose - Callback to close and reset the game
  */
 
-import type { PrizeConfig } from '../../game/types';
+import type { PrizeConfig } from '@game/types';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
-import { useAnimation } from '../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 
 interface PrizeClaimedProps {
   prize: PrizeConfig;

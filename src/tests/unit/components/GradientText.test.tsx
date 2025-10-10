@@ -5,7 +5,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { GradientText } from '../../../components/ui/GradientText';
+import { GradientText } from '@components/ui/GradientText';
 
 describe('GradientText', () => {
   describe('Rendering', () => {

@@ -10,13 +10,13 @@ import offerIcon from '../../assets/offer.png';
 import randomRewardIcon from '../../assets/random_reward.png';
 import scIcon from '../../assets/sc.png';
 import xpIcon from '../../assets/xp.png';
-import type { Prize } from '../../game/prizeTypes';
-import { createRng, generateSeed } from '../../game/rng';
+import type { Prize } from '@game/prizeTypes';
+import { createRng, generateSeed } from '@game/rng';
 import {
   getPrizeByIndex as getPrizeByIndexUtil,
   normalizeProbabilities,
   validatePrizeSet,
-} from '../../utils/prizeUtils';
+} from '@utils/prizeUtils';
 
 /**
  * Prize pool for production use

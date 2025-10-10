@@ -7,16 +7,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '../../../utils/prizeUtils';
+import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '@utils/prizeUtils';
 import {
   isMobileDevice,
   getMaxMobileWidth,
   getResponsiveViewportWidth,
-} from '../../../utils/deviceDetection';
-import { abbreviateNumber } from '../../../utils/formatNumber';
-import { calculateBucketHeight, calculateBucketZoneY } from '../../../utils/slotDimensions';
-import { deviceInfoAdapter } from '../../../utils/platform/deviceInfo';
-import type { PrizeConfig } from '../../../game/types';
+} from '@utils/deviceDetection';
+import { abbreviateNumber } from '@utils/formatNumber';
+import { calculateBucketHeight, calculateBucketZoneY } from '@utils/slotDimensions';
+import { deviceInfoAdapter } from '@utils/platform/deviceInfo';
+import type { PrizeConfig } from '@game/types';
 
 describe('prizeUtils', () => {
   describe('validatePrizeSet', () => {

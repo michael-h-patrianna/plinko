@@ -3,7 +3,7 @@
  * Used by both prizeTable.ts and productionPrizeTable.ts
  */
 
-import type { PrizeConfig } from '../game/types';
+import type { PrizeConfig } from '@game/types';
 
 /**
  * Validates that prize probabilities sum to 1.0 and count is within valid range

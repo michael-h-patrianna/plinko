@@ -27,14 +27,14 @@
  */
 
 import { memo } from 'react';
-import type { PrizeConfig, GameState } from '../../../game/types';
-import { calculateBucketHeight } from '../../../utils/slotDimensions';
-import { getSlotDisplayText } from '../../../game/prizeTypes';
-import { abbreviateNumber } from '../../../utils/formatNumber';
+import type { PrizeConfig, GameState } from '@game/types';
+import { calculateBucketHeight } from '@utils/slotDimensions';
+import { getSlotDisplayText } from '@game/prizeTypes';
+import { abbreviateNumber } from '@utils/formatNumber';
 import { useTheme } from '../../../theme';
-import { getPrizeThemeColor } from '../../../theme/prizeColorMapper';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
-import { hexToRgba } from '../../../utils/formatting/colorUtils';
+import { getPrizeThemeColor } from '@theme/prizeColorMapper';
+import { useAnimationDriver } from '@theme/animationDrivers';
+import { hexToRgba } from '@utils/formatting/colorUtils';
 
 interface SlotProps {
   index: number;

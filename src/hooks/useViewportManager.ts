@@ -4,10 +4,10 @@
  */
 
 import { useEffect, useReducer, useCallback } from 'react';
-import { dimensionsAdapter, deviceInfoAdapter } from '../utils/platform';
+import { dimensionsAdapter, deviceInfoAdapter } from '@utils/platform';
 import { VIEWPORT } from '../constants';
-import type { GameState } from '../game/types';
-import { trackStateTransition } from '../utils/telemetry';
+import type { GameState } from '@game/types';
+import { trackStateTransition } from '@utils/telemetry';
 
 // ============================================================================
 // Types

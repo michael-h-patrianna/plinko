@@ -8,8 +8,8 @@
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '../../testUtils';
-import { PlinkoBoard } from '../../../components/game/PlinkoBoard/PlinkoBoard';
-import { MOCK_PRIZES } from '../../../config/prizes/prizeTable';
+import { PlinkoBoard } from '@components/game/PlinkoBoard/PlinkoBoard';
+import { MOCK_PRIZES } from '@config/prizes/prizeTable';
 
 describe('PlinkoBoard Component', () => {
   const defaultProps = {

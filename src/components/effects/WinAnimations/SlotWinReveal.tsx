@@ -12,9 +12,9 @@
 
 import { useMemo } from 'react';
 import { useTheme } from '../../../theme';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
-import { useAppConfig } from '../../../config/AppConfigContext';
-import { getPerformanceSetting } from '../../../config/appConfig';
+import { useAnimationDriver } from '@theme/animationDrivers';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
 
 interface SlotWinRevealProps {
   x: number;

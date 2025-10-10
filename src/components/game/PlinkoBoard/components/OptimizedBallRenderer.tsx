@@ -65,23 +65,23 @@
  */
 
 import { memo, useRef, useEffect } from 'react';
-import type { GameState, BallPosition, TrajectoryCache } from '../../../../game/types';
-import { getCachedValues } from '../../../../game/trajectoryCache';
-import { useBallAnimationDriver } from '../../../../animation/useBallAnimationDriver';
+import type { GameState, BallPosition, TrajectoryCache } from '@game/types';
+import { getCachedValues } from '@game/trajectoryCache';
+import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
 import { useTheme } from '../../../../theme';
-import { useAppConfig } from '../../../../config/AppConfigContext';
-import { getPerformanceSetting } from '../../../../config/appConfig';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
 import {
   sizeTokens,
   zIndexTokens,
   opacityTokens,
   borderWidthTokens,
   animationTokens,
-} from '../../../../theme/tokens';
+} from '@theme/tokens';
 import { BallLauncher } from '../../BallLauncher';
-import type { TrailFrame } from '../../../../animation/ballAnimationDriver';
-import { getCachedTrailLookup } from '../../../../animation/trailOptimization';
-import { calculateBucketHeight } from '../../../../utils/slotDimensions';
+import type { TrailFrame } from '@/animation/ballAnimationDriver';
+import { getCachedTrailLookup } from '@/animation/trailOptimization';
+import { calculateBucketHeight } from '@utils/slotDimensions';
 
 /**
  * Frame store interface for animation frame synchronization.
@@ -288,9 +288,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         const trailLookup = getCachedTrailLookup(trailPointsRef.current.length);
 
         // Calculate motion blur based on horizontal velocity (high-speed effect)
-        // Position is actually a TrajectoryPoint with vx/vy, but typed as BallPosition
-        const vx = (position as any).vx ?? 0;
-        const vy = (position as any).vy ?? 0;
+        // BallPosition includes optional vx/vy for motion blur effects
+        const vx = position.vx ?? 0;
+        const vy = position.vy ?? 0;
         const absVx = Math.abs(vx);
         const motionBlurScaleX = absVx > 400 ? Math.min(1.5 + (absVx - 400) / 400, 2.5) : 1;
 

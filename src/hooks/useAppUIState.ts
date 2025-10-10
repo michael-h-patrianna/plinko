@@ -4,7 +4,7 @@
  */
 
 import { useCallback } from 'react';
-import type { GameState, PrizeConfig } from '../game/types';
+import type { GameState, PrizeConfig } from '@game/types';
 import { useViewportManager } from './useViewportManager';
 import { useShakeController } from './useShakeController';
 

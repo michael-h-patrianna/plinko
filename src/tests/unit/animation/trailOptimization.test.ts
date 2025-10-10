@@ -11,8 +11,8 @@ import {
   clearTrailCache,
   getTrailCacheStats,
   DEFAULT_TRAIL_CONFIG,
-} from '../../../animation/trailOptimization';
-import { opacityTokens } from '../../../theme/tokens';
+} from '@/animation/trailOptimization';
+import { opacityTokens } from '@theme/tokens';
 
 describe('trailOptimization', () => {
   beforeEach(() => {

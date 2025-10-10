@@ -4,7 +4,7 @@ import {
   createDefaultPrizeProvider,
   createFixturePrizeProvider,
   validatePrizeProviderPayload,
-} from '../../../game/prizeProvider';
+} from '@game/prizeProvider';
 import { getPrizeFixture } from '../../fixtures/prizeFixtures';
 
 const SHARED_SEED = 1337;

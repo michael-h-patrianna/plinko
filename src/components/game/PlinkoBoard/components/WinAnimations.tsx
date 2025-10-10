@@ -4,13 +4,13 @@
  */
 
 import { memo } from 'react';
-import type { PrizeConfig, BallPosition } from '../../../../game/types';
+import type { PrizeConfig, BallPosition } from '@game/types';
 import { BallLandingImpact } from '../../../effects/WinAnimations/BallLandingImpact';
 import { SlotAnticipation } from '../../../effects/WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../../../effects/WinAnimations/SlotWinReveal';
 import { VictoryRevealSequence } from '../../../effects/WinAnimations/VictoryRevealSequence';
 import { useTheme } from '../../../../theme';
-import { getPrizeThemeColor } from '../../../../theme/prizeColorMapper';
+import { getPrizeThemeColor } from '@theme/prizeColorMapper';
 
 interface WinAnimationsProps {
   showLandingImpact: boolean;

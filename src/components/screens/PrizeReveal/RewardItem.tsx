@@ -12,9 +12,9 @@ import gcIcon from '../../../assets/gc.png';
 import freeSpinsIcon from '../../../assets/free-spins.png';
 import randomRewardIcon from '../../../assets/random_reward.png';
 import { useTheme } from '../../../theme';
-import type { Theme } from '../../../theme/types';
-import { useAnimation } from '../../../theme/animationDrivers/useAnimation';
-import { hexToRgba } from '../../../utils/formatting/colorUtils';
+import type { Theme } from '@theme/types';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { hexToRgba } from '@utils/formatting/colorUtils';
 
 interface RewardItemProps {
   type: 'gc' | 'sc' | 'spins' | 'xp' | 'randomReward';

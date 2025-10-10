@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { transition, initialContext } from '../../../game/stateMachine';
-import type { GameContext } from '../../../game/types';
+import { transition, initialContext } from '@game/stateMachine';
+import type { GameContext } from '@game/types';
 
 describe('State Machine', () => {
   const mockContext: GameContext = {

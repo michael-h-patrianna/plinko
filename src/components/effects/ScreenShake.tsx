@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from 'react';
 import { UI_DELAY } from '../../constants';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 interface ScreenShakeProps {
   /** Trigger shake effect */

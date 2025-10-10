@@ -5,8 +5,8 @@
 
 import type { GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from './types';
 import type { DropZone } from './types';
-import { trackStateTransition, trackStateError } from '../utils/telemetry';
-import { now } from '../utils/time';
+import { trackStateTransition, trackStateError } from '@utils/telemetry';
+import { now } from '@utils/time';
 
 export type GameEvent =
   | {

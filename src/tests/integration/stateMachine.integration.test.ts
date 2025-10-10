@@ -11,10 +11,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { transition, initialContext } from '../../game/stateMachine';
-import type { GameContext, GameState, PrizeConfig } from '../../game/types';
-import * as telemetry from '../../utils/telemetry';
-import { generateTrajectoryCache } from '../../game/trajectoryCache';
+import { transition, initialContext } from '@game/stateMachine';
+import type { GameContext, GameState, PrizeConfig } from '@game/types';
+import * as telemetry from '@utils/telemetry';
+import { generateTrajectoryCache } from '@game/trajectoryCache';
 
 // Mock telemetry to avoid side effects
 vi.mock('../../utils/telemetry', () => ({

@@ -3,12 +3,12 @@
  * Supports 3-8 prizes with dynamic selection
  */
 
-import type { PrizeConfig } from '../../game/types';
+import type { PrizeConfig } from '@game/types';
 import {
   validatePrizeSet,
   getPrizeByIndex as getPrizeByIndexUtil,
   normalizeProbabilities,
-} from '../../utils/prizeUtils';
+} from '@utils/prizeUtils';
 
 /**
  * Mock prizes for testing

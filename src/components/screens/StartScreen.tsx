@@ -7,13 +7,13 @@
  */
 
 import { useState } from 'react';
-import { getSlotDisplayText } from '../../game/prizeTypes';
-import type { PrizeConfig } from '../../game/types';
+import { getSlotDisplayText } from '@game/prizeTypes';
+import type { PrizeConfig } from '@game/types';
 import { useTheme } from '../../theme';
-import { getPrizeThemeColor, getPrizeThemeColorWithOpacity } from '../../theme/prizeColorMapper';
-import { abbreviateNumber } from '../../utils/formatNumber';
+import { getPrizeThemeColor, getPrizeThemeColorWithOpacity } from '@theme/prizeColorMapper';
+import { abbreviateNumber } from '@utils/formatNumber';
 import { ThemedButton } from '../controls/ThemedButton';
-import { useAnimation } from '../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];

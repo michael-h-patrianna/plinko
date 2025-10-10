@@ -13,18 +13,18 @@
  */
 
 import { useMemo, useState } from 'react';
-import type { GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '../../../game/types';
+import type { GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '@game/types';
 import { useTheme } from '../../../theme';
-import { getPrizeThemeColor } from '../../../theme/prizeColorMapper';
-import { calculateBucketZoneY } from '../../../utils/slotDimensions';
+import { getPrizeThemeColor } from '@theme/prizeColorMapper';
+import { calculateBucketZoneY } from '@utils/slotDimensions';
 import {
   PHYSICS,
   BOARD,
   DROP_ZONE_POSITIONS,
   generatePegLayout,
   type DropZone,
-} from '../../../game/boardGeometry';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
+} from '@game/boardGeometry';
+import { useAnimationDriver } from '@theme/animationDrivers';
 import { BallLauncher } from '../BallLauncher';
 import { DropPositionControls } from '../../controls/DropPositionSelector';
 import { BallLandingImpact } from '../../effects/WinAnimations/BallLandingImpact';
@@ -35,9 +35,9 @@ import { ComboLegend } from './ComboLegend';
 import { Peg } from './Peg';
 import { Slot } from './Slot';
 import { OptimizedBallRenderer } from './components/OptimizedBallRenderer';
-import { useAppConfig } from '../../../config/AppConfigContext';
-import { getPerformanceSetting } from '../../../config/appConfig';
-import { useWinAnimationState } from '../../../hooks/useWinAnimationState';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
+import { useWinAnimationState } from '@hooks/useWinAnimationState';
 
 interface FrameStore {
   subscribe: (listener: () => void) => () => void;

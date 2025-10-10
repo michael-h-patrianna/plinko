@@ -11,7 +11,7 @@
  */
 
 import type { TrajectoryPoint, TrajectoryCache } from './types';
-import { sizeTokens } from '../theme/tokens';
+import { sizeTokens } from '@theme/tokens';
 
 /**
  * Generate pre-calculated cache for a trajectory

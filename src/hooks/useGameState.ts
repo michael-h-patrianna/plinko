@@ -5,13 +5,13 @@
 
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
 import type { ChoiceMechanic } from '../dev-tools';
-import type { PrizeProviderResult } from '../game/prizeProvider';
-import { initialContext, transition, type GameEvent } from '../game/stateMachine';
-import { generateTrajectory } from '../game/trajectory';
-import { initializeTrajectoryAndPrizes } from '../game/trajectoryInitialization';
-import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '../game/types';
+import type { PrizeProviderResult } from '@game/prizeProvider';
+import { initialContext, transition, type GameEvent } from '@game/stateMachine';
+import { generateTrajectory } from '@game/trajectory';
+import { initializeTrajectoryAndPrizes } from '@game/trajectoryInitialization';
+import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '@game/types';
 import { GAME_TIMEOUT } from '../constants';
-import { trackStateError } from '../utils/telemetry';
+import { trackStateError } from '@utils/telemetry';
 
 interface PlinkoGameState {
   state: GameState;
@@ -291,6 +291,8 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       x: point.x,
       y: point.y,
       rotation: point.rotation,
+      vx: point.vx,
+      vy: point.vy,
     };
   }, [gameState.state, gameState.context]);
 

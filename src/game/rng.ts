@@ -3,7 +3,7 @@
  * Ensures consistent behavior across platforms and test runs
  */
 
-import { cryptoAdapter } from '../utils/platform';
+import { cryptoAdapter } from '@utils/platform';
 import type { PrizeConfig } from './types';
 
 /**

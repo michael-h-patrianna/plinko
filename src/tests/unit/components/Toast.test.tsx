@@ -7,9 +7,9 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
-import { Toast } from '../../../components/feedback/Toast';
-import { ToastContainer } from '../../../components/feedback/ToastContainer';
-import { ToastProvider, useToast } from '../../../components/feedback/ToastContext';
+import { Toast } from '@components/feedback/Toast';
+import { ToastContainer } from '@components/feedback/ToastContainer';
+import { ToastProvider, useToast } from '@components/feedback/ToastContext';
 import { ThemeProvider, themes } from '../../../theme';
 
 // Wrapper component for testing useToast hook

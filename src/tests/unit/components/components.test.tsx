@@ -4,18 +4,18 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, act } from '../../testUtils';
-import { BallLauncher } from '../../../components/game/BallLauncher';
-import { Countdown } from '../../../components/game/Countdown';
-import { StartScreen } from '../../../components/screens/StartScreen';
-import { PrizeReveal } from '../../../components/screens/PrizeReveal';
-import { PrizeClaimed } from '../../../components/screens/PrizeClaimed';
-import { Slot } from '../../../components/game/PlinkoBoard/Slot';
-import { Peg } from '../../../components/game/PlinkoBoard/Peg';
-import { ThemedButton } from '../../../components/controls/ThemedButton';
+import { BallLauncher } from '@components/game/BallLauncher';
+import { Countdown } from '@components/game/Countdown';
+import { StartScreen } from '@components/screens/StartScreen';
+import { PrizeReveal } from '@components/screens/PrizeReveal';
+import { PrizeClaimed } from '@components/screens/PrizeClaimed';
+import { Slot } from '@components/game/PlinkoBoard/Slot';
+import { Peg } from '@components/game/PlinkoBoard/Peg';
+import { ThemedButton } from '@components/controls/ThemedButton';
 import { ViewportSelector, ThemeSelector } from '../../../dev-tools';
-import { PopupContainer } from '../../../components/layout/PopupContainer';
-import { MOCK_PRIZES } from '../../../config/prizes/prizeTable';
-import type { PrizeConfig } from '../../../game/types';
+import { PopupContainer } from '@components/layout/PopupContainer';
+import { MOCK_PRIZES } from '@config/prizes/prizeTable';
+import type { PrizeConfig } from '@game/types';
 
 // ============================================================================
 // BallLauncher Component Tests

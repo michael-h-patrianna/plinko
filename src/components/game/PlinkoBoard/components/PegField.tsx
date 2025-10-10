@@ -4,7 +4,7 @@
  */
 
 import { memo, useMemo } from 'react';
-import { generatePegLayout, BOARD } from '../../../../game/boardGeometry';
+import { generatePegLayout, BOARD } from '@game/boardGeometry';
 import { Peg } from '../Peg';
 
 interface PegFieldProps {

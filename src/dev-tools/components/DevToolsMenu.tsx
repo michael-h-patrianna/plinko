@@ -12,9 +12,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useTheme } from '../../theme';
-import { isMobileDevice } from '../../utils/deviceDetection';
-import { useAnimationDriver } from '../../theme/animationDrivers';
-import type { PerformanceMode } from '../../config/appConfig';
+import { isMobileDevice } from '@utils/deviceDetection';
+import { useAnimationDriver } from '@theme/animationDrivers';
+import type { PerformanceMode } from '@config/appConfig';
 
 interface DevToolsMenuProps {
   /** Current viewport width for device simulation */

@@ -14,12 +14,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { createElement, type ReactNode } from 'react';
-import { usePrizeSession } from '../../hooks/usePrizeSession';
-import { useGameState } from '../../hooks/useGameState';
-import { useGameAnimation } from '../../hooks/useGameAnimation';
-import { useResetCoordinator } from '../../hooks/useResetCoordinator';
-import type { PrizeProvider, PrizeProviderResult } from '../../game/prizeProvider';
-import { AppConfigProvider } from '../../config/AppConfigContext';
+import { usePrizeSession } from '@hooks/usePrizeSession';
+import { useGameState } from '@hooks/useGameState';
+import { useGameAnimation } from '@hooks/useGameAnimation';
+import { useResetCoordinator } from '@hooks/useResetCoordinator';
+import type { PrizeProvider, PrizeProviderResult } from '@game/prizeProvider';
+import { AppConfigProvider } from '@config/AppConfigContext';
 
 // Mock telemetry to avoid side effects
 vi.mock('../../utils/telemetry', () => ({

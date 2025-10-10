@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 interface BallLandingImpactProps {
   x: number;

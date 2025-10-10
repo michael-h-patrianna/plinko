@@ -1,5 +1,5 @@
-import { generateTrajectory } from '../../game/trajectory';
-import type { DropZone, TrajectoryPoint } from '../../game/types';
+import { generateTrajectory } from '@game/trajectory';
+import type { DropZone, TrajectoryPoint } from '@game/types';
 import { getDeterministicSeed } from './seedFixtures';
 
 export interface TrajectoryFixtureParams {

@@ -11,8 +11,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateTrajectory } from '../../game/trajectory';
-import type { TrajectoryPoint } from '../../game/types';
+import { generateTrajectory } from '@game/trajectory';
+import type { TrajectoryPoint } from '@game/types';
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;

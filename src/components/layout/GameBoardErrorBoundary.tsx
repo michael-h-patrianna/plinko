@@ -1,6 +1,6 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
-import { trackErrorBoundary } from '../../utils/telemetry';
-import { colorTokens, spacingTokens, borderRadiusTokens, typographyTokens, opacityTokens } from '../../theme/tokens';
+import { trackErrorBoundary } from '@utils/telemetry';
+import { colorTokens, spacingTokens, borderRadiusTokens, typographyTokens, opacityTokens } from '@theme/tokens';
 
 interface Props {
   children: ReactNode;

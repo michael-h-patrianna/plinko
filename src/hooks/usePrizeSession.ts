@@ -4,10 +4,10 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useAppConfig } from '../config/AppConfigContext';
-import type { PrizeProviderResult } from '../game/prizeProvider';
-import type { PrizeConfig } from '../game/types';
-import { navigationAdapter } from '../utils/platform';
+import { useAppConfig } from '@config/AppConfigContext';
+import type { PrizeProviderResult } from '@game/prizeProvider';
+import type { PrizeConfig } from '@game/types';
+import { navigationAdapter } from '@utils/platform';
 import { API_TIMEOUT } from '../constants';
 
 interface UsePrizeSessionOptions {

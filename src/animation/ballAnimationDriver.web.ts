@@ -24,7 +24,7 @@
  */
 
 import type { BallAnimationDriver, BallTransform, TrailFrame, AnimationTimingConfig } from './ballAnimationDriver';
-import { animationAdapter } from '../utils/platform/animation';
+import { animationAdapter } from '@utils/platform/animation';
 import { GAME_TIMEOUT } from '../constants';
 
 export interface WebBallRefs {

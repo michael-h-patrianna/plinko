@@ -11,11 +11,11 @@ import { render, screen, waitFor } from '../../testUtils';
 import { renderHook, act } from '@testing-library/react';
 import { ReactNode } from 'react';
 import { ThemeProvider, useTheme, useThemeValue } from '../../../theme';
-import type { Theme } from '../../../theme/types';
-import { defaultTheme } from '../../../theme/themes/defaultTheme';
-import { playFameTheme } from '../../../theme/themes/playFameTheme';
-import { darkBlueTheme } from '../../../theme/themes/darkBlueTheme';
-import { brutalistTheme } from '../../../theme/themes/brutalistTheme';
+import type { Theme } from '@theme/types';
+import { defaultTheme } from '@theme/themes/defaultTheme';
+import { playFameTheme } from '@theme/themes/playFameTheme';
+import { darkBlueTheme } from '@theme/themes/darkBlueTheme';
+import { brutalistTheme } from '@theme/themes/brutalistTheme';
 import { ThemeSelector } from '../../../dev-tools';
 
 // Mock localStorage

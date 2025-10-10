@@ -12,8 +12,8 @@
  */
 
 import { useReducer, useEffect, useRef } from 'react';
-import type { GameState } from '../game/types';
-import { trackStateTransition } from '../utils/telemetry';
+import type { GameState } from '@game/types';
+import { trackStateTransition } from '@utils/telemetry';
 
 // ============================================================================
 // STATE MACHINE TYPES

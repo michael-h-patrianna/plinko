@@ -6,7 +6,7 @@
  * @param canClaim - Whether the claim button should be enabled
  */
 
-import type { PrizeConfig } from '../../game/types';
+import type { PrizeConfig } from '@game/types';
 import { FreeRewardView } from './PrizeReveal/FreeRewardView';
 import { NoWinView } from './PrizeReveal/NoWinView';
 import { PurchaseOfferView } from './PrizeReveal/PurchaseOfferView';

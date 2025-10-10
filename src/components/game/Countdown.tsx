@@ -8,7 +8,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTheme } from '../../theme';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 import {
   sizeTokens,
   zIndexTokens,
@@ -16,7 +16,7 @@ import {
   animationTokens,
   borderWidthTokens,
   spacingTokens,
-} from '../../theme/tokens';
+} from '@theme/tokens';
 import { GradientText } from '../ui/GradientText';
 
 interface CountdownProps {

@@ -6,7 +6,7 @@ import arrowLeftImg from '../../assets/arrow-left.png';
 import arrowRightImg from '../../assets/arrow-right.png';
 import { useTheme } from '../../theme';
 import { ThemedButton } from './ThemedButton';
-import { useAnimation } from '../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 
 interface DropPositionControlsProps {
   boardWidth: number;

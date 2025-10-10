@@ -16,9 +16,9 @@
  */
 
 import { useEffect, useCallback } from 'react';
-import { useAnimation } from '../../theme/animationDrivers/useAnimation';
+import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { useTheme } from '../../theme';
-import { colorTokens, opacityTokens, spacingTokens, borderRadiusTokens } from '../../theme/tokens';
+import { colorTokens, opacityTokens, spacingTokens, borderRadiusTokens } from '@theme/tokens';
 
 export type ToastSeverity = 'success' | 'error' | 'warning' | 'info';
 

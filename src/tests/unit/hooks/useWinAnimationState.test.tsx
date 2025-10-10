@@ -6,9 +6,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
-import { useWinAnimationState } from '../../../hooks/useWinAnimationState';
-import type { GameState } from '../../../game/types';
-import * as telemetry from '../../../utils/telemetry';
+import { useWinAnimationState } from '@hooks/useWinAnimationState';
+import type { GameState } from '@game/types';
+import * as telemetry from '@utils/telemetry';
 
 // Mock telemetry
 vi.mock('../../../utils/telemetry', () => ({

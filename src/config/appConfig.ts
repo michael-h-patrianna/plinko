@@ -1,5 +1,5 @@
-import { createDefaultPrizeProvider, type PrizeProvider } from '../game/prizeProvider';
-import { sizeTokens } from '../theme/tokens';
+import { createDefaultPrizeProvider, type PrizeProvider } from '@game/prizeProvider';
+import { sizeTokens } from '@theme/tokens';
 
 export interface FeatureFlags {
   /** Controls whether developer tooling renders in production bundles. */

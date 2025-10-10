@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import type { Prize } from '../../../game/prizeTypes';
+import type { Prize } from '@game/prizeTypes';
 import {
   isPrize,
   isPrizeType,
@@ -12,7 +12,7 @@ import {
   validatePrizes,
   validatePrizesOrThrow,
   validatePrizeOrThrow,
-} from '../../../game/prizeValidation';
+} from '@game/prizeValidation';
 
 describe('Prize Validation', () => {
   describe('validatePrize - no_win type', () => {

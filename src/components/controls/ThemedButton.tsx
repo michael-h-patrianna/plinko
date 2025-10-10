@@ -10,7 +10,7 @@
  */
 
 import { useTheme } from '../../theme';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 type EntranceAnimation = 'fade' | 'hero' | 'none';
 

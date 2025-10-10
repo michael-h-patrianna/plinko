@@ -19,7 +19,7 @@
  * ✅ No blur, filters, or web-only CSS features
  */
 
-import { opacityTokens } from '../theme/tokens';
+import { opacityTokens } from '@theme/tokens';
 
 /**
  * Pre-computed trail frame properties for a single trail point

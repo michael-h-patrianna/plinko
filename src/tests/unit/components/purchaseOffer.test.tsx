@@ -7,10 +7,10 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../../App';
-import { AppConfigProvider } from '../../../config/AppConfigContext';
+import { AppConfigProvider } from '@config/AppConfigContext';
 import { ThemeProvider, themes } from '../../../theme';
-import { ToastProvider } from '../../../components/feedback';
-import { createFixturePrizeProvider } from '../../../game/prizeProvider';
+import { ToastProvider } from '@components/feedback';
+import { createFixturePrizeProvider } from '@game/prizeProvider';
 import { getPrizeFixture } from '../../fixtures/prizeFixtures';
 
 describe('Purchase Offer Prize Display', () => {

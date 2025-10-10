@@ -76,6 +76,8 @@ export interface BallPosition {
   x: number;
   y: number;
   rotation: number;
+  vx?: number; // Optional horizontal velocity for motion blur effects
+  vy?: number; // Optional vertical velocity for motion blur effects
 }
 
 export interface PegPosition {

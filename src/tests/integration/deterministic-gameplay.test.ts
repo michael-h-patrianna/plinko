@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { generateTrajectory } from '../../game/trajectory';
-import { selectPrize } from '../../game/rng';
+import { generateTrajectory } from '@game/trajectory';
+import { selectPrize } from '@game/rng';
 import {
   getTrajectoryFixture,
   getPrizeFixture,

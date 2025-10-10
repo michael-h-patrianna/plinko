@@ -6,7 +6,7 @@
  */
 
 import type { ReactNode } from 'react';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 import { UI_SIZE } from '../../constants';
 
 interface PopupContainerProps {

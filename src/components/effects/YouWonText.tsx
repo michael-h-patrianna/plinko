@@ -6,7 +6,7 @@
 
 import { useMemo } from 'react';
 import { useTheme } from '../../theme';
-import { useAnimationDriver } from '../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 export function YouWonText() {
   const driver = useAnimationDriver();

@@ -11,7 +11,7 @@
  */
 
 import type { CSSProperties } from 'react';
-import { hexToRgba } from '../utils/formatting/colorUtils';
+import { hexToRgba } from '@utils/formatting/colorUtils';
 
 // Re-export for backwards compatibility
 export { hexToRgba };

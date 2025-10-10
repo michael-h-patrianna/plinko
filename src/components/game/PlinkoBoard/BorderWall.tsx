@@ -9,7 +9,7 @@
 
 import React, { useRef } from 'react';
 import { useTheme } from '../../../theme';
-import { useAnimationDriver } from '../../../theme/animationDrivers';
+import { useAnimationDriver } from '@theme/animationDrivers';
 
 interface BorderWallProps {
   side: 'left' | 'right' | 'top' | 'bottom';

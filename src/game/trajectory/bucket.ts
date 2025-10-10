@@ -6,7 +6,7 @@
  */
 
 import { PHYSICS, getSlotBoundaries } from '../boardGeometry';
-import { calculateBucketZoneY } from '../../utils/slotDimensions';
+import { calculateBucketZoneY } from '@utils/slotDimensions';
 import type { createRng } from '../rng';
 
 type Rng = ReturnType<typeof createRng>;

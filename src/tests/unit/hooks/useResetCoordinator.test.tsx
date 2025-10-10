@@ -7,7 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useResetCoordinator } from '../../../hooks/useResetCoordinator';
+import { useResetCoordinator } from '@hooks/useResetCoordinator';
 
 // Mock react-dom's flushSync to avoid DOM dependencies in tests
 vi.mock('react-dom', () => ({

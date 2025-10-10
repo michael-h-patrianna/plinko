@@ -7,9 +7,9 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { useViewportManager } from '../../../hooks/useViewportManager';
-import { dimensionsAdapter, deviceInfoAdapter } from '../../../utils/platform';
-import type { GameState } from '../../../game/types';
+import { useViewportManager } from '@hooks/useViewportManager';
+import { dimensionsAdapter, deviceInfoAdapter } from '@utils/platform';
+import type { GameState } from '@game/types';
 
 // Mock platform adapters
 vi.mock('../../../utils/platform', () => ({

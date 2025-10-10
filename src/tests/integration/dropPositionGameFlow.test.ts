@@ -4,9 +4,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { transition, initialContext, type GameEvent } from '../../game/stateMachine';
-import type { GameContext, GameState, DropZone } from '../../game/types';
-import { generateTrajectory } from '../../game/trajectory';
+import { transition, initialContext, type GameEvent } from '@game/stateMachine';
+import type { GameContext, GameState, DropZone } from '@game/types';
+import { generateTrajectory } from '@game/trajectory';
 
 describe('Drop Position Game Flow Integration', () => {
   const mockTrajectory = generateTrajectory({
