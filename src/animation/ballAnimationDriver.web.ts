@@ -300,9 +300,14 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     });
   }
 
+  // Track slot overlay animation and observer for cleanup
+  private overlayAnimation: Animation | null = null;
+  private overlayObserver: MutationObserver | null = null;
+
   /**
    * Update slot anticipation overlay imperatively (bypasses React reconciliation).
    * Moves and colors the overlay to highlight the slot under the ball.
+   * Also applies floor impact animation to match the underlying slot movement.
    *
    * CROSS-PLATFORM DESIGN:
    * - Web: Direct DOM manipulation of overlay element
@@ -310,7 +315,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    *
    * PERFORMANCE: Single overlay element updated imperatively vs 5-8 Slot re-renders
    */
-  updateSlotHighlight(_slotIndex: number, isActive: boolean, slotX?: number, slotWidth?: number, slotColor?: string, slotHeight?: number): void {
+  updateSlotHighlight(slotIndex: number, isActive: boolean, slotX?: number, slotWidth?: number, slotColor?: string, slotHeight?: number): void {
     const overlayEl = document.querySelector('[data-testid="slot-anticipation-overlay"]');
     if (!overlayEl) return;
 
@@ -326,10 +331,91 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
       htmlEl.style.borderLeftColor = slotColor;
       htmlEl.style.borderRightColor = slotColor;
       htmlEl.style.borderBottomColor = slotColor;
+
+      // Watch for floor impacts on the active slot and mirror the animation
+      this.syncOverlayWithSlotFloorImpact(slotIndex, htmlEl);
     } else {
-      // Hide overlay
+      // Hide overlay and cleanup observers/animations
       htmlEl.style.display = 'none';
+      if (this.overlayAnimation) {
+        this.overlayAnimation.cancel();
+        this.overlayAnimation = null;
+      }
+      if (this.overlayObserver) {
+        this.overlayObserver.disconnect();
+        this.overlayObserver = null;
+      }
     }
+  }
+
+  /**
+   * Synchronize overlay floor impact animation with underlying slot.
+   * Watches the active slot for floor impacts and mirrors the animation.
+   */
+  private syncOverlayWithSlotFloorImpact(slotIndex: number, overlayEl: HTMLElement): void {
+    const slotEl = document.querySelector(`[data-testid="slot-${slotIndex}"]`);
+    if (!slotEl) return;
+
+    // Disconnect any existing observer first (slot changed)
+    if (this.overlayObserver) {
+      this.overlayObserver.disconnect();
+    }
+
+    // Watch for floor impact changes on this slot
+    this.overlayObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-floor-impact') {
+          const impactValue = slotEl.getAttribute('data-floor-impact');
+          const hasImpact = impactValue === 'true';
+
+          if (hasImpact) {
+            // Cancel any existing animation
+            if (this.overlayAnimation) {
+              this.overlayAnimation.cancel();
+            }
+
+            // Calculate animation intensity based on impact speed
+            // Speed thresholds: <200px/s = low (small bounce), 200-500px/s = medium, >500px/s = high (large bounce)
+            const impactSpeedStr = slotEl.getAttribute('data-impact-speed');
+            const impactSpeed = impactSpeedStr ? parseFloat(impactSpeedStr) : 0;
+
+            // Scale compression based on speed (min 1px, max 6px)
+            const MIN_COMPRESSION = 1;
+            const MAX_COMPRESSION = 6;
+            const MIN_SPEED = 50;  // Below this, minimal bounce
+            const MAX_SPEED = 600; // Above this, maximum bounce
+
+            const speedRatio = Math.max(0, Math.min(1, (impactSpeed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)));
+            const compressionDistance = MIN_COMPRESSION + (MAX_COMPRESSION - MIN_COMPRESSION) * speedRatio;
+            const overshootDistance = -compressionDistance * 0.25; // Overshoot is 25% of compression
+
+            // Apply spring animation with speed-based intensity
+            // IMPORTANT: Framer Motion uses times:[0,0.4,0.7,1] which distributes keyframes non-linearly
+            // Web Animations API requires explicit offsets to match this timing distribution
+            overlayEl.style.transform = ''; // Clear any existing transform
+            this.overlayAnimation = overlayEl.animate(
+              [
+                { transform: 'translateY(0px)', offset: 0, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+                { transform: `translateY(${compressionDistance}px)`, offset: 0.4, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+                { transform: `translateY(${overshootDistance}px)`, offset: 0.7, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' },
+                { transform: 'translateY(0px)', offset: 1 },
+              ],
+              {
+                duration: 300, // Match slot animation duration (0.3s)
+              }
+            );
+
+            // Cleanup after animation
+            this.overlayAnimation.onfinish = () => {
+              overlayEl.style.transform = ''; // Clear transform after animation
+              this.overlayAnimation = null;
+            };
+          }
+        }
+      });
+    });
+
+    this.overlayObserver.observe(slotEl, { attributes: true, attributeFilter: ['data-floor-impact'] });
   }
 
   /**
@@ -341,8 +427,10 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    *
    * AUTO-CLEAR: Attributes are automatically cleared after 300ms (200ms animation + 100ms buffer)
    * to ensure animations can be re-triggered on subsequent impacts.
+   *
+   * @param impactSpeed - Speed of impact in px/s for realistic animation intensity scaling
    */
-  updateSlotCollision(slotIndex: number, wallImpact: 'left' | 'right' | null, floorImpact: boolean): void {
+  updateSlotCollision(slotIndex: number, wallImpact: 'left' | 'right' | null, floorImpact: boolean, impactSpeed?: number): void {
     const slotEl = document.querySelector(`[data-testid="slot-${slotIndex}"]`);
     if (!slotEl) return;
 
@@ -374,19 +462,25 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
       slotEl.setAttribute('data-wall-impact', 'none');
     }
 
-    // Update floor impact
+    // Update floor impact with speed-based intensity
     if (floorImpact) {
       slotEl.setAttribute('data-floor-impact', 'true');
+      // Store impact speed for animation intensity calculation
+      if (impactSpeed !== undefined) {
+        slotEl.setAttribute('data-impact-speed', String(impactSpeed));
+      }
 
       // Auto-clear after 300ms (200ms animation + 100ms buffer)
       const timeout = window.setTimeout(() => {
         slotEl.setAttribute('data-floor-impact', 'false');
+        slotEl.removeAttribute('data-impact-speed');
         this.slotImpactTimeouts.delete(floorTimeoutKey);
       }, 300);
 
       this.slotImpactTimeouts.set(floorTimeoutKey, timeout);
     } else {
       slotEl.setAttribute('data-floor-impact', 'false');
+      slotEl.removeAttribute('data-impact-speed');
     }
   }
 

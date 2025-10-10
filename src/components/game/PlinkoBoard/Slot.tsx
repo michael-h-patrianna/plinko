@@ -26,7 +26,7 @@
  * @param comboBadgeNumber - Badge number for combo rewards
  */
 
-import { memo } from 'react';
+import { memo, useRef, useEffect, useState } from 'react';
 import type { PrizeConfig, GameState } from '@game/types';
 import { calculateBucketHeight } from '@utils/slotDimensions';
 import { getSlotDisplayText } from '@game/prizeTypes';
@@ -66,6 +66,44 @@ const SlotComponent = memo(function Slot({
   const { theme } = useTheme();
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
+
+  // Track floor impact state via data attribute (imperative updates from driver)
+  const [hasFloorImpact, setHasFloorImpact] = useState(false);
+  const slotRef = useRef<HTMLDivElement>(null);
+  const impactKeyRef = useRef(0);
+
+  // Track impact speed for realistic animation intensity
+  const [impactSpeed, setImpactSpeed] = useState(0);
+
+  // Watch for floor impact data attribute changes (set by driver)
+  useEffect(() => {
+    const slotEl = slotRef.current;
+    if (!slotEl) return;
+
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-floor-impact') {
+          const impactValue = slotEl.getAttribute('data-floor-impact');
+          const hasImpact = impactValue === 'true';
+
+          if (hasImpact && !hasFloorImpact) {
+            // Floor was just hit - read impact speed and increment key to trigger new animation
+            const speedStr = slotEl.getAttribute('data-impact-speed');
+            const speed = speedStr ? parseFloat(speedStr) : 0;
+            setImpactSpeed(speed);
+            impactKeyRef.current += 1;
+            setHasFloorImpact(true);
+          } else if (!hasImpact && hasFloorImpact) {
+            setHasFloorImpact(false);
+          }
+        }
+      });
+    });
+
+    observer.observe(slotEl, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [hasFloorImpact]);
 
   // Calculate responsive bucket dimensions based on slot width
   // Narrower slots (8 prizes on small screens) need taller buckets to fit text
@@ -111,50 +149,107 @@ const SlotComponent = memo(function Slot({
   // Determine if we should show idle animations (breathing, gradient sweep)
   const isIdle = ballState === 'idle' || ballState === 'ready';
 
+  // Determine if slot should flip (non-winning slots flip when ball lands, before reveal)
+  // Trigger on 'landed' state to give flip animation time before prize reveal
+  const shouldFlip = (ballState === 'landed' || ballState === 'revealed') && !isWinning;
+
+  // Calculate floor impact animation (downward compression with spring back)
+  // Animation intensity scales with ball velocity for realistic physics
+  const getFloorImpactAnimation = () => {
+    if (!hasFloorImpact) return { y: 0 };
+
+    // Scale compression based on impact speed (min 1px, max 6px)
+    // Speed thresholds: <50px/s = minimal, 50-600px/s = scaled, >600px/s = maximum
+    const MIN_COMPRESSION = 1;
+    const MAX_COMPRESSION = 6;
+    const MIN_SPEED = 50;  // Below this, minimal bounce
+    const MAX_SPEED = 600; // Above this, maximum bounce
+
+    const speedRatio = Math.max(0, Math.min(1, (impactSpeed - MIN_SPEED) / (MAX_SPEED - MIN_SPEED)));
+    const compressionDistance = MIN_COMPRESSION + (MAX_COMPRESSION - MIN_COMPRESSION) * speedRatio;
+    const overshootDistance = -compressionDistance * 0.25; // Overshoot is 25% of compression
+
+    // First bounce: full compression based on speed
+    // Subsequent bounces (low speed): minimal compression
+    return {
+      y: [0, compressionDistance, overshootDistance, 0], // Compress down, spring back with overshoot, settle
+    };
+  };
+
   return (
     <AnimatedDiv
-      className="absolute flex flex-col items-center justify-end text-center slot-container"
+      className="absolute"
       style={{
         left: `${x}px`,
         bottom: '-10px',
         width: `${width}px`,
         height: `${bucketHeight}px`,
-        zIndex: 15, // Above background overlay (z-index: 0) and pegs (z-index: 10)
-        background:
-          slotStyle?.background ||
-          theme.colors.game.slot.background ||
-          `
-          linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
-        `,
-        // Use per-slot border if available, otherwise borders controlled by CSS via data-approaching
-        ...(slotStyle?.border
-          ? {
-              borderLeft: slotStyle.border,
-              borderRight: slotStyle.border,
-              borderBottom: slotStyle.border,
-              borderTop: 'none',
-            }
-          : {
-              borderLeft: `${borderWidth} solid var(--slot-border-color)`,
-              borderRight: `${borderWidth} solid var(--slot-border-color)`,
-              borderBottom: `${borderWidth} solid var(--slot-border-color)`,
-              borderTop: 'none',
-            }),
-        borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
-        /* RN-compatible: removed boxShadow, depth created by gradient + border */
-        transition: theme.effects.transitions.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
-        // CSS variables for border color (controlled by data-approaching)
-        '--slot-border-color': theme.colors.game.slot.border || theme.colors.border.default,
-        '--slot-border-color-active': color,
-      } as React.CSSProperties}
-      data-testid={`slot-${index}`}
-      data-active={isWinning}
-      data-approaching="false"
-      data-wall-impact="none"
-      data-floor-impact="false"
-      data-slot-color={color}
-      data-state={ballState}
+        zIndex: 15,
+        perspective: '1000px', // Enable 3D perspective for flip
+      }}
+      animate={getFloorImpactAnimation()}
+      transition={{
+        duration: 0.3,
+        ease: [0.34, 1.56, 0.64, 1], // Spring easing for bounce effect
+        times: [0, 0.4, 0.7, 1], // Timing for each keyframe
+      }}
     >
+      {/* 3D Flip Container */}
+      <AnimatedDiv
+        className="absolute inset-0"
+        style={{
+          transformStyle: 'preserve-3d',
+        }}
+        animate={{
+          rotateY: shouldFlip ? 180 : 0,
+        }}
+        transition={{
+          duration: 0.6,
+          ease: [0.43, 0.13, 0.23, 0.96], // Smooth flip easing
+          delay: shouldFlip ? index * 0.08 : 0, // Stagger flip based on slot index
+        }}
+      >
+        {/* Front side (normal slot) */}
+        <div
+          ref={slotRef}
+          className="absolute inset-0 flex flex-col items-center justify-end text-center slot-container"
+          style={{
+            backfaceVisibility: 'hidden',
+            background:
+            slotStyle?.background ||
+            theme.colors.game.slot.background ||
+            `
+            linear-gradient(180deg, transparent 0%, transparent 40%, ${color}33 70%, ${color}66 100%)
+          `,
+          // Use per-slot border if available, otherwise borders controlled by CSS via data-approaching
+          ...(slotStyle?.border
+            ? {
+                borderLeft: slotStyle.border,
+                borderRight: slotStyle.border,
+                borderBottom: slotStyle.border,
+                borderTop: 'none',
+              }
+            : {
+                borderLeft: `${borderWidth} solid var(--slot-border-color)`,
+                borderRight: `${borderWidth} solid var(--slot-border-color)`,
+                borderBottom: `${borderWidth} solid var(--slot-border-color)`,
+                borderTop: 'none',
+              }),
+          borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
+          /* RN-compatible: removed boxShadow, depth created by gradient + border */
+          transition: theme.effects.transitions.fast || 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+          // CSS variables for border color (controlled by data-approaching)
+          '--slot-border-color': theme.colors.game.slot.border || theme.colors.border.default,
+          '--slot-border-color-active': color,
+        } as React.CSSProperties}
+        data-testid={`slot-${index}`}
+        data-active={isWinning}
+        data-approaching="false"
+        data-wall-impact="none"
+        data-floor-impact="false"
+        data-slot-color={color}
+        data-state={ballState}
+      >
       <style>
         {`
           /* Border color transitions controlled by data-approaching attribute */
@@ -450,6 +545,34 @@ const SlotComponent = memo(function Slot({
           }}
         />
       )}
+      </div>
+
+        {/* Back side (flipped state) */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center text-center"
+          style={{
+            backfaceVisibility: 'hidden',
+            transform: 'rotateY(180deg)',
+            background: `linear-gradient(180deg, ${hexToRgba(theme.colors.surface.secondary, 0.3)} 0%, ${hexToRgba(theme.colors.surface.secondary, 0.6)} 100%)`,
+            borderLeft: `${borderWidth} solid ${hexToRgba(theme.colors.border.default, 0.5)}`,
+            borderRight: `${borderWidth} solid ${hexToRgba(theme.colors.border.default, 0.5)}`,
+            borderBottom: `${borderWidth} solid ${hexToRgba(theme.colors.border.default, 0.5)}`,
+            borderTop: 'none',
+            borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
+          }}
+        >
+          {/* Backside visual - simple pattern or text */}
+          <div
+            className="font-bold opacity-30"
+            style={{
+              fontSize: width < 45 ? '20px' : '28px',
+              color: theme.colors.text.primary,
+            }}
+          >
+            ✕
+          </div>
+        </div>
+      </AnimatedDiv>
     </AnimatedDiv>
   );
 });

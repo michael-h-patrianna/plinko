@@ -32,6 +32,7 @@ export function BorderWall({ side, width, offset = 0, boardWidth }: BorderWallPr
   const [isHit, setIsHit] = React.useState(false);
   const [impactY, setImpactY] = React.useState<number | null>(null);
   const wallRef = useRef<HTMLDivElement>(null);
+  const wallContainerRef = useRef<HTMLDivElement>(null);
 
   // Stable key for impact animation - increment counter when impact triggers
   const impactKeyRef = useRef(0);
@@ -89,60 +90,84 @@ export function BorderWall({ side, width, offset = 0, boardWidth }: BorderWallPr
           ? { top: isMobile ? 0 : `${width}px`, left: 0, bottom: offset, width: `${width}px` }
           : { top: isMobile ? 0 : `${width}px`, right: 0, bottom: offset, width: `${width}px` };
 
+  // Calculate directional movement based on wall side
+  // Move wall in direction of ball impact, then spring back
+  const getDirectionalMovement = () => {
+    if (!isVertical || !isHit) return { x: 0 };
+
+    // Left wall: move left (negative x), Right wall: move right (positive x)
+    // Small movement: 3px outward, then spring back
+    const direction = side === 'left' ? -1 : 1;
+    return {
+      x: [0, direction * 3, direction * 1, 0], // Push out, small overshoot back, settle
+    };
+  };
+
   return (
-    <div
-      ref={wallRef}
+    <AnimatedDiv
+      ref={wallContainerRef}
       className="absolute"
-      style={{ ...positionStyle, ...baseStyle, zIndex: 5 }}
-      data-wall-side={side}
-      data-wall-hit="false"
+      style={{ ...positionStyle, zIndex: 5 }}
+      animate={getDirectionalMovement()}
+      transition={{
+        duration: 0.25,
+        ease: [0.34, 1.56, 0.64, 1], // Spring easing for bounce effect
+      }}
     >
-      {/* Wall impact glow - Small, focused on ball contact point */}
-      <AnimatePresence>
-        {isHit && (
-          <AnimatedDiv
-            key={`impact-${side}-${impactKeyRef.current}`}
-            className="absolute pointer-events-none"
-            style={{
-              // Position: Small 50px tall glow at inner edge, centered on ball impact
-              ...(isVertical
-                ? side === 'left'
-                  ? {
-                      left: `${width - 3}px`,
-                      top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
-                      height: impactY !== null ? '50px' : '100%',
-                      width: '6px',
-                    }
-                  : {
-                      right: `${width - 3}px`,
-                      top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
-                      height: impactY !== null ? '50px' : '100%',
-                      width: '6px',
-                    }
-                : { left: 0, right: 0, bottom: 0, height: '6px' }),
-              // Cross-platform: linear gradient from bright to transparent
-              background: isVertical
-                ? side === 'left'
-                  ? `linear-gradient(to right, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
-                  : `linear-gradient(to left, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
-                : `linear-gradient(to bottom, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`,
-              borderRadius: isVertical ? '3px' : 'inherit',
-            }}
-            initial={{ opacity: 0, scaleY: isVertical ? 0.6 : 1, scaleX: isVertical ? 1 : 0.6 }}
-            animate={{
-              opacity: [0, 1, 0.6, 0],
-              scaleY: isVertical ? [0.6, 1.1, 1, 1] : 1,
-              scaleX: isVertical ? 1 : [0.6, 1.1, 1, 1]
-            }}
-            exit={{ opacity: 0 }}
-            transition={{
-              duration: 0.3,
-              ease: 'easeOut',
-              times: [0, 0.2, 0.6, 1]
-            }}
-          />
-        )}
-      </AnimatePresence>
-    </div>
+      <div
+        ref={wallRef}
+        className="absolute inset-0"
+        style={{ ...baseStyle }}
+        data-wall-side={side}
+        data-wall-hit="false"
+      >
+        {/* Wall impact glow - Small, focused on ball contact point */}
+        <AnimatePresence>
+          {isHit && (
+            <AnimatedDiv
+              key={`impact-${side}-${impactKeyRef.current}`}
+              className="absolute pointer-events-none"
+              style={{
+                // Position: Small 50px tall glow at inner edge, centered on ball impact
+                ...(isVertical
+                  ? side === 'left'
+                    ? {
+                        left: `${width - 3}px`,
+                        top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
+                        height: impactY !== null ? '50px' : '100%',
+                        width: '6px',
+                      }
+                    : {
+                        right: `${width - 3}px`,
+                        top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
+                        height: impactY !== null ? '50px' : '100%',
+                        width: '6px',
+                      }
+                  : { left: 0, right: 0, bottom: 0, height: '6px' }),
+                // Cross-platform: linear gradient from bright to transparent
+                background: isVertical
+                  ? side === 'left'
+                    ? `linear-gradient(to right, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
+                    : `linear-gradient(to left, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
+                  : `linear-gradient(to bottom, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`,
+                borderRadius: isVertical ? '3px' : 'inherit',
+              }}
+              initial={{ opacity: 0, scaleY: isVertical ? 0.6 : 1, scaleX: isVertical ? 1 : 0.6 }}
+              animate={{
+                opacity: [0, 1, 0.6, 0],
+                scaleY: isVertical ? [0.6, 1.1, 1, 1] : 1,
+                scaleX: isVertical ? 1 : [0.6, 1.1, 1, 1]
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                duration: 0.3,
+                ease: 'easeOut',
+                times: [0, 0.2, 0.6, 1]
+              }}
+            />
+          )}
+        </AnimatePresence>
+      </div>
+    </AnimatedDiv>
   );
 }

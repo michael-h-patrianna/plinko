@@ -343,12 +343,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         );
 
         if (newLeftHits.length > 0) {
-          // Left wall was hit! Trigger flash via driver with ball Y position
+          // Left wall was hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('left', true, position.y);
-          // Trigger screen shake - always minimum 0.5 intensity, max 1.0 for high speeds
-          const speed = cached.speed || 0;
-          const shakeIntensity = Math.max(0.5, Math.min(speed / 400, 1)); // Min 0.5, max at 400 px/s
-          driver.triggerScreenShake(shakeIntensity);
+          // NOTE: Screen shake removed - walls now use directional bounce animation
           // Update last checked frame
           lastCheckedWallFrameRef.current.left = currentFrame;
         }
@@ -360,12 +357,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         );
 
         if (newRightHits.length > 0) {
-          // Right wall was hit! Trigger flash via driver with ball Y position
+          // Right wall was hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('right', true, position.y);
-          // Trigger screen shake - always minimum 0.5 intensity, max 1.0 for high speeds
-          const speed = cached.speed || 0;
-          const shakeIntensity = Math.max(0.5, Math.min(speed / 400, 1)); // Min 0.5, max at 400 px/s
-          driver.triggerScreenShake(shakeIntensity);
+          // NOTE: Screen shake removed - walls now use directional bounce animation
           // Update last checked frame
           lastCheckedWallFrameRef.current.right = currentFrame;
         }
@@ -412,7 +406,12 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
             const wallImpact = (trajectoryPoint as unknown as { bucketWallHit?: 'left' | 'right' }).bucketWallHit || null;
             const floorImpact = (trajectoryPoint as unknown as { bucketFloorHit?: boolean }).bucketFloorHit || false;
 
-            driver.updateSlotCollision(newActiveSlot, wallImpact, floorImpact);
+            // Calculate impact speed for realistic animation intensity
+            const vx = trajectoryPoint.vx ?? 0;
+            const vy = trajectoryPoint.vy ?? 0;
+            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+            driver.updateSlotCollision(newActiveSlot, wallImpact, floorImpact, impactSpeed);
           }
         }
       }

@@ -364,8 +364,9 @@ export function PlinkoBoard({
         {/* Slots - memoized to prevent unnecessary re-renders */}
         {slotElements}
 
-        {/* Slot Anticipation Overlay - static div updated imperatively by driver */}
+        {/* Slot Anticipation Overlay - positioned and animated by driver */}
         {/* Shows highlighted border on slot under ball during drop */}
+        {/* Driver handles positioning (left, width) and floor impact animation (translateY) */}
         <div
           data-testid="slot-anticipation-overlay"
           className="absolute pointer-events-none"
@@ -378,7 +379,7 @@ export function PlinkoBoard({
             borderTop: 'none',
             borderRadius: theme.colors.game.slot.borderRadius || '0 0 8px 8px',
             zIndex: 20, // Above slots but below ball
-            transition: 'all 0.1s ease-out', // Smooth position/color changes
+            transition: 'left 0.1s ease-out, width 0.1s ease-out, border-color 0.1s ease-out',
           }}
         />
 

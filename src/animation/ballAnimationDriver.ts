@@ -141,8 +141,9 @@ export interface BallAnimationDriver {
    * @param slotIndex - Zero-based slot index
    * @param wallImpact - Wall collision type ('left' | 'right' | null)
    * @param floorImpact - Whether floor collision occurred
+   * @param impactSpeed - Impact speed in px/s for realistic animation intensity scaling (optional)
    */
-  updateSlotCollision(slotIndex: number, wallImpact: 'left' | 'right' | null, floorImpact: boolean): void;
+  updateSlotCollision(slotIndex: number, wallImpact: 'left' | 'right' | null, floorImpact: boolean, impactSpeed?: number): void;
 
   /**
    * Clear all peg flashes (called on reset/idle).
