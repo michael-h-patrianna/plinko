@@ -20,9 +20,10 @@ interface StartScreenProps {
   onStart: () => void;
   disabled: boolean;
   winningIndex?: number;
+  showWinner?: boolean;
 }
 
-export function StartScreen({ prizes, onStart, disabled, winningIndex }: StartScreenProps) {
+export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinner = false }: StartScreenProps) {
   const { AnimatedDiv, AnimatedH1, AnimatePresence } = useAnimation();
   const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
   const { theme } = useTheme();
@@ -155,7 +156,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex }: StartSc
                   onClick={() => isCombo && setExpandedPrize(isExpanded ? null : prize.id)}
                   data-prize-index={index}
                 >
-                  {winningIndex === index && (
+                  {showWinner && winningIndex === index && (
                     <div
                       style={{
                         position: 'absolute',

@@ -32,7 +32,6 @@ import { calculateBucketHeight } from '@utils/slotDimensions';
 import { getSlotDisplayText } from '@game/prizeTypes';
 import { abbreviateNumber } from '@utils/formatNumber';
 import { useTheme } from '../../../theme';
-import { getPrizeThemeColor } from '@theme/prizeColorMapper';
 import { useAnimationDriver } from '@theme/animationDrivers';
 import { hexToRgba } from '@utils/formatting/colorUtils';
 
@@ -60,7 +59,7 @@ const SlotComponent = memo(function Slot({
   isWinning = false,
   prizeCount = 5,
   boardWidth = 375,
-  comboBadgeNumber,
+  comboBadgeNumber: _comboBadgeNumber,
   ballState = 'idle',
 }: SlotProps) {
   const { theme } = useTheme();
@@ -150,8 +149,8 @@ const SlotComponent = memo(function Slot({
   const isIdle = ballState === 'idle' || ballState === 'ready';
 
   // Determine if slot should flip (non-winning slots flip when ball lands, before reveal)
-  // Trigger on 'landed' state to give flip animation time before prize reveal
-  const shouldFlip = (ballState === 'landed' || ballState === 'revealed') && !isWinning;
+  // Trigger on 'landed' or 'celebrating' state to give flip animation time before prize reveal
+  const shouldFlip = (ballState === 'landed' || ballState === 'celebrating' || ballState === 'revealed') && !isWinning;
 
   // Calculate floor impact animation (downward compression with spring back)
   // Animation intensity scales with ball velocity for realistic physics
@@ -205,7 +204,7 @@ const SlotComponent = memo(function Slot({
         }}
         transition={{
           duration: 0.6,
-          ease: [0.43, 0.13, 0.23, 0.96], // Smooth flip easing
+          ease: [0.43, 0.13, 0.23, 0.96],
           delay: shouldFlip ? index * 0.08 : 0, // Stagger flip based on slot index
         }}
       >
@@ -500,32 +499,6 @@ const SlotComponent = memo(function Slot({
           />
         )}
       </div>
-
-      {/* Combo badge - positioned in top-right corner */}
-      {comboBadgeNumber !== undefined && (() => {
-        const badgeColor = getPrizeThemeColor(prize, theme);
-        return (
-          <div
-            className="absolute font-bold text-white text-xs leading-none"
-            style={{
-              top: '-6px',
-              right: '-6px',
-              width: '20px',
-              height: '20px',
-              borderRadius: '50%',
-              background: `linear-gradient(135deg, ${badgeColor} 0%, ${hexToRgba(badgeColor, 0.87)} 100%)`,
-              /* RN-compatible: removed boxShadow, using border for definition */
-              border: `2px solid ${hexToRgba(theme.colors.text.inverse, 0.3)}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 10,
-            }}
-          >
-            {comboBadgeNumber}
-          </div>
-        );
-      })()}
 
       {/* Winning slot red badge - positioned at bottom center */}
       {isWinning && (

@@ -31,6 +31,10 @@ interface DevToolsMenuProps {
   performanceMode?: PerformanceMode;
   /** Callback when performance mode changes */
   onPerformanceModeChange?: (mode: PerformanceMode) => void;
+  /** Whether to show winner badge and enable shift+click */
+  showWinner?: boolean;
+  /** Callback when show winner toggle changes */
+  onShowWinnerChange?: (show: boolean) => void;
 }
 
 const VIEWPORT_SIZES = [
@@ -61,6 +65,8 @@ export function DevToolsMenu({
   onChoiceMechanicChange,
   performanceMode = 'high-quality',
   onPerformanceModeChange,
+  showWinner = false,
+  onShowWinnerChange,
 }: DevToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -143,35 +149,32 @@ export function DevToolsMenu({
           >
             {/* Header */}
             <div
-              className="px-4 py-3 border-b"
+              className="px-3 py-2 border-b"
               style={{
                 background: theme.colors.surface.elevated,
                 borderColor: theme.colors.border.default,
               }}
             >
               <h3
-                className="font-semibold text-sm"
+                className="font-semibold text-xs"
                 style={{ color: theme.colors.text.primary }}
               >
                 Dev Tools
               </h3>
-              <p className="text-xs mt-0.5" style={{ color: theme.colors.text.tertiary }}>
-                Local testing utilities
-              </p>
             </div>
 
             {/* Theme Section */}
-            <div className="p-4 border-b" style={{ borderColor: theme.colors.border.default }}>
-              <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
+            <div className="p-2 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
                 Theme
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {availableThemes.map((availableTheme) => (
                   <AnimatedButton
                     key={availableTheme.name}
                     onClick={() => switchTheme(availableTheme.name)}
                     className={`
-                      px-3 py-1.5 rounded-md text-xs font-medium transition-all
+                      px-2 py-1 rounded text-xs font-medium transition-all
                       ${themeName === availableTheme.name ? 'shadow-md' : 'hover:opacity-80'}
                     `}
                     style={{
@@ -199,17 +202,17 @@ export function DevToolsMenu({
             </div>
 
             {/* Choice Mechanic Section */}
-            <div className="p-4 border-b" style={{ borderColor: theme.colors.border.default }}>
-              <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
+            <div className="p-2 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
                 Choice Mechanic
               </label>
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1.5">
                 {CHOICE_MECHANICS.map(({ value, label }) => (
                   <AnimatedButton
                     key={value}
                     onClick={() => onChoiceMechanicChange?.(value)}
                     className={`
-                      px-3 py-2 rounded-md text-xs font-medium transition-all text-left
+                      px-2 py-1 rounded text-xs font-medium transition-all text-left
                       ${choiceMechanic === value ? 'shadow-md' : 'hover:opacity-80'}
                     `}
                     style={{
@@ -237,17 +240,17 @@ export function DevToolsMenu({
             </div>
 
             {/* Performance Mode Section */}
-            <div className="p-4 border-b" style={{ borderColor: theme.colors.border.default }}>
-              <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
-                Performance Mode
+            <div className="p-2 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
+                Performance
               </label>
-              <div className="flex flex-col gap-2">
-                {PERFORMANCE_MODES.map(({ value, label, description }) => (
+              <div className="flex flex-col gap-1.5">
+                {PERFORMANCE_MODES.map(({ value, label }) => (
                   <AnimatedButton
                     key={value}
                     onClick={() => onPerformanceModeChange?.(value)}
                     className={`
-                      px-3 py-2 rounded-md text-xs font-medium transition-all text-left
+                      px-2 py-1 rounded text-xs font-medium transition-all text-left
                       ${performanceMode === value ? 'shadow-md' : 'hover:opacity-80'}
                     `}
                     style={{
@@ -268,25 +271,52 @@ export function DevToolsMenu({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <div className="font-medium">{label}</div>
-                    <div className="text-xs opacity-70 mt-0.5">{description}</div>
+                    {label}
                   </AnimatedButton>
                 ))}
               </div>
             </div>
 
+            {/* Show Winner Section */}
+            <div className="p-2 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
+                Debug
+              </label>
+              <AnimatedButton
+                onClick={() => onShowWinnerChange?.(!showWinner)}
+                className={`
+                  px-2 py-1 rounded text-xs font-medium transition-all text-left w-full
+                  ${showWinner ? 'shadow-md' : 'hover:opacity-80'}
+                `}
+                style={{
+                  background:
+                    showWinner
+                      ? theme.gradients.buttonPrimary
+                      : theme.colors.surface.elevated,
+                  color:
+                    showWinner
+                      ? theme.colors.primary.contrast
+                      : theme.colors.text.primary,
+                  border: `1px solid ${
+                    showWinner
+                      ? theme.colors.primary.main
+                      : theme.colors.border.default
+                  }`,
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Show Winner
+              </AnimatedButton>
+            </div>
+
             {/* Viewport Section - Desktop only */}
             {!isMobile && (
-              <div className="p-4">
-                <label className="block text-xs font-medium mb-2" style={{ color: theme.colors.text.secondary }}>
-                  Viewport Size
+              <div className="p-2">
+                <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
+                  Viewport {viewportDisabled && <span style={{ color: theme.colors.status.warning }}>(Locked)</span>}
                 </label>
-                {viewportDisabled && (
-                  <p className="text-xs mb-2" style={{ color: theme.colors.status.warning }}>
-                    Locked during gameplay
-                  </p>
-                )}
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {VIEWPORT_SIZES.map(({ width, label, colorKey }) => {
                     const isSelected = viewportWidth === width;
                     const color =
@@ -297,7 +327,7 @@ export function DevToolsMenu({
                         key={width}
                         onClick={() => !viewportDisabled && onViewportChange(width)}
                         disabled={viewportDisabled}
-                        className="px-3 py-2 rounded-md text-xs transition-all"
+                        className="px-2 py-1 rounded text-xs transition-all"
                         style={{
                           background: isSelected ? color : theme.colors.surface.secondary,
                           color: isSelected ? theme.colors.primary.contrast : theme.colors.text.secondary,
@@ -316,19 +346,6 @@ export function DevToolsMenu({
                 </div>
               </div>
             )}
-
-            {/* Footer */}
-            <div
-              className="px-4 py-2 border-t"
-              style={{
-                background: theme.colors.surface.elevated,
-                borderColor: theme.colors.border.default,
-              }}
-            >
-              <p className="text-xs" style={{ color: theme.colors.text.tertiary }}>
-                These tools are for development only and not part of the production app.
-              </p>
-            </div>
           </AnimatedDiv>
         )}
       </AnimatePresence>

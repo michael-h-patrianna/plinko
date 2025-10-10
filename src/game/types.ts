@@ -57,6 +57,7 @@ export type GameState =
   | 'countdown'
   | 'dropping'
   | 'landed'
+  | 'celebrating' // Celebration animation before prize reveal
   | 'revealed'
   | 'claimed';
 

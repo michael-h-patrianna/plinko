@@ -9,7 +9,7 @@
  * This component should be used in App.tsx instead of directly importing DevToolsMenu.
  */
 
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useAppConfig } from '@config/AppConfigContext';
 import type { ChoiceMechanic } from './components/DevToolsMenu';
 import type { PerformanceMode } from '@config/appConfig';
@@ -53,6 +53,8 @@ export interface DevToolsLoaderProps {
   onPerformanceModeChange?: (mode: PerformanceMode) => void;
   gameState?: GameState;
   isStartScreen?: boolean;
+  showWinner?: boolean;
+  onShowWinnerChange?: (show: boolean) => void;
 }
 
 /**
@@ -60,8 +62,13 @@ export interface DevToolsLoaderProps {
  * Uses lazy loading to ensure dev tools are in a separate chunk.
  */
 export function DevToolsLoader(props: DevToolsLoaderProps) {
-  const { gameState, isStartScreen, ...menuProps } = props;
+  const { gameState, isStartScreen, showWinner: showWinnerProp, onShowWinnerChange, ...menuProps } = props;
   const { featureFlags } = useAppConfig();
+
+  // Use local state if not controlled by parent
+  const [localShowWinner, setLocalShowWinner] = useState(false);
+  const showWinner = showWinnerProp ?? localShowWinner;
+  const handleShowWinnerChange = onShowWinnerChange ?? setLocalShowWinner;
 
   // Don't render anything if dev tools are disabled
   if (!featureFlags.devToolsEnabled) {
@@ -103,9 +110,16 @@ export function DevToolsLoader(props: DevToolsLoaderProps) {
   // Render with Suspense to handle lazy loading
   return (
     <Suspense fallback={null}>
-      <DevToolsMenu {...menuProps} />
+      <DevToolsMenu
+        {...menuProps}
+        showWinner={showWinner}
+        onShowWinnerChange={handleShowWinnerChange}
+      />
       {handleSelectWinner && isStartScreen && (
-        <DevToolsStartScreenOverlay isActive={true} onSelectWinner={handleSelectWinner} />
+        <DevToolsStartScreenOverlay
+          isActive={showWinner}
+          onSelectWinner={handleSelectWinner}
+        />
       )}
     </Suspense>
   );

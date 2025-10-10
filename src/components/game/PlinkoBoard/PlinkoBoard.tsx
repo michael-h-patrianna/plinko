@@ -27,6 +27,7 @@ import { useWinAnimationState } from '@hooks/useWinAnimationState';
 import { useAnimationDriver } from '@theme/animationDrivers';
 import { getPrizeThemeColor } from '@theme/prizeColorMapper';
 import { calculateBucketZoneY } from '@utils/slotDimensions';
+import { hexToRgba } from '@utils/formatting/colorUtils';
 import { useMemo, useState } from 'react';
 import { useTheme } from '../../../theme';
 import { DropPositionControls } from '../../controls/DropPositionSelector';
@@ -66,6 +67,7 @@ interface PlinkoBoardProps {
   isSelectingPosition?: boolean;
   onPositionSelected?: (zone: DropZone) => void;
   onLandingComplete?: () => void;
+  showWinner?: boolean;
 }
 
 export function PlinkoBoard({
@@ -86,6 +88,7 @@ export function PlinkoBoard({
   isSelectingPosition = false,
   onPositionSelected,
   onLandingComplete,
+  showWinner = false,
 }: PlinkoBoardProps) {
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
@@ -240,7 +243,8 @@ export function PlinkoBoard({
   const slotElements = useMemo(() => {
     return slots.map((slot) => {
       // Only show winning state during drop and end phase, not when idle
-      const isWinning = ballState !== 'idle' && slot.index === selectedIndex;
+      // Also respect showWinner flag from devtools
+      const isWinning = showWinner && ballState !== 'idle' && slot.index === selectedIndex;
 
       return (
         <Slot
@@ -257,7 +261,7 @@ export function PlinkoBoard({
         />
       );
     });
-  }, [slots, slotCount, ballState, selectedIndex, boardWidth]);
+  }, [slots, slotCount, ballState, selectedIndex, boardWidth, showWinner]);
 
   // Calculate ambient background color shift during landed state
   // Blends board background with winning slot color for subtle anticipation effect
@@ -363,6 +367,44 @@ export function PlinkoBoard({
 
         {/* Slots - memoized to prevent unnecessary re-renders */}
         {slotElements}
+
+        {/* Combo Badges Layer - rendered AFTER slots to ensure proper z-index stacking */}
+        {/* Badges positioned absolutely based on slot positions */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            inset: 0,
+            zIndex: 25, // Above slots (15) and slot anticipation overlay (20)
+          }}
+        >
+          {slots.map((slot) => {
+            if (slot.comboBadgeNumber === undefined) return null;
+
+            const badgeColor = getPrizeThemeColor(slot.prize, theme);
+
+            return (
+              <div
+                key={`combo-badge-${slot.index}`}
+                className="absolute font-bold text-white text-xs leading-none"
+                style={{
+                  bottom: `${-10 - 10}px`, // Slot bottom is at -10px, badge center aligned with floor (bottom edge) means badge center at -10px, so top of badge at -10px - 10px (half of 20px height)
+                  left: `${slot.x + slot.width / 2 - 10}px`, // Center horizontally: slot x + half width - half badge width (10px)
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: `linear-gradient(135deg, ${badgeColor} 0%, ${hexToRgba(badgeColor, 0.87)} 100%)`,
+                  /* RN-compatible: removed boxShadow, using border for definition */
+                  border: `2px solid ${hexToRgba(theme.colors.text.inverse, 0.3)}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {slot.comboBadgeNumber}
+              </div>
+            );
+          })}
+        </div>
 
         {/* Slot Anticipation Overlay - positioned and animated by driver */}
         {/* Shows highlighted border on slot under ball during drop */}

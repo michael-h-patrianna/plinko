@@ -16,10 +16,10 @@ async function testCelebration() {
     await page.goto('http://localhost:5174', { waitUntil: 'networkidle', timeout: 10000 });
     console.log('✓ Page loaded');
 
-    // Click "Drop Ball" to begin game
-    console.log('Finding Drop Ball button...');
+    // Wait for Drop Ball button to appear (after prizes load)
+    console.log('Waiting for Drop Ball button...');
     const dropButton = await page.locator('button:has-text("Drop Ball")').first();
-    await dropButton.waitFor({ state: 'visible', timeout: 5000 });
+    await dropButton.waitFor({ state: 'visible', timeout: 10000 });
 
     await page.screenshot({
       path: 'screenshots/celebration-test/00-before-drop.png',
@@ -27,7 +27,21 @@ async function testCelebration() {
     });
 
     await dropButton.click();
-    console.log('✓ Clicked Drop Ball');
+    console.log('✓ Clicked Drop Ball button');
+
+    // Wait for position selection screen, then click START
+    await page.waitForTimeout(500);
+    console.log('Waiting for START button (position selection)...');
+    const startButton = await page.locator('button:has-text("START")').first();
+    await startButton.waitFor({ state: 'visible', timeout: 5000 });
+
+    await page.screenshot({
+      path: 'screenshots/celebration-test/00b-position-select.png',
+      fullPage: false
+    });
+
+    await startButton.click();
+    console.log('✓ Clicked START button');
 
     // Wait for countdown (3-2-1)
     await page.waitForTimeout(3000);
@@ -43,15 +57,45 @@ async function testCelebration() {
       fullPage: false
     });
 
-    // Check for "You Won!" text
+    // Capture celebration phases
+    console.log('Capturing celebration animation...');
+
+    // Phase 1: Focus/Anticipation (0-400ms)
+    await page.waitForTimeout(200);
+    await page.screenshot({
+      path: 'screenshots/celebration-test/03a-celebration-focus.png',
+      fullPage: false
+    });
+
+    // Phase 2: Burst moment (400-500ms) - flash + confetti + stars
+    await page.waitForTimeout(300);
+    await page.screenshot({
+      path: 'screenshots/celebration-test/03b-celebration-burst.png',
+      fullPage: false
+    });
+
+    // Phase 3: Particle expansion (500-1000ms)
+    await page.waitForTimeout(400);
+    await page.screenshot({
+      path: 'screenshots/celebration-test/03c-celebration-particles.png',
+      fullPage: false
+    });
+
+    // Phase 4: Settle and reveal (1000-1500ms)
+    await page.waitForTimeout(600);
+    await page.screenshot({
+      path: 'screenshots/celebration-test/03d-celebration-settle.png',
+      fullPage: false
+    });
+
+    // Check for "You Won!" text (should appear after celebration)
     console.log('Checking for You Won text...');
     const youWonText = await page.locator('.you-won-main-text').first();
     const youWonVisible = await youWonText.isVisible().catch(() => false);
     console.log(`You Won text visible: ${youWonVisible}`);
 
-    await page.waitForTimeout(1500);
     await page.screenshot({
-      path: 'screenshots/celebration-test/03-you-won-animation.png',
+      path: 'screenshots/celebration-test/04-you-won-screen.png',
       fullPage: false
     });
 
@@ -90,7 +134,7 @@ async function testCelebration() {
       console.log(`Found ${indicators.length} floating +amount indicators`);
 
       await page.screenshot({
-        path: 'screenshots/celebration-test/04-counters-animating.png',
+        path: 'screenshots/celebration-test/05-counters-animating.png',
         fullPage: false
       });
     }
@@ -98,7 +142,7 @@ async function testCelebration() {
     // Wait for full animation to complete
     await page.waitForTimeout(2000);
     await page.screenshot({
-      path: 'screenshots/celebration-test/05-celebration-complete.png',
+      path: 'screenshots/celebration-test/06-celebration-complete.png',
       fullPage: false
     });
 

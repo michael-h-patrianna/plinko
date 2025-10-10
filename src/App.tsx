@@ -12,6 +12,7 @@ import { GameBoardErrorBoundary } from './components/layout/GameBoardErrorBounda
 import { PrizeErrorBoundary } from './components/layout/PrizeErrorBoundary';
 import { ToastProvider, useToast } from './components/feedback';
 import { ScreenShake } from './components/effects/ScreenShake';
+import { CelebrationOverlay } from './components/effects/celebrations';
 import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
 import { PopupContainer } from './components/layout/PopupContainer';
 import { PrizeClaimed } from './components/screens/PrizeClaimed';
@@ -43,6 +44,7 @@ function AppContent({
   const { theme } = useTheme();
   const { showToast } = useToast();
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('drop-position');
+  const [showWinner, setShowWinner] = useState(false);
 
   // Error handlers for toast notifications
   const handleGameBoardError = useCallback(() => {
@@ -167,12 +169,14 @@ function AppContent({
             onPerformanceModeChange={setPerformanceMode}
             gameState={gameState}
             isStartScreen={state === 'idle' || state === 'ready'}
+            showWinner={showWinner}
+            onShowWinnerChange={setShowWinner}
           />
         </div>
       </div>
 
       {/* Game container with screen shake */}
-  <ScreenShake active={shakeActive} intensity="high" duration={400}>
+      <ScreenShake active={shakeActive} intensity="high" duration={400}>
         <div style={gameContainerStyle}>
           <PopupContainer isMobileOverlay={isMobile}>
             {/* Start screen overlay with smooth exit */}
@@ -185,12 +189,13 @@ function AppContent({
                     onStart={startGame}
                     disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
                     winningIndex={winningIndex}
+                    showWinner={showWinner}
                   />
                 )}
               </AnimatePresence>
             </PrizeErrorBoundary>
 
-            {/* Main game board with ball - animated entrance when countdown starts */}
+            {/* Main game board with ball - stays visible during celebrating state */}
             <GameBoardErrorBoundary onReset={resetGame} onError={handleGameBoardError}>
               <AnimatePresence mode="wait">
                 {state !== 'idle' &&
@@ -214,6 +219,7 @@ function AppContent({
                       isSelectingPosition={state === 'selecting-position'}
                       onPositionSelected={selectDropPosition}
                       onLandingComplete={onLandingComplete}
+                      showWinner={showWinner}
                     />
                   )}
               </AnimatePresence>
@@ -255,6 +261,20 @@ function AppContent({
               </AnimatePresence>
             </PrizeErrorBoundary>
           </PopupContainer>
+
+          {/* Celebration overlay - AFTER PopupContainer to render above everything */}
+          <AnimatePresence mode="wait">
+            {state === 'celebrating' && selectedPrize && (
+              <CelebrationOverlay
+                key="celebration"
+                prize={selectedPrize}
+                onComplete={() => {
+                  // Celebration overlay manages its own timing
+                  // Auto-advance is handled by useGameState effect
+                }}
+              />
+            )}
+          </AnimatePresence>
         </div>
       </ScreenShake>
     </div>

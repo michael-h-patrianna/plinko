@@ -272,12 +272,23 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
     }
   }, [gameState.state, initializationResult]);
 
-  // Auto-reveal prize after landing
+  // Auto-advance from landed → celebrating
   useEffect(() => {
     if (gameState.state === 'landed') {
       const timer = setTimeout(() => {
+        dispatch({ type: 'CELEBRATION_COMPLETED' });
+      }, 300); // Brief delay before celebration starts
+      return () => clearTimeout(timer);
+    }
+    return undefined;
+  }, [gameState.state]);
+
+  // Auto-advance from celebrating → revealed
+  useEffect(() => {
+    if (gameState.state === 'celebrating') {
+      const timer = setTimeout(() => {
         dispatch({ type: 'REVEAL_CONFIRMED' });
-      }, GAME_TIMEOUT.AUTO_REVEAL);
+      }, GAME_TIMEOUT.AUTO_REVEAL); // Celebration duration handled by overlay
       return () => clearTimeout(timer);
     }
     return undefined;
@@ -316,10 +327,53 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       if (choiceMechanic === 'drop-position') {
         dispatch({ type: 'START_POSITION_SELECTION' });
       } else {
-        dispatch({ type: 'DROP_REQUESTED' });
+        // Classic mode: generate trajectory from center position and go directly to countdown
+        if (!prizeSession) {
+          return;
+        }
+
+        const currentSeed = gameState.context.seed || Date.now();
+        const dropZone: DropZone = 'center';
+
+        // Generate trajectory with center drop zone
+        // In classic mode: User sees original prizes, trajectory targets winning slot
+        let result;
+        try {
+          result = initializeTrajectoryAndPrizes({
+            boardWidth,
+            boardHeight,
+            pegRows,
+            prizes: [...prizeSession.prizes],
+            winningIndex: prizeSession.winningIndex,
+            seed: currentSeed,
+            dropZone,
+            precomputedTrajectory: prizeSession.deterministicTrajectory,
+            useChoiceMechanic: true, // Keep prizes in original order, target winning slot
+          });
+        } catch (error) {
+          trackStateError({
+            currentState: gameState.state,
+            event: 'CLASSIC_MODE_START',
+            error: `Failed to generate trajectory: ${error instanceof Error ? error.message : String(error)}`,
+          });
+          dispatch({ type: 'RESET_REQUESTED' });
+          return;
+        }
+
+        // Dispatch countdown transition with trajectory
+        dispatch({
+          type: 'POSITION_SELECTED',
+          payload: {
+            dropZone,
+            trajectory: result.trajectory,
+            selectedIndex: result.landedSlot,
+            prize: result.prizeAtLandedSlot,
+            trajectoryCache: result.trajectoryCache,
+          },
+        });
       }
     }
-  }, [gameState.state, choiceMechanic]);
+  }, [gameState.state, choiceMechanic, prizeSession, boardWidth, boardHeight, pegRows, gameState.context.seed]);
 
   const selectDropPosition = useCallback(
     (dropZone: DropZone) => {

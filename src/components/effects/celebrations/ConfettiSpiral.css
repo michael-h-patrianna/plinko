@@ -1,0 +1,23 @@
+/* Confetti Spiral celebration styles - adapted for Plinko */
+.pf-celebration {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pf-celebration__layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pf-celebration__confetti {
+  position: absolute;
+  width: 8px;
+  height: 12px;
+  border-radius: 2px;
+  pointer-events: none;
+}

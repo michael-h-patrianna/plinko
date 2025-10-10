@@ -34,6 +34,7 @@ export type GameEvent =
     }
   | { type: 'COUNTDOWN_COMPLETED' }
   | { type: 'LANDING_COMPLETED' }
+  | { type: 'CELEBRATION_COMPLETED' }
   | { type: 'REVEAL_CONFIRMED' }
   | { type: 'CLAIM_REQUESTED' }
   | { type: 'RESET_REQUESTED' };
@@ -149,6 +150,18 @@ function executeTransition(
       if (event.type === 'START_POSITION_SELECTION') {
         return transitionTo('selecting-position', context);
       }
+      if (event.type === 'POSITION_SELECTED') {
+        // Classic mode: user clicked "Drop Ball", system auto-selected center position
+        return transitionTo('countdown', {
+          ...context,
+          dropZone: event.payload.dropZone,
+          trajectory: event.payload.trajectory,
+          trajectoryCache: event.payload.trajectoryCache,
+          selectedIndex: event.payload.selectedIndex,
+          prize: event.payload.prize,
+          currentFrame: 0,
+        });
+      }
       if (event.type === 'RESET_REQUESTED') {
         return resetToIdle();
       }
@@ -190,6 +203,15 @@ function executeTransition(
       throw new Error(`Invalid event ${event.type} for state ${state}`);
 
     case 'landed':
+      if (event.type === 'CELEBRATION_COMPLETED') {
+        return transitionTo('celebrating', context);
+      }
+      if (event.type === 'RESET_REQUESTED') {
+        return resetToIdle();
+      }
+      throw new Error(`Invalid event ${event.type} for state ${state}`);
+
+    case 'celebrating':
       if (event.type === 'REVEAL_CONFIRMED') {
         return transitionTo('revealed', context);
       }
