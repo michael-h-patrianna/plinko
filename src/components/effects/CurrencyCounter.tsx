@@ -47,11 +47,38 @@ export function CurrencyCounter({
     timersRef.current = [];
 
     const startAnimation = () => {
-      const incrementCount = Math.min(Math.ceil(targetAmount / 100), 12); // Max 12 increments
+      // Better increment count logic - aim for 8-15 visible increments
+      // Small numbers (1-50): fewer increments
+      // Medium numbers (50-1000): ~10 increments
+      // Large numbers (1000+): 12-15 increments
+      let incrementCount: number;
+      if (targetAmount <= 50) {
+        incrementCount = Math.max(3, Math.ceil(targetAmount / 10));
+      } else if (targetAmount <= 500) {
+        incrementCount = Math.min(10, Math.ceil(targetAmount / 50));
+      } else if (targetAmount <= 5000) {
+        incrementCount = 12;
+      } else {
+        incrementCount = 15;
+      }
+
       const incrementValue = Math.ceil(targetAmount / incrementCount);
-      const incrementInterval = UI_DELAY.COUNTER_INCREMENT;
       let currentIncrement = 0;
       let previousValue = 0;
+
+      // Ease-out curve: fast at first, slows down dramatically near the end
+      // Using easeOutQuart: 1 - (1-t)^4
+      const getDelayForIncrement = (index: number): number => {
+        const progress = index / incrementCount;
+        const easedProgress = 1 - Math.pow(1 - progress, 4); // easeOutQuart
+
+        // Map to delay range: starts at ~50ms, ends at ~300ms
+        const minDelay = 50;
+        const maxDelay = 300;
+        const delay = minDelay + (maxDelay - minDelay) * easedProgress;
+
+        return delay;
+      };
 
       const incrementStep = () => {
         currentIncrement++;
@@ -85,7 +112,8 @@ export function CurrencyCounter({
 
         // Continue or finish
         if (currentIncrement < incrementCount) {
-          const stepTimer = setTimeout(incrementStep, incrementInterval);
+          const nextDelay = getDelayForIncrement(currentIncrement);
+          const stepTimer = setTimeout(incrementStep, nextDelay);
           timersRef.current.push(stepTimer);
         } else {
           // Ensure final value is exact
@@ -145,11 +173,9 @@ export function CurrencyCounter({
           style={{
             position: 'relative',
             minHeight: '36px',
-            display: 'flex',
-            alignItems: 'center',
           }}
         >
-          {/* Animated value with pop effect */}
+          {/* Animated value with pop effect - shrink-wraps to content */}
           <AnimatedSpan
             style={{
               position: 'relative',
@@ -159,6 +185,7 @@ export function CurrencyCounter({
               letterSpacing: '1px',
               color: theme.colors.text.primary,
               transformOrigin: 'center bottom',
+              display: 'inline-block',
             }}
             animate={
               isValueAnimating
@@ -176,48 +203,50 @@ export function CurrencyCounter({
             }}
           >
             {currentValue.toLocaleString()}
-          </AnimatedSpan>
 
-          {/* Floating increment indicators */}
-          {indicators.map((indicator) => (
-            <AnimatedSpan
-              key={indicator.id}
-              style={{
-                position: 'absolute',
-                right: '-24px',
-                top: '-8px',
-                color: theme.colors.status.success,
-                fontWeight: 700,
-                fontSize: '16px',
-                pointerEvents: 'none',
-              }}
-              initial={{
-                y: 8,
-                scale: 0.8,
-                opacity: 0,
-              }}
-              animate={
-                indicator.isAnimating
-                  ? {
-                      y: [-4, -16, -28],
-                      scale: [1, 1, 0.9],
-                      opacity: [1, 1, 0],
-                    }
-                  : {
-                      y: -28,
-                      scale: 0.9,
-                      opacity: 0,
-                    }
-              }
-              transition={{
-                duration: 0.8,
-                ease: [0.25, 0.46, 0.45, 0.94],
-                times: [0.2, 0.5, 1],
-              }}
-            >
-              +{indicator.amount}
-            </AnimatedSpan>
-          ))}
+            {/* Floating increment indicators - positioned directly relative to number */}
+            {indicators.map((indicator) => (
+              <AnimatedSpan
+                key={indicator.id}
+                style={{
+                  position: 'absolute',
+                  left: '100%', // Stick to right edge of number text
+                  top: '-8px',
+                  marginLeft: '4px', // Minimal gap from number
+                  color: theme.colors.status.success,
+                  fontWeight: 700,
+                  fontSize: '16px',
+                  pointerEvents: 'none',
+                  whiteSpace: 'nowrap',
+                }}
+                initial={{
+                  y: 8,
+                  scale: 0.8,
+                  opacity: 0,
+                }}
+                animate={
+                  indicator.isAnimating
+                    ? {
+                        y: [-4, -16, -28],
+                        scale: [1, 1, 0.9],
+                        opacity: [1, 1, 0],
+                      }
+                    : {
+                        y: -28,
+                        scale: 0.9,
+                        opacity: 0,
+                      }
+                }
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  times: [0.2, 0.5, 1],
+                }}
+              >
+                +{indicator.amount}
+              </AnimatedSpan>
+            ))}
+          </AnimatedSpan>
         </div>
         <span
           style={{
