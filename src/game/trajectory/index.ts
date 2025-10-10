@@ -30,6 +30,8 @@ export interface GenerateTrajectoryParams {
   precomputedTrajectory?: PrecomputedTrajectoryInput;
   /** Override for maximum deterministic search attempts. */
   maxAttempts?: number;
+  /** Enable advanced motion effects (squash/stretch, motion blur). Default: true */
+  enableMotionEffects?: boolean;
 }
 
 export interface GenerateTrajectoryResult {
@@ -80,6 +82,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
     targetSlot,
     precomputedTrajectory,
     maxAttempts = 50000,
+    enableMotionEffects = true,
   } = params;
 
   if (slotCount <= 0) {
@@ -119,7 +122,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
       slotHistogram,
       failure,
       source: 'precomputed',
-      cache: generateTrajectoryCache(trajectory),
+      cache: generateTrajectoryCache(trajectory, enableMotionEffects),
     };
   }
 
@@ -202,7 +205,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
           attempts: attempt + 1,
           slotHistogram,
           source: 'simulated',
-          cache: generateTrajectoryCache(trajectory),
+          cache: generateTrajectoryCache(trajectory, enableMotionEffects),
         };
       }
     }
@@ -221,7 +224,7 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
           ? ({ reason: 'max-attempts-exceeded', targetSlot } as const)
           : undefined,
       source: 'simulated',
-      cache: generateTrajectoryCache(bestCandidate.trajectory),
+      cache: generateTrajectoryCache(bestCandidate.trajectory, enableMotionEffects),
     };
   }
 

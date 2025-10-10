@@ -45,6 +45,7 @@ export interface WebBallRefs {
 export class WebBallAnimationDriver implements BallAnimationDriver {
   private refs: WebBallRefs;
   private pegFlashTimeouts = new Map<string, number>();
+  private pegRippleTimeouts = new Map<string, number>();
   private slotImpactTimeouts = new Map<string, number>();
 
   constructor(refs: WebBallRefs) {
@@ -127,9 +128,13 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     const { ballMain, ballGlowOuter, ballGlowMid } = this.refs;
 
     // Calculate transforms
+    // Ball: gets full transform including squash/stretch for physical realism
     const ballTransform = `translate(${position.x - 7}px, ${position.y - 7}px) rotate(${position.rotation}deg) scaleX(${stretch.scaleX}) scaleY(${stretch.scaleY})`;
-    const glowOuterTransform = `translate(${position.x - 20}px, ${position.y - 20}px) scaleX(${stretch.scaleX}) scaleY(${stretch.scaleY})`;
-    const glowMidTransform = `translate(${position.x - 14}px, ${position.y - 14}px) scaleX(${stretch.scaleX}) scaleY(${stretch.scaleY})`;
+
+    // Glows: only translate (no scale) to stay perfectly centered and circular
+    // This prevents misalignment during squash/stretch since glows are decorative auras
+    const glowOuterTransform = `translate(${position.x - 20}px, ${position.y - 20}px)`;
+    const glowMidTransform = `translate(${position.x - 14}px, ${position.y - 14}px)`;
 
     // Apply directly to DOM
     if (ballMain) {
@@ -164,10 +169,16 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
         const point = points[i];
         if (!point) continue;
 
-        // Direct DOM updates
+        // Direct DOM updates with optional motion blur (scaleX) and gradient
         el.style.display = 'block';
-        el.style.transform = `translate(${point.x}px, ${point.y}px) scale(${point.scale})`;
+        const scaleX = point.scaleX ?? 1;
+        el.style.transform = `translate(${point.x}px, ${point.y}px) scale(${point.scale}) scaleX(${scaleX})`;
         el.style.opacity = String(point.opacity);
+
+        // Update gradient if provided (for speed-based intensity)
+        if (point.gradient) {
+          el.style.background = point.gradient;
+        }
       }
     }
   }
@@ -243,6 +254,50 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
 
       this.pegFlashTimeouts.set(pegId, timeout);
     }
+  }
+
+  /**
+   * Update peg ripple state imperatively (for adjacent peg chain reactions).
+   * Directly manipulates data-peg-ripple attribute on peg DOM elements.
+   *
+   * PERFORMANCE: Uses same imperative strategy as updatePegFlash.
+   * Auto-clears after 200ms (150ms animation + 50ms buffer).
+   */
+  updatePegRipple(pegId: string, isRippling: boolean): void {
+    const pegEl = document.querySelector(`[data-testid="peg-${pegId}"]`) as HTMLDivElement | null;
+    if (!pegEl) return;
+
+    pegEl.setAttribute('data-peg-ripple', String(isRippling));
+
+    // If starting ripple, schedule auto-clear after 200ms
+    if (isRippling) {
+      const existingTimeout = this.pegRippleTimeouts.get(pegId);
+      if (existingTimeout !== undefined) {
+        clearTimeout(existingTimeout);
+      }
+
+      const timeout = window.setTimeout(() => {
+        pegEl.setAttribute('data-peg-ripple', 'false');
+        this.pegRippleTimeouts.delete(pegId);
+      }, 200);
+
+      this.pegRippleTimeouts.set(pegId, timeout);
+    }
+  }
+
+  /**
+   * Set the flash color for all pegs imperatively (uses CSS variables).
+   * Sets --peg-flash-color CSS variable on all peg elements.
+   *
+   * PERFORMANCE: Single DOM query and batch update.
+   * Called once per game start to theme peg flashes to winning slot color.
+   */
+  setPegFlashColor(color: string): void {
+    const pegs = document.querySelectorAll('[data-testid^="peg-"]');
+    pegs.forEach((peg) => {
+      const pegEl = peg as HTMLElement;
+      pegEl.style.setProperty('--peg-flash-color', color);
+    });
   }
 
   /**
@@ -334,17 +389,21 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
 
   /**
    * Clear all peg flashes (called on reset/idle).
-   * Sets data-peg-hit="false" on all peg elements.
+   * Sets data-peg-hit="false" and data-peg-ripple="false" on all peg elements.
    */
   clearAllPegFlashes(): void {
     // Clear all pending timeouts
     this.pegFlashTimeouts.forEach((timeout) => clearTimeout(timeout));
     this.pegFlashTimeouts.clear();
+    this.pegRippleTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.pegRippleTimeouts.clear();
 
     // Reset all peg elements
     const pegs = document.querySelectorAll('[data-testid^="peg-"]');
     pegs.forEach((peg) => {
-      (peg as HTMLElement).setAttribute('data-peg-hit', 'false');
+      const pegEl = peg as HTMLElement;
+      pegEl.setAttribute('data-peg-hit', 'false');
+      pegEl.setAttribute('data-peg-ripple', 'false');
     });
   }
 
@@ -366,12 +425,111 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     });
   }
 
+  // Track wall flash timeouts to ensure they can be re-triggered
+  private wallFlashTimeouts = new Map<string, number>();
+
   /**
-   * Cleanup: clear all pending peg flash timeouts
+   * Update board wall flash state imperatively (bypasses React reconciliation).
+   * Directly manipulates data-wall-hit attribute on BorderWall elements.
+   *
+   * PERFORMANCE: Eliminates need for walls to subscribe to frame updates.
+   * AUTO-CLEAR: Flash is automatically cleared after 300ms to allow re-triggering.
+   */
+  updateWallFlash(side: 'left' | 'right', isFlashing: boolean, impactY?: number): void {
+    const wallEl = document.querySelector(`[data-wall-side="${side}"]`) as HTMLDivElement | null;
+    if (!wallEl) return;
+
+    // Clear any existing timeout for this wall
+    const timeoutKey = `wall-${side}`;
+    const existingTimeout = this.wallFlashTimeouts.get(timeoutKey);
+    if (existingTimeout !== undefined) {
+      clearTimeout(existingTimeout);
+    }
+
+    wallEl.setAttribute('data-wall-hit', String(isFlashing));
+
+    // Set impact Y position if provided (for localized effect)
+    if (impactY !== undefined) {
+      wallEl.setAttribute('data-impact-y', String(impactY));
+    }
+
+    // Auto-clear after 300ms if we're setting it to true
+    if (isFlashing) {
+      const timeout = window.setTimeout(() => {
+        wallEl.setAttribute('data-wall-hit', 'false');
+        wallEl.removeAttribute('data-impact-y');
+        this.wallFlashTimeouts.delete(timeoutKey);
+      }, 300);
+
+      this.wallFlashTimeouts.set(timeoutKey, timeout);
+    }
+  }
+
+  /**
+   * Trigger screen shake effect on wall impact.
+   * Applies dramatic transform animation to board container.
+   *
+   * @param intensity - Shake intensity (0-1, where 1 is maximum shake)
+   */
+  triggerScreenShake(intensity: number): void {
+    const boardEl = document.querySelector('[data-testid="plinko-board"]') as HTMLDivElement | null;
+    if (!boardEl) return;
+
+    // Calculate shake amount based on intensity
+    // Enhanced: Increased max shake from 4px to 8px for more dramatic effect
+    // Also add vertical shake for more impact
+    const horizontalShake = intensity * 8;
+    const verticalShake = intensity * 4;
+
+    // Apply shake animation using keyframes with both horizontal and vertical movement
+    const animation = boardEl.animate(
+      [
+        { transform: 'translate(0px, 0px)' },
+        { transform: `translate(${horizontalShake}px, ${-verticalShake * 0.5}px)` },
+        { transform: `translate(${-horizontalShake}px, ${verticalShake * 0.5}px)` },
+        { transform: `translate(${horizontalShake * 0.7}px, ${-verticalShake * 0.3}px)` },
+        { transform: `translate(${-horizontalShake * 0.7}px, ${verticalShake * 0.3}px)` },
+        { transform: `translate(${horizontalShake * 0.4}px, ${-verticalShake * 0.2}px)` },
+        { transform: `translate(${-horizontalShake * 0.4}px, ${verticalShake * 0.2}px)` },
+        { transform: `translate(${horizontalShake * 0.2}px, 0px)` },
+        { transform: 'translate(0px, 0px)' },
+      ],
+      {
+        duration: 250,
+        easing: 'cubic-bezier(0.36, 0.07, 0.19, 0.97)', // Natural bounce-out easing
+      }
+    );
+
+    // Cleanup after animation completes
+    animation.onfinish = () => {
+      // Reset transform to ensure clean state
+      boardEl.style.transform = '';
+    };
+  }
+
+  /**
+   * Clear all wall flashes (called on reset/idle).
+   * Sets data-wall-hit="false" on all wall elements.
+   */
+  clearAllWallFlashes(): void {
+    // Clear all pending timeouts
+    this.wallFlashTimeouts.forEach((timeout) => clearTimeout(timeout));
+    this.wallFlashTimeouts.clear();
+
+    const walls = document.querySelectorAll('[data-wall-side]');
+    walls.forEach((wall) => {
+      const wallEl = wall as HTMLElement;
+      wallEl.setAttribute('data-wall-hit', 'false');
+    });
+  }
+
+  /**
+   * Cleanup: clear all pending timeouts and reset states
    */
   destroy(): void {
     this.clearAllPegFlashes();
     this.clearAllSlotHighlights();
+    this.clearAllWallFlashes();
   }
 }
 

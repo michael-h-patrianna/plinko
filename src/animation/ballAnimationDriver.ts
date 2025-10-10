@@ -29,6 +29,8 @@ export interface TrailFrame {
   y: number;
   opacity: number;
   scale: number;
+  scaleX?: number; // Horizontal stretch for motion blur effect (default: 1)
+  gradient?: string; // Optional CSS gradient for speed-based color intensity
 }
 
 /**
@@ -99,6 +101,25 @@ export interface BallAnimationDriver {
   updatePegFlash(pegId: string, isFlashing: boolean): void;
 
   /**
+   * Update peg ripple state imperatively (for adjacent peg chain reactions).
+   * Web: Directly manipulates data-peg-ripple attribute on peg elements
+   * Native: Updates shared value for peg ripple animation
+   *
+   * @param pegId - Peg identifier in "row-col" format (e.g., "3-2")
+   * @param isRippling - Whether peg should show ripple effect
+   */
+  updatePegRipple(pegId: string, isRippling: boolean): void;
+
+  /**
+   * Set the flash color for all pegs imperatively (uses CSS variables).
+   * Web: Sets --peg-flash-color CSS variable on all peg elements
+   * Native: Updates shared color value
+   *
+   * @param color - Hex or RGB color string for peg flash (e.g., "#FF6B35" or "rgb(255, 107, 53)")
+   */
+  setPegFlashColor(color: string): void;
+
+  /**
    * Update slot highlight state imperatively (bypasses React reconciliation).
    * Web: Positions and colors overlay element to highlight the slot under the ball
    * Native: Updates shared values for overlay position and border color
@@ -136,4 +157,31 @@ export interface BallAnimationDriver {
    * Native: Clears all slot shared values
    */
   clearAllSlotHighlights(): void;
+
+  /**
+   * Update board wall flash state imperatively (bypasses React reconciliation).
+   * Web: Directly manipulates data-wall-hit attribute on BorderWall elements
+   * Native: Updates shared value for wall flash animation
+   *
+   * @param side - Wall side ('left' | 'right')
+   * @param isFlashing - Whether wall should be in flashing state
+   * @param impactY - Y coordinate of impact (for localized effect)
+   */
+  updateWallFlash(side: 'left' | 'right', isFlashing: boolean, impactY?: number): void;
+
+  /**
+   * Trigger screen shake effect on wall impact.
+   * Web: Applies transform animation to board container
+   * Native: Uses Reanimated withSequence for shake effect
+   *
+   * @param intensity - Shake intensity (0-1, where 1 is maximum shake)
+   */
+  triggerScreenShake(intensity: number): void;
+
+  /**
+   * Clear all wall flashes (called on reset/idle).
+   * Web: Sets data-wall-hit="false" on all wall elements
+   * Native: Clears all wall shared values
+   */
+  clearAllWallFlashes(): void;
 }

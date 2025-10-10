@@ -18,9 +18,10 @@ import { sizeTokens } from '../theme/tokens';
  * Call this once when trajectory is loaded, before animation starts
  *
  * @param trajectory - Array of trajectory points
+ * @param enableMotionEffects - Whether to enable enhanced motion effects (squash/stretch on collisions)
  * @returns TrajectoryCache with typed arrays for fast frame lookups
  */
-export function generateTrajectoryCache(trajectory: TrajectoryPoint[]): TrajectoryCache {
+export function generateTrajectoryCache(trajectory: TrajectoryPoint[], enableMotionEffects: boolean = true): TrajectoryCache {
   const length = trajectory.length;
 
   // Allocate typed arrays (memory efficient: 4 bytes per float, 1 byte per uint8)
@@ -50,21 +51,48 @@ export function generateTrajectoryCache(trajectory: TrajectoryPoint[]): Trajecto
       trailLengths[i] = sizeTokens.ball.maxTrailLength;
     }
 
-    // Calculate squash/stretch scales
+    // Calculate squash/stretch scales with optional enhanced collision effects
     let scaleX = 1;
     let scaleY = 1;
 
-    // Squash on impact (when hitting peg)
-    if (point.pegHit && speed > 50) {
-      const squashAmount = Math.min(speed / 800, 0.4); // Max 40% squash
-      scaleX = 1 + squashAmount * 0.5; // Widen horizontally
-      scaleY = 1 - squashAmount; // Compress vertically
-    }
-    // Stretch when falling fast
-    else if (vy > 200 && !point.pegHit) {
-      const stretchAmount = Math.min(vy / 1000, 0.3); // Max 30% stretch
-      scaleX = 1 - stretchAmount * 0.4; // Narrow horizontally
-      scaleY = 1 + stretchAmount; // Elongate vertically
+    if (enableMotionEffects) {
+      // Enhanced squash on peg collision (more pronounced)
+      if (point.pegHit && speed > 50) {
+        const squashAmount = Math.min(speed / 600, 0.5); // Max 50% squash
+        scaleX = 1 + squashAmount * 0.65; // Widen horizontally (1.15x at max)
+        scaleY = 1 - squashAmount * 0.7; // Compress vertically (0.85x at min)
+      }
+      // Enhanced squash on wall collision
+      else if (point.wallHit && speed > 50) {
+        const squashAmount = Math.min(speed / 700, 0.4); // Max 40% squash
+        scaleX = 1 - squashAmount * 0.55; // Compress horizontally (0.9x at max)
+        scaleY = 1 + squashAmount * 0.55; // Expand vertically (1.1x at max)
+      }
+      // Enhanced squash on bucket floor collision
+      else if (point.bucketFloorHit && speed > 50) {
+        const squashAmount = Math.min(speed / 500, 0.6); // Max 60% squash (more impact)
+        scaleX = 1 + squashAmount * 0.85; // Expand horizontally (1.25x at max)
+        scaleY = 1 - squashAmount * 0.85; // Compress vertically (0.75x at min)
+      }
+      // Stretch when falling fast
+      else if (vy > 200 && !point.pegHit && !point.wallHit && !point.bucketFloorHit) {
+        const stretchAmount = Math.min(vy / 1000, 0.3); // Max 30% stretch
+        scaleX = 1 - stretchAmount * 0.4; // Narrow horizontally
+        scaleY = 1 + stretchAmount; // Elongate vertically
+      }
+    } else {
+      // Fallback to basic squash/stretch (legacy behavior)
+      if (point.pegHit && speed > 50) {
+        const squashAmount = Math.min(speed / 800, 0.4); // Max 40% squash
+        scaleX = 1 + squashAmount * 0.5; // Widen horizontally
+        scaleY = 1 - squashAmount; // Compress vertically
+      }
+      // Basic stretch when falling fast
+      else if (vy > 200 && !point.pegHit) {
+        const stretchAmount = Math.min(vy / 1000, 0.3); // Max 30% stretch
+        scaleX = 1 - stretchAmount * 0.4; // Narrow horizontally
+        scaleY = 1 + stretchAmount; // Elongate vertically
+      }
     }
 
     scalesX[i] = scaleX;

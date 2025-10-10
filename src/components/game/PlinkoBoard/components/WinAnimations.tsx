@@ -1,6 +1,6 @@
 /**
  * WinAnimations component - orchestrates all win-related animations
- * Includes landing impact, slot anticipation, and win reveal effects
+ * Includes landing impact, slot anticipation, victory reveal sequence, and win reveal effects
  */
 
 import { memo } from 'react';
@@ -8,6 +8,7 @@ import type { PrizeConfig, BallPosition } from '../../../../game/types';
 import { BallLandingImpact } from '../../../effects/WinAnimations/BallLandingImpact';
 import { SlotAnticipation } from '../../../effects/WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../../../effects/WinAnimations/SlotWinReveal';
+import { VictoryRevealSequence } from '../../../effects/WinAnimations/VictoryRevealSequence';
 import { useTheme } from '../../../../theme';
 import { getPrizeThemeColor } from '../../../../theme/prizeColorMapper';
 
@@ -24,6 +25,7 @@ interface WinAnimationsProps {
   } | null;
   bucketZoneY: number;
   boardHeight: number;
+  totalSlots?: number;
 }
 
 export const WinAnimations = memo(function WinAnimations({
@@ -35,6 +37,7 @@ export const WinAnimations = memo(function WinAnimations({
   winningSlot,
   bucketZoneY,
   boardHeight,
+  totalSlots = 5,
 }: WinAnimationsProps) {
   const { theme } = useTheme();
 
@@ -68,7 +71,16 @@ export const WinAnimations = memo(function WinAnimations({
         />
       )}
 
-      {/* Win Reveal Animation */}
+      {/* Victory Reveal Sequence - coordinated slot dimming and scaling */}
+      {showWinReveal && (
+        <VictoryRevealSequence
+          winningSlotIndex={selectedIndex}
+          totalSlots={totalSlots}
+          isActive={showWinReveal}
+        />
+      )}
+
+      {/* Win Reveal Animation - confetti and radial rays */}
       {showWinReveal && (
         <SlotWinReveal
           x={winningSlot.x}

@@ -7,7 +7,7 @@
  * @param offset - Optional offset from edge (for bottom wall)
  */
 
-import { useRef } from 'react';
+import React, { useRef } from 'react';
 import { useTheme } from '../../../theme';
 import { useAnimationDriver } from '../../../theme/animationDrivers';
 
@@ -19,7 +19,7 @@ interface BorderWallProps {
   boardWidth?: number;
 }
 
-export function BorderWall({ side, width, hasImpact, offset = 0, boardWidth }: BorderWallProps) {
+export function BorderWall({ side, width, offset = 0, boardWidth }: BorderWallProps) {
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
   const { AnimatePresence } = driver;
@@ -28,17 +28,48 @@ export function BorderWall({ side, width, hasImpact, offset = 0, boardWidth }: B
   const isVertical = side === 'left' || side === 'right';
   const isMobile = boardWidth !== undefined && boardWidth <= 375;
 
+  // Track wall hit state via data attribute (imperative updates from driver)
+  const [isHit, setIsHit] = React.useState(false);
+  const [impactY, setImpactY] = React.useState<number | null>(null);
+  const wallRef = useRef<HTMLDivElement>(null);
+
   // Stable key for impact animation - increment counter when impact triggers
   const impactKeyRef = useRef(0);
-  const prevHasImpactRef = useRef(false);
 
-  // Increment key when impact changes from false to true
-  if (hasImpact && !prevHasImpactRef.current) {
-    impactKeyRef.current += 1;
-  }
+  // Watch for data attribute changes (set by driver)
+  React.useEffect(() => {
+    const wallEl = wallRef.current;
+    if (!wallEl) return;
 
-  // Update previous state
-  prevHasImpactRef.current = hasImpact;
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes') {
+          if (mutation.attributeName === 'data-wall-hit') {
+            const hitValue = wallEl.getAttribute('data-wall-hit');
+            const isNowHit = hitValue === 'true';
+
+            if (isNowHit && !isHit) {
+              // Wall was just hit - increment key to trigger new animation
+              impactKeyRef.current += 1;
+
+              // Get impact Y position if available
+              const impactYStr = wallEl.getAttribute('data-impact-y');
+              const impactYValue = impactYStr ? parseFloat(impactYStr) : null;
+              setImpactY(impactYValue);
+              setIsHit(true);
+            } else if (!isNowHit && isHit) {
+              setIsHit(false);
+              setImpactY(null);
+            }
+          }
+        }
+      });
+    });
+
+    observer.observe(wallEl, { attributes: true });
+
+    return () => observer.disconnect();
+  }, [isHit]);
 
   const baseStyle = {
     background: `${theme.colors.surface.elevated}66`,
@@ -59,25 +90,56 @@ export function BorderWall({ side, width, hasImpact, offset = 0, boardWidth }: B
           : { top: isMobile ? 0 : `${width}px`, right: 0, bottom: offset, width: `${width}px` };
 
   return (
-    <div className="absolute" style={{ ...positionStyle, ...baseStyle }}>
-      {/* Impact flash */}
+    <div
+      ref={wallRef}
+      className="absolute"
+      style={{ ...positionStyle, ...baseStyle, zIndex: 5 }}
+      data-wall-side={side}
+      data-wall-hit="false"
+    >
+      {/* Wall impact glow - Small, focused on ball contact point */}
       <AnimatePresence>
-        {hasImpact && (
+        {isHit && (
           <AnimatedDiv
             key={`impact-${side}-${impactKeyRef.current}`}
-            className="absolute inset-0 pointer-events-none"
+            className="absolute pointer-events-none"
             style={{
-              // Cross-platform compatible: linear gradients only (no radial for RN compatibility)
+              // Position: Small 50px tall glow at inner edge, centered on ball impact
+              ...(isVertical
+                ? side === 'left'
+                  ? {
+                      left: `${width - 3}px`,
+                      top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
+                      height: impactY !== null ? '50px' : '100%',
+                      width: '6px',
+                    }
+                  : {
+                      right: `${width - 3}px`,
+                      top: impactY !== null ? `${Math.max(0, impactY - 25)}px` : 0,
+                      height: impactY !== null ? '50px' : '100%',
+                      width: '6px',
+                    }
+                : { left: 0, right: 0, bottom: 0, height: '6px' }),
+              // Cross-platform: linear gradient from bright to transparent
               background: isVertical
                 ? side === 'left'
-                  ? `linear-gradient(to right, ${theme.colors.text.inverse}cc 0%, ${theme.colors.status.warning}99 30%, transparent 70%)`
-                  : `linear-gradient(to left, ${theme.colors.text.inverse}cc 0%, ${theme.colors.status.warning}99 30%, transparent 70%)`
-                : `linear-gradient(to bottom, ${theme.colors.text.inverse}cc 0%, ${theme.colors.status.warning}99 30%, transparent 70%)`,
-              /* RN-compatible: removed boxShadow glow effect */
+                  ? `linear-gradient(to right, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
+                  : `linear-gradient(to left, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`
+                : `linear-gradient(to bottom, ${theme.colors.status.warning}ff 0%, ${theme.colors.game.ball.primary}ff 50%, transparent 100%)`,
+              borderRadius: isVertical ? '3px' : 'inherit',
             }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: [0, 1, 0] }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
+            initial={{ opacity: 0, scaleY: isVertical ? 0.6 : 1, scaleX: isVertical ? 1 : 0.6 }}
+            animate={{
+              opacity: [0, 1, 0.6, 0],
+              scaleY: isVertical ? [0.6, 1.1, 1, 1] : 1,
+              scaleX: isVertical ? 1 : [0.6, 1.1, 1, 1]
+            }}
+            exit={{ opacity: 0 }}
+            transition={{
+              duration: 0.3,
+              ease: 'easeOut',
+              times: [0, 0.2, 0.6, 1]
+            }}
           />
         )}
       </AnimatePresence>

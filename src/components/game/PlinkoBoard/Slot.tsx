@@ -27,7 +27,7 @@
  */
 
 import { memo } from 'react';
-import type { PrizeConfig } from '../../../game/types';
+import type { PrizeConfig, GameState } from '../../../game/types';
 import { calculateBucketHeight } from '../../../utils/slotDimensions';
 import { getSlotDisplayText } from '../../../game/prizeTypes';
 import { abbreviateNumber } from '../../../utils/formatNumber';
@@ -45,6 +45,7 @@ interface SlotProps {
   prizeCount?: number;
   boardWidth?: number;
   comboBadgeNumber?: number;
+  ballState?: GameState;
 }
 
 /**
@@ -60,6 +61,7 @@ const SlotComponent = memo(function Slot({
   prizeCount = 5,
   boardWidth = 375,
   comboBadgeNumber,
+  ballState = 'idle',
 }: SlotProps) {
   const { theme } = useTheme();
   const driver = useAnimationDriver();
@@ -106,6 +108,9 @@ const SlotComponent = memo(function Slot({
     ? ''
     : getSlotDisplayText(prize, abbreviateNumber, false, compactMode);
 
+  // Determine if we should show idle animations (breathing, gradient sweep)
+  const isIdle = ballState === 'idle' || ballState === 'ready';
+
   return (
     <AnimatedDiv
       className="absolute flex flex-col items-center justify-end text-center slot-container"
@@ -114,6 +119,7 @@ const SlotComponent = memo(function Slot({
         bottom: '-10px',
         width: `${width}px`,
         height: `${bucketHeight}px`,
+        zIndex: 15, // Above background overlay (z-index: 0) and pegs (z-index: 10)
         background:
           slotStyle?.background ||
           theme.colors.game.slot.background ||
@@ -147,6 +153,7 @@ const SlotComponent = memo(function Slot({
       data-wall-impact="none"
       data-floor-impact="false"
       data-slot-color={color}
+      data-state={ballState}
     >
       <style>
         {`
@@ -169,6 +176,21 @@ const SlotComponent = memo(function Slot({
           /* Floor impact flash animation - triggered by data-floor-impact attribute */
           [data-floor-impact="true"] .slot-floor-impact {
             animation: floorFlash 200ms ease-out;
+          }
+
+          /* BREATHING ANIMATION - Idle state gentle pulse */
+          .slot-container[data-state="idle"] {
+            animation: slotBreathe 2s ease-in-out infinite;
+          }
+
+          /* BORDER PULSE - Rhythmic pulse when ball is approaching */
+          .slot-container[data-approaching="true"] {
+            animation: borderPulse 500ms ease-in-out infinite;
+          }
+
+          /* GRADIENT SWEEP - Animated shimmer during idle/ready states */
+          .slot-gradient-sweep {
+            animation: gradientSweep 3s linear infinite;
           }
 
           /* Keyframe animations for impact effects */
@@ -216,8 +238,52 @@ const SlotComponent = memo(function Slot({
               transform: scaleX(0.8);
             }
           }
+
+          /* BREATHING ANIMATION - Gentle scale pulse (RN-compatible: scale only) */
+          @keyframes slotBreathe {
+            0%, 100% {
+              transform: scale(1.0);
+            }
+            50% {
+              transform: scale(1.02);
+            }
+          }
+
+          /* BORDER PULSE - Rhythmic opacity and scale at 120 BPM (RN-compatible) */
+          @keyframes borderPulse {
+            0%, 100% {
+              opacity: 0.6;
+              transform: scale(1.0);
+            }
+            50% {
+              opacity: 1.0;
+              transform: scale(1.03);
+            }
+          }
+
+          /* GRADIENT SWEEP - Animated background position for shimmer effect (RN-compatible: linear gradient position) */
+          @keyframes gradientSweep {
+            0% {
+              background-position: 0% 50%;
+            }
+            100% {
+              background-position: 200% 50%;
+            }
+          }
         `}
       </style>
+      {/* Gradient sweep effect - animated shimmer during idle/ready states */}
+      {isIdle && (
+        <div
+          className="absolute top-0 left-0 right-0 bottom-0 slot-gradient-sweep pointer-events-none"
+          style={{
+            background: `linear-gradient(90deg, transparent 0%, ${hexToRgba(color, 0.2)} 30%, ${hexToRgba(color, 0.4)} 50%, ${hexToRgba(color, 0.2)} 70%, transparent 100%)`,
+            backgroundSize: '200% 100%',
+            backgroundPosition: '0% 50%',
+          }}
+        />
+      )}
+
       {/* Shine effect */}
       <div
         className="absolute top-0 left-0 right-0"
@@ -405,6 +471,7 @@ export const Slot = memo(SlotComponent, (prev, next) => {
     prev.isWinning === next.isWinning &&
     prev.prizeCount === next.prizeCount &&
     prev.boardWidth === next.boardWidth &&
-    prev.comboBadgeNumber === next.comboBadgeNumber
+    prev.comboBadgeNumber === next.comboBadgeNumber &&
+    prev.ballState === next.ballState
   );
 });

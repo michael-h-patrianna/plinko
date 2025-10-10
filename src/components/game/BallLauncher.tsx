@@ -4,6 +4,7 @@
  * @param x - X position of launcher
  * @param y - Y position of launcher
  * @param isLaunching - Whether the ball is currently being launched
+ * @param showCountdownPulses - Whether to show countdown rhythm pulses
  */
 
 import { useTheme } from '../../theme';
@@ -15,6 +16,7 @@ interface BallLauncherProps {
   isLaunching: boolean;
   isSelected?: boolean;
   onClick?: () => void;
+  showCountdownPulses?: boolean;
 }
 
 export function BallLauncher({ x, y, isLaunching, isSelected = false, onClick }: BallLauncherProps) {

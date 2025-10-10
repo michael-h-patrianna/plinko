@@ -7,7 +7,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../theme';
 import { useAnimationDriver } from '../../theme/animationDrivers';
-import { ANIMATION_DURATION, UI_DELAY } from '../../constants';
+import { ANIMATION_DURATION } from '../../constants';
 
 interface CounterIndicator {
   id: number;

@@ -94,6 +94,40 @@ interface FrameStore {
   notifyListeners: () => void;
 }
 
+/**
+ * Calculate trail gradient intensity based on ball speed.
+ * Low speed = desaturated/dim, high speed = saturated/bright
+ * Uses linear gradients only (cross-platform compatible, no radial/conic)
+ *
+ * @param speed - Ball speed in pixels/second
+ * @param baseColor - Base color (e.g., theme.colors.game.ball.primary - must be hex format)
+ * @returns CSS linear gradient with speed-based intensity
+ */
+function calculateTrailGradient(speed: number, baseColor: string): string {
+  // Speed thresholds (px/s)
+  const LOW_SPEED = 200;
+  const HIGH_SPEED = 400;
+
+  // Calculate intensity based on speed
+  let alphaMultiplier = 0.6; // Desaturated for low speed
+
+  if (speed >= HIGH_SPEED) {
+    alphaMultiplier = 1.0; // Fully saturated for high speed
+  } else if (speed > LOW_SPEED) {
+    // Linear interpolation between low and high speed
+    const ratio = (speed - LOW_SPEED) / (HIGH_SPEED - LOW_SPEED);
+    alphaMultiplier = 0.6 + ratio * 0.4; // 0.6 to 1.0
+  }
+
+  // Calculate alpha hex values for gradient stops
+  // Full intensity at start, fading to transparent
+  const alpha1 = Math.round(255 * alphaMultiplier).toString(16).padStart(2, '0');
+  const alpha2 = Math.round(204 * alphaMultiplier).toString(16).padStart(2, '0'); // 80% of full
+  const alpha3 = Math.round(102 * alphaMultiplier).toString(16).padStart(2, '0'); // 40% of full
+
+  return `linear-gradient(135deg, ${baseColor}${alpha1} 0%, ${baseColor}${alpha2} 30%, ${baseColor}${alpha3} 70%, transparent 100%)`;
+}
+
 interface OptimizedBallRendererProps {
   isSelectingPosition: boolean;
   ballState: GameState;
@@ -104,6 +138,7 @@ interface OptimizedBallRendererProps {
   trajectoryLength?: number;
   onLandingComplete?: () => void;
   pegHitFrames?: Map<string, number[]>;
+  wallHitFrames?: { left: number[]; right: number[] };
   currentFrameRef?: React.MutableRefObject<number>;
   slots?: Array<{ x: number; width: number }>;
   slotHighlightColor?: string;
@@ -121,6 +156,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
   trajectoryLength,
   onLandingComplete,
   pegHitFrames,
+  wallHitFrames,
   currentFrameRef,
   slots,
   slotHighlightColor,
@@ -146,6 +182,9 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
 
   // Peg flash tracking - keeps track of last checked frame for each peg
   const lastCheckedPegFrameRef = useRef<Map<string, number>>(new Map());
+
+  // Wall flash tracking - keeps track of last checked frame for each wall
+  const lastCheckedWallFrameRef = useRef<{ left: number; right: number }>({ left: -1, right: -1 });
 
   // Slot highlight tracking - keeps track of currently highlighted slot
   const activeSlotRef = useRef<number | null>(null);
@@ -248,6 +287,17 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         // This eliminates Math.pow() calls: was 20 × 60 FPS = 1,200 operations/sec
         const trailLookup = getCachedTrailLookup(trailPointsRef.current.length);
 
+        // Calculate motion blur based on horizontal velocity (high-speed effect)
+        // Position is actually a TrajectoryPoint with vx/vy, but typed as BallPosition
+        const vx = (position as any).vx ?? 0;
+        const vy = (position as any).vy ?? 0;
+        const absVx = Math.abs(vx);
+        const motionBlurScaleX = absVx > 400 ? Math.min(1.5 + (absVx - 400) / 400, 2.5) : 1;
+
+        // Calculate trail gradient based on speed (speed-based color intensity)
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        const trailGradient = calculateTrailGradient(speed, theme.colors.game.ball.primary);
+
         // Build trail frames using pre-computed values (O(1) array access)
         const trailSize = 12;
         const halfTrailSize = trailSize / 2;
@@ -256,6 +306,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           y: point.y - halfTrailSize,
           opacity: trailLookup[i]?.opacity ?? 0,
           scale: trailLookup[i]?.scale ?? 0,
+          scaleX: motionBlurScaleX, // Apply motion blur stretch
+          gradient: trailGradient, // Apply speed-based color intensity
         }));
 
         driver.updateTrail(trailFrames);
@@ -278,6 +330,44 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
             lastCheckedPegFrameRef.current.set(pegId, currentFrame);
           }
         });
+      }
+
+      // COLLISION DETECTION: Wall flashes (frame-drop-safe)
+      // Check if walls were hit between last checked frame and current frame
+      if (wallHitFrames) {
+        // Check left wall
+        const lastCheckedLeft = lastCheckedWallFrameRef.current.left;
+        const newLeftHits = wallHitFrames.left.filter(
+          hitFrame => hitFrame > lastCheckedLeft && hitFrame <= currentFrame
+        );
+
+        if (newLeftHits.length > 0) {
+          // Left wall was hit! Trigger flash via driver with ball Y position
+          driver.updateWallFlash('left', true, position.y);
+          // Trigger screen shake based on speed (intensity 0-1)
+          const speed = cached.speed || 0;
+          const shakeIntensity = Math.min(speed / 600, 1); // Max intensity at 600 px/s
+          driver.triggerScreenShake(shakeIntensity);
+          // Update last checked frame
+          lastCheckedWallFrameRef.current.left = currentFrame;
+        }
+
+        // Check right wall
+        const lastCheckedRight = lastCheckedWallFrameRef.current.right;
+        const newRightHits = wallHitFrames.right.filter(
+          hitFrame => hitFrame > lastCheckedRight && hitFrame <= currentFrame
+        );
+
+        if (newRightHits.length > 0) {
+          // Right wall was hit! Trigger flash via driver with ball Y position
+          driver.updateWallFlash('right', true, position.y);
+          // Trigger screen shake based on speed
+          const speed = cached.speed || 0;
+          const shakeIntensity = Math.min(speed / 600, 1); // Max intensity at 600 px/s
+          driver.triggerScreenShake(shakeIntensity);
+          // Update last checked frame
+          lastCheckedWallFrameRef.current.right = currentFrame;
+        }
       }
 
       // COLLISION DETECTION: Slot highlighting (show which slot ball is above during entire drop)
@@ -339,11 +429,13 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
       cancel();
       driver.clearTrail();
       driver.clearAllPegFlashes();
+      driver.clearAllWallFlashes();
       driver.clearAllSlotHighlights();
       lastCheckedPegFrameRef.current.clear();
+      lastCheckedWallFrameRef.current = { left: -1, right: -1 };
       activeSlotRef.current = null;
     };
-  }, [ballState, frameStore, getBallPosition, trajectoryCache, trajectoryLength, onLandingComplete, showTrail, driver, performance, pegHitFrames, currentFrameRef, slots, slotHighlightColor, bucketZoneY, getCurrentTrajectoryPoint]);
+  }, [ballState, frameStore, getBallPosition, trajectoryCache, trajectoryLength, onLandingComplete, showTrail, driver, performance, pegHitFrames, wallHitFrames, currentFrameRef, slots, slotHighlightColor, bucketZoneY, getCurrentTrajectoryPoint]);
 
   // Don't render anything during position selection
   if (isSelectingPosition) {
@@ -370,6 +462,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         y={ballPosition.y}
         isLaunching={false}
         isSelected={false}
+        showCountdownPulses={true}
       />
     );
   }
@@ -449,6 +542,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           position: 'relative',
           overflow: 'hidden',
           borderRadius: '50%',
+          transformOrigin: 'center center',
           transform: ballPosition ? `translate(${ballPosition.x - 7}px, ${ballPosition.y - 7}px) rotate(${ballPosition.rotation}deg)` : undefined,
         }}
         data-state={ballState}

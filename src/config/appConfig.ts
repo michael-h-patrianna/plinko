@@ -45,6 +45,8 @@ export interface PerformanceConfig {
     pegFlashDurationMs?: number;
     /** Enable animation stats logging (debug). Default: false */
     logAnimationStats?: boolean;
+    /** Enable advanced motion effects (squash/stretch, motion blur, speed-based trail intensity). Default: true for high-quality/balanced, false for power-saving */
+    enableMotionEffects?: boolean;
   };
 }
 
@@ -142,6 +144,7 @@ export function getPerformanceSetting<K extends keyof Required<PerformanceConfig
       enableInfiniteAnimations: true,
       pegFlashDurationMs: 300,
       logAnimationStats: false,
+      enableMotionEffects: true, // Full motion effects
     },
     balanced: {
       fps: 60,
@@ -152,6 +155,7 @@ export function getPerformanceSetting<K extends keyof Required<PerformanceConfig
       enableInfiniteAnimations: false,
       pegFlashDurationMs: 300,
       logAnimationStats: false,
+      enableMotionEffects: true, // Keep motion effects in balanced mode
     },
     'power-saving': {
       fps: 30,
@@ -162,6 +166,7 @@ export function getPerformanceSetting<K extends keyof Required<PerformanceConfig
       enableInfiniteAnimations: false,
       pegFlashDurationMs: 300,
       logAnimationStats: false,
+      enableMotionEffects: false, // Disable for battery savings
     },
   };
 

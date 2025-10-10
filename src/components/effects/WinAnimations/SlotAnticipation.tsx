@@ -30,15 +30,16 @@ export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipation
   const particleMultiplier = getPerformanceSetting(performance, 'particleMultiplier') ?? 1.0;
   const enableInfiniteAnimations = getPerformanceSetting(performance, 'enableInfiniteAnimations') ?? true;
 
-  // Calculate particle count based on particle multiplier (5 high-quality, 3-4 balanced, 2-3 power-saving)
-  const particleCount = Math.max(2, Math.round(5 * particleMultiplier));
+  // Calculate particle count based on particle multiplier (8 high-quality, 5-6 balanced, 3-4 power-saving)
+  const particleCount = Math.max(3, Math.round(8 * particleMultiplier));
 
   // Note: particleCount is NOT in dependencies to prevent particles from jumping when performance mode changes
   const particles = useMemo(
     () =>
       Array.from({ length: particleCount }).map((_, i) => ({
         x: x + width * (0.3 + Math.random() * 0.4),
-        delay: i * 0.2 + Math.random() * 0.3,
+        delay: i * 0.2,
+        size: 6 + Math.random() * 4, // 6-10px random size
       })),
     [x, width]
   );
@@ -55,19 +56,19 @@ export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipation
           style={{
             left: `${particle.x}px`,
             bottom: '0px',
-            width: '6px',
-            height: '6px',
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
             background: `linear-gradient(135deg, ${color} 0%, ${color}aa 50%, transparent 100%)`,
             /* RN-compatible: removed boxShadow glow */
           }}
           initial={{ y: 0, opacity: 0, scale: 0 }}
           animate={{
-            y: -80,
-            opacity: [0, 1, 0.8, 0],
-            scale: [0, 1, 0.8, 0.3],
+            y: [-40, -80], // Rise from -40px to -80px
+            opacity: [0, 0.8, 0], // Fade in to 0.8, then fade out
+            scale: [0, 1, 0.3],
           }}
           transition={{
-            duration: 2,
+            duration: 1.5,
             delay: particle.delay,
             repeat: Infinity,
             ease: [0.22, 1, 0.36, 1], // Ease-out cubic

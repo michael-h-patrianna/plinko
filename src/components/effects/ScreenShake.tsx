@@ -11,8 +11,8 @@ import { useAnimationDriver } from '../../theme/animationDrivers';
 interface ScreenShakeProps {
   /** Trigger shake effect */
   active: boolean;
-  /** Shake intensity (low/medium/high) */
-  intensity?: 'low' | 'medium' | 'high';
+  /** Shake intensity (low/medium/high) or custom amplitude in pixels */
+  intensity?: 'low' | 'medium' | 'high' | number;
   /** Duration in ms (default: 400) */
   duration?: number;
   /** Callback when shake completes */
@@ -45,22 +45,36 @@ export function ScreenShake({
 
   // Shake intensity configurations (cross-platform compatible)
   // Uses translateX and translateY only (GPU accelerated)
-  const shakeKeyframes = {
-    low: {
-      x: [0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0],
-      y: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    },
-    medium: {
-      x: [0, -2, 2, -2, 2, -2, 2, -2, 2, -2, 0],
-      y: [0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0],
-    },
-    high: {
-      x: [0, -3, 3, -3, 3, -3, 3, -2, 2, -1, 0],
-      y: [0, -2, 2, 2, -2, -2, 2, 1, -1, 0, 0],
-    },
+  const getShakeKeyframes = (intensityValue: 'low' | 'medium' | 'high' | number) => {
+    // If numeric intensity provided, use it directly as amplitude
+    if (typeof intensityValue === 'number') {
+      const amplitude = intensityValue;
+      return {
+        x: [0, -amplitude, amplitude, -amplitude, amplitude, -amplitude, amplitude, -amplitude * 0.7, amplitude * 0.7, -amplitude * 0.3, 0],
+        y: [0, -amplitude * 0.5, amplitude * 0.5, amplitude * 0.5, -amplitude * 0.5, -amplitude * 0.5, amplitude * 0.5, amplitude * 0.3, -amplitude * 0.3, 0, 0],
+      };
+    }
+
+    // Preset intensity levels
+    const presets = {
+      low: {
+        x: [0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0],
+        y: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      },
+      medium: {
+        x: [0, -2, 2, -2, 2, -2, 2, -2, 2, -2, 0],
+        y: [0, -1, 1, -1, 1, -1, 1, -1, 1, -1, 0],
+      },
+      high: {
+        x: [0, -3, 3, -3, 3, -3, 3, -2, 2, -1, 0],
+        y: [0, -2, 2, 2, -2, -2, 2, 1, -1, 0, 0],
+      },
+    };
+
+    return presets[intensityValue];
   };
 
-  const currentShake = shakeKeyframes[intensity];
+  const currentShake = getShakeKeyframes(intensity);
   const durationInSeconds = duration / 1000;
 
   return (

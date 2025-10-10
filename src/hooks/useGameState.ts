@@ -170,42 +170,67 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
       const sessionPrizes = [...prizeSession.prizes];
       const winningIndex = prizeSession.winningIndex;
 
-      // Initialize trajectory and swap prizes
-      let result;
-      try {
-        result = initializeTrajectoryAndPrizes({
-          boardWidth,
-          boardHeight,
-          pegRows,
-          prizes: sessionPrizes,
-          winningIndex,
+      // Initialize trajectory and arrange prizes
+      // In choice mode: DON'T swap prizes! User will see them and select drop position.
+      //                 Trajectory will be generated later when user selects drop position.
+      // In classic mode: Swap prizes so winning prize appears at landed slot
+      const useChoiceMode = choiceMechanic === 'drop-position';
+
+      if (useChoiceMode) {
+        // Choice mode: Keep prizes in original order, don't generate trajectory yet
+        // User needs to see the actual prizes before choosing drop position
+        setPrizesRef.current(sessionPrizes); // Original order!
+        setCurrentWinningIndexRef.current(winningIndex); // Original winning index!
+
+        // Store minimal initialization (trajectory will be generated when user selects drop position)
+        setInitializationResult({
+          selectedIndex: winningIndex, // Will be updated when drop position selected
+          trajectory: [], // Will be generated when drop position selected
+          prize: sessionPrizes[winningIndex]!,
           seed: prizeSession.seed,
-          precomputedTrajectory: prizeSession.deterministicTrajectory,
+          trajectoryCache: null,
+          swappedPrizes: sessionPrizes, // Not swapped!
+          winningPrizeVisualIndex: winningIndex,
         });
-      } catch (error) {
-        trackStateError({
-          currentState: gameState.state,
-          event: 'INITIALIZE',
-          error: `Failed to initialize trajectory: ${error instanceof Error ? error.message : String(error)}`,
+      } else {
+        // Classic mode: Generate trajectory and swap prizes
+        let result;
+        try {
+          result = initializeTrajectoryAndPrizes({
+            boardWidth,
+            boardHeight,
+            pegRows,
+            prizes: sessionPrizes,
+            winningIndex,
+            seed: prizeSession.seed,
+            precomputedTrajectory: prizeSession.deterministicTrajectory,
+            useChoiceMechanic: false, // Classic mode swaps prizes
+          });
+        } catch (error) {
+          trackStateError({
+            currentState: gameState.state,
+            event: 'INITIALIZE',
+            error: `Failed to initialize trajectory: ${error instanceof Error ? error.message : String(error)}`,
+          });
+          dispatch({ type: 'RESET_REQUESTED' });
+          return;
+        }
+
+        // Update prizes array with swapped prizes
+        setPrizesRef.current(result.swappedPrizes);
+        setCurrentWinningIndexRef.current(result.winningPrizeVisualIndex);
+
+        // Store initialization result
+        setInitializationResult({
+          selectedIndex: result.landedSlot,
+          trajectory: result.trajectory,
+          prize: result.prizeAtLandedSlot,
+          seed: prizeSession.seed,
+          trajectoryCache: result.trajectoryCache,
+          swappedPrizes: result.swappedPrizes,
+          winningPrizeVisualIndex: result.winningPrizeVisualIndex,
         });
-        dispatch({ type: 'RESET_REQUESTED' });
-        return;
       }
-
-      // Update prizes array with swapped prizes
-      setPrizesRef.current(result.swappedPrizes);
-      setCurrentWinningIndexRef.current(result.winningPrizeVisualIndex);
-
-      // Store result for state machine dispatch
-      setInitializationResult({
-        selectedIndex: result.landedSlot,
-        trajectory: result.trajectory,
-        prize: result.prizeAtLandedSlot,
-        seed: prizeSession.seed,
-        trajectoryCache: result.trajectoryCache,
-        swappedPrizes: result.swappedPrizes,
-        winningPrizeVisualIndex: result.winningPrizeVisualIndex,
-      });
     }
   }, [
     prizeSession,
@@ -213,6 +238,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
     boardWidth,
     boardHeight,
     pegRows,
+    choiceMechanic,
     winningPrizeLockedRef,
     initializationResult,
   ]);
@@ -290,6 +316,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
         const currentSeed = gameState.context.seed || Date.now();
 
         // Re-initialize trajectory with drop zone
+        // CRITICAL: Use choice mode = true so trajectory targets winning slot without swapping
         let result;
         try {
           result = initializeTrajectoryAndPrizes({
@@ -301,6 +328,7 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
             seed: currentSeed,
             dropZone,
             precomputedTrajectory: prizeSession.deterministicTrajectory,
+            useChoiceMechanic: true, // USER CHOSE DROP POSITION - must target winning slot!
           });
         } catch (error) {
           trackStateError({
@@ -312,9 +340,9 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
           return;
         }
 
-        // Update state with swapped prizes
-        setPrizes(result.swappedPrizes);
-        setCurrentWinningIndex(result.winningPrizeVisualIndex);
+        // In choice mode, prizes are NOT swapped (already in original order)
+        // No need to update setPrizes since they haven't changed from initialization
+        // setPrizes and setCurrentWinningIndex are already set during initialization
 
         // Dispatch position selected
         dispatch({

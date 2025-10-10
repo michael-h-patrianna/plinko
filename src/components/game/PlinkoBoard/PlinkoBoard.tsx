@@ -164,6 +164,27 @@ export function PlinkoBoard({
     return hitMap;
   }, [trajectory]);
 
+  // Pre-calculate wall hit frames from trajectory
+  // Maps 'left' or 'right' to array of frame numbers when hit occurs
+  const wallHitFrames = useMemo(() => {
+    if (!trajectory || trajectory.length === 0) {
+      return { left: [], right: [] };
+    }
+
+    const leftHits: number[] = [];
+    const rightHits: number[] = [];
+
+    trajectory.forEach((point, frameIndex) => {
+      if (point.wallHit === 'left') {
+        leftHits.push(frameIndex);
+      } else if (point.wallHit === 'right') {
+        rightHits.push(frameIndex);
+      }
+    });
+
+    return { left: leftHits, right: rightHits };
+  }, [trajectory]);
+
   // Generate slot positions and assign combo badge numbers
   const slots = useMemo(() => {
     const { slotWidth } = dimensions;
@@ -203,6 +224,15 @@ export function PlinkoBoard({
     return calculateBucketZoneY(boardHeight, dimensions.slotWidth);
   }, [boardHeight, dimensions.slotWidth]);
 
+  // Calculate winning slot color for peg flash theming
+  // TODO: Use this for peg flash color theming in future iteration
+  // const pegFlashColor = useMemo(() => {
+  //   if (selectedIndex >= 0 && selectedIndex < slots.length && slots[selectedIndex]) {
+  //     return getPrizeThemeColor(slots[selectedIndex].prize, theme);
+  //   }
+  //   return theme.colors.game.peg.highlight; // Fallback to default
+  // }, [selectedIndex, slots, theme]);
+
   // PERFORMANCE: Memoize mapped slot elements to prevent Slot re-renders
   // Slots are now static - collision detection moved to OptimizedBallRenderer (imperative updates)
   // This eliminates 60 FPS re-renders of PlinkoBoard and Slots during ball drop
@@ -222,10 +252,34 @@ export function PlinkoBoard({
           prizeCount={slotCount}
           boardWidth={boardWidth}
           comboBadgeNumber={slot.comboBadgeNumber}
+          ballState={ballState}
         />
       );
     });
   }, [slots, slotCount, ballState, selectedIndex, boardWidth]);
+
+  // Calculate ambient background color shift during landed state
+  // Blends board background with winning slot color for subtle anticipation effect
+  // TODO: Use this for background color theming in future iteration
+  // const backgroundStyle = useMemo(() => {
+  //   const baseBackground = theme.colors.game.board.background || theme.gradients.backgroundCard;
+
+  //   // During 'landed' state, blend in winning slot color
+  //   if (ballState === 'landed' && selectedIndex >= 0 && selectedIndex < slots.length && slots[selectedIndex]) {
+  //     const slotColorRgba = getPrizeThemeColorWithOpacity(slots[selectedIndex].prize, theme, 0.2);
+
+  //     // Check if base is gradient or solid
+  //     if (baseBackground.includes('gradient')) {
+  //       // Overlay transparent slot color on gradient
+  //       return `${baseBackground}, ${slotColorRgba}`;
+  //     } else {
+  //       // Create gradient blend for solid colors
+  //       return `linear-gradient(180deg, ${baseBackground} 0%, ${slotColorRgba} 100%)`;
+  //     }
+  //   }
+
+  //   return baseBackground;
+  // }, [ballState, selectedIndex, slots, theme]);
 
   return (
     <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
@@ -235,13 +289,16 @@ export function PlinkoBoard({
           width: '100%',
           height: `${boardHeight}px`,
           overflow: 'visible',
-          background: theme.colors.game.board.background || theme.gradients.backgroundCard,
           /* RN-compatible: removed boxShadow, using border for definition */
           border: theme.colors.game.board.border || `1px solid ${theme.colors.border.default}`,
           borderRadius: boardWidth <= 375 ? '0 0 12px 12px' : (theme.colors.game.board.borderRadius || theme.borderRadius.card),
         }}
         initial={{ opacity: 0, scale: 0.92, y: 30 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+        }}
         exit={{ opacity: 0, scale: 0.92, y: 30 }}
         transition={{
           duration: 0.5,
@@ -249,7 +306,29 @@ export function PlinkoBoard({
         }}
         data-testid="plinko-board"
       >
-        {/* Border Walls with impact animation */}
+        {/* Background Overlay - Fades in on board open, gradually reduces to 30%, disappears on ball drop */}
+        <AnimatedDiv
+          className="absolute inset-0 pointer-events-none"
+          style={{
+            background: `linear-gradient(180deg, ${theme.colors.surface.primary}80 0%, ${theme.colors.surface.secondary}60 100%)`,
+            borderRadius: 'inherit',
+            zIndex: 0,
+          }}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity:
+              ballState === 'dropping' || ballState === 'landed' || ballState === 'revealed'
+                ? 0
+                : ballState === 'countdown'
+                  ? 0.3
+                  : 1,
+          }}
+          transition={{
+            duration: ballState === 'dropping' ? 0.2 : ballState === 'countdown' ? 2 : 1,
+            ease: ballState === 'countdown' ? 'easeInOut' : 'easeOut',
+          }}
+        />
+        {/* Border Walls with impact animation - z-index: 5 (above parallax) */}
         <BorderWall
           side="left"
           width={BORDER_WIDTH}
@@ -314,6 +393,55 @@ export function PlinkoBoard({
           />
         ))}
 
+        {/* SELECTION MODE: Animated chevron indicators above selected drop zone */}
+        {isSelectingPosition && DROP_ZONES.map((dropZone, index) => {
+          const isSelected = index === selectedDropIndex;
+          return (
+            <AnimatedDiv
+              key={`chevron-${dropZone.zone}`}
+              className="absolute pointer-events-none"
+              style={{
+                left: `${boardWidth * dropZone.position}px`,
+                top: `${BORDER_WIDTH - 15}px`,
+                zIndex: 25,
+                opacity: isSelected ? 1 : 0,
+              }}
+              animate={{
+                y: isSelected ? [-5, -15, -5] : -5,
+                opacity: isSelected ? 1 : 0,
+              }}
+              transition={{
+                y: isSelected
+                  ? {
+                      duration: 0.8,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }
+                  : { duration: 0 },
+                opacity: { duration: 0.3 },
+              }}
+            >
+              {/* Chevron/arrow SVG - Cross-platform compatible, tip centered at x=8 */}
+              <svg
+                width="16"
+                height="10"
+                viewBox="0 0 16 10"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: 'translateX(-50%)', // Center the SVG so tip (x=8) aligns with left position
+                }}
+              >
+                <path
+                  d="M8 10L0 0H16L8 10Z"
+                  fill={theme.colors.game.ball.primary}
+                  opacity="0.9"
+                />
+              </svg>
+            </AnimatedDiv>
+          );
+        })}
+
         {/* SELECTION MODE: Controls - title, arrows, START button */}
         {isSelectingPosition && (
           <DropPositionControls
@@ -338,6 +466,7 @@ export function PlinkoBoard({
           trajectoryLength={trajectory?.length}
           onLandingComplete={onLandingComplete}
           pegHitFrames={pegHitFrames}
+          wallHitFrames={wallHitFrames}
           slots={slots.map((slot) => ({ x: slot.x, width: slot.width }))}
           slotHighlightColor={theme.colors.game.ball.primary}
           bucketZoneY={bucketZoneY}
