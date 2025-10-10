@@ -10,6 +10,7 @@
  * - See: ballAnimationDriver.web.ts for consolidated animation loop
  */
 
+import type { ValueRef } from '@/types/ref';
 import { useCallback, useMemo, useRef } from 'react';
 
 // Frame store for efficient per-frame updates without re-rendering entire tree
@@ -21,7 +22,7 @@ interface FrameStore {
 }
 
 interface UseGameAnimationOptions {
-  currentFrameRef: React.MutableRefObject<number>;
+  currentFrameRef: ValueRef<number>;
 }
 
 interface UseGameAnimationResult {

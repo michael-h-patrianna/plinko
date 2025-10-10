@@ -2,8 +2,8 @@
  * Comprehensive tests for prize configurations
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
 
 import { describe, expect, it } from 'vitest';
 import {

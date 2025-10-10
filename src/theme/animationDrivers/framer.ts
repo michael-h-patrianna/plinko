@@ -8,14 +8,17 @@
  * future React Native implementation (transforms, opacity, colors only).
  */
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import type { ComponentType } from 'react';
 import type {
+  AnimatedComponentFactory,
+  AnimatePresenceProps,
   AnimationDriver,
   AnimationEnvironment,
-  SpringConfig,
-  TransitionConfig,
   SPRING_PRESETS,
+  SpringConfig,
   TRANSITION_PRESETS,
+  TransitionConfig,
 } from './types';
 
 /**
@@ -31,7 +34,7 @@ function detectEnvironment(): AnimationEnvironment {
 
   // Reduced motion preference
   let prefersReducedMotion = false;
-  if (isBrowser && window.matchMedia) {
+  if (isBrowser && 'matchMedia' in window) {
     prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
@@ -40,8 +43,7 @@ function detectEnvironment(): AnimationEnvironment {
   if (isBrowser) {
     // Check for hardware acceleration support
     const canvas = document.createElement('canvas');
-    const gl =
-      canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
     hasGPUAcceleration = !!gl;
   }
 
@@ -72,16 +74,16 @@ class FramerMotionDriver implements AnimationDriver {
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any {
-    // Return the motion wrapper for the component
-    return motion[component as keyof typeof motion] || motion.div;
+  ): AnimatedComponentFactory<T> {
+    const key = component as keyof typeof motion;
+    return motion[key] as AnimatedComponentFactory<T>;
   }
 
   /**
    * AnimatePresence for mount/unmount animations
    */
-  AnimatePresence = AnimatePresence;
+  AnimatePresence: ComponentType<AnimatePresenceProps> =
+    AnimatePresence as ComponentType<AnimatePresenceProps>;
 
   /**
    * Check if animations are supported
@@ -101,9 +103,7 @@ class FramerMotionDriver implements AnimationDriver {
   /**
    * Get spring configuration for smooth 60 FPS animations
    */
-  getSpringConfig(
-    preset: 'gentle' | 'wobbly' | 'stiff' | 'slow'
-  ): SpringConfig {
+  getSpringConfig(preset: 'gentle' | 'wobbly' | 'stiff' | 'slow'): SpringConfig {
     const presets: typeof SPRING_PRESETS = {
       gentle: {
         stiffness: 120,
@@ -133,9 +133,7 @@ class FramerMotionDriver implements AnimationDriver {
   /**
    * Get transition configuration optimized for GPU acceleration
    */
-  getTransitionConfig(
-    preset: 'fast' | 'medium' | 'slow' | 'spring'
-  ): TransitionConfig {
+  getTransitionConfig(preset: 'fast' | 'medium' | 'slow' | 'spring'): TransitionConfig {
     const presets: typeof TRANSITION_PRESETS = {
       fast: {
         duration: 0.2,

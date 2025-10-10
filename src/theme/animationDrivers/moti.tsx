@@ -17,14 +17,18 @@
  * - Linear gradients (via react-native-linear-gradient)
  */
 
+import type { ComponentPropsWithoutRef, ComponentType } from 'react';
 import React from 'react';
 import type {
-  AnimationDriver,
-  AnimationEnvironment,
-  SpringConfig,
-  TransitionConfig,
-  SPRING_PRESETS,
-  TRANSITION_PRESETS,
+    AnimatedComponentFactory,
+    AnimatedComponentProps,
+    AnimatePresenceProps,
+    AnimationDriver,
+    AnimationEnvironment,
+    SPRING_PRESETS,
+    SpringConfig,
+    TRANSITION_PRESETS,
+    TransitionConfig,
 } from './types';
 
 /**
@@ -93,9 +97,8 @@ class MotiDriver implements AnimationDriver {
    * ```
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
-    _component: T
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any {
+    component: T
+  ): AnimatedComponentFactory<T> {
     // Placeholder: return a basic div
     // This will throw an error if used in actual RN context
     if (this.environment.isNative) {
@@ -105,7 +108,25 @@ class MotiDriver implements AnimationDriver {
     }
 
     // In web context, return a minimal stub
-    return 'div';
+    const AnimatedStub = (({
+      children,
+      initial: _initial,
+      animate: _animate,
+      exit: _exit,
+      whileHover: _whileHover,
+      whileTap: _whileTap,
+      whileInView: _whileInView,
+      layout: _layout,
+      layoutId: _layoutId,
+      transition: _transition,
+      variants: _variants,
+      ...rest
+    }: AnimatedComponentProps<T>) => {
+      const elementProps = rest as ComponentPropsWithoutRef<T>;
+  return React.createElement(component, elementProps, children);
+    }) as AnimatedComponentFactory<T>;
+
+    return AnimatedStub;
   }
 
   /**
@@ -117,7 +138,7 @@ class MotiDriver implements AnimationDriver {
    * AnimatePresence = AnimatePresence;
    * ```
    */
-  AnimatePresence = PlaceholderAnimatePresence;
+  AnimatePresence: ComponentType<AnimatePresenceProps> = PlaceholderAnimatePresence;
 
   /**
    * Check if animations are supported
@@ -201,8 +222,6 @@ class MotiDriver implements AnimationDriver {
  * Singleton instance of Moti driver
  * Export as default for consistency with framer driver
  */
-export const motiDriver = new MotiDriver();
-
 /**
  * Export the class for testing purposes
  */

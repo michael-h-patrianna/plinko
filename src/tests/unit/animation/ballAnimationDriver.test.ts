@@ -5,14 +5,17 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createWebBallAnimationDriver, WebBallAnimationDriver } from '@/animation/ballAnimationDriver.web';
 import type { BallTransform, TrailFrame } from '@/animation/ballAnimationDriver';
+import {
+  createWebBallAnimationDriver,
+  WebBallAnimationDriver,
+} from '@/animation/ballAnimationDriver.web';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock animation adapter
 vi.mock('../../../utils/platform/animation', () => ({
   animationAdapter: {
-    requestFrame: vi.fn((callback) => {
+    requestFrame: vi.fn((callback: (timestamp: number) => void) => {
       // Immediately call callback for testing with a timestamp
       setTimeout(() => callback(Date.now()), 0);
       return Math.random(); // Return fake RAF ID
@@ -395,7 +398,7 @@ describe('Ball Animation Driver Integration', () => {
       expect(cancel).toBeInstanceOf(Function);
     });
 
-    it('should cancel animation when cancel function is called', async () => {
+    it('should cancel animation when cancel function is called', () => {
       const cancel = driver.schedule(vi.fn(), mockConfig);
 
       // Cancel should not throw
@@ -468,7 +471,7 @@ describe('Ball Animation Driver Integration', () => {
       expect(pegEl.getAttribute('data-peg-hit')).toBe('true');
     });
 
-    it('should clear flash after timeout', async () => {
+    it('should clear flash after timeout', () => {
       vi.useFakeTimers();
 
       const pegEl = document.createElement('div');

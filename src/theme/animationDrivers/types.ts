@@ -12,6 +12,8 @@
  * - NO blur, filters, shadows, or pseudo-elements
  */
 
+import type { ComponentPropsWithoutRef, ComponentType, PropsWithChildren, ReactNode } from 'react';
+
 /**
  * Cross-platform animation configuration
  * Supports only animations that work on both web and React Native
@@ -70,15 +72,15 @@ export interface TransitionConfig {
   /** Delay before animation starts in seconds */
   delay?: number;
   /** Easing function or cubic bezier array */
-  ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut' | number[] | string;
+  ease?: Easing;
   /** Repeat count (Infinity for infinite) */
   repeat?: number;
   /** Repeat type */
-  repeatType?: 'loop' | 'reverse' | 'mirror';
+  repeatType?: RepeatType;
   /** Repeat delay in seconds */
   repeatDelay?: number;
   /** Spring configuration (overrides duration/ease) */
-  type?: 'spring' | 'tween' | 'inertia';
+  type?: TransitionType;
   /** Spring-specific config */
   spring?: SpringConfig;
   /** Stiffness of the spring (can be specified at top level) */
@@ -90,14 +92,65 @@ export interface TransitionConfig {
   /** Keyframe timing array */
   times?: number[];
   /** Per-property transition overrides and other transition properties */
-  [key: string]: number | number[] | string | boolean | SpringConfig | TransitionConfig | undefined;
+  [key: string]: TransitionIndexValue;
 }
+
+export type Easing =
+  | 'linear'
+  | 'easeIn'
+  | 'easeOut'
+  | 'easeInOut'
+  | readonly [number, number, number, number];
+
+type TransitionType = 'spring' | 'tween' | 'inertia';
+type RepeatType = 'loop' | 'reverse' | 'mirror';
+type TransitionIndexValue =
+  | number
+  | readonly number[]
+  | boolean
+  | SpringConfig
+  | TransitionConfig
+  | Easing
+  | TransitionType
+  | RepeatType
+  | undefined;
 
 /**
  * Variant configuration for predefined animation states
  */
 export interface VariantConfig {
   [key: string]: AnimationConfig;
+}
+
+type SharedAnimationProps = {
+  initial?: AnimationConfig | AnimationConfig[] | VariantConfig;
+  animate?: AnimationConfig | AnimationConfig[] | VariantConfig;
+  exit?: AnimationConfig | AnimationConfig[] | VariantConfig;
+  whileHover?: AnimationConfig;
+  whileTap?: AnimationConfig;
+  whileInView?: AnimationConfig;
+  layout?: boolean | 'position' | 'size' | 'preserve-aspect';
+  layoutId?: string;
+  transition?: TransitionConfig | TransitionConfig[];
+  variants?: VariantConfig;
+};
+
+export type AnimatedComponentProps<T extends keyof React.JSX.IntrinsicElements> = PropsWithChildren<
+  ComponentPropsWithoutRef<T>
+> &
+  SharedAnimationProps & {
+    [key: string]: unknown;
+  };
+
+export type AnimatedComponentFactory<T extends keyof React.JSX.IntrinsicElements> = ComponentType<
+  AnimatedComponentProps<T>
+>;
+
+export interface AnimatePresenceProps {
+  children: ReactNode;
+  mode?: 'wait' | 'sync' | 'popLayout';
+  initial?: boolean;
+  onExitComplete?: () => void;
 }
 
 /**
@@ -140,18 +193,14 @@ export interface AnimationDriver {
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ): any;
+  ): AnimatedComponentFactory<T>;
 
   /**
    * Animate presence (mount/unmount animations)
    * Web: AnimatePresence
    * React Native: AnimatePresence from moti
    */
-  AnimatePresence: React.ComponentType<{
-    children: React.ReactNode;
-    mode?: 'wait' | 'sync' | 'popLayout';
-  }>;
+  AnimatePresence: ComponentType<AnimatePresenceProps>;
 
   /**
    * Check if animations are supported in current environment
@@ -169,9 +218,7 @@ export interface AnimationDriver {
    * Get optimized transition configuration
    * Ensures GPU acceleration and smooth performance
    */
-  getTransitionConfig(
-    preset: 'fast' | 'medium' | 'slow' | 'spring'
-  ): TransitionConfig;
+  getTransitionConfig(preset: 'fast' | 'medium' | 'slow' | 'spring'): TransitionConfig;
 }
 
 /**
@@ -199,10 +246,7 @@ export interface AnimationEnvironment {
  * Spring preset configurations
  * Optimized for 60 FPS performance
  */
-export const SPRING_PRESETS: Record<
-  'gentle' | 'wobbly' | 'stiff' | 'slow',
-  SpringConfig
-> = {
+export const SPRING_PRESETS: Record<'gentle' | 'wobbly' | 'stiff' | 'slow', SpringConfig> = {
   gentle: {
     stiffness: 120,
     damping: 14,
@@ -229,10 +273,7 @@ export const SPRING_PRESETS: Record<
  * Transition preset configurations
  * Optimized for GPU acceleration
  */
-export const TRANSITION_PRESETS: Record<
-  'fast' | 'medium' | 'slow' | 'spring',
-  TransitionConfig
-> = {
+export const TRANSITION_PRESETS: Record<'fast' | 'medium' | 'slow' | 'spring', TransitionConfig> = {
   fast: {
     duration: 0.2,
     ease: [0.4, 0, 0.2, 1], // cubic-bezier for smooth deceleration

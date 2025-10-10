@@ -42,30 +42,35 @@ export function VictoryRevealSequence({
       for (let i = 0; i < totalSlots; i++) {
         if (i === winningSlotIndex) continue;
 
-        const slotEl = document.querySelector(`[data-testid="slot-${i}"]`) as HTMLElement | null;
+        const slotEl = document.querySelector(`[data-testid="slot-${i}"]`);
         if (!slotEl) continue;
 
+        // Cast to HTMLElement after null check to access style property
+        const htmlEl = slotEl as HTMLElement;
+
         // Animate opacity and scale down
-        slotEl.style.transition = `opacity ${DIM_DURATION}ms ease-out, transform ${DIM_DURATION}ms ease-out`;
-        slotEl.style.opacity = '0.3';
-        slotEl.style.transform = 'scale(0.95)';
+        htmlEl.style.transition = `opacity ${DIM_DURATION}ms ease-out, transform ${DIM_DURATION}ms ease-out`;
+        htmlEl.style.opacity = '0.3';
+        htmlEl.style.transform = 'scale(0.95)';
       }
     }, 0);
 
     // Step 2: Scale up winning slot
     setTimeout(() => {
-      const winningSlotEl = document.querySelector(`[data-testid="slot-${winningSlotIndex}"]`) as HTMLElement | null;
+      const winningSlotEl = document.querySelector(`[data-testid="slot-${winningSlotIndex}"]`);
       if (winningSlotEl) {
-        winningSlotEl.style.transition = `transform ${SCALE_DURATION}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
-        winningSlotEl.style.transform = 'scale(1.15)';
-        winningSlotEl.setAttribute('data-victory-scale', 'true');
+        // Cast to HTMLElement after null check to access style property
+        const htmlEl = winningSlotEl as HTMLElement;
+        htmlEl.style.transition = `transform ${SCALE_DURATION}ms cubic-bezier(0.34, 1.56, 0.64, 1)`;
+        htmlEl.style.transform = 'scale(1.15)';
+        htmlEl.setAttribute('data-victory-scale', 'true');
       }
     }, SCALE_DELAY);
 
     // Step 3: Trigger confetti (handled by parent SlotWinReveal)
     // Mark slot as ready for confetti
     setTimeout(() => {
-      const winningSlotEl = document.querySelector(`[data-testid="slot-${winningSlotIndex}"]`) as HTMLElement | null;
+      const winningSlotEl = document.querySelector(`[data-testid="slot-${winningSlotIndex}"]`);
       if (winningSlotEl) {
         winningSlotEl.setAttribute('data-victory-confetti', 'true');
       }
@@ -76,14 +81,16 @@ export function VictoryRevealSequence({
     return () => {
       // Reset all slots when component unmounts or isActive changes
       for (let i = 0; i < totalSlots; i++) {
-        const slotEl = document.querySelector(`[data-testid="slot-${i}"]`) as HTMLElement | null;
+        const slotEl = document.querySelector(`[data-testid="slot-${i}"]`);
         if (!slotEl) continue;
 
-        slotEl.style.transition = '';
-        slotEl.style.opacity = '';
-        slotEl.style.transform = '';
-        slotEl.removeAttribute('data-victory-scale');
-        slotEl.removeAttribute('data-victory-confetti');
+        // Cast to HTMLElement after null check to access style property
+        const htmlEl = slotEl as HTMLElement;
+        htmlEl.style.transition = '';
+        htmlEl.style.opacity = '';
+        htmlEl.style.transform = '';
+        htmlEl.removeAttribute('data-victory-scale');
+        htmlEl.removeAttribute('data-victory-confetti');
       }
     };
   }, [isActive, winningSlotIndex, totalSlots, onComplete]);

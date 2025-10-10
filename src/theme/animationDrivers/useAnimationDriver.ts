@@ -13,9 +13,11 @@
  */
 
 import { useMemo } from 'react';
-import type { AnimationDriver, AnimationDriverType } from './types';
 import { framerDriver } from './framer';
-import { motiDriver } from './moti';
+import { MotiDriver } from './moti';
+import type { AnimationDriver, AnimationDriverType } from './types';
+
+const motiDriver = new MotiDriver();
 
 /**
  * Detect platform environment
@@ -87,9 +89,7 @@ function selectDriver(driverType: AnimationDriverType = 'auto'): AnimationDriver
  * }
  * ```
  */
-export function useAnimationDriver(
-  driverType: AnimationDriverType = 'auto'
-): AnimationDriver {
+export function useAnimationDriver(driverType: AnimationDriverType = 'auto'): AnimationDriver {
   const driver = useMemo(() => selectDriver(driverType), [driverType]);
 
   return driver;
@@ -103,8 +103,6 @@ export { framerDriver, motiDriver };
 /**
  * Get driver without React (for utility functions, tests, etc.)
  */
-export function getAnimationDriver(
-  driverType: AnimationDriverType = 'auto'
-): AnimationDriver {
+export function getAnimationDriver(driverType: AnimationDriverType = 'auto'): AnimationDriver {
   return selectDriver(driverType);
 }

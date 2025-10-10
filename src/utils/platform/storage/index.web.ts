@@ -15,44 +15,49 @@ class WebStorageAdapter extends PlatformAdapter implements StorageAdapter {
     this.storage = requireFeature('localStorage', () => window.localStorage);
   }
 
-  async getItem(key: string): Promise<string | null> {
-    return this.executeAsync(
-      'getItem',
-      async () => this.storage.getItem(key),
-      { defaultValue: null }
-    );
+  getItem(key: string): Promise<string | null> {
+    return this.executeAsync('getItem', () => Promise.resolve(this.storage.getItem(key)), {
+      defaultValue: null,
+    });
   }
 
-  async setItem(key: string, value: string): Promise<void> {
+  setItem(key: string, value: string): Promise<void> {
     return this.executeAsync(
       'setItem',
-      async () => this.storage.setItem(key, value),
+      () => {
+        this.storage.setItem(key, value);
+        return Promise.resolve();
+      },
       { rethrow: true }
     );
   }
 
-  async removeItem(key: string): Promise<void> {
+  removeItem(key: string): Promise<void> {
     return this.executeAsync(
       'removeItem',
-      async () => this.storage.removeItem(key),
+      () => {
+        this.storage.removeItem(key);
+        return Promise.resolve();
+      },
       { rethrow: true }
     );
   }
 
-  async clear(): Promise<void> {
+  clear(): Promise<void> {
     return this.executeAsync(
       'clear',
-      async () => this.storage.clear(),
+      () => {
+        this.storage.clear();
+        return Promise.resolve();
+      },
       { rethrow: true }
     );
   }
 
-  async getAllKeys(): Promise<string[]> {
-    return this.executeAsync(
-      'getAllKeys',
-      async () => Object.keys(this.storage),
-      { defaultValue: [] }
-    );
+  getAllKeys(): Promise<string[]> {
+    return this.executeAsync('getAllKeys', () => Promise.resolve(Object.keys(this.storage)), {
+      defaultValue: [],
+    });
   }
 }
 

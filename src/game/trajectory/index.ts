@@ -10,7 +10,7 @@
  * We simply find the right starting conditions that naturally lead to the desired outcome.
  */
 
-import { clampSlotIndexFromX, generatePegLayout, getDropZoneRange } from '../boardGeometry';
+import { clampSlotIndexFromX, generatePegLayout, getDropZoneCenter } from '../boardGeometry';
 import type { DeterministicTrajectoryPayload, DropZone, TrajectoryPoint, TrajectoryCache } from '../types';
 import { runSimulation, type SimulationParams } from './simulation';
 import { generateTrajectoryCache } from '../trajectoryCache';
@@ -135,42 +135,15 @@ export function generateTrajectory(params: GenerateTrajectoryParams): GenerateTr
     attempts: number;
   } | null = null;
 
-  // Determine search range based on drop zone
-  let searchCenterX: number;
-  let searchRangeX: number;
-
-  if (dropZone) {
-    // User selected a specific drop zone - constrain search to that zone
-    const { min, max } = getDropZoneRange(dropZone, boardWidth);
-    searchCenterX = (min + max) / 2;
-    searchRangeX = (max - min) / 2;
-  } else {
-    // Classic mode - search center area
-    searchCenterX = boardWidth / 2;
-    searchRangeX = 2.5; // Small range around center
-  }
+  // Fix startX to exact drop zone center - never vary the ball's starting position
+  // Ball must drop from exactly where the launcher is visually positioned
+  // Only vary RNG seed and bounce randomness to find different trajectories
+  const startX = dropZone ? getDropZoneCenter(dropZone, boardWidth) : boardWidth / 2;
+  const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    // Microscopic variations that are imperceptible but change entire trajectory
-    // Use different patterns to explore the space efficiently
-    const pattern = attempt % 7;
-    let microOffset: number;
-    if (pattern === 0)
-      microOffset = 0; // Dead center of zone
-    else if (pattern === 1)
-      microOffset = searchRangeX * 0.3; // Slightly right
-    else if (pattern === 2)
-      microOffset = -searchRangeX * 0.3; // Slightly left
-    else if (pattern === 3) microOffset = searchRangeX * 0.6;
-    else if (pattern === 4) microOffset = -searchRangeX * 0.6;
-    else if (pattern === 5)
-      microOffset = Math.sin(attempt * 0.618) * searchRangeX * 0.8; // Sine wave pattern
-    else microOffset = Math.cos(attempt * 1.414) * searchRangeX * 0.8; // Cosine wave pattern
-
-    const startX = searchCenterX + microOffset;
-    const startVx = 0; // ALWAYS zero initial velocity - ball drops from rest
-
-    // Vary bounce randomness systematically
+    // Vary bounce randomness systematically to create different trajectories
+    // This provides path variation without changing the ball's starting position
     const bounceRandomness = 0.2 + ((attempt % 100) / 100) * 0.6; // 0.2 to 0.8 range
 
     const simulationParams: SimulationParams = {

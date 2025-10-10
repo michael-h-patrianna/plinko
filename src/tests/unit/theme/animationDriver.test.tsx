@@ -65,7 +65,11 @@ describe('Animation Driver Abstraction', () => {
     });
 
     it('should have environment detection', () => {
-      const env = (framerDriver as any).getEnvironment();
+      // Type assertion for internal method access in tests only
+      const driverWithEnv = framerDriver as typeof framerDriver & {
+        getEnvironment: () => Record<string, boolean>;
+      };
+      const env = driverWithEnv.getEnvironment();
       expect(env).toHaveProperty('isBrowser');
       expect(env).toHaveProperty('isNative');
       expect(env).toHaveProperty('isSSR');
@@ -174,7 +178,8 @@ describe('Animation Driver Abstraction', () => {
     it('should use cubic-bezier easing for smooth animations', () => {
       const fast = framerDriver.getTransitionConfig('fast');
       expect(Array.isArray(fast.ease)).toBe(true);
-      expect((fast.ease as number[]).length).toBe(4);
+      // Cast to unknown first to avoid readonly tuple conversion error
+      expect((fast.ease as unknown as number[]).length).toBe(4);
     });
   });
 

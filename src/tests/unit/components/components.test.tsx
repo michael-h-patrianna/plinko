@@ -415,7 +415,7 @@ describe('Slot Component', () => {
 
   it('should render prize title', () => {
     render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
-    expect(screen.getByText(mockPrize.title!)).toBeInTheDocument();
+    expect(screen.getByText(mockPrize.title)).toBeInTheDocument();
   });
 
   it('should mark winning slot with data-active', () => {

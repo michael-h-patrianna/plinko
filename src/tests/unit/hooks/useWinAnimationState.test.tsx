@@ -4,11 +4,11 @@
  * Tests state machine logic, transitions, telemetry, and automatic sequencing
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useWinAnimationState } from '@hooks/useWinAnimationState';
 import type { GameState } from '@game/types';
+import { useWinAnimationState } from '@hooks/useWinAnimationState';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import * as telemetry from '@utils/telemetry';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock telemetry
 vi.mock('../../../utils/telemetry', () => ({
@@ -323,7 +323,7 @@ describe('useWinAnimationState', () => {
   // ============================================================================
 
   describe('idempotency', () => {
-    it('should handle repeated landed state without duplicate transitions', async () => {
+  it('should handle repeated landed state without duplicate transitions', () => {
       const { rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'landed' as GameState } }

@@ -12,25 +12,34 @@
 import { throwNativeNotImplemented } from '../detect';
 import type { StorageAdapter } from './types';
 
+function rejectNative(feature: string): Promise<never> {
+  try {
+    throwNativeNotImplemented(feature);
+  } catch (error) {
+    const rejection = error instanceof Error ? error : new Error(String(error));
+    return Promise.reject(rejection);
+  }
+}
+
 class NativeStorageAdapter implements StorageAdapter {
-  async getItem(_key: string): Promise<string | null> {
-    throwNativeNotImplemented('Storage.getItem');
+  getItem(_key: string): Promise<string | null> {
+    return rejectNative('Storage.getItem');
   }
 
-  async setItem(_key: string, _value: string): Promise<void> {
-    throwNativeNotImplemented('Storage.setItem');
+  setItem(_key: string, _value: string): Promise<void> {
+    return rejectNative('Storage.setItem');
   }
 
-  async removeItem(_key: string): Promise<void> {
-    throwNativeNotImplemented('Storage.removeItem');
+  removeItem(_key: string): Promise<void> {
+    return rejectNative('Storage.removeItem');
   }
 
-  async clear(): Promise<void> {
-    throwNativeNotImplemented('Storage.clear');
+  clear(): Promise<void> {
+    return rejectNative('Storage.clear');
   }
 
-  async getAllKeys(): Promise<string[]> {
-    throwNativeNotImplemented('Storage.getAllKeys');
+  getAllKeys(): Promise<string[]> {
+    return rejectNative('Storage.getAllKeys');
   }
 }
 

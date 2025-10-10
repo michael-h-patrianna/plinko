@@ -3,16 +3,17 @@
  * Handles prize loading, validation, shuffling, and session persistence
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { ValueRef } from '@/types/ref';
 import { useAppConfig } from '@config/AppConfigContext';
 import type { PrizeProviderResult } from '@game/prizeProvider';
 import type { PrizeConfig } from '@game/types';
 import { navigationAdapter } from '@utils/platform';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { API_TIMEOUT } from '../constants';
 
 interface UsePrizeSessionOptions {
   seedOverride?: number;
-  forceFreshSeedRef: React.MutableRefObject<boolean>;
+  forceFreshSeedRef: ValueRef<boolean>;
   sessionKey: number;
 }
 
@@ -26,7 +27,7 @@ interface UsePrizeSessionResult {
   // Winning prize tracking
   winningPrize: PrizeConfig | null;
   currentWinningIndex: number | undefined;
-  winningPrizeLockedRef: React.MutableRefObject<boolean>;
+  winningPrizeLockedRef: ValueRef<boolean>;
 
   // Session management
   setPrizes: React.Dispatch<React.SetStateAction<PrizeConfig[]>>;
@@ -119,14 +120,14 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
       try {
         // Race between load operation and timeout
         const timeoutPromise = new Promise<never>((_, reject) => {
-          const timeoutId = setTimeout(() => reject(new Error('Provider load timeout')), API_TIMEOUT.LOAD_TIMEOUT);
+          const timeoutId = setTimeout(
+            () => reject(new Error('Provider load timeout')),
+            API_TIMEOUT.LOAD_TIMEOUT
+          );
           abortController.signal.addEventListener('abort', () => clearTimeout(timeoutId));
         });
 
-        const result = await Promise.race([
-          loadWithRetry(abortController.signal),
-          timeoutPromise
-        ]);
+        const result = await Promise.race([loadWithRetry(abortController.signal), timeoutPromise]);
 
         if (abortController.signal.aborted) {
           return;
@@ -146,7 +147,7 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
       }
     }
 
-    loadPrizeSession();
+    void loadPrizeSession();
 
     return () => {
       abortController.abort();

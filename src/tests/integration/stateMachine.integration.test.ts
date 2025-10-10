@@ -302,9 +302,9 @@ describe('State Machine Integration Tests', () => {
     });
 
     it('should update trajectory and index when position is selected', () => {
-      let state: GameState = 'selecting-position';
+      const state: GameState = 'selecting-position';
       const originalTrajectory = mockTrajectory;
-      let context: GameContext = {
+      const context: GameContext = {
         ...mockContext,
         trajectory: originalTrajectory,
       };
@@ -686,8 +686,8 @@ describe('State Machine Integration Tests', () => {
     });
 
     it('should handle multiple consecutive resets', () => {
-      let state: GameState = 'ready';
-      let context = mockContext;
+      const state: GameState = 'ready';
+      const context = mockContext;
 
       // First reset
       const reset1 = transition(state, context, { type: 'RESET_REQUESTED' });

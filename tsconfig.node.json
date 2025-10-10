@@ -10,6 +10,7 @@
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",
+  "types": ["node"],
 
     /* Linting */
     "strict": true,

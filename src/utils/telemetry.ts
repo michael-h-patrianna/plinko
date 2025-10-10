@@ -178,7 +178,14 @@ export interface ErrorPhysicsViolationEvent extends BaseTelemetryEvent {
 export interface ErrorPlatformAdapterEvent extends BaseTelemetryEvent {
   type: 'error.platform_adapter';
   data: {
-    adapter: 'dimensions' | 'deviceInfo' | 'navigation' | 'storage' | 'animation' | 'crypto' | 'performance';
+    adapter:
+      | 'dimensions'
+      | 'deviceInfo'
+      | 'navigation'
+      | 'storage'
+      | 'animation'
+      | 'crypto'
+      | 'performance';
     operation: string;
     error: string;
     context?: unknown;
@@ -256,11 +263,8 @@ class TelemetryService {
     this.eventQueue.push(fullEvent);
 
     // Auto-flush if batch size reached
-    if (
-      this.options.remote?.batchSize &&
-      this.eventQueue.length >= this.options.remote.batchSize
-    ) {
-      this.flush();
+    if (this.options.remote?.batchSize && this.eventQueue.length >= this.options.remote.batchSize) {
+      void this.flush();
     }
   }
 

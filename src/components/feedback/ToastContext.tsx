@@ -80,6 +80,7 @@ export function ToastProvider({ children, position = 'top-right', maxToasts = 5 
  * Hook to access toast notifications
  * @throws Error if used outside ToastProvider
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function useToast(): ToastContextValue {
   const context = useContext(ToastContext);
   if (!context) {
@@ -91,6 +92,7 @@ export function useToast(): ToastContextValue {
 /**
  * Convenience helper functions for common toast types
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function createToastHelpers(showToast: ToastContextValue['showToast']) {
   return {
     success: (message: string, duration?: number) =>

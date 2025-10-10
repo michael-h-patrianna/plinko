@@ -161,7 +161,7 @@ export function assertDefined<T>(
   name: string
 ): asserts value is T {
   if (value === null || value === undefined) {
-    throw new Error(`${name} is required but was ${value}`);
+    throw new Error(`${name} is required but was ${String(value)}`);
   }
 }
 

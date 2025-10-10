@@ -45,14 +45,12 @@ export function ThemedButton({
   const buttonStyle = variant === 'primary' ? theme.buttons.primary : theme.buttons.secondary;
 
   // Animation configuration types
-  // Note: Using Record<string, unknown> for platform-specific animation properties
-  // that may differ between Framer Motion (web) and Moti (React Native)
+  // Note: Using AnimationConfig and TransitionConfig from animation driver for type safety
   type AnimationTarget = Record<string, number | number[] | string | undefined>;
-  type AnimationTransition = Record<string, number | number[] | string | undefined> | undefined;
 
   let animateTarget: AnimationTarget = { scale: 1, rotate: 0, opacity: 1, y: 0 };
-  let initialState: AnimationTarget | false = false;
-  let entranceTransition: AnimationTransition = undefined;
+  let initialState: AnimationTarget | undefined = undefined;
+  let entranceTransition: Record<string, number | number[] | string | undefined> | undefined = undefined;
 
   switch (entranceAnimation) {
     case 'hero':
@@ -79,7 +77,7 @@ export function ThemedButton({
       break;
     case 'none':
     default:
-      initialState = false;
+      initialState = undefined;
       entranceTransition = undefined;
       break;
   }
@@ -134,7 +132,7 @@ export function ThemedButton({
       }
       initial={initialState}
       animate={animateTarget}
-      transition={entranceTransition}
+      transition={entranceTransition as any}
       data-testid={testId}
     >
       {/* Button shine effect */}

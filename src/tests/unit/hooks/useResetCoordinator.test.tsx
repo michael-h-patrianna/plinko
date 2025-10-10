@@ -5,9 +5,10 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import type { ValueRef } from '@/types/ref';
 import { useResetCoordinator } from '@hooks/useResetCoordinator';
+import { act, renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock react-dom's flushSync to avoid DOM dependencies in tests
 vi.mock('react-dom', () => ({
@@ -15,9 +16,9 @@ vi.mock('react-dom', () => ({
 }));
 
 interface MockDependencies {
-  currentFrameRef: React.MutableRefObject<number>;
-  winningPrizeLockedRef: React.MutableRefObject<boolean>;
-  forceFreshSeedRef: React.MutableRefObject<boolean>;
+  currentFrameRef: ValueRef<number>;
+  winningPrizeLockedRef: ValueRef<boolean>;
+  forceFreshSeedRef: ValueRef<boolean>;
   resetFrame: ReturnType<typeof vi.fn>;
   dispatch: ReturnType<typeof vi.fn>;
   setWinningPrize: ReturnType<typeof vi.fn>;

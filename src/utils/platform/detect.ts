@@ -20,6 +20,7 @@ export function detectPlatform(): Platform {
   // React Native detection
   if (
     typeof navigator !== 'undefined' &&
+    // eslint-disable-next-line @typescript-eslint/no-deprecated
     navigator.product === 'ReactNative'
   ) {
     return 'native';

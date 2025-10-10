@@ -16,17 +16,30 @@
  */
 
 import { useMemo } from 'react';
+import type { AnimatedComponentFactory } from './types';
 import { useAnimationDriver } from './useAnimationDriver';
+
+interface UseAnimationResult {
+  AnimatedDiv: AnimatedComponentFactory<'div'>;
+  AnimatedSpan: AnimatedComponentFactory<'span'>;
+  AnimatedButton: AnimatedComponentFactory<'button'>;
+  AnimatedH1: AnimatedComponentFactory<'h1'>;
+  AnimatedH2: AnimatedComponentFactory<'h2'>;
+  AnimatedH3: AnimatedComponentFactory<'h3'>;
+  AnimatedP: AnimatedComponentFactory<'p'>;
+  AnimatedImg: AnimatedComponentFactory<'img'>;
+  AnimatePresence: ReturnType<typeof useAnimationDriver>['AnimatePresence'];
+}
 
 /**
  * Hook providing pre-created animated components and utilities
  * Memoizes created components to avoid recreation on every render
  */
-export function useAnimation() {
+export function useAnimation(): UseAnimationResult {
   const driver = useAnimationDriver();
 
   // Memoize to avoid recreating on every render
-  const components = useMemo(
+  const components = useMemo<UseAnimationResult>(
     () => ({
       // Common HTML elements
       AnimatedDiv: driver.createAnimatedComponent('div'),

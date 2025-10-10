@@ -324,7 +324,8 @@ describe('Deterministic Gameplay Integration', () => {
 
         const slot = result.landedSlot;
         if (slot >= 0 && slot < 6) {
-          slotCounts[slot] = (slotCounts[slot] || 0) + 1;
+          const currentCount = slotCounts[slot];
+          slotCounts[slot] = (typeof currentCount === 'number' ? currentCount : 0) + 1;
         }
       }
 

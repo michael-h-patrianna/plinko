@@ -106,7 +106,7 @@ export function abortablePromise<T>(
         },
         (reason) => {
           signal?.removeEventListener('abort', abortHandler);
-          reject(reason);
+          reject(reason instanceof Error ? reason : new Error(String(reason)));
         },
         signal || new AbortController().signal
       );

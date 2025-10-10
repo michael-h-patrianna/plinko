@@ -3,13 +3,13 @@
  * Tests for CurrencyCounter timer cleanup and React key stability
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
 import { CurrencyCounter } from '@components/effects/CurrencyCounter';
-import { Slot } from '@components/game/PlinkoBoard/Slot';
 import { BorderWall } from '@components/game/PlinkoBoard/BorderWall';
-import { ThemeProvider } from '../../theme';
+import { Slot } from '@components/game/PlinkoBoard/Slot';
 import type { Prize } from '@game/prizeTypes';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ThemeProvider } from '../../theme';
 
 describe('P2.5: Timer & Key Issues Regression Tests', () => {
   beforeEach(() => {
@@ -21,7 +21,7 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
   });
 
   describe('CurrencyCounter Timer Cleanup', () => {
-    it('should cleanup all timers on unmount', async () => {
+  it('should cleanup all timers on unmount', () => {
       const { unmount } = render(
         <ThemeProvider>
           <CurrencyCounter targetAmount={1000} label="GC" />
@@ -44,7 +44,7 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
       }).not.toThrow();
     });
 
-    it('should clear timers when targetAmount changes mid-animation', async () => {
+  it('should clear timers when targetAmount changes mid-animation', () => {
       const { rerender } = render(
         <ThemeProvider>
           <CurrencyCounter targetAmount={1000} label="GC" />
@@ -71,7 +71,7 @@ describe('P2.5: Timer & Key Issues Regression Tests', () => {
       }).not.toThrow();
     });
 
-    it('should animate smoothly without memory leaks', async () => {
+  it('should animate smoothly without memory leaks', () => {
       const { unmount } = render(
         <ThemeProvider>
           <CurrencyCounter targetAmount={500} label="SC" />

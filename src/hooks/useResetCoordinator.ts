@@ -8,11 +8,12 @@
  * when unrelated state changes.
  */
 
+import type { ValueRef } from '@/types/ref';
+import type { PrizeProviderResult } from '@game/prizeProvider';
+import type { GameEvent } from '@game/stateMachine';
+import type { PrizeConfig } from '@game/types';
 import { useCallback, useRef } from 'react';
 import { flushSync } from 'react-dom';
-import type { GameEvent } from '@game/stateMachine';
-import type { PrizeProviderResult } from '@game/prizeProvider';
-import type { PrizeConfig } from '@game/types';
 
 /**
  * Hook providing centralized reset orchestration
@@ -42,9 +43,9 @@ export interface UseResetCoordinatorResult {
  */
 export function useResetCoordinator(
   refs: {
-    currentFrameRef: React.MutableRefObject<number>;
-    winningPrizeLockedRef: React.MutableRefObject<boolean>;
-    forceFreshSeedRef: React.MutableRefObject<boolean>;
+    currentFrameRef: ValueRef<number>;
+    winningPrizeLockedRef: ValueRef<boolean>;
+    forceFreshSeedRef: ValueRef<boolean>;
   },
   resetFrame: () => void,
   dispatch: React.Dispatch<GameEvent>,
@@ -56,7 +57,6 @@ export function useResetCoordinator(
     setSessionKey: React.Dispatch<React.SetStateAction<number>>;
   }
 ): UseResetCoordinatorResult {
-
   const resetInProgressRef = useRef(false);
 
   /**

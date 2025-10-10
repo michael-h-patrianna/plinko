@@ -251,14 +251,19 @@ describe('trailOptimization', () => {
       // Verify lookup is just array access (no Math.pow needed)
       const startTime = performance.now();
 
+      let dummySum = 0;
       for (let i = 0; i < 1000; i++) {
         // Simulate 1000 frames of animation
         for (let j = 0; j < 20; j++) {
-          lookup[j]; // Array access only
+          const frame = lookup[j]; // Array access only
+          dummySum += frame?.opacity ?? 0; // Use the value to prevent optimization
         }
       }
 
       const lookupTime = performance.now() - startTime;
+
+      // Prevent compiler optimization
+      expect(dummySum).toBeGreaterThan(0);
 
       // Compare with original Math.pow approach
       const startTimePow = performance.now();

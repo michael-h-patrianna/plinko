@@ -12,32 +12,33 @@
  * @param ballState - Current game state (idle, countdown, dropping, landed, etc.)
  */
 
-import { useMemo, useState } from 'react';
-import type { GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '@game/types';
-import { useTheme } from '../../../theme';
-import { getPrizeThemeColor } from '@theme/prizeColorMapper';
-import { calculateBucketZoneY } from '@utils/slotDimensions';
+import type { ValueRef } from '@/types/ref';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
 import {
-  PHYSICS,
   BOARD,
   DROP_ZONE_POSITIONS,
   generatePegLayout,
+  PHYSICS,
   type DropZone,
 } from '@game/boardGeometry';
+import type { GameState, PrizeConfig, TrajectoryCache, TrajectoryPoint } from '@game/types';
+import { useWinAnimationState } from '@hooks/useWinAnimationState';
 import { useAnimationDriver } from '@theme/animationDrivers';
-import { BallLauncher } from '../BallLauncher';
+import { getPrizeThemeColor } from '@theme/prizeColorMapper';
+import { calculateBucketZoneY } from '@utils/slotDimensions';
+import { useMemo, useState } from 'react';
+import { useTheme } from '../../../theme';
 import { DropPositionControls } from '../../controls/DropPositionSelector';
 import { BallLandingImpact } from '../../effects/WinAnimations/BallLandingImpact';
 import { SlotAnticipation } from '../../effects/WinAnimations/SlotAnticipation';
 import { SlotWinReveal } from '../../effects/WinAnimations/SlotWinReveal';
+import { BallLauncher } from '../BallLauncher';
 import { BorderWall } from './BorderWall';
 import { ComboLegend } from './ComboLegend';
 import { Peg } from './Peg';
 import { Slot } from './Slot';
 import { OptimizedBallRenderer } from './components/OptimizedBallRenderer';
-import { useAppConfig } from '@config/AppConfigContext';
-import { getPerformanceSetting } from '@config/appConfig';
-import { useWinAnimationState } from '@hooks/useWinAnimationState';
 
 interface FrameStore {
   subscribe: (listener: () => void) => () => void;
@@ -52,7 +53,7 @@ interface PlinkoBoardProps {
   trajectory?: TrajectoryPoint[];
   trajectoryCache?: TrajectoryCache | null;
   frameStore?: FrameStore;
-  currentFrameRef?: React.MutableRefObject<number>;
+  currentFrameRef?: ValueRef<number>;
   getBallPosition?: () => { x: number; y: number; rotation: number } | null;
   getCurrentTrajectoryPoint?: () => TrajectoryPoint | null;
   // Legacy props for backwards compatibility with tests

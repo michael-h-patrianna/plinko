@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import {
   createValidatedProductionPrizeSet,
   DEFAULT_PRODUCTION_PRIZE_COUNT,
@@ -6,6 +5,7 @@ import {
 } from '@config/prizes/productionPrizeTable';
 import type { PrizeFixture } from '@tests/fixtures/prizeFixtures';
 import { validatePrizeSet } from '@utils/prizeUtils';
+import { z } from 'zod';
 import { validatePrizesOrThrow } from './prizeValidation';
 import { selectPrize } from './rng';
 import type { DeterministicTrajectoryPayload, PrizeConfig } from './types';
@@ -82,7 +82,7 @@ export const prizeConfigSchema = z
     freeReward: freeRewardSchema.optional(),
     purchaseOffer: purchaseOfferSchema.optional(),
   })
-  .passthrough();
+  .catchall(z.unknown());
 
 const prizeArraySchema = z
   .array(prizeConfigSchema)
@@ -131,7 +131,7 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
   const { prizes, winningIndex } = value;
   if (winningIndex >= prizes.length) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['winningIndex'],
       message: `Winning index ${winningIndex} is out of bounds for prize list of length ${prizes.length}.`,
     });
@@ -142,7 +142,7 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
     value.deterministicTrajectory.landingSlot >= prizes.length
   ) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       path: ['deterministicTrajectory', 'landingSlot'],
       message: `Deterministic trajectory landing slot ${value.deterministicTrajectory.landingSlot} is out of bounds for prize list of length ${prizes.length}.`,
     });
@@ -153,7 +153,7 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
     validatePrizeSet(prizes as PrizeConfig[]);
   } catch (error: unknown) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: error instanceof Error ? error.message : 'Invalid prize configuration',
     });
   }
@@ -163,7 +163,7 @@ export const prizeProviderResultSchema = basePrizeProviderResultSchema.superRefi
     validatePrizesOrThrow(prizes);
   } catch (error: unknown) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: error instanceof Error ? error.message : 'Prize validation failed',
     });
   }
@@ -217,7 +217,7 @@ function buildDefaultSession(
   const prizeSet = createValidatedProductionPrizeSet({
     count: options.count,
     seed: resolvedSeed,
-  }) as PrizeConfig[];
+  });
 
   const { selectedIndex, seedUsed } = selectPrize(prizeSet, resolvedSeed);
 

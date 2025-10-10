@@ -212,7 +212,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     }
 
     // Find peg element by data attribute
-    const pegEl = document.querySelector(`[data-testid="peg-${id}"]`) as HTMLDivElement | null;
+    const pegEl = document.querySelector(`[data-testid="peg-${id}"]`);
     if (!pegEl) return;
 
     // Trigger flash (could be improved with direct ref access)
@@ -235,7 +235,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * preventing 3,000+ React re-renders per second.
    */
   updatePegFlash(pegId: string, isFlashing: boolean): void {
-    const pegEl = document.querySelector(`[data-testid="peg-${pegId}"]`) as HTMLDivElement | null;
+    const pegEl = document.querySelector(`[data-testid="peg-${pegId}"]`);
     if (!pegEl) return;
 
     pegEl.setAttribute('data-peg-hit', String(isFlashing));
@@ -264,7 +264,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * Auto-clears after 200ms (150ms animation + 50ms buffer).
    */
   updatePegRipple(pegId: string, isRippling: boolean): void {
-    const pegEl = document.querySelector(`[data-testid="peg-${pegId}"]`) as HTMLDivElement | null;
+    const pegEl = document.querySelector(`[data-testid="peg-${pegId}"]`);
     if (!pegEl) return;
 
     pegEl.setAttribute('data-peg-ripple', String(isRippling));
@@ -311,21 +311,24 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * PERFORMANCE: Single overlay element updated imperatively vs 5-8 Slot re-renders
    */
   updateSlotHighlight(_slotIndex: number, isActive: boolean, slotX?: number, slotWidth?: number, slotColor?: string, slotHeight?: number): void {
-    const overlayEl = document.querySelector('[data-testid="slot-anticipation-overlay"]') as HTMLDivElement | null;
+    const overlayEl = document.querySelector('[data-testid="slot-anticipation-overlay"]');
     if (!overlayEl) return;
+
+    // Cast to HTMLElement after null check to access style property
+    const htmlEl = overlayEl as HTMLElement;
 
     if (isActive && slotX !== undefined && slotWidth !== undefined && slotColor) {
       // Show and position overlay
-      overlayEl.style.display = 'block';
-      overlayEl.style.left = `${slotX}px`;
-      overlayEl.style.width = `${slotWidth}px`;
-      overlayEl.style.height = `${slotHeight || 100}px`;
-      overlayEl.style.borderLeftColor = slotColor;
-      overlayEl.style.borderRightColor = slotColor;
-      overlayEl.style.borderBottomColor = slotColor;
+      htmlEl.style.display = 'block';
+      htmlEl.style.left = `${slotX}px`;
+      htmlEl.style.width = `${slotWidth}px`;
+      htmlEl.style.height = `${slotHeight || 100}px`;
+      htmlEl.style.borderLeftColor = slotColor;
+      htmlEl.style.borderRightColor = slotColor;
+      htmlEl.style.borderBottomColor = slotColor;
     } else {
       // Hide overlay
-      overlayEl.style.display = 'none';
+      htmlEl.style.display = 'none';
     }
   }
 
@@ -340,7 +343,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * to ensure animations can be re-triggered on subsequent impacts.
    */
   updateSlotCollision(slotIndex: number, wallImpact: 'left' | 'right' | null, floorImpact: boolean): void {
-    const slotEl = document.querySelector(`[data-testid="slot-${slotIndex}"]`) as HTMLDivElement | null;
+    const slotEl = document.querySelector(`[data-testid="slot-${slotIndex}"]`);
     if (!slotEl) return;
 
     // Clear any existing timeout for this slot
@@ -436,7 +439,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * AUTO-CLEAR: Flash is automatically cleared after 300ms to allow re-triggering.
    */
   updateWallFlash(side: 'left' | 'right', isFlashing: boolean, impactY?: number): void {
-    const wallEl = document.querySelector(`[data-wall-side="${side}"]`) as HTMLDivElement | null;
+    const wallEl = document.querySelector(`[data-wall-side="${side}"]`);
     if (!wallEl) return;
 
     // Clear any existing timeout for this wall
@@ -472,8 +475,11 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
    * @param intensity - Shake intensity (0-1, where 1 is maximum shake)
    */
   triggerScreenShake(intensity: number): void {
-    const boardEl = document.querySelector('[data-testid="plinko-board"]') as HTMLDivElement | null;
+    const boardEl = document.querySelector('[data-testid="plinko-board"]');
     if (!boardEl) return;
+
+    // Cast to HTMLElement after null check to access style property
+    const htmlEl = boardEl as HTMLElement;
 
     // Calculate shake amount based on intensity
     // Subtle but noticeable shake: 3-6px horizontal, 2-3px vertical
@@ -481,7 +487,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     const verticalShake = intensity * 3;
 
     // Apply shake animation using keyframes with both horizontal and vertical movement
-    const animation = boardEl.animate(
+    const animation = htmlEl.animate(
       [
         { transform: 'translate(0px, 0px)' },
         { transform: `translate(${horizontalShake}px, ${-verticalShake * 0.5}px)` },
@@ -502,7 +508,7 @@ export class WebBallAnimationDriver implements BallAnimationDriver {
     // Cleanup after animation completes
     animation.onfinish = () => {
       // Reset transform to ensure clean state
-      boardEl.style.transform = '';
+      htmlEl.style.transform = '';
     };
   }
 

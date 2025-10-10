@@ -64,24 +64,25 @@
  * @see {@link file://./docs/optimize.md} - Full optimization strategy and performance benchmarks
  */
 
-import { memo, useRef, useEffect } from 'react';
-import type { GameState, BallPosition, TrajectoryCache } from '@game/types';
-import { getCachedValues } from '@game/trajectoryCache';
-import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
-import { useTheme } from '../../../../theme';
-import { useAppConfig } from '@config/AppConfigContext';
-import { getPerformanceSetting } from '@config/appConfig';
-import {
-  sizeTokens,
-  zIndexTokens,
-  opacityTokens,
-  borderWidthTokens,
-  animationTokens,
-} from '@theme/tokens';
-import { BallLauncher } from '../../BallLauncher';
 import type { TrailFrame } from '@/animation/ballAnimationDriver';
 import { getCachedTrailLookup } from '@/animation/trailOptimization';
+import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
+import type { ValueRef } from '@/types/ref';
+import { useAppConfig } from '@config/AppConfigContext';
+import { getPerformanceSetting } from '@config/appConfig';
+import { getCachedValues } from '@game/trajectoryCache';
+import type { BallPosition, GameState, TrajectoryCache } from '@game/types';
+import {
+  animationTokens,
+  borderWidthTokens,
+  opacityTokens,
+  sizeTokens,
+  zIndexTokens,
+} from '@theme/tokens';
 import { calculateBucketHeight } from '@utils/slotDimensions';
+import { memo, useEffect, useRef } from 'react';
+import { useTheme } from '../../../../theme';
+import { BallLauncher } from '../../BallLauncher';
 
 /**
  * Frame store interface for animation frame synchronization.
@@ -139,7 +140,7 @@ interface OptimizedBallRendererProps {
   onLandingComplete?: () => void;
   pegHitFrames?: Map<string, number[]>;
   wallHitFrames?: { left: number[]; right: number[] };
-  currentFrameRef?: React.MutableRefObject<number>;
+  currentFrameRef?: ValueRef<number>;
   slots?: Array<{ x: number; width: number }>;
   slotHighlightColor?: string;
   bucketZoneY?: number;

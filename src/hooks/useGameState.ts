@@ -3,15 +3,24 @@
  * Handles state transitions, trajectory management, and prize swapping logic
  */
 
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
-import type { ChoiceMechanic } from '../dev-tools';
+import type { ValueRef } from '@/types/ref';
 import type { PrizeProviderResult } from '@game/prizeProvider';
 import { initialContext, transition, type GameEvent } from '@game/stateMachine';
 import { generateTrajectory } from '@game/trajectory';
 import { initializeTrajectoryAndPrizes } from '@game/trajectoryInitialization';
-import type { BallPosition, DropZone, GameContext, GameState, PrizeConfig, TrajectoryPoint, TrajectoryCache } from '@game/types';
-import { GAME_TIMEOUT } from '../constants';
+import type {
+  BallPosition,
+  DropZone,
+  GameContext,
+  GameState,
+  PrizeConfig,
+  TrajectoryCache,
+  TrajectoryPoint,
+} from '@game/types';
 import { trackStateError } from '@utils/telemetry';
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react';
+import { GAME_TIMEOUT } from '../constants';
+import type { ChoiceMechanic } from '../dev-tools';
 
 interface PlinkoGameState {
   state: GameState;
@@ -29,9 +38,9 @@ interface UseGameStateOptions {
   boardHeight: number;
   pegRows: number;
   choiceMechanic: ChoiceMechanic;
-  currentFrameRef: React.MutableRefObject<number>;
+  currentFrameRef: ValueRef<number>;
   winningPrize: PrizeConfig | null;
-  winningPrizeLockedRef: React.MutableRefObject<boolean>;
+  winningPrizeLockedRef: ValueRef<boolean>;
   setWinningPrize: React.Dispatch<React.SetStateAction<PrizeConfig | null>>;
   setCurrentWinningIndex: React.Dispatch<React.SetStateAction<number | undefined>>;
   setPrizes: React.Dispatch<React.SetStateAction<PrizeConfig[]>>;
@@ -394,7 +403,9 @@ export function useGameState(options: UseGameStateOptions): UseGameStateResult {
 
       if (gameState.state !== 'ready') {
         if (import.meta.env.DEV) {
-          console.error(`[DevTools] Can only regenerate trajectory in 'ready' state, current: ${gameState.state}`);
+          console.error(
+            `[DevTools] Can only regenerate trajectory in 'ready' state, current: ${gameState.state}`
+          );
         }
         return;
       }

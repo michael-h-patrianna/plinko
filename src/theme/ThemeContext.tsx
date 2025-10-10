@@ -3,11 +3,11 @@
  * Provides theme switching functionality with localStorage persistence
  */
 
-import React, { useState, useCallback, ReactNode } from 'react';
-import { Theme } from './types';
-import { defaultTheme } from './themes/defaultTheme';
-import { ThemeContext, ThemeContextType } from './context';
 import { storageAdapter } from '@utils/platform';
+import React, { ReactNode, useCallback, useState } from 'react';
+import { ThemeContext, ThemeContextType } from './context';
+import { defaultTheme } from './themes/defaultTheme';
+import { Theme } from './types';
 
 interface ThemeProviderProps {
   children: ReactNode;
@@ -36,7 +36,11 @@ export function ThemeProvider({
       if (newTheme) {
         setTheme(newTheme);
         // Persist theme preference
-        storageAdapter.setItem('plinko-theme', themeName);
+        void storageAdapter
+          .setItem('plinko-theme', themeName)
+          .catch((error: unknown) => {
+            console.warn('Failed to persist theme preference:', error);
+          });
       }
     },
     [availableThemes]
@@ -55,7 +59,7 @@ export function ThemeProvider({
       }
     }
 
-    loadSavedTheme();
+    void loadSavedTheme();
   }, [switchTheme]);
 
   const value: ThemeContextType = {

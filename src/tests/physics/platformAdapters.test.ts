@@ -557,7 +557,13 @@ describe('Platform Adapters', () => {
       // Mock window.location
       delete (window as any).location;
       window.location = {
-        ...originalLocation,
+        href: originalLocation.href,
+        origin: originalLocation.origin,
+        protocol: originalLocation.protocol,
+        host: originalLocation.host,
+        hostname: originalLocation.hostname,
+        port: originalLocation.port,
+        hash: originalLocation.hash,
         search: '?foo=bar&baz=qux&empty=',
         pathname: '/test/path',
       } as any;

@@ -4,12 +4,12 @@
  * use animation driver correctly for cross-platform compatibility
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { Peg } from '@components/game/PlinkoBoard/Peg';
-import { ScreenShake } from '@components/effects/ScreenShake';
 import { CurrencyCounter } from '@components/effects/CurrencyCounter';
+import { ScreenShake } from '@components/effects/ScreenShake';
 import { YouWonText } from '@components/effects/YouWonText';
+import { Peg } from '@components/game/PlinkoBoard/Peg';
+import { render, screen, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock animation driver props interface for test mocks only
 interface MockAnimatedComponentProps {
@@ -71,7 +71,7 @@ describe('Animation Migration Tests', () => {
       expect(styleTags.length).toBe(0);
     });
 
-    it('should use animation driver for pulse ring animation', () => {
+    it('should use animation driver for pulse ring animation', async () => {
       const { container } = render(
         <Peg
           row={0}
@@ -82,13 +82,13 @@ describe('Animation Migration Tests', () => {
       );
 
       // Wait for animation trigger
-      waitFor(() => {
+      await waitFor(() => {
         const animatedElements = container.querySelectorAll('[data-animated="true"]');
         expect(animatedElements.length).toBeGreaterThan(0);
       });
     });
 
-    it('should use cross-platform safe transforms (scale, opacity)', () => {
+    it('should use cross-platform safe transforms (scale, opacity)', async () => {
       const { container } = render(
         <Peg
           row={0}
@@ -98,7 +98,7 @@ describe('Animation Migration Tests', () => {
         />
       );
 
-      waitFor(() => {
+      await waitFor(() => {
         const animatedElement = container.querySelector('[data-animated="true"]');
         if (animatedElement) {
           const animateData = animatedElement.getAttribute('data-animate');
@@ -168,7 +168,7 @@ describe('Animation Migration Tests', () => {
         expect(Array.isArray(animate.y)).toBe(true);
 
         // Verify intensity affects transform magnitude
-        const maxX = Math.max(...animate.x.map(Math.abs));
+        const maxX = Math.max(...(animate.x as number[]).map(Math.abs));
         const expectedMaxX = intensity === 'low' ? 1 : intensity === 'medium' ? 2 : 3;
         expect(maxX).toBe(expectedMaxX);
       });

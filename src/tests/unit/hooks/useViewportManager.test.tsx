@@ -5,11 +5,11 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useViewportManager } from '@hooks/useViewportManager';
-import { dimensionsAdapter, deviceInfoAdapter } from '@utils/platform';
 import type { GameState } from '@game/types';
+import { useViewportManager } from '@hooks/useViewportManager';
+import { act, renderHook } from '@testing-library/react';
+import { deviceInfoAdapter, dimensionsAdapter } from '@utils/platform';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock platform adapters
 vi.mock('../../../utils/platform', () => ({
@@ -52,7 +52,7 @@ describe('useViewportManager', () => {
     });
 
     it('should detect mobile device on mount', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
+  vi.mocked(deviceInfoAdapter).isMobileDevice.mockReturnValue(true);
 
       const { result } = renderHook(() =>
         useViewportManager({
@@ -64,9 +64,11 @@ describe('useViewportManager', () => {
     });
 
     it('should detect touch device within tablet breakpoint', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(false);
-      vi.mocked(deviceInfoAdapter.isTouchDevice).mockReturnValue(true);
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(768);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(false);
+      mockedDeviceInfo.isTouchDevice.mockReturnValue(true);
+      mockedDimensions.getWidth.mockReturnValue(768);
 
       const { result } = renderHook(() =>
         useViewportManager({
@@ -78,9 +80,11 @@ describe('useViewportManager', () => {
     });
 
     it('should not detect desktop as mobile', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(false);
-      vi.mocked(deviceInfoAdapter.isTouchDevice).mockReturnValue(false);
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(1920);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(false);
+      mockedDeviceInfo.isTouchDevice.mockReturnValue(false);
+      mockedDimensions.getWidth.mockReturnValue(1920);
 
       const { result } = renderHook(() =>
         useViewportManager({
@@ -94,9 +98,11 @@ describe('useViewportManager', () => {
 
   describe('Mobile Viewport Resizing', () => {
     it('should update viewport width on mobile resize', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
       let resizeCallback: ((dimensions: { width: number; height: number }) => void) | null = null;
-      vi.mocked(dimensionsAdapter.addChangeListener).mockImplementation((cb) => {
+      mockedDimensions.addChangeListener.mockImplementation((cb) => {
         resizeCallback = cb;
         return vi.fn();
       });
@@ -108,7 +114,7 @@ describe('useViewportManager', () => {
       );
 
       // Simulate resize
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(400);
+      mockedDimensions.getWidth.mockReturnValue(400);
       act(() => {
         resizeCallback?.({ width: 400, height: 800 });
       });
@@ -118,9 +124,11 @@ describe('useViewportManager', () => {
     });
 
     it('should cap viewport width at MAX_MOBILE', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
       let resizeCallback: ((dimensions: { width: number; height: number }) => void) | null = null;
-      vi.mocked(dimensionsAdapter.addChangeListener).mockImplementation((cb) => {
+      mockedDimensions.addChangeListener.mockImplementation((cb) => {
         resizeCallback = cb;
         return vi.fn();
       });
@@ -132,7 +140,7 @@ describe('useViewportManager', () => {
       );
 
       // Simulate resize beyond max mobile width
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(500);
+      mockedDimensions.getWidth.mockReturnValue(500);
       act(() => {
         resizeCallback?.({ width: 500, height: 800 });
       });
@@ -141,7 +149,9 @@ describe('useViewportManager', () => {
     });
 
     it('should not resize on desktop', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(false);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(false);
 
       const { result } = renderHook(() =>
         useViewportManager({
@@ -152,15 +162,17 @@ describe('useViewportManager', () => {
       const initialWidth = result.current.viewportWidth;
 
       // Simulate resize (should be ignored)
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(800);
+      mockedDimensions.getWidth.mockReturnValue(800);
 
       expect(result.current.viewportWidth).toBe(initialWidth);
     });
 
     it('should cleanup resize listener on unmount', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
       const cleanup = vi.fn();
-      vi.mocked(dimensionsAdapter.addChangeListener).mockReturnValue(cleanup);
+      mockedDimensions.addChangeListener.mockReturnValue(cleanup);
 
       const { unmount } = renderHook(() =>
         useViewportManager({
@@ -228,8 +240,10 @@ describe('useViewportManager', () => {
     });
 
     it('should maintain locked width value during lock', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(375);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
+      mockedDimensions.getWidth.mockReturnValue(375);
 
       const { result, rerender } = renderHook(
         ({ gameState }: { gameState: GameState }) =>
@@ -246,9 +260,11 @@ describe('useViewportManager', () => {
     });
 
     it('should not update locked width while locked', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
       let resizeCallback: ((dimensions: { width: number; height: number }) => void) | null = null;
-      vi.mocked(dimensionsAdapter.addChangeListener).mockImplementation((cb) => {
+      mockedDimensions.addChangeListener.mockImplementation((cb) => {
         resizeCallback = cb;
         return vi.fn();
       });
@@ -265,7 +281,7 @@ describe('useViewportManager', () => {
       rerender({ gameState: 'dropping' as GameState });
 
       // Try to resize
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(400);
+      mockedDimensions.getWidth.mockReturnValue(400);
       act(() => {
         resizeCallback?.({ width: 400, height: 800 });
       });
@@ -450,7 +466,9 @@ describe('useViewportManager', () => {
         })
       );
 
-      act(() => result.current.handleViewportChange(0));
+      act(() => {
+        result.current.handleViewportChange(0);
+      });
 
       expect(result.current.viewportWidth).toBe(0);
     });
@@ -462,7 +480,9 @@ describe('useViewportManager', () => {
         })
       );
 
-      act(() => result.current.handleViewportChange(-100));
+      act(() => {
+        result.current.handleViewportChange(-100);
+      });
 
       expect(result.current.viewportWidth).toBe(-100);
     });
@@ -474,7 +494,9 @@ describe('useViewportManager', () => {
         })
       );
 
-      act(() => result.current.handleViewportChange(10000));
+      act(() => {
+        result.current.handleViewportChange(10000);
+      });
 
       expect(result.current.viewportWidth).toBe(10000);
     });
@@ -509,8 +531,10 @@ describe('useViewportManager', () => {
 
   describe('Integration', () => {
     it('should work with realistic game flow', () => {
-      vi.mocked(deviceInfoAdapter.isMobileDevice).mockReturnValue(true);
-      vi.mocked(dimensionsAdapter.getWidth).mockReturnValue(375);
+      const mockedDeviceInfo = vi.mocked(deviceInfoAdapter);
+      const mockedDimensions = vi.mocked(dimensionsAdapter);
+      mockedDeviceInfo.isMobileDevice.mockReturnValue(true);
+      mockedDimensions.getWidth.mockReturnValue(375);
 
       const { result, rerender } = renderHook(
         ({ gameState }: { gameState: GameState }) =>

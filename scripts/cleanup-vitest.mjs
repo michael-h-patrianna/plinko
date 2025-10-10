@@ -37,6 +37,7 @@ function listProcesses() {
     // Exclude shell wrappers and other non-vitest processes
     if (command.includes('/bin/zsh') || command.includes('/bin/bash')) return false;
     if (command.includes('claude/shell-snapshots')) return false;
+    if (command.includes('scripts/cleanup-vitest.mjs')) return false;
     if (command.includes('grep')) return false;
 
     // Watch mode processes (original pattern)
