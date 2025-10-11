@@ -85,13 +85,13 @@ const MUSIC_FILES: Record<
     id: 'music-start-loop',
     url: startLoopMusic,
     loop: true,
-    volume: 0.5, // Play at 50% volume
+    volume: 1.0, // Volume will be controlled by useMusicManager
   },
   gameLoop: {
     id: 'music-game-loop',
     url: gameLoopMusic,
     loop: true,
-    volume: 0.36, // Play at 36% volume during gameplay
+    volume: 1.0, // Volume will be controlled by useMusicManager
   },
 };
 

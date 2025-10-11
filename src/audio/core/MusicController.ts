@@ -17,10 +17,57 @@ export class MusicController {
   private layers = new Map<MusicTrackId, MusicLayer>();
   private currentDuckLevel = 1.0;
   private baseMusicVolume = 1.0;
+  private musicBPM = 112; // Default BPM for music tracks
 
   constructor(adapter: AudioAdapter, volumeController: VolumeController) {
     this.adapter = adapter;
     this.volumeController = volumeController;
+  }
+
+  /**
+   * Set the BPM (beats per minute) for music timing calculations.
+   * Used to calculate musically-aligned crossfade durations.
+   */
+  setMusicBPM(bpm: number): void {
+    this.musicBPM = bpm;
+  }
+
+  /**
+   * Get the current music BPM.
+   */
+  getMusicBPM(): number {
+    return this.musicBPM;
+  }
+
+  /**
+   * Calculate the duration of a number of beats in milliseconds.
+   * @param beats - Number of beats (can be fractional, e.g., 0.5 for half beat)
+   * @returns Duration in milliseconds
+   */
+  getBeatsInMs(beats: number): number {
+    const msPerBeat = (60 / this.musicBPM) * 1000;
+    return beats * msPerBeat;
+  }
+
+  /**
+   * Get common musical durations in milliseconds based on current BPM.
+   * Useful for creating musically-aligned transitions.
+   */
+  getMusicalDurations(): {
+    quarterNote: number;
+    halfNote: number;
+    wholeNote: number;
+    bar: number; // 4 beats (one bar in 4/4 time)
+    twoBars: number;
+  } {
+    const quarterNote = this.getBeatsInMs(1);
+    return {
+      quarterNote,
+      halfNote: quarterNote * 2,
+      wholeNote: quarterNote * 4,
+      bar: quarterNote * 4,
+      twoBars: quarterNote * 8,
+    };
   }
 
   /**
@@ -128,6 +175,13 @@ export class MusicController {
   }
 
   /**
+   * Get the current volume of a layer (0-1).
+   */
+  getLayerVolume(id: MusicTrackId): number {
+    return this.layers.get(id)?.volume ?? 1.0;
+  }
+
+  /**
    * Transition from one layer to another at the end of the current loop.
    * This ensures rhythmic continuity by switching at loop boundaries.
    * Returns a cleanup function to cancel the transition if needed.
@@ -139,6 +193,7 @@ export class MusicController {
       fadeOutFrom?: number;
       fadeInTo?: number;
       volumeTo?: number;
+      inheritVolume?: boolean; // If true, copy volume from fromLayer to toLayer at transition time
     }
   ): () => void {
     const fromLayer = this.layers.get(fromId);
@@ -154,29 +209,43 @@ export class MusicController {
       return () => {};
     }
 
-    // Schedule transition at loop end
-    const cleanup = this.adapter.onMusicLoopEnd(fromId, () => {
-      console.log(`Loop boundary reached - transitioning from ${fromId} to ${toId}`);
+    // Schedule transition at loop end with 20 second max wait (longer than our 17s loops)
+    const cleanup = this.adapter.onMusicLoopEnd(
+      fromId,
+      () => {
+        console.log(`Loop boundary reached - transitioning from ${fromId} to ${toId}`);
 
-      // Stop the from layer with optional fade
-      if (options?.fadeOutFrom) {
-        this.stopLayer(fromId, options.fadeOutFrom);
-      } else {
-        this.stopLayer(fromId, 0); // Instant stop at loop boundary
-      }
+        // Capture the current volume of the from layer at transition time
+        const currentFromVolume = fromLayer.volume;
 
-      // Set target volume if specified
-      if (options?.volumeTo !== undefined) {
-        toLayer.volume = options.volumeTo;
-      }
+        // Set target volume for new track
+        if (options?.inheritVolume) {
+          // Inherit the volume from the layer we're transitioning away from
+          toLayer.volume = currentFromVolume;
+          console.log(`Inherited volume ${currentFromVolume} from ${fromId} to ${toId}`);
+        } else if (options?.volumeTo !== undefined) {
+          // Use explicit volume
+          toLayer.volume = options.volumeTo;
+        }
+        // Otherwise, toLayer keeps its current stored volume
 
-      // Start the to layer with optional fade
-      if (options?.fadeInTo) {
-        this.playLayer(toId, options.fadeInTo);
-      } else {
-        this.playLayer(toId, 0); // Instant start
-      }
-    });
+        // Start the new track first (with fade-in if specified)
+        if (options?.fadeInTo) {
+          this.playLayer(toId, options.fadeInTo);
+        } else {
+          this.playLayer(toId, 0); // Instant start
+        }
+
+        // Then stop the old track (with fade-out if specified)
+        // This creates a crossfade where both tracks overlap briefly
+        if (options?.fadeOutFrom) {
+          this.stopLayer(fromId, options.fadeOutFrom);
+        } else {
+          this.stopLayer(fromId, 0); // Instant stop at loop boundary
+        }
+      },
+      20000 // Max wait 20 seconds - longer than our 17-18s music loops
+    );
 
     return cleanup;
   }

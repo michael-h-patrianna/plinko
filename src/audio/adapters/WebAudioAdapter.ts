@@ -164,10 +164,26 @@ export class WebAudioAdapter implements AudioAdapter {
     }
 
     if (fadeOutMs && fadeOutMs > 0) {
-      howl.fade(howl.volume(), 0, fadeOutMs);
-      // Stop after fade completes
+      // Get current state
+      const currentVolume = howl.volume();
+      const wasLooping = howl.loop();
+
+      // Key insight: We can't disable looping because if the track reaches its natural end
+      // during the fadeout, it will stop playing and create a gap in the audio.
+      // Instead, we need to let it continue playing (and potentially loop) while fading,
+      // then stop it after the fade completes.
+
+      console.log(`[WebAudioAdapter] Fading out ${id} over ${fadeOutMs}ms (current volume: ${currentVolume}, looping: ${wasLooping})`);
+
+      // Start fade to 0
+      howl.fade(currentVolume, 0, fadeOutMs);
+
+      // Schedule stop after fade completes
       setTimeout(() => {
+        console.log(`[WebAudioAdapter] Stopping ${id} after fadeout`);
         howl.stop();
+        // Restore original volume for next playback
+        howl.volume(currentVolume);
       }, fadeOutMs);
     } else {
       howl.stop();

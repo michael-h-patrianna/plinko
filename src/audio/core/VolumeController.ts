@@ -12,7 +12,7 @@ export class VolumeController {
 
   constructor(
     defaultMasterVolume = 1.0,
-    defaultMusicVolume = 0.7,
+    defaultMusicVolume = 1.0, // Changed from 0.7 to 1.0 so layer volumes directly control output
     defaultSFXVolume = 1.0,
     storageKey = 'plinko-audio-settings'
   ) {

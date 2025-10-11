@@ -63,6 +63,9 @@ export function AudioProvider({ children }: AudioProviderProps) {
         const sfxController = new SFXController(adapter, volumeController, performanceAdapter);
         const musicController = new MusicController(adapter, volumeController);
 
+        // Set music BPM for timing calculations
+        musicController.setMusicBPM(112); // Plinko music is 112 BPM
+
         // Store in refs
         adapterRef.current = adapter;
         sfxControllerRef.current = sfxController;
