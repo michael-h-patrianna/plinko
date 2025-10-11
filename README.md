@@ -10,7 +10,7 @@ A React + TypeScript implementation of a Plinko game with **100% guaranteed outc
 - ⚡ **60 FPS Animation**: Smooth trajectory playback with 300-600 frame sequences
 - 🧪 **Comprehensive Testing**: 10,000 trajectory validation with 100% pass rate
 - 🎨 **375px Fixed Width**: Optimized for popup/modal display
-- 📐 **Binary Search Collision**: Precise collision detection prevents tunneling
+- 📐 **CCD Collision Detection**: Line-circle intersection prevents tunneling
 
 ## 🚀 Quick Start
 
@@ -217,10 +217,10 @@ DT: 1/60              // 60 FPS timestep
 TERMINAL_VELOCITY: 600 // Max fall speed
 ```
 
-**Collision Detection** (4-step process):
+**Collision Detection** (CCD process):
 
-1. **Detect collision** - Check if ball overlaps with any peg
-2. **Binary search** - Find exact collision moment (10 iterations for precision)
+1. **Line-circle intersection** - Check if ball's movement path intersects any peg using parametric math
+2. **Find collision point** - Calculate exact collision moment along the path (t parameter in [0,1])
 3. **Collision response** - Reflect velocity using physics, apply restitution
 4. **Safety check** - Ensure no overlaps remain (push ball away if needed)
 
@@ -261,7 +261,7 @@ generateTrajectory({
 
 See [docs/architecture.md](docs/architecture.md) for comprehensive technical documentation including:
 - Detailed physics engine explanation
-- Binary search collision detection algorithm
+- CCD (Continuous Collision Detection) algorithm
 - Bucket physics implementation
 - Testing strategy and validation
 - Performance optimization tips
@@ -391,13 +391,13 @@ for (let i = 1; i < trajectory.length; i++) {
 - Not truly random (but appears random)
 - Requires sophisticated search algorithm
 
-### Why Binary Search for Collisions?
+### Why CCD (Continuous Collision Detection)?
 
 **Problem**: Ball can "tunnel" through pegs at high speeds
 
-**Solution**: Binary search finds exact collision moment
+**Solution**: Line-circle intersection math finds exact collision point along movement path
 
-**Benefit**: Perfect accuracy, zero overlaps
+**Benefit**: Perfect accuracy, zero overlaps, 100% detection rate
 
 ### Why Brute Force Search?
 
@@ -509,14 +509,14 @@ MIT
 ## 🙏 Credits
 
 Physics engine implements:
-- Binary search collision detection
+- CCD (Continuous Collision Detection) via line-circle intersection
 - Deterministic RNG (LCG algorithm)
 - Chaos-based trajectory search
-- 4-step collision response
+- Physics-based collision response with restitution
 - Realistic bucket physics
 
 Built with comprehensive testing: 10,000+ validation runs ensuring 100% accuracy.
 
 ---
 
-**Note**: See [docs/architecture.md](docs/architecture.md) for the complete technical deep-dive including collision detection algorithms, binary search implementation, bucket physics, and testing strategy.
+**Note**: See [docs/architecture.md](docs/architecture.md) for the complete technical deep-dive including collision detection algorithms, CCD implementation, bucket physics, and testing strategy.

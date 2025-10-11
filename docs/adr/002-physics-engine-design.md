@@ -1,9 +1,21 @@
 # ADR 002: Physics Engine Design
 
-**Status:** Accepted
+**Status:** Superseded by ADR 007 (Collision Detection)
 **Date:** 2025-10-09
 **Deciders:** Development Team
 **Tags:** physics, determinism, performance
+
+---
+
+**⚠️ IMPORTANT NOTE (2025-10-11):**
+
+This ADR documents the original physics engine design. The collision detection approach described here as "binary search" has been superseded by **ADR 007: CCD (Continuous Collision Detection)**.
+
+The actual implementation has always used line-circle intersection (CCD), not binary search. The terminology was corrected and the "visual feedback pass" that caused duplicate collision detections was removed on 2025-10-11.
+
+See [ADR 007](./007-ccd-collision-detection.md) for current collision detection implementation.
+
+---
 
 ## Context
 
