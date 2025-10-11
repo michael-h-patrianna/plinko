@@ -7,13 +7,14 @@
  * Cross-platform safe: all animations use only transforms and opacity
  */
 
-import { useEffect } from 'react';
-import { useAnimationDriver } from '@theme/animationDrivers';
 import type { PrizeConfig } from '@game/types';
-import { ConfettiSpiral } from './ConfettiSpiral';
-import { StarBurst } from './StarBurst';
-import { FlashOverlay } from './FlashOverlay';
+import { useAnimationDriver } from '@theme/animationDrivers';
+import { useEffect } from 'react';
+import { useAudio } from '../../../audio/context/AudioProvider';
 import { useTheme } from '../../../theme';
+import { ConfettiSpiral } from './ConfettiSpiral';
+import { FlashOverlay } from './FlashOverlay';
+import { StarBurst } from './StarBurst';
 
 interface CelebrationOverlayProps {
   prize: PrizeConfig;
@@ -28,6 +29,7 @@ export function CelebrationOverlay({
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
   const { theme } = useTheme();
+  const { sfxController } = useAudio();
 
   const prizeType = prize.type;
 
@@ -45,6 +47,22 @@ export function CelebrationOverlay({
 
     return () => clearTimeout(timer);
   }, [celebrationDuration, onComplete]);
+
+  // Trigger fireworks sound for free prize wins when particle effect starts
+  useEffect(() => {
+    if (!sfxController) return;
+
+    // Only play fireworks for free prizes when confetti burst happens
+    if (prizeType === 'free') {
+      // Delay matches the FlashOverlay and particle burst timing (400ms)
+      const fireworksTimer = setTimeout(() => {
+        console.log('Playing fireworks sound for free prize celebration');
+        sfxController.play('result-fireworks');
+      }, 400);
+
+      return () => clearTimeout(fireworksTimer);
+    }
+  }, [prizeType, sfxController]);
 
   // For no_win, just show gentle dimming overlay
   if (prizeType === 'no_win') {

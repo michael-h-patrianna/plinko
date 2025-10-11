@@ -54,6 +54,11 @@ export type SoundEffectId =
   | 'prize-claim-press'
   | 'prize-claimed'
 
+  // Result Transitions (3 sounds)
+  | 'result-cheers'
+  | 'result-fireworks'
+  | 'result-nowin'
+
   // Screen Effects (3 sounds)
   | 'fx-screen-shake'
   | 'fx-screen-shake-subtle'

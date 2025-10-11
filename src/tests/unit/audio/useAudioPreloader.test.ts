@@ -56,6 +56,12 @@ describe('useAudioPreloader', () => {
     expect(result.current.errors).toEqual([]);
     expect(mockSFXController.loadSound).toHaveBeenCalledWith('ui-button-press', expect.any(String));
     expect(mockSFXController.loadSound).toHaveBeenCalledWith('ball-peg-hit', expect.any(String));
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('result-cheers', expect.any(String));
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith(
+      'result-fireworks',
+      expect.any(String)
+    );
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('result-nowin', expect.any(String));
   });
 
   it('preloads ball peg-hit sound', async () => {
@@ -72,6 +78,28 @@ describe('useAudioPreloader', () => {
     });
 
     expect(mockSFXController.loadSound).toHaveBeenCalledWith('ball-peg-hit', expect.any(String));
+  });
+
+  it('preloads result sounds (cheers, fireworks, nowin)', async () => {
+    const { result } = renderHook(() =>
+      useAudioPreloader({
+        sfxController: mockSFXController as SFXController,
+        musicController: mockMusicController as MusicController,
+        enabled: true,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    // Verify all three result sounds are loaded
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('result-cheers', expect.any(String));
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith(
+      'result-fireworks',
+      expect.any(String)
+    );
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('result-nowin', expect.any(String));
   });
 
   it('does not preload when disabled', async () => {

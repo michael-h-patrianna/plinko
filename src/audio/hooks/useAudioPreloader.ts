@@ -13,15 +13,18 @@ import type { SoundEffectId } from '../types/SoundEffectId';
 import pegHitSound from '../../assets/sounds/sfx/ball/peg-hit.mp3';
 import slotHitSound from '../../assets/sounds/sfx/ball/slot-hit.mp3';
 import wallHitSound from '../../assets/sounds/sfx/ball/wall-hit.mp3';
-import buttonPressSound from '../../assets/sounds/sfx/ui/button-press.mp3';
-import countdown3Sound from '../../assets/sounds/sfx/countdown/countdown-3.mp3';
-import countdown2Sound from '../../assets/sounds/sfx/countdown/countdown-2.mp3';
 import countdown1Sound from '../../assets/sounds/sfx/countdown/countdown-1.mp3';
+import countdown2Sound from '../../assets/sounds/sfx/countdown/countdown-2.mp3';
+import countdown3Sound from '../../assets/sounds/sfx/countdown/countdown-3.mp3';
 import countdownGoSound from '../../assets/sounds/sfx/countdown/countdown-go.mp3';
+import cheersSound from '../../assets/sounds/sfx/result/cheers.mp3';
+import fireworksSound from '../../assets/sounds/sfx/result/fireworks.mp3';
+import nowinSound from '../../assets/sounds/sfx/result/nowin.mp3';
+import buttonPressSound from '../../assets/sounds/sfx/ui/button-press.mp3';
 
 // Music file imports
-import startLoopMusic from '../../assets/sounds/music/start-loop.mp3';
 import gameLoopMusic from '../../assets/sounds/music/game-loop.mp3';
+import startLoopMusic from '../../assets/sounds/music/start-loop.mp3';
 
 /**
  * Sound file registry
@@ -60,9 +63,24 @@ const SOUND_FILES: Record<string, { id: SoundEffectId; url: string }> = {
     id: 'countdown-go',
     url: countdownGoSound,
   },
+  cheers: {
+    id: 'result-cheers',
+    url: cheersSound,
+  },
+  fireworks: {
+    id: 'result-fireworks',
+    url: fireworksSound,
+  },
+  nowin: {
+    id: 'result-nowin',
+    url: nowinSound,
+  },
 };
 
-const MUSIC_FILES: Record<string, { id: MusicTrackId; url: string; loop?: boolean; volume?: number }> = {
+const MUSIC_FILES: Record<
+  string,
+  { id: MusicTrackId; url: string; loop?: boolean; volume?: number }
+> = {
   startLoop: {
     id: 'music-start-loop',
     url: startLoopMusic,

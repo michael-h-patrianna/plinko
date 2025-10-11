@@ -235,6 +235,25 @@ function AppContent({
     };
   }, [state, musicController, musicEnabled]);
 
+  // Handle result SFX based on game state and prize type
+  useEffect(() => {
+    if (!sfxController || !selectedPrize) return;
+
+    if (state === 'celebrating') {
+      // Ball has landed and celebration animation starts
+      // Play appropriate sound based on prize type
+      if (selectedPrize.type === 'no_win') {
+        // No win - play sad/neutral sound
+        console.log('Playing nowin sound for no_win prize');
+        sfxController.play('result-nowin');
+      } else {
+        // Win (free or purchase) - play cheers
+        console.log('Playing cheers sound for win prize');
+        sfxController.play('result-cheers');
+      }
+    }
+  }, [state, selectedPrize, sfxController]);
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
