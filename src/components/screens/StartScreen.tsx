@@ -37,8 +37,15 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
       className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
+      exit={{
+        opacity: 0,
+        scale: 0.95,
+        y: -20
+      }}
+      transition={{
+        duration: 0.4,
+        ease: [0.22, 1, 0.36, 1]
+      }}
     >
       {/* Title - using theme */}
       <AnimatedH1

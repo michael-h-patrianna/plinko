@@ -298,7 +298,7 @@ export function PlinkoBoard({
           border: theme.colors.game.board.border || `1px solid ${theme.colors.border.default}`,
           borderRadius: boardWidth <= 375 ? '0 0 12px 12px' : (theme.colors.game.board.borderRadius || theme.borderRadius.card),
         }}
-        initial={{ opacity: 0, scale: 0.92, y: 30 }}
+        initial={{ opacity: 0, scale: 0.88, y: 40 }}
         animate={{
           opacity: 1,
           scale: 1,
@@ -306,7 +306,8 @@ export function PlinkoBoard({
         }}
         exit={{ opacity: 0, scale: 0.92, y: 30 }}
         transition={{
-          duration: 0.5,
+          duration: 0.55,
+          delay: 0.1,
           ease: [0.22, 1, 0.36, 1],
         }}
         data-testid="plinko-board"
