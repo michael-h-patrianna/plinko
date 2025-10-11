@@ -17,7 +17,7 @@ WHY: Tracks progress, maintains focus
 ```
 
 ## MANDATORY CODE STYLE AND ARCHITECTURE RULES
-Coding agents must follow styleguide.md - No exceptions!
+Coding agents must follow `docs/meta/styleguide.md` - No exceptions!
 
 ## MANDATORY EXECUTION PROTOCOL
 1. Always complete all tasks fully. Do not simplify approaches, do not skip tasks.

@@ -169,18 +169,9 @@ sfxController.playFromPool('peg-hits');
 ```
 src/assets/sounds/
 ├── sfx/
-│   ├── ui/              # button-tap.mp3, button-press.mp3, etc.
-│   ├── countdown/       # countdown-3.mp3, countdown-2.mp3, etc.
-│   ├── ball/            # peg-hit.mp3, peg-hit-low.mp3, etc.
-│   ├── landing/         # impact-win.mp3, impact-nowin.mp3
-│   ├── celebration/     # win-small.mp3, win-big.mp3, etc.
-│   ├── prize/           # reveal-minor.mp3, reveal-major.mp3
+│   ├── ui/
 │   └── ...
 └── music/
-    ├── base-layer.mp3
-    ├── tension-layer.mp3
-    ├── win-stinger.mp3
-    └── nowin-stinger.mp3
 ```
 
 ### Adding New Sounds
@@ -203,14 +194,13 @@ export type SoundEffectId =
 ### Naming Conventions
 
 **Sound IDs**: `category-description-variant`
-- `ui-button-tap`
-- `ball-peg-hit-low`
-- `land-impact-win`
-- `prize-reveal-major`
+- `ui-button-click`
+- `ball-peg-hit`
+- `prize-reveal-nowin`
 
 **File names**: Match the description part
-- Sound ID: `ui-button-tap` → File: `button-tap.mp3`
-- Sound ID: `ball-peg-hit-low` → File: `peg-hit-low.mp3`
+- Sound ID: `ui-button-clikc` → File: `button-click.mp3`
+- Sound ID: `ball-peg-hit` → File: `peg-hit.mp3`
 
 **Categories**:
 - `ui-*` - User interface sounds
