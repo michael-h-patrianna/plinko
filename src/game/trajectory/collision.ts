@@ -2,7 +2,12 @@
  * Peg Collision Detection and Response
  *
  * Handles all collision detection and physics response for ball-peg interactions.
- * Uses binary search for precise collision point detection to prevent overlaps.
+ * Uses continuous collision detection (CCD) via line-circle intersection to prevent
+ * tunneling and ensure all collisions are caught.
+ *
+ * NOTE: Visual feedback pass was removed 2025-10-11 to eliminate false positives.
+ * CCD is now the single source of truth for collision detection.
+ * See docs/collision-review.md for details.
  */
 
 import { PHYSICS, type Peg } from '../boardGeometry';
@@ -39,7 +44,10 @@ interface CollisionParams {
 /**
  * Detects and handles collisions with all pegs
  * Returns updated position, velocity, and collision information
- * Uses binary search for precise collision point to prevent overlaps
+ * Uses continuous collision detection (CCD) for precise collision point to prevent overlaps
+ *
+ * NOTE: Only CCD is used for detection. Visual feedback pass was removed 2025-10-11
+ * to eliminate false positives from cooldown expiry while ball lingering near peg.
  */
 export function detectAndHandlePegCollisions(params: CollisionParams): CollisionResult {
   const { state, oldState, pegs, recentCollisions, frame, bounceRandomness, rng } = params;
@@ -176,8 +184,19 @@ export function detectAndHandlePegCollisions(params: CollisionParams): Collision
         recentCollisions.delete(firstKey);
       }
     }
+
+    // Add to pegsHit for visual feedback (ONLY actual physics collision)
+    pegsHitThisFrame.push({ row: peg.row, col: peg.col });
   }
 
+  // ============================================================
+  // VISUAL FEEDBACK PASS - DISABLED 2025-10-11
+  // Reason: Creates false positives when cooldown expires but ball still lingering
+  // See: docs/collision-review.md and docs/collision-refactor-plan.md
+  // If CCD coverage is insufficient, re-enable with direction check (Solution C)
+  // ============================================================
+
+  /* DISABLED - Uncomment if needed
   // After physics collision, detect ALL pegs the ball is near for visual feedback
   // Apply same cooldown as physics to prevent duplicate detections across frames
   for (const peg of pegs) {
@@ -200,6 +219,7 @@ export function detectAndHandlePegCollisions(params: CollisionParams): Collision
       }
     }
   }
+  */ // END DISABLED VISUAL FEEDBACK PASS
 
   return { x, y, vx, vy, hitPeg, pegsHit: pegsHitThisFrame };
 }

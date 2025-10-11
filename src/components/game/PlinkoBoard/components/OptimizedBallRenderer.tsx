@@ -324,6 +324,10 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
       // TIMING FIX: Trigger effects 1 frame early to synchronize with visual ball position
       // The trajectory stores POST-BOUNCE positions, but collisions happen earlier in the frame.
       // By looking ahead, we trigger effects when the ball VISUALLY appears to hit the peg.
+      //
+      // NOTE: Collision detection now uses CCD only (physics layer).
+      // False positives eliminated by removing visual feedback pass (2025-10-11).
+      // See docs/collision-review.md for details.
       if (pegHitFrames && trajectory) {
         // Look-ahead: Check for collisions 1 frame in the future
         const COLLISION_LOOKAHEAD = 1;

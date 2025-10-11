@@ -5,10 +5,20 @@
  * across consecutive frames when the ball remains near the same peg.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { detectAndHandlePegCollisions } from '../../../game/trajectory/collision';
 import { PHYSICS, type Peg } from '../../../game/boardGeometry';
 import { createRng } from '../../../game/rng';
+
+// Mock platform storage to avoid web dependencies in Node environment
+vi.mock('../../../utils/platform/storage', () => ({
+  getStorageAdapter: () => ({
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  }),
+}));
 
 describe('Collision Detection Cooldown', () => {
   it('should not report the same peg hit in consecutive frames within cooldown period', () => {
@@ -65,6 +75,9 @@ describe('Collision Detection Cooldown', () => {
     expect(result3.pegsHit).toHaveLength(0);
 
     // Frame 10: Ball still near peg (cooldown expired)
+    // NOTE: With visual feedback pass disabled (2025-10-11), cooldown expiry no longer
+    // causes false positives. The ball is NOT in the movement path that would trigger
+    // a new collision, so pegsHit should remain empty.
     const result4 = detectAndHandlePegCollisions({
       state: { x: 106, y: 100 - PHYSICS.COLLISION_RADIUS + 3, vx: 1.5, vy: 2 },
       oldState: { x: 105, y: 100 - PHYSICS.COLLISION_RADIUS + 2, vx: 1.5, vy: 2 },
@@ -75,9 +88,9 @@ describe('Collision Detection Cooldown', () => {
       rng,
     });
 
-    // Should add peg to pegsHit (cooldown expired after 10 frames)
-    expect(result4.pegsHit).toHaveLength(1);
-    expect(result4.pegsHit[0]).toEqual({ row: 0, col: 0 });
+    // Should NOT add peg to pegsHit even though cooldown expired
+    // Only CCD (movement path intersection) triggers detection now
+    expect(result4.pegsHit).toHaveLength(0);
   });
 
   it('should allow different pegs to be detected simultaneously', () => {

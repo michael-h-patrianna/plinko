@@ -2,8 +2,18 @@
  * Debug test to verify line-circle intersection logic
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { generateTrajectory } from '@game/trajectory';
+
+// Mock platform storage to avoid web dependencies in Node environment
+vi.mock('../../utils/platform/storage', () => ({
+  getStorageAdapter: () => ({
+    getItem: vi.fn(),
+    setItem: vi.fn(),
+    removeItem: vi.fn(),
+    clear: vi.fn(),
+  }),
+}));
 
 const BOARD_WIDTH = 375;
 const BOARD_HEIGHT = 500;

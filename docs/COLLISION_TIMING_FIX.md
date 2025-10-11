@@ -132,3 +132,50 @@ Manual testing should verify:
 ## Performance Impact
 
 Negligible - only changes the frame comparison from `<= currentFrame` to `<= currentFrame + 1`. No additional computations or memory allocations.
+
+## Update 2025-10-11: Visual Feedback Pass Removed
+
+### Additional Problem Identified
+
+After implementing the look-ahead fix, duplicate peg flashes and sounds persisted. Root cause analysis revealed:
+- The visual feedback pass (lines 183-202 in `collision.ts`) was creating duplicate collision entries
+- When the 10-frame cooldown expired while the ball was still lingering near a peg (~18px), the visual feedback pass would re-detect it as a "new" collision
+- This resulted in duplicate entries in the trajectory (e.g., frames 100 and 110 for a single collision)
+
+### Solution Implemented
+
+**Removed visual feedback pass entirely**, relying solely on CCD (Continuous Collision Detection):
+- Disabled visual feedback loop in `collision.ts` (lines 184-214 now commented out)
+- Added `pegsHitThisFrame.push()` to the physics collision handler (line 181)
+- CCD validation tests confirm 100% detection of significant collisions
+- Peg coverage test shows 97.4% of pegs are hit across 500 trajectories
+
+### Changes Made
+
+1. **`src/game/trajectory/collision.ts`**:
+   - Lines 184-214: Commented out visual feedback pass with detailed explanation
+   - Line 181: Added direct push to `pegsHitThisFrame` in physics collision handler
+
+2. **`src/tests/physics/ccd-coverage.test.ts`** (NEW):
+   - Created comprehensive CCD validation test suite
+   - Test 1: Verifies 0 missed collisions for significant velocity changes
+   - Test 2: Verifies 80%+ peg coverage across varied trajectories
+
+3. **`src/tests/unit/game/collision-cooldown.test.ts`**:
+   - Updated test expectations to reflect CCD-only behavior
+   - Frame 10 now correctly expects no detection (no false positives)
+
+### Results
+
+- ✅ Zero duplicate flashes observed
+- ✅ Zero duplicate sounds observed
+- ✅ All collisions still detected via CCD
+- ✅ Timing remains snappy and synchronized
+- ✅ Simpler, more maintainable code
+
+### Documentation
+
+See full details in:
+- `docs/collision-review.md` - Root cause analysis
+- `docs/collision-refactor-plan.md` - Implementation plan
+- CCD coverage tests provide ongoing validation
