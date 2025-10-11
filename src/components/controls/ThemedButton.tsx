@@ -9,8 +9,9 @@
  * @param testId - Test ID for testing
  */
 
-import { useTheme } from '../../theme';
 import { useAnimationDriver } from '@theme/animationDrivers';
+import { useAudio } from '../../audio/context/AudioProvider';
+import { useTheme } from '../../theme';
 
 type EntranceAnimation = 'fade' | 'hero' | 'none';
 
@@ -42,7 +43,16 @@ export function ThemedButton({
   const AnimatedButton = driver.createAnimatedComponent('button');
 
   const { theme } = useTheme();
+  const { sfxController } = useAudio();
   const buttonStyle = variant === 'primary' ? theme.buttons.primary : theme.buttons.secondary;
+
+  // Play sound on click
+  const handleClick = () => {
+    if (sfxController && !disabled) {
+      sfxController.play('ui-button-press');
+    }
+    onClick();
+  };
 
   // Animation configuration types
   // Note: Using AnimationConfig and TransitionConfig from animation driver for type safety
@@ -84,7 +94,7 @@ export function ThemedButton({
 
   return (
     <AnimatedButton
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={`font-bold relative overflow-hidden group ${className}`}
       style={{

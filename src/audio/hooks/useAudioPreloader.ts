@@ -4,10 +4,10 @@
  */
 
 import { useEffect, useState } from 'react';
-import type { SFXController } from '../core/SFXController';
 import type { MusicController } from '../core/MusicController';
-import type { SoundEffectId } from '../types/SoundEffectId';
+import type { SFXController } from '../core/SFXController';
 import type { MusicTrackId } from '../types/MusicTrackId';
+import type { SoundEffectId } from '../types/SoundEffectId';
 
 // Sound file imports
 import buttonPressSound from '../../assets/sounds/sfx/ui/button-press.mp3';
@@ -73,9 +73,7 @@ export function useAudioPreloader({
         } catch (error) {
           console.error(`Failed to preload sound ${key}:`, error);
           loadErrors.push(
-            error instanceof Error
-              ? error
-              : new Error(`Failed to load sound ${key}`)
+            error instanceof Error ? error : new Error(`Failed to load sound ${key}`)
           );
         }
       }
@@ -89,9 +87,7 @@ export function useAudioPreloader({
         } catch (error) {
           console.error(`Failed to preload music ${key}:`, error);
           loadErrors.push(
-            error instanceof Error
-              ? error
-              : new Error(`Failed to load music ${key}`)
+            error instanceof Error ? error : new Error(`Failed to load music ${key}`)
           );
         }
       }

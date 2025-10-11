@@ -3,31 +3,31 @@
  * With smooth state transitions using AnimatePresence
  */
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
-import { AppConfigProvider } from './config/AppConfigContext';
-import type { PerformanceMode } from './config/appConfig';
-import { Countdown } from './components/game/Countdown';
-import { ErrorBoundary } from './components/layout/ErrorBoundary';
-import { GameBoardErrorBoundary } from './components/layout/GameBoardErrorBoundary';
-import { PrizeErrorBoundary } from './components/layout/PrizeErrorBoundary';
-import { ToastProvider, useToast } from './components/feedback';
-import { ScreenShake } from './components/effects/ScreenShake';
-import { CelebrationOverlay } from './components/effects/celebrations';
-import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
-import { PopupContainer } from './components/layout/PopupContainer';
-import { PrizeClaimed } from './components/screens/PrizeClaimed';
-import { PrizeReveal } from './components/screens/PrizeReveal';
-import { StartScreen } from './components/screens/StartScreen';
-import { DevToolsLoader, type ChoiceMechanic } from './dev-tools';
-import { usePlinkoGame } from './hooks/usePlinkoGame';
-import { useAppUIState } from './hooks/useAppUIState';
-import { ThemeProvider, themes, useTheme } from './theme';
-import { useAnimationDriver } from './theme/animationDrivers';
-import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from './theme/tokens';
-import { LAYOUT } from './constants';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { prewarmTrailCache } from './animation/trailOptimization';
 import { AudioProvider, useAudio } from './audio/context/AudioProvider';
 import { useAudioPreloader } from './audio/hooks/useAudioPreloader';
+import { ScreenShake } from './components/effects/ScreenShake';
+import { CelebrationOverlay } from './components/effects/celebrations';
+import { ToastProvider, useToast } from './components/feedback';
+import { Countdown } from './components/game/Countdown';
+import { PlinkoBoard } from './components/game/PlinkoBoard/PlinkoBoard';
+import { ErrorBoundary } from './components/layout/ErrorBoundary';
+import { GameBoardErrorBoundary } from './components/layout/GameBoardErrorBoundary';
+import { PopupContainer } from './components/layout/PopupContainer';
+import { PrizeErrorBoundary } from './components/layout/PrizeErrorBoundary';
+import { PrizeClaimed } from './components/screens/PrizeClaimed';
+import { PrizeReveal } from './components/screens/PrizeReveal';
+import { StartScreen } from './components/screens/StartScreen';
+import { AppConfigProvider } from './config/AppConfigContext';
+import type { PerformanceMode } from './config/appConfig';
+import { LAYOUT } from './constants';
+import { DevToolsLoader, type ChoiceMechanic } from './dev-tools';
+import { useAppUIState } from './hooks/useAppUIState';
+import { usePlinkoGame } from './hooks/usePlinkoGame';
+import { ThemeProvider, themes, useTheme } from './theme';
+import { useAnimationDriver } from './theme/animationDrivers';
+import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from './theme/tokens';
 
 /**
  * Main application content component
@@ -325,9 +325,11 @@ export function App() {
     <ErrorBoundary>
       <AppConfigProvider value={config}>
         <ThemeProvider themes={themes}>
-          <ToastProvider position="top-right" maxToasts={3}>
-            <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
-          </ToastProvider>
+          <AudioProvider>
+            <ToastProvider position="top-right" maxToasts={3}>
+              <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+            </ToastProvider>
+          </AudioProvider>
         </ThemeProvider>
       </AppConfigProvider>
     </ErrorBoundary>

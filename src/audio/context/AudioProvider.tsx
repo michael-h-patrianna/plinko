@@ -3,11 +3,11 @@
  * Initializes audio system and provides controllers to components
  */
 
-import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { WebAudioAdapter } from '../adapters/WebAudioAdapter';
-import { VolumeController } from '../core/VolumeController';
-import { SFXController } from '../core/SFXController';
 import { MusicController } from '../core/MusicController';
+import { SFXController } from '../core/SFXController';
+import { VolumeController } from '../core/VolumeController';
 
 interface AudioContextValue {
   sfxController: SFXController | null;
