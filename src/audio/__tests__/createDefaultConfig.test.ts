@@ -9,7 +9,7 @@ describe('createDefaultConfig', () => {
     expect(config.assetBasePath).toBe('/assets/audio');
     expect(config.defaultMasterVolume).toBe(1.0);
     expect(config.defaultMusicVolume).toBe(0.7);
-    expect(config.defaultSFXVolume).toBe(1.0);
+    expect(config.defaultSFXVolume).toBe(0.66);
     expect(config.preloadCriticalOnly).toBe(true);
     expect(config.criticalSounds).toContain('countdown-go');
     expect(config.maxSimultaneousSounds).toBe(32);
@@ -40,22 +40,19 @@ describe('createDefaultConfig', () => {
   it('should include all critical sounds', () => {
     const config = createDefaultConfig();
 
-    expect(config.criticalSounds).toHaveLength(11);
+    expect(config.criticalSounds).toHaveLength(8);
     expect(config.criticalSounds).toContain('countdown-3');
     expect(config.criticalSounds).toContain('countdown-2');
     expect(config.criticalSounds).toContain('countdown-1');
     expect(config.criticalSounds).toContain('countdown-go');
     expect(config.criticalSounds).toContain('ball-peg-hit');
-    expect(config.criticalSounds).toContain('ball-peg-hit-low');
-    expect(config.criticalSounds).toContain('ball-peg-hit-high');
-    expect(config.criticalSounds).toContain('land-impact-win');
-    expect(config.criticalSounds).toContain('land-impact-nowin');
-    expect(config.criticalSounds).toContain('ui-button-tap');
-    expect(config.criticalSounds).toContain('ui-button-primary');
+    expect(config.criticalSounds).toContain('ball-wall-hit');
+    expect(config.criticalSounds).toContain('ball-slot-hit');
+    expect(config.criticalSounds).toContain('ui-button-press');
   });
 
   it('should allow overriding critical sounds list', () => {
-    const customCriticalSounds: SoundEffectId[] = ['ui-button-tap', 'countdown-go'];
+    const customCriticalSounds: SoundEffectId[] = ['ui-button-press', 'countdown-go'];
     const config = createDefaultConfig({
       criticalSounds: customCriticalSounds,
     });

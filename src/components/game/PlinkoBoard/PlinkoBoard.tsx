@@ -508,6 +508,7 @@ export function PlinkoBoard({
           currentFrameRef={currentFrameRef}
           getBallPosition={getBallPosition}
           trajectoryCache={trajectoryCache}
+          trajectory={trajectory}
           trajectoryLength={trajectory?.length}
           onLandingComplete={onLandingComplete}
           pegHitFrames={pegHitFrames}
@@ -515,7 +516,6 @@ export function PlinkoBoard({
           slots={slots.map((slot) => ({ x: slot.x, width: slot.width }))}
           slotHighlightColor={theme.colors.game.ball.primary}
           bucketZoneY={bucketZoneY}
-          getCurrentTrajectoryPoint={getCurrentTrajectoryPoint}
         />
 
         {/* Ball Landing Impact - triggers when ball lands */}

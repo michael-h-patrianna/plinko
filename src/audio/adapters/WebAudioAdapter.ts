@@ -143,10 +143,12 @@ export class WebAudioAdapter implements AudioAdapter {
     }
 
     if (fadeInMs && fadeInMs > 0) {
-      // Start at volume 0 and fade in
+      // Get the current volume (set by MusicController via setMusicVolume)
+      const targetVolume = howl.volume();
+      // Start at volume 0 and fade to the target volume
       howl.volume(0);
       howl.play();
-      howl.fade(0, 1.0, fadeInMs);
+      howl.fade(0, targetVolume, fadeInMs);
     } else {
       howl.play();
     }
@@ -186,6 +188,20 @@ export class WebAudioAdapter implements AudioAdapter {
   }
 
   /**
+   * Fade music volume from current to target over specified duration.
+   */
+  fadeMusicVolume(id: string, targetVolume: number, durationMs: number): void {
+    const howl = this.musicTracks.get(id);
+    if (!howl) {
+      return;
+    }
+
+    const clampedVolume = Math.max(0, Math.min(1, targetVolume));
+    const currentVolume = howl.volume();
+    howl.fade(currentVolume, clampedVolume, durationMs);
+  }
+
+  /**
    * Check if a music track is currently playing.
    */
   isMusicPlaying(id: string): boolean {
@@ -194,6 +210,59 @@ export class WebAudioAdapter implements AudioAdapter {
       return false;
     }
     return howl.playing();
+  }
+
+  /**
+   * Get the current playback position in seconds.
+   */
+  getMusicSeek(id: string): number {
+    const howl = this.musicTracks.get(id);
+    if (!howl) {
+      return 0;
+    }
+    return howl.seek() as number;
+  }
+
+  /**
+   * Get the duration of a music track in seconds.
+   */
+  getMusicDuration(id: string): number {
+    const howl = this.musicTracks.get(id);
+    if (!howl) {
+      return 0;
+    }
+    return howl.duration();
+  }
+
+  /**
+   * Schedule a callback when the current loop iteration ends.
+   * If more than maxWaitMs until loop end, transition immediately instead.
+   * Returns a cleanup function to cancel the scheduled callback.
+   */
+  onMusicLoopEnd(id: string, callback: () => void, maxWaitMs: number = 5000): () => void {
+    const howl = this.musicTracks.get(id);
+    if (!howl || !howl.playing()) {
+      console.warn(`Cannot schedule loop end for ${id}: not playing`);
+      return () => {}; // No-op cleanup
+    }
+
+    const duration = howl.duration();
+    const currentSeek = howl.seek() as number;
+    const timeUntilLoopEnd = (duration - currentSeek) * 1000; // Convert to ms
+
+    console.log(`[${id}] Duration: ${duration}s, Current position: ${currentSeek}s, Time until loop end: ${(timeUntilLoopEnd / 1000).toFixed(2)}s`);
+
+    // If we'd wait too long, transition immediately
+    if (timeUntilLoopEnd > maxWaitMs) {
+      console.log(`[${id}] Would wait ${(timeUntilLoopEnd / 1000).toFixed(2)}s - transitioning immediately instead`);
+      setTimeout(callback, 0);
+      return () => {};
+    }
+
+    console.log(`[${id}] Scheduling transition in ${(timeUntilLoopEnd / 1000).toFixed(2)}s`);
+    const timeoutId = setTimeout(callback, timeUntilLoopEnd);
+
+    return () => clearTimeout(timeoutId);
   }
 
   /**

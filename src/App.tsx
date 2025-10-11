@@ -67,8 +67,10 @@ function AppContent({
       console.log('Audio system ready');
     }
   }, [audioLoaded]);
+
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('drop-position');
   const [showWinner, setShowWinner] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(false); // Default: music off
 
   // Error handlers for toast notifications
   const handleGameBoardError = useCallback(() => {
@@ -172,6 +174,67 @@ function AppContent({
     [state, uiState]
   );
 
+  // Handle music transitions based on game state
+  useEffect(() => {
+    if (!musicController) return;
+
+    let cleanupTransition: (() => void) | undefined;
+
+    // Stop all music when returning to start screen (reset)
+    if (state === 'idle' || state === 'ready') {
+      console.log('Returned to start screen - stopping all music');
+      musicController.stopAllLayers(1000);
+      return;
+    }
+
+    // Only play music if enabled
+    if (!musicEnabled) {
+      return;
+    }
+
+    if (state === 'countdown') {
+      // Countdown started - transition to game-loop at next loop boundary
+      if (musicController.isLayerPlaying('music-start-loop') && musicController.isLoaded('music-game-loop')) {
+        console.log('Countdown started - scheduling transition to game-loop at loop boundary');
+
+        cleanupTransition = musicController.transitionAtLoopBoundary(
+          'music-start-loop',
+          'music-game-loop',
+          {
+            fadeOutFrom: 500, // Short fade out for smooth transition
+            fadeInTo: 0, // Instant start to maintain rhythm
+            volumeTo: 0.5, // Start at 50% volume
+          }
+        );
+      }
+    } else if (state === 'dropping') {
+      // Ball is dropping - ensure start-loop is stopped and game-loop is at correct volume
+
+      // Failsafe: Stop start-loop if it's somehow still playing
+      if (musicController.isLayerPlaying('music-start-loop')) {
+        console.log('Ball dropping - force stopping start-loop (failsafe)');
+        musicController.stopLayer('music-start-loop', 500);
+      }
+
+      // Fade game-loop to 36%
+      if (musicController.isLayerPlaying('music-game-loop')) {
+        console.log('Ball dropping - fading game-loop to 36%');
+        musicController.fadeLayerVolume('music-game-loop', 0.36, 1000);
+      }
+    } else if (state === 'landed') {
+      // Ball has landed - fade out and stop all music
+      console.log('Ball landed - fading out and stopping all music');
+      musicController.stopAllLayers(1000);
+    }
+
+    // Cleanup transition if state changes before it happens
+    return () => {
+      if (cleanupTransition) {
+        cleanupTransition();
+      }
+    };
+  }, [state, musicController, musicEnabled]);
+
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center"
@@ -195,6 +258,8 @@ function AppContent({
             isStartScreen={state === 'idle' || state === 'ready'}
             showWinner={showWinner}
             onShowWinnerChange={setShowWinner}
+            musicEnabled={musicEnabled}
+            onMusicEnabledChange={setMusicEnabled}
           />
         </div>
       </div>
@@ -214,6 +279,7 @@ function AppContent({
                     disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
                     winningIndex={winningIndex}
                     showWinner={showWinner}
+                    musicEnabled={musicEnabled}
                   />
                 )}
               </AnimatePresence>

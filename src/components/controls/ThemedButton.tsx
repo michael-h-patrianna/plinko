@@ -17,6 +17,8 @@ type EntranceAnimation = 'fade' | 'hero' | 'none';
 
 interface ThemedButtonProps {
   onClick: () => void;
+  onMouseEnter?: () => void;
+  onFocus?: () => void;
   disabled?: boolean;
   className?: string;
   delay?: number;
@@ -29,6 +31,8 @@ interface ThemedButtonProps {
 
 export function ThemedButton({
   onClick,
+  onMouseEnter,
+  onFocus,
   disabled = false,
   className = '',
   delay = 0,
@@ -95,6 +99,8 @@ export function ThemedButton({
   return (
     <AnimatedButton
       onClick={handleClick}
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
       disabled={disabled}
       className={`font-bold relative overflow-hidden group ${className}`}
       style={{

@@ -137,6 +137,7 @@ interface OptimizedBallRendererProps {
   frameStore?: FrameStore;
   getBallPosition?: () => BallPosition | null;
   trajectoryCache?: TrajectoryCache | null;
+  trajectory?: Array<BallPosition & { bucketWallHit?: 'left' | 'right'; bucketFloorHit?: boolean }>;
   trajectoryLength?: number;
   onLandingComplete?: () => void;
   pegHitFrames?: Map<string, number[]>;
@@ -145,7 +146,6 @@ interface OptimizedBallRendererProps {
   slots?: Array<{ x: number; width: number }>;
   slotHighlightColor?: string;
   bucketZoneY?: number;
-  getCurrentTrajectoryPoint?: () => BallPosition | null;
 }
 
 export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
@@ -155,6 +155,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
   frameStore,
   getBallPosition,
   trajectoryCache,
+  trajectory,
   trajectoryLength,
   onLandingComplete,
   pegHitFrames,
@@ -163,7 +164,6 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
   slots,
   slotHighlightColor,
   bucketZoneY,
-  getCurrentTrajectoryPoint,
 }: OptimizedBallRendererProps) {
   const { theme } = useTheme();
   const { performance } = useAppConfig();
@@ -191,6 +191,10 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
 
   // Slot highlight tracking - keeps track of currently highlighted slot
   const activeSlotRef = useRef<number | null>(null);
+
+  // Slot collision tracking - keeps track of last frame for wall/floor impacts
+  const lastSlotWallHitFrameRef = useRef<Map<number, number>>(new Map());
+  const lastSlotFloorHitFrameRef = useRef<Map<number, number>>(new Map());
 
   /**
    * GETTER PATTERN EXPLANATION (L74-88):
@@ -320,10 +324,11 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
       // TIMING FIX: Trigger effects 1 frame early to synchronize with visual ball position
       // The trajectory stores POST-BOUNCE positions, but collisions happen earlier in the frame.
       // By looking ahead, we trigger effects when the ball VISUALLY appears to hit the peg.
-      if (pegHitFrames) {
+      if (pegHitFrames && trajectory) {
         // Look-ahead: Check for collisions 1 frame in the future
         const COLLISION_LOOKAHEAD = 1;
         const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
+        const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-collisions below this are inaudible
 
         pegHitFrames.forEach((hitFrames, pegId) => {
           const lastChecked = lastCheckedPegFrameRef.current.get(pegId) ?? -1;
@@ -332,25 +337,39 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           const newHits = hitFrames.filter(hitFrame => hitFrame > lastChecked && hitFrame <= lookAheadFrame);
 
           if (newHits.length > 0) {
+            // Process ONLY the earliest new hit (prevents sound spam from multiple consecutive collision frames)
+            const collisionFrame = Math.min(...newHits);
+
+            // Update last checked frame FIRST to prevent processing same hit multiple times
+            lastCheckedPegFrameRef.current.set(pegId, collisionFrame);
+
             // Peg will be hit! Trigger flash imperatively via driver
             driver.updatePegFlash(pegId, true);
 
-            // Play peg hit sound with throttling (prevents audio overlap during rapid collisions)
-            if (sfxController) {
-              sfxController.play('ball-peg-hit', { throttle: true });
-            }
+            // Calculate impact speed from trajectory at the collision frame
+            // Only play sound if impact is audible (prevents micro-collision spam during slow movements)
+            const collisionPoint = trajectory[collisionFrame];
 
-            // Update last checked frame for this peg to the earliest hit in this window
-            lastCheckedPegFrameRef.current.set(pegId, Math.min(...newHits));
+            if (collisionPoint && sfxController) {
+              const vx = collisionPoint.vx ?? 0;
+              const vy = collisionPoint.vy ?? 0;
+              const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+              // Play sound ONCE for this collision if velocity is sufficient
+              if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+                sfxController.play('ball-peg-hit', { throttle: true });
+              }
+            }
           }
         });
       }
 
       // COLLISION DETECTION: Wall flashes (frame-drop-safe with look-ahead)
       // TIMING FIX: Same look-ahead as peg collisions for consistent timing
-      if (wallHitFrames) {
+      if (wallHitFrames && trajectory) {
         const COLLISION_LOOKAHEAD = 1;
         const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
+        const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-collisions below this are inaudible
 
         // Check left wall
         const lastCheckedLeft = lastCheckedWallFrameRef.current.left;
@@ -361,9 +380,23 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         if (newLeftHits.length > 0) {
           // Left wall will be hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('left', true, position.y);
-          // NOTE: Screen shake removed - walls now use directional bounce animation
+
+          // Calculate impact speed and play sound only if audible
+          const collisionFrame = Math.min(...newLeftHits);
+          const collisionPoint = trajectory[collisionFrame];
+
+          if (collisionPoint && sfxController) {
+            const vx = collisionPoint.vx ?? 0;
+            const vy = collisionPoint.vy ?? 0;
+            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+            if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-wall-hit', { throttle: false });
+            }
+          }
+
           // Update last checked frame to the earliest hit in this window
-          lastCheckedWallFrameRef.current.left = Math.min(...newLeftHits);
+          lastCheckedWallFrameRef.current.left = collisionFrame;
         }
 
         // Check right wall
@@ -375,9 +408,23 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         if (newRightHits.length > 0) {
           // Right wall will be hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('right', true, position.y);
-          // NOTE: Screen shake removed - walls now use directional bounce animation
+
+          // Calculate impact speed and play sound only if audible
+          const collisionFrame = Math.min(...newRightHits);
+          const collisionPoint = trajectory[collisionFrame];
+
+          if (collisionPoint && sfxController) {
+            const vx = collisionPoint.vx ?? 0;
+            const vy = collisionPoint.vy ?? 0;
+            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+            if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-wall-hit', { throttle: false });
+            }
+          }
+
           // Update last checked frame to the earliest hit in this window
-          lastCheckedWallFrameRef.current.right = Math.min(...newRightHits);
+          lastCheckedWallFrameRef.current.right = collisionFrame;
         }
       }
 
@@ -415,19 +462,90 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         }
 
         // Update collision effects ONLY when in bucket zone
-        if (newActiveSlot !== null && bucketZoneY !== undefined && position.y >= bucketZoneY && getCurrentTrajectoryPoint) {
-          const trajectoryPoint = getCurrentTrajectoryPoint();
-          if (trajectoryPoint) {
-            // Access bucketWallHit and bucketFloorHit from trajectory point
-            const wallImpact = (trajectoryPoint as unknown as { bucketWallHit?: 'left' | 'right' }).bucketWallHit || null;
-            const floorImpact = (trajectoryPoint as unknown as { bucketFloorHit?: boolean }).bucketFloorHit || false;
+        // Check BOTH current frame AND look-ahead frame to catch all collisions
+        // Look-ahead helps with timing, but checking current frame prevents missing first hit
+        if (newActiveSlot !== null && bucketZoneY !== undefined && position.y >= bucketZoneY && trajectory) {
+          const COLLISION_LOOKAHEAD = 1;
+          const lookAheadFrame = Math.min(currentFrame + COLLISION_LOOKAHEAD, (trajectoryLength ?? trajectory.length) - 1);
 
-            // Calculate impact speed for realistic animation intensity
-            const vx = trajectoryPoint.vx ?? 0;
-            const vy = trajectoryPoint.vy ?? 0;
-            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+          // Check both current and look-ahead frames for collisions
+          const currentPoint = trajectory[currentFrame];
+          const lookAheadPoint = trajectory[lookAheadFrame];
 
-            driver.updateSlotCollision(newActiveSlot, wallImpact, floorImpact, impactSpeed);
+          // Combine collision data from both frames (current takes priority for immediate impacts)
+          let wallImpact: 'left' | 'right' | null = null;
+          let floorImpact = false;
+          let impactSpeed = 0;
+          let wallHitFrame = -1;
+          let floorHitFrame = -1;
+
+          // Check current frame first (immediate collision)
+          if (currentPoint) {
+            if (currentPoint.bucketWallHit) {
+              wallImpact = currentPoint.bucketWallHit;
+              wallHitFrame = currentFrame;
+            }
+            if (currentPoint.bucketFloorHit) {
+              floorImpact = true;
+              floorHitFrame = currentFrame;
+            }
+
+            const vx = currentPoint.vx ?? 0;
+            const vy = currentPoint.vy ?? 0;
+            impactSpeed = Math.sqrt(vx * vx + vy * vy);
+          }
+
+          // Check look-ahead frame for upcoming collisions (if current frame had no collision)
+          if (lookAheadPoint && !wallImpact && !floorImpact) {
+            if (lookAheadPoint.bucketWallHit) {
+              wallImpact = lookAheadPoint.bucketWallHit;
+              wallHitFrame = lookAheadFrame;
+            }
+            if (lookAheadPoint.bucketFloorHit) {
+              floorImpact = true;
+              floorHitFrame = lookAheadFrame;
+            }
+
+            const vx = lookAheadPoint.vx ?? 0;
+            const vy = lookAheadPoint.vy ?? 0;
+            impactSpeed = Math.sqrt(vx * vx + vy * vy);
+          }
+
+          // Always update visual collision effects
+          driver.updateSlotCollision(newActiveSlot, wallImpact, floorImpact, impactSpeed);
+
+          // Play wall hit sound ONLY if this is a NEW collision (frame-drop-safe)
+          if (wallImpact && wallHitFrame >= 0 && sfxController) {
+            const lastWallHitFrame = lastSlotWallHitFrameRef.current.get(newActiveSlot) ?? -1;
+
+            // Only play if this collision occurs after the last one we handled
+            // AND the impact has sufficient velocity to be audible (prevents micro-bounce spam)
+            const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-bounces below this are inaudible
+
+            if (wallHitFrame > lastWallHitFrame && impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-slot-hit', { throttle: false });
+              lastSlotWallHitFrameRef.current.set(newActiveSlot, wallHitFrame);
+            } else if (wallHitFrame > lastWallHitFrame) {
+              // Still update last frame even if we don't play sound (prevents queuing up silent impacts)
+              lastSlotWallHitFrameRef.current.set(newActiveSlot, wallHitFrame);
+            }
+          }
+
+          // Play floor hit sound ONLY if this is a NEW collision (frame-drop-safe)
+          if (floorImpact && floorHitFrame >= 0 && sfxController) {
+            const lastFloorHitFrame = lastSlotFloorHitFrameRef.current.get(newActiveSlot) ?? -1;
+
+            // Only play if this collision occurs after the last one we handled
+            // AND the impact has sufficient velocity to be audible (prevents micro-bounce spam)
+            const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-bounces below this are inaudible
+
+            if (floorHitFrame > lastFloorHitFrame && impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-slot-hit', { throttle: false });
+              lastSlotFloorHitFrameRef.current.set(newActiveSlot, floorHitFrame);
+            } else if (floorHitFrame > lastFloorHitFrame) {
+              // Still update last frame even if we don't play sound (prevents queuing up silent impacts)
+              lastSlotFloorHitFrameRef.current.set(newActiveSlot, floorHitFrame);
+            }
           }
         }
       }
@@ -450,8 +568,10 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
       lastCheckedPegFrameRef.current.clear();
       lastCheckedWallFrameRef.current = { left: -1, right: -1 };
       activeSlotRef.current = null;
+      lastSlotWallHitFrameRef.current.clear();
+      lastSlotFloorHitFrameRef.current.clear();
     };
-  }, [ballState, frameStore, getBallPosition, trajectoryCache, trajectoryLength, onLandingComplete, showTrail, driver, performance, pegHitFrames, wallHitFrames, currentFrameRef, slots, slotHighlightColor, bucketZoneY, getCurrentTrajectoryPoint]);
+  }, [ballState, frameStore, getBallPosition, trajectoryCache, trajectory, trajectoryLength, onLandingComplete, showTrail, driver, performance, pegHitFrames, wallHitFrames, currentFrameRef, slots, slotHighlightColor, bucketZoneY]);
 
   // Don't render anything during position selection
   if (isSelectingPosition) {

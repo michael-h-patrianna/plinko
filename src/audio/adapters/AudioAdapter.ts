@@ -46,9 +46,34 @@ export interface AudioAdapter {
   setMusicVolume(id: string, volume: number): void;
 
   /**
+   * Fade music volume from current to target over specified duration.
+   * @param id - Track identifier
+   * @param targetVolume - Target volume level (0-1)
+   * @param durationMs - Fade duration in milliseconds
+   */
+  fadeMusicVolume(id: string, targetVolume: number, durationMs: number): void;
+
+  /**
    * Check if a music track is currently playing.
    */
   isMusicPlaying(id: string): boolean;
+
+  /**
+   * Get the current playback position in seconds.
+   */
+  getMusicSeek(id: string): number;
+
+  /**
+   * Get the duration of a music track in seconds.
+   */
+  getMusicDuration(id: string): number;
+
+  /**
+   * Schedule a callback when the current loop iteration ends.
+   * If more than maxWaitMs until loop end, transition immediately instead.
+   * Returns a cleanup function to cancel the scheduled callback.
+   */
+  onMusicLoopEnd(id: string, callback: () => void, maxWaitMs?: number): () => void;
 
   /**
    * Load a sound effect.

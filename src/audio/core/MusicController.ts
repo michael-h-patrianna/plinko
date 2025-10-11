@@ -102,10 +102,83 @@ export class MusicController {
   }
 
   /**
+   * Fade a layer's volume from current to target over specified duration.
+   */
+  fadeLayerVolume(id: MusicTrackId, targetVolume: number, durationMs: number): void {
+    const layer = this.layers.get(id);
+    if (!layer || !layer.isPlaying) {
+      return;
+    }
+
+    // Update stored volume
+    layer.volume = Math.max(0, Math.min(1, targetVolume));
+
+    // Calculate effective target volume
+    const effectiveVolume = this.calculateEffectiveVolume(layer.volume);
+
+    // Fade at adapter level
+    this.adapter.fadeMusicVolume(id, effectiveVolume, durationMs);
+  }
+
+  /**
    * Check if a layer is currently playing.
    */
   isLayerPlaying(id: MusicTrackId): boolean {
     return this.layers.get(id)?.isPlaying ?? false;
+  }
+
+  /**
+   * Transition from one layer to another at the end of the current loop.
+   * This ensures rhythmic continuity by switching at loop boundaries.
+   * Returns a cleanup function to cancel the transition if needed.
+   */
+  transitionAtLoopBoundary(
+    fromId: MusicTrackId,
+    toId: MusicTrackId,
+    options?: {
+      fadeOutFrom?: number;
+      fadeInTo?: number;
+      volumeTo?: number;
+    }
+  ): () => void {
+    const fromLayer = this.layers.get(fromId);
+    const toLayer = this.layers.get(toId);
+
+    if (!fromLayer || !fromLayer.isPlaying) {
+      console.warn(`Source layer "${fromId}" is not playing`);
+      return () => {};
+    }
+
+    if (!toLayer) {
+      console.warn(`Target layer "${toId}" not loaded`);
+      return () => {};
+    }
+
+    // Schedule transition at loop end
+    const cleanup = this.adapter.onMusicLoopEnd(fromId, () => {
+      console.log(`Loop boundary reached - transitioning from ${fromId} to ${toId}`);
+
+      // Stop the from layer with optional fade
+      if (options?.fadeOutFrom) {
+        this.stopLayer(fromId, options.fadeOutFrom);
+      } else {
+        this.stopLayer(fromId, 0); // Instant stop at loop boundary
+      }
+
+      // Set target volume if specified
+      if (options?.volumeTo !== undefined) {
+        toLayer.volume = options.volumeTo;
+      }
+
+      // Start the to layer with optional fade
+      if (options?.fadeInTo) {
+        this.playLayer(toId, options.fadeInTo);
+      } else {
+        this.playLayer(toId, 0); // Instant start
+      }
+    });
+
+    return cleanup;
   }
 
   /**

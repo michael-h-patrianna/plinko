@@ -55,6 +55,8 @@ export interface DevToolsLoaderProps {
   isStartScreen?: boolean;
   showWinner?: boolean;
   onShowWinnerChange?: (show: boolean) => void;
+  musicEnabled?: boolean;
+  onMusicEnabledChange?: (enabled: boolean) => void;
 }
 
 /**
@@ -62,13 +64,17 @@ export interface DevToolsLoaderProps {
  * Uses lazy loading to ensure dev tools are in a separate chunk.
  */
 export function DevToolsLoader(props: DevToolsLoaderProps) {
-  const { gameState, isStartScreen, showWinner: showWinnerProp, onShowWinnerChange, ...menuProps } = props;
+  const { gameState, isStartScreen, showWinner: showWinnerProp, onShowWinnerChange, musicEnabled: musicEnabledProp, onMusicEnabledChange, ...menuProps } = props;
   const { featureFlags } = useAppConfig();
 
   // Use local state if not controlled by parent
   const [localShowWinner, setLocalShowWinner] = useState(false);
   const showWinner = showWinnerProp ?? localShowWinner;
   const handleShowWinnerChange = onShowWinnerChange ?? setLocalShowWinner;
+
+  const [localMusicEnabled, setLocalMusicEnabled] = useState(false);
+  const musicEnabled = musicEnabledProp ?? localMusicEnabled;
+  const handleMusicEnabledChange = onMusicEnabledChange ?? setLocalMusicEnabled;
 
   // Don't render anything if dev tools are disabled
   if (!featureFlags.devToolsEnabled) {
@@ -114,6 +120,8 @@ export function DevToolsLoader(props: DevToolsLoaderProps) {
         {...menuProps}
         showWinner={showWinner}
         onShowWinnerChange={handleShowWinnerChange}
+        musicEnabled={musicEnabled}
+        onMusicEnabledChange={handleMusicEnabledChange}
       />
       {handleSelectWinner && isStartScreen && (
         <DevToolsStartScreenOverlay

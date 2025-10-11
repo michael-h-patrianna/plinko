@@ -15,23 +15,20 @@ export function createDefaultConfig(overrides?: Partial<SoundEngineConfig>): Sou
     preloadAssets: true,
     preloadCriticalOnly: true,
     criticalSounds: [
+      'ball-peg-hit',
+      'ball-slot-hit',
+      'ball-wall-hit',
+      'ui-button-press',
       'countdown-3',
       'countdown-2',
       'countdown-1',
       'countdown-go',
-      'ball-peg-hit',
-      'ball-peg-hit-low',
-      'ball-peg-hit-high',
-      'land-impact-win',
-      'land-impact-nowin',
-      'ui-button-tap',
-      'ui-button-primary',
     ] as SoundEffectId[],
 
     // Volume defaults (0-1 range)
     defaultMasterVolume: 1.0,
     defaultMusicVolume: 0.7,
-    defaultSFXVolume: 1.0,
+    defaultSFXVolume: 0.66, // 66% volume for SFX
 
     // Performance
     maxSimultaneousSounds: 32,

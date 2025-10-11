@@ -11,7 +11,17 @@ import type { SoundEffectId } from '../types/SoundEffectId';
 
 // Sound file imports
 import pegHitSound from '../../assets/sounds/sfx/ball/peg-hit.mp3';
+import slotHitSound from '../../assets/sounds/sfx/ball/slot-hit.mp3';
+import wallHitSound from '../../assets/sounds/sfx/ball/wall-hit.mp3';
 import buttonPressSound from '../../assets/sounds/sfx/ui/button-press.mp3';
+import countdown3Sound from '../../assets/sounds/sfx/countdown/countdown-3.mp3';
+import countdown2Sound from '../../assets/sounds/sfx/countdown/countdown-2.mp3';
+import countdown1Sound from '../../assets/sounds/sfx/countdown/countdown-1.mp3';
+import countdownGoSound from '../../assets/sounds/sfx/countdown/countdown-go.mp3';
+
+// Music file imports
+import startLoopMusic from '../../assets/sounds/music/start-loop.mp3';
+import gameLoopMusic from '../../assets/sounds/music/game-loop.mp3';
 
 /**
  * Sound file registry
@@ -26,10 +36,45 @@ const SOUND_FILES: Record<string, { id: SoundEffectId; url: string }> = {
     id: 'ball-peg-hit',
     url: pegHitSound,
   },
+  wallHit: {
+    id: 'ball-wall-hit',
+    url: wallHitSound,
+  },
+  slotHit: {
+    id: 'ball-slot-hit',
+    url: slotHitSound,
+  },
+  countdown3: {
+    id: 'countdown-3',
+    url: countdown3Sound,
+  },
+  countdown2: {
+    id: 'countdown-2',
+    url: countdown2Sound,
+  },
+  countdown1: {
+    id: 'countdown-1',
+    url: countdown1Sound,
+  },
+  countdownGo: {
+    id: 'countdown-go',
+    url: countdownGoSound,
+  },
 };
 
-const MUSIC_FILES: Record<string, { id: MusicTrackId; url: string; loop?: boolean }> = {
-  // Add music files here
+const MUSIC_FILES: Record<string, { id: MusicTrackId; url: string; loop?: boolean; volume?: number }> = {
+  startLoop: {
+    id: 'music-start-loop',
+    url: startLoopMusic,
+    loop: true,
+    volume: 0.5, // Play at 50% volume
+  },
+  gameLoop: {
+    id: 'music-game-loop',
+    url: gameLoopMusic,
+    loop: true,
+    volume: 0.36, // Play at 36% volume during gameplay
+  },
 };
 
 interface UseAudioPreloaderOptions {
@@ -84,15 +129,19 @@ export function useAudioPreloader({
       }
 
       // Configure throttle delays for rapid-fire sounds
-      // Peg hit: Throttle to max once every 50ms (prevents audio overlap during rapid collisions)
       sfxController.setThrottleDelay('ball-peg-hit', 50);
+      sfxController.setThrottleDelay('ball-wall-hit', 50);
+      sfxController.setThrottleDelay('ball-slot-hit', 50);
 
       // Load music tracks
       for (const [key, music] of Object.entries(MUSIC_FILES)) {
         try {
+          console.log(`Loading music track: ${key} (${music.id}) from ${music.url}`);
           await musicController.loadTrack(music.id, music.url, {
             loop: music.loop ?? true,
+            volume: music.volume,
           });
+          console.log(`Successfully loaded music track: ${key} (${music.id})`);
         } catch (error) {
           console.error(`Failed to preload music ${key}:`, error);
           loadErrors.push(

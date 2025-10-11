@@ -5,4 +5,6 @@ export type MusicTrackId =
   | 'music-base' // Base layer loop
   | 'music-tension' // Tension layer
   | 'music-win-stinger' // Win celebration stinger
-  | 'music-nowin-stinger'; // No-win acknowledgment stinger
+  | 'music-nowin-stinger' // No-win acknowledgment stinger
+  | 'music-start-loop' // Start screen loop
+  | 'music-game-loop'; // Game loop (plays during gameplay)

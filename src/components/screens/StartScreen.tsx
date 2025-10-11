@@ -14,6 +14,7 @@ import { getPrizeThemeColor, getPrizeThemeColorWithOpacity } from '@theme/prizeC
 import { abbreviateNumber } from '@utils/formatNumber';
 import { ThemedButton } from '../controls/ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { useAudio } from '../../audio/context/AudioProvider';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -21,12 +22,26 @@ interface StartScreenProps {
   disabled: boolean;
   winningIndex?: number;
   showWinner?: boolean;
+  musicEnabled?: boolean;
 }
 
-export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinner = false }: StartScreenProps) {
+export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinner = false, musicEnabled = false }: StartScreenProps) {
   const { AnimatedDiv, AnimatedH1, AnimatePresence } = useAnimation();
   const [expandedPrize, setExpandedPrize] = useState<string | null>(null);
   const { theme } = useTheme();
+  const { musicController } = useAudio();
+
+  // Start music when user clicks "Drop Ball" button
+  const handleStartWithMusic = () => {
+    // Only play music if enabled
+    if (musicEnabled && musicController && musicController.isLoaded('music-start-loop')) {
+      console.log('Starting transition music with fade-in');
+      musicController.playLayer('music-start-loop', 1000);
+    }
+
+    // Call the original onStart handler
+    onStart();
+  };
 
   // Determine if title should use gradient text or solid color
   const titleGradient = theme.gradients.titleGradient || theme.gradients.buttonPrimary;
@@ -251,10 +266,10 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
 
       {/* Play button */}
       <ThemedButton
-        onClick={onStart}
+        onClick={handleStartWithMusic}
         disabled={disabled}
         entranceAnimation="hero"
-  delay={0.24}
+        delay={0.24}
         testId="drop-ball-button"
         className="min-w-[120px] h-14 text-lg"
       >

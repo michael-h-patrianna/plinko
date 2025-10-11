@@ -108,6 +108,8 @@ describe('WebAudioAdapter - Music', () => {
     fade: ReturnType<typeof vi.fn>;
     playing: ReturnType<typeof vi.fn>;
     unload: ReturnType<typeof vi.fn>;
+    seek: ReturnType<typeof vi.fn>;
+    duration: ReturnType<typeof vi.fn>;
   };
   let onloadCallback: (() => void) | undefined;
 
@@ -123,6 +125,8 @@ describe('WebAudioAdapter - Music', () => {
       fade: vi.fn(),
       playing: vi.fn().mockReturnValue(false),
       unload: vi.fn(),
+      seek: vi.fn().mockReturnValue(5.0), // 5 seconds into playback
+      duration: vi.fn().mockReturnValue(10.0), // 10 second track
     };
 
     // Setup Howl mock to capture onload and return mockHowl
@@ -176,7 +180,8 @@ describe('WebAudioAdapter - Music', () => {
 
     expect(mockHowlInstance.volume).toHaveBeenCalledWith(0);
     expect(mockHowlInstance.play).toHaveBeenCalled();
-    expect(mockHowlInstance.fade).toHaveBeenCalledWith(0, 1.0, 1000);
+    // Should fade to the pre-set volume (0.8 in mock), not hardcoded 1.0
+    expect(mockHowlInstance.fade).toHaveBeenCalledWith(0, 0.8, 1000);
   });
 
   it('should stop music with fade-out', async () => {
@@ -206,6 +211,22 @@ describe('WebAudioAdapter - Music', () => {
     expect(mockHowlInstance.volume).toHaveBeenCalledWith(0.5);
   });
 
+  it('should fade music volume', async () => {
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    adapter.fadeMusicVolume('test', 0.5, 1000);
+
+    expect(mockHowlInstance.fade).toHaveBeenCalledWith(0.8, 0.5, 1000);
+  });
+
+  it('should handle fading unloaded track', () => {
+    adapter.fadeMusicVolume('not-loaded', 0.5, 1000);
+
+    expect(mockHowlInstance.fade).not.toHaveBeenCalled();
+  });
+
   it('should report playing state', async () => {
     mockHowlInstance.playing.mockReturnValue(true);
 
@@ -220,6 +241,80 @@ describe('WebAudioAdapter - Music', () => {
     adapter.playMusic('not-loaded');
 
     expect(mockHowlInstance.play).not.toHaveBeenCalled();
+  });
+
+  it('should get music seek position', async () => {
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    const seek = adapter.getMusicSeek('test');
+
+    expect(seek).toBe(5.0);
+  });
+
+  it('should get music duration', async () => {
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    const duration = adapter.getMusicDuration('test');
+
+    expect(duration).toBe(10.0);
+  });
+
+  it('should schedule callback at loop end', async () => {
+    vi.useFakeTimers();
+
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    mockHowlInstance.playing.mockReturnValue(true);
+
+    const callback = vi.fn();
+    adapter.onMusicLoopEnd('test', callback);
+
+    // Should schedule for 5 seconds (10 - 5 = 5 seconds remaining)
+    expect(callback).not.toHaveBeenCalled();
+
+    vi.advanceTimersByTime(5000);
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    vi.useRealTimers();
+  });
+
+  it('should allow canceling loop end callback', async () => {
+    vi.useFakeTimers();
+
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    mockHowlInstance.playing.mockReturnValue(true);
+
+    const callback = vi.fn();
+    const cleanup = adapter.onMusicLoopEnd('test', callback);
+
+    cleanup();
+
+    vi.advanceTimersByTime(5000);
+    expect(callback).not.toHaveBeenCalled();
+
+    vi.useRealTimers();
+  });
+
+  it('should handle loop end for non-playing track', async () => {
+    const loadPromise = adapter.loadMusic('test', '/test.mp3', false);
+    if (onloadCallback) onloadCallback();
+    await loadPromise;
+
+    mockHowlInstance.playing.mockReturnValue(false);
+
+    const callback = vi.fn();
+    const cleanup = adapter.onMusicLoopEnd('test', callback);
+
+    expect(typeof cleanup).toBe('function');
   });
 });
 

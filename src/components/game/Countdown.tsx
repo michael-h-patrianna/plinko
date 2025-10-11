@@ -18,6 +18,7 @@ import {
   spacingTokens,
 } from '@theme/tokens';
 import { GradientText } from '../ui/GradientText';
+import { useAudio } from '../../audio/context/AudioProvider';
 
 interface CountdownProps {
   onComplete: () => void;
@@ -41,6 +42,23 @@ export function Countdown({ onComplete, boardHeight = sizeTokens.board.height, p
 
   const [count, setCount] = useState(3);
   const { theme } = useTheme();
+  const { sfxController } = useAudio();
+
+  // Play countdown sound effect when count changes
+  useEffect(() => {
+    if (!sfxController) return;
+
+    // Play appropriate sound for current count
+    if (count === 3) {
+      sfxController.play('countdown-3');
+    } else if (count === 2) {
+      sfxController.play('countdown-2');
+    } else if (count === 1) {
+      sfxController.play('countdown-1');
+    } else if (count === 0) {
+      sfxController.play('countdown-go');
+    }
+  }, [count, sfxController]);
 
   useEffect(() => {
     if (count === 0) {

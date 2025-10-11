@@ -33,19 +33,19 @@ describe('SFXController', () => {
   });
 
   it('should load sound effect', async () => {
-    await controller.loadSound('ui-button-tap', '/audio/tap.mp3');
+    await controller.loadSound('ui-button-press', '/audio/tap.mp3');
 
-    expect(mockAdapter.loadSFX).toHaveBeenCalledWith('ui-button-tap', '/audio/tap.mp3');
-    expect(controller.isLoaded('ui-button-tap')).toBe(true);
+    expect(mockAdapter.loadSFX).toHaveBeenCalledWith('ui-button-press', '/audio/tap.mp3');
+    expect(controller.isLoaded('ui-button-press')).toBe(true);
   });
 
   it('should play loaded sound', async () => {
-    await controller.loadSound('ui-button-tap', '/audio/tap.mp3');
+    await controller.loadSound('ui-button-press', '/audio/tap.mp3');
 
-    const playbackId = controller.play('ui-button-tap');
+    const playbackId = controller.play('ui-button-press');
 
     expect(mockAdapter.playSFX).toHaveBeenCalledWith(
-      'ui-button-tap',
+      'ui-button-press',
       expect.objectContaining({ volume: 1.0 }) // Default volumes
     );
     expect(playbackId).toBe(123);
@@ -54,12 +54,12 @@ describe('SFXController', () => {
   it('should apply volume controller SFX volume', async () => {
     volumeController.setMasterVolume(0.8);
     volumeController.setSFXVolume(0.5);
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3');
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3');
 
-    controller.play('ui-button-tap' as SoundEffectId);
+    controller.play('ui-button-press' as SoundEffectId);
 
     // Effective volume = 0.8 * 0.5 = 0.4
-    expect(mockAdapter.playSFX).toHaveBeenCalledWith('ui-button-tap', expect.any(Object));
+    expect(mockAdapter.playSFX).toHaveBeenCalledWith('ui-button-press', expect.any(Object));
     const callArgs = vi.mocked(mockAdapter.playSFX).mock.calls[0];
     expect(callArgs).toBeDefined();
     expect(callArgs![1]?.volume).toBeCloseTo(0.4, 5);
@@ -68,12 +68,12 @@ describe('SFXController', () => {
   it('should apply custom volume on top of controller volume', async () => {
     volumeController.setMasterVolume(0.5);
     volumeController.setSFXVolume(0.8);
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3');
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3');
 
-    controller.play('ui-button-tap' as SoundEffectId, { volume: 0.5 });
+    controller.play('ui-button-press' as SoundEffectId, { volume: 0.5 });
 
     // Effective volume = 0.5 * 0.8 * 0.5 = 0.2
-    expect(mockAdapter.playSFX).toHaveBeenCalledWith('ui-button-tap', expect.any(Object));
+    expect(mockAdapter.playSFX).toHaveBeenCalledWith('ui-button-press', expect.any(Object));
     const callArgs = vi.mocked(mockAdapter.playSFX).mock.calls[0];
     expect(callArgs).toBeDefined();
     expect(callArgs![1]?.volume).toBeCloseTo(0.2, 5);
@@ -85,41 +85,41 @@ describe('SFXController', () => {
       .mockReturnValueOnce(2)
       .mockReturnValueOnce(3);
 
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3');
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3');
 
-    controller.play('ui-button-tap' as SoundEffectId);
-    controller.play('ui-button-tap' as SoundEffectId);
-    controller.play('ui-button-tap' as SoundEffectId);
+    controller.play('ui-button-press' as SoundEffectId);
+    controller.play('ui-button-press' as SoundEffectId);
+    controller.play('ui-button-press' as SoundEffectId);
 
-    expect(controller.getActiveCount('ui-button-tap' as SoundEffectId)).toBe(3);
+    expect(controller.getActiveCount('ui-button-press' as SoundEffectId)).toBe(3);
   });
 
   it('should stop specific playback instance', async () => {
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3');
-    const playbackId = controller.play('ui-button-tap' as SoundEffectId);
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3');
+    const playbackId = controller.play('ui-button-press' as SoundEffectId);
 
     controller.stop(playbackId);
 
     expect(mockAdapter.stopSFX).toHaveBeenCalledWith(123);
-    expect(controller.getActiveCount('ui-button-tap' as SoundEffectId)).toBe(0);
+    expect(controller.getActiveCount('ui-button-press' as SoundEffectId)).toBe(0);
   });
 
   it('should stop all instances of a sound', async () => {
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3');
-    controller.play('ui-button-tap' as SoundEffectId);
-    controller.play('ui-button-tap' as SoundEffectId);
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3');
+    controller.play('ui-button-press' as SoundEffectId);
+    controller.play('ui-button-press' as SoundEffectId);
 
-    controller.stopAll('ui-button-tap' as SoundEffectId);
+    controller.stopAll('ui-button-press' as SoundEffectId);
 
-    expect(mockAdapter.stopAllSFX).toHaveBeenCalledWith('ui-button-tap');
-    expect(controller.getActiveCount('ui-button-tap' as SoundEffectId)).toBe(0);
+    expect(mockAdapter.stopAllSFX).toHaveBeenCalledWith('ui-button-press');
+    expect(controller.getActiveCount('ui-button-press' as SoundEffectId)).toBe(0);
   });
 
   it('should stop all sounds when no ID provided', async () => {
-    await controller.loadSound('ui-button-tap' as SoundEffectId, '/test1.mp3');
-    await controller.loadSound('ui-button-press' as SoundEffectId, '/test2.mp3');
-    controller.play('ui-button-tap' as SoundEffectId);
+    await controller.loadSound('ui-button-press' as SoundEffectId, '/test1.mp3');
+    await controller.loadSound('ball-peg-hit' as SoundEffectId, '/test2.mp3');
     controller.play('ui-button-press' as SoundEffectId);
+    controller.play('ball-peg-hit' as SoundEffectId);
 
     controller.stopAll();
 
@@ -127,7 +127,7 @@ describe('SFXController', () => {
   });
 
   it('should handle playing unloaded sound', () => {
-    const playbackId = controller.play('ui-button-tap' as SoundEffectId);
+    const playbackId = controller.play('ui-button-press' as SoundEffectId);
 
     expect(playbackId).toBe(-1);
     expect(mockAdapter.playSFX).not.toHaveBeenCalled();
@@ -137,10 +137,10 @@ describe('SFXController', () => {
     vi.mocked(mockAdapter.loadSFX).mockRejectedValue(new Error('Load failed'));
 
     await expect(
-      controller.loadSound('ui-button-tap' as SoundEffectId, '/test.mp3')
+      controller.loadSound('ui-button-press' as SoundEffectId, '/test.mp3')
     ).rejects.toThrow('Load failed');
 
-    expect(controller.isLoaded('ui-button-tap' as SoundEffectId)).toBe(false);
+    expect(controller.isLoaded('ui-button-press' as SoundEffectId)).toBe(false);
   });
 });
 

@@ -4,33 +4,18 @@
  */
 export type SoundEffectId =
   // UI Sounds (9 sounds)
-  | 'ui-launch'
-  | 'ui-button-tap'
   | 'ui-button-press'
-  | 'ui-button-primary'
-  | 'ui-drop-position'
-  | 'ui-settings-open'
-  | 'ui-settings-close'
-  | 'ui-slider-drag'
-  | 'ui-toast'
 
-  // Countdown (6 sounds)
+  // Countdown
   | 'countdown-3'
   | 'countdown-2'
   | 'countdown-1'
   | 'countdown-go'
-  | 'countdown-ring'
-  | 'countdown-particles'
 
-  // Ball Physics (8 sounds)
-  | 'ball-drop'
-  | 'ball-trail'
+  // Ball Physics
   | 'ball-peg-hit'
-  | 'ball-peg-hit-low'
-  | 'ball-peg-hit-high'
-  | 'ball-peg-flash'
-  | 'ball-peg-ripple'
   | 'ball-wall-hit'
+  | 'ball-slot-hit'
 
   // Landing (4 sounds)
   | 'land-impact-win'

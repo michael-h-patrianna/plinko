@@ -36,7 +36,7 @@ describe('Audio Memory Management', () => {
   describe('SFXController cleanup', () => {
     it('clears all tracking maps when cleanup is called', () => {
       // Add some tracking data
-      const soundId = 'ui-button-tap' as const;
+      const soundId = 'ui-button-press' as const;
       sfxController.setSimultaneousLimit(soundId, 5);
       sfxController.createPool('test-pool', [soundId], {
         maxSimultaneous: 3,
@@ -122,7 +122,7 @@ describe('Audio Memory Management', () => {
       await adapter.initialize();
 
       // Create some state
-      const soundId = 'ui-button-tap' as const;
+      const soundId = 'ui-button-press' as const;
       sfxController.setSimultaneousLimit(soundId, 5);
 
       // Cleanup in reverse order (controllers first, then adapter)

@@ -35,6 +35,10 @@ interface DevToolsMenuProps {
   showWinner?: boolean;
   /** Callback when show winner toggle changes */
   onShowWinnerChange?: (show: boolean) => void;
+  /** Whether music is enabled */
+  musicEnabled?: boolean;
+  /** Callback when music toggle changes */
+  onMusicEnabledChange?: (enabled: boolean) => void;
 }
 
 const VIEWPORT_SIZES = [
@@ -67,6 +71,8 @@ export function DevToolsMenu({
   onPerformanceModeChange,
   showWinner = false,
   onShowWinnerChange,
+  musicEnabled = false,
+  onMusicEnabledChange,
 }: DevToolsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -275,6 +281,39 @@ export function DevToolsMenu({
                   </AnimatedButton>
                 ))}
               </div>
+            </div>
+
+            {/* Audio Section */}
+            <div className="p-2 border-b" style={{ borderColor: theme.colors.border.default }}>
+              <label className="block text-xs font-medium mb-1.5" style={{ color: theme.colors.text.secondary }}>
+                Audio
+              </label>
+              <AnimatedButton
+                onClick={() => onMusicEnabledChange?.(!musicEnabled)}
+                className={`
+                  px-2 py-1 rounded text-xs font-medium transition-all text-left w-full
+                  ${musicEnabled ? 'shadow-md' : 'hover:opacity-80'}
+                `}
+                style={{
+                  background:
+                    musicEnabled
+                      ? theme.gradients.buttonPrimary
+                      : theme.colors.surface.elevated,
+                  color:
+                    musicEnabled
+                      ? theme.colors.primary.contrast
+                      : theme.colors.text.primary,
+                  border: `1px solid ${
+                    musicEnabled
+                      ? theme.colors.primary.main
+                      : theme.colors.border.default
+                  }`,
+                }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Music {musicEnabled ? 'On' : 'Off'}
+              </AnimatedButton>
             </div>
 
             {/* Show Winner Section */}
