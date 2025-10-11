@@ -7,33 +7,61 @@ import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioProvider, useAudio } from '../../../audio/context/AudioProvider';
 
-const mockAdapter = {
-  initialize: vi.fn().mockResolvedValue(undefined),
-};
-
-const mockVolumeController = {
-  loadFromStorage: vi.fn(),
-};
-
-const mockSFXController = {};
-const mockMusicController = {};
-
 // Mock the audio adapter
-vi.mock('../../../audio/adapters/WebAudioAdapter', () => ({
-  WebAudioAdapter: vi.fn().mockImplementation(() => mockAdapter),
-}));
+vi.mock('../../../audio/adapters/WebAudioAdapter', () => {
+  const MockWebAudioAdapter = vi.fn();
+  MockWebAudioAdapter.prototype.initialize = vi.fn().mockResolvedValue(undefined);
+  MockWebAudioAdapter.prototype.isInitialized = vi.fn().mockReturnValue(true);
+  MockWebAudioAdapter.prototype.destroy = vi.fn();
+
+  return {
+    WebAudioAdapter: MockWebAudioAdapter,
+  };
+});
 
 // Mock the controllers
-vi.mock('../../../audio/core/VolumeController', () => ({
-  VolumeController: vi.fn().mockImplementation(() => mockVolumeController),
-}));
+vi.mock('../../../audio/core/VolumeController', () => {
+  const MockVolumeController = vi.fn();
+  MockVolumeController.prototype.loadFromStorage = vi.fn();
+  MockVolumeController.prototype.getEffectiveSFXVolume = vi.fn().mockReturnValue(1.0);
 
-vi.mock('../../../audio/core/SFXController', () => ({
-  SFXController: vi.fn().mockImplementation(() => mockSFXController),
-}));
+  return {
+    VolumeController: MockVolumeController,
+  };
+});
 
-vi.mock('../../../audio/core/MusicController', () => ({
-  MusicController: vi.fn().mockImplementation(() => mockMusicController),
+vi.mock('../../../audio/core/SFXController', () => {
+  const MockSFXController = vi.fn();
+  MockSFXController.prototype.setThrottleDelay = vi.fn();
+  MockSFXController.prototype.loadSound = vi.fn().mockResolvedValue(undefined);
+  MockSFXController.prototype.cleanup = vi.fn();
+  MockSFXController.prototype.stopAll = vi.fn();
+
+  return {
+    SFXController: MockSFXController,
+  };
+});
+
+vi.mock('../../../audio/core/MusicController', () => {
+  const MockMusicController = vi.fn();
+  MockMusicController.prototype.loadTrack = vi.fn().mockResolvedValue(undefined);
+  MockMusicController.prototype.cleanup = vi.fn();
+  MockMusicController.prototype.stopAllLayers = vi.fn();
+
+  return {
+    MusicController: MockMusicController,
+  };
+});
+
+// Mock the performance adapter
+vi.mock('../../../utils/platform/performance', () => ({
+  performanceAdapter: {
+    now: vi.fn().mockReturnValue(0),
+    mark: vi.fn(),
+    measure: vi.fn().mockReturnValue(0),
+    clearMarks: vi.fn(),
+    getMemoryInfo: vi.fn().mockReturnValue(null),
+  },
 }));
 
 // Test component to access context
@@ -54,7 +82,6 @@ function TestComponent() {
 describe('AudioProvider', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAdapter.initialize.mockResolvedValue(undefined);
   });
 
   afterEach(() => {

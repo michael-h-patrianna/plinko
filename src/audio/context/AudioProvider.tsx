@@ -4,6 +4,7 @@
  */
 
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { performanceAdapter } from '../../utils/platform/performance';
 import { WebAudioAdapter } from '../adapters/WebAudioAdapter';
 import { MusicController } from '../core/MusicController';
 import { SFXController } from '../core/SFXController';
@@ -37,6 +38,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
   const sfxControllerRef = useRef<SFXController | null>(null);
   const musicControllerRef = useRef<MusicController | null>(null);
   const volumeControllerRef = useRef<VolumeController | null>(null);
+  const adapterRef = useRef<WebAudioAdapter | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -47,17 +49,22 @@ export function AudioProvider({ children }: AudioProviderProps) {
         const adapter = new WebAudioAdapter();
         await adapter.initialize();
 
-        if (!mounted) return;
+        if (!mounted) {
+          // If unmounted during initialization, clean up immediately
+          adapter.destroy();
+          return;
+        }
 
         // Create volume controller and load user preferences
         const volumeController = new VolumeController();
         volumeController.loadFromStorage();
 
         // Create sound controllers
-        const sfxController = new SFXController(adapter, volumeController);
+        const sfxController = new SFXController(adapter, volumeController, performanceAdapter);
         const musicController = new MusicController(adapter, volumeController);
 
         // Store in refs
+        adapterRef.current = adapter;
         sfxControllerRef.current = sfxController;
         musicControllerRef.current = musicController;
         volumeControllerRef.current = volumeController;
@@ -74,6 +81,34 @@ export function AudioProvider({ children }: AudioProviderProps) {
 
     return () => {
       mounted = false;
+
+      // Clean up audio resources to prevent memory leaks
+      const sfxController = sfxControllerRef.current;
+      const musicController = musicControllerRef.current;
+      const adapter = adapterRef.current;
+
+      // Clean up controllers (stops sounds and clears tracking)
+      if (sfxController) {
+        sfxController.cleanup();
+      }
+
+      if (musicController) {
+        musicController.cleanup();
+      }
+
+      // Destroy adapter and unload all sounds
+      if (adapter) {
+        // Small delay to allow any final audio operations to complete
+        setTimeout(() => {
+          adapter.destroy();
+        }, 100);
+      }
+
+      // Clear refs
+      sfxControllerRef.current = null;
+      musicControllerRef.current = null;
+      volumeControllerRef.current = null;
+      adapterRef.current = null;
     };
   }, []);
 

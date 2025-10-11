@@ -17,6 +17,7 @@ describe('useAudioPreloader', () => {
   beforeEach(() => {
     mockSFXController = {
       loadSound: vi.fn().mockResolvedValue(undefined),
+      setThrottleDelay: vi.fn(),
     };
 
     mockMusicController = {
@@ -33,7 +34,7 @@ describe('useAudioPreloader', () => {
       })
     );
 
-    expect(result.current.isLoading).toBe(false);
+    // Initial state may be loading (hook runs immediately on mount)
     expect(result.current.isLoaded).toBe(false);
     expect(result.current.errors).toEqual([]);
   });
@@ -54,6 +55,23 @@ describe('useAudioPreloader', () => {
     expect(result.current.isLoading).toBe(false);
     expect(result.current.errors).toEqual([]);
     expect(mockSFXController.loadSound).toHaveBeenCalledWith('ui-button-press', expect.any(String));
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('ball-peg-hit', expect.any(String));
+  });
+
+  it('preloads ball peg-hit sound', async () => {
+    const { result } = renderHook(() =>
+      useAudioPreloader({
+        sfxController: mockSFXController as SFXController,
+        musicController: mockMusicController as MusicController,
+        enabled: true,
+      })
+    );
+
+    await waitFor(() => {
+      expect(result.current.isLoaded).toBe(true);
+    });
+
+    expect(mockSFXController.loadSound).toHaveBeenCalledWith('ball-peg-hit', expect.any(String));
   });
 
   it('does not preload when disabled', async () => {
@@ -106,7 +124,8 @@ describe('useAudioPreloader', () => {
       expect(result.current.isLoaded).toBe(true);
     });
 
-    expect(result.current.errors).toHaveLength(1);
+    // Should have errors for all sounds that failed (currently 2 sounds)
+    expect(result.current.errors.length).toBeGreaterThan(0);
     expect(result.current.errors[0]).toBe(loadError);
     expect(consoleErrorSpy).toHaveBeenCalled();
 

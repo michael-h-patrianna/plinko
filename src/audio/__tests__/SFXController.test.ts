@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { PerformanceAdapter } from '../../utils/platform/performance';
 import { AudioAdapter } from '../adapters/AudioAdapter';
 import { SFXController } from '../core/SFXController';
 import { VolumeController } from '../core/VolumeController';
@@ -9,6 +10,7 @@ describe('SFXController', () => {
   let controller: SFXController;
   let mockAdapter: AudioAdapter;
   let volumeController: VolumeController;
+  let mockPerformanceAdapter: PerformanceAdapter;
 
   beforeEach(() => {
     mockAdapter = {
@@ -18,8 +20,16 @@ describe('SFXController', () => {
       stopAllSFX: vi.fn(),
     } as unknown as AudioAdapter;
 
+    mockPerformanceAdapter = {
+      now: vi.fn().mockReturnValue(0),
+      mark: vi.fn(),
+      measure: vi.fn().mockReturnValue(0),
+      clearMarks: vi.fn(),
+      getMemoryInfo: vi.fn().mockReturnValue(null),
+    };
+
     volumeController = new VolumeController();
-    controller = new SFXController(mockAdapter, volumeController);
+    controller = new SFXController(mockAdapter, volumeController, mockPerformanceAdapter);
   });
 
   it('should load sound effect', async () => {
@@ -138,6 +148,7 @@ describe('SFXController - Pooling', () => {
   let controller: SFXController;
   let mockAdapter: AudioAdapter;
   let volumeController: VolumeController;
+  let mockPerformanceAdapter: PerformanceAdapter;
 
   beforeEach(() => {
     let playbackIdCounter = 1;
@@ -148,8 +159,16 @@ describe('SFXController - Pooling', () => {
       stopAllSFX: vi.fn(),
     } as unknown as AudioAdapter;
 
+    mockPerformanceAdapter = {
+      now: vi.fn().mockReturnValue(0),
+      mark: vi.fn(),
+      measure: vi.fn().mockReturnValue(0),
+      clearMarks: vi.fn(),
+      getMemoryInfo: vi.fn().mockReturnValue(null),
+    };
+
     volumeController = new VolumeController();
-    controller = new SFXController(mockAdapter, volumeController);
+    controller = new SFXController(mockAdapter, volumeController, mockPerformanceAdapter);
   });
 
   it('should create sound pool', async () => {
@@ -273,5 +292,106 @@ describe('SFXController - Pooling', () => {
   it('should handle playing from non-existent pool', () => {
     const playbackId = controller.playFromPool('non-existent');
     expect(playbackId).toBe(-1);
+  });
+
+  describe('Sound Throttling', () => {
+    let currentTime: number;
+
+    beforeEach(() => {
+      currentTime = 0;
+      vi.mocked(mockPerformanceAdapter.now).mockImplementation(() => currentTime);
+    });
+
+    it('should set and get throttle delay', () => {
+      controller.setThrottleDelay('test' as SoundEffectId, 50);
+      expect(controller.getThrottleDelay('test' as SoundEffectId)).toBe(50);
+    });
+
+    it('should return undefined for sounds without throttle', () => {
+      expect(controller.getThrottleDelay('no-throttle' as SoundEffectId)).toBeUndefined();
+    });
+
+    it('should throttle rapid plays when throttle option is enabled', async () => {
+      await controller.loadSound('test' as SoundEffectId, '/test.mp3');
+      controller.setThrottleDelay('test' as SoundEffectId, 50);
+
+      // First play should succeed at time 0
+      currentTime = 0;
+      const id1 = controller.play('test' as SoundEffectId, { throttle: true });
+      expect(id1).not.toBe(-1);
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(1);
+
+      // Immediate second play should be throttled (still at time 0)
+      const id2 = controller.play('test' as SoundEffectId, { throttle: true });
+      expect(id2).toBe(-1);
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(1); // Still only 1 call
+
+      // Advance time by 30ms (still within 50ms throttle window)
+      currentTime = 30;
+      const id3 = controller.play('test' as SoundEffectId, { throttle: true });
+      expect(id3).toBe(-1);
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(1);
+
+      // Advance time to exceed throttle delay
+      currentTime = 55; // Total 55ms elapsed
+      const id4 = controller.play('test' as SoundEffectId, { throttle: true });
+      expect(id4).not.toBe(-1);
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(2);
+    });
+
+    it('should allow plays without throttle option even if throttle is configured', async () => {
+      await controller.loadSound('test' as SoundEffectId, '/test.mp3');
+      controller.setThrottleDelay('test' as SoundEffectId, 50);
+
+      // Play without throttle option
+      controller.play('test' as SoundEffectId);
+      controller.play('test' as SoundEffectId);
+      controller.play('test' as SoundEffectId);
+
+      // All should succeed (throttle not applied)
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(3);
+    });
+
+    it('should clear throttle delay', async () => {
+      await controller.loadSound('test' as SoundEffectId, '/test.mp3');
+      controller.setThrottleDelay('test' as SoundEffectId, 50);
+
+      // First play
+      controller.play('test' as SoundEffectId, { throttle: true });
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(1);
+
+      // Clear throttle
+      controller.clearThrottleDelay('test' as SoundEffectId);
+      expect(controller.getThrottleDelay('test' as SoundEffectId)).toBeUndefined();
+
+      // Immediate play should now succeed (no throttle)
+      controller.play('test' as SoundEffectId, { throttle: true });
+      expect(mockAdapter.playSFX).toHaveBeenCalledTimes(2);
+    });
+
+    it('should handle negative throttle delays as zero', () => {
+      controller.setThrottleDelay('test' as SoundEffectId, -10);
+      expect(controller.getThrottleDelay('test' as SoundEffectId)).toBe(0);
+    });
+
+    it('should track timestamps per sound independently', async () => {
+      await controller.loadSound('sound1' as SoundEffectId, '/sound1.mp3');
+      await controller.loadSound('sound2' as SoundEffectId, '/sound2.mp3');
+
+      controller.setThrottleDelay('sound1' as SoundEffectId, 50);
+      controller.setThrottleDelay('sound2' as SoundEffectId, 50);
+
+      // Play sound1 at time 0
+      currentTime = 0;
+      controller.play('sound1' as SoundEffectId, { throttle: true });
+
+      // Immediate play of sound2 should work (different sound)
+      const id2 = controller.play('sound2' as SoundEffectId, { throttle: true });
+      expect(id2).not.toBe(-1);
+
+      // Immediate play of sound1 again should be throttled
+      const id1again = controller.play('sound1' as SoundEffectId, { throttle: true });
+      expect(id1again).toBe(-1);
+    });
   });
 });

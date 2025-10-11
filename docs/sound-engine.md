@@ -704,7 +704,88 @@ class SFXController {
 }
 ```
 
-### 5.3 Music Ducking on SFX Trigger
+### 5.3 Sound Throttling (Rapid-Fire Prevention)
+
+**Requirement**: Prevent the same sound from playing in rapid succession, which creates audio clutter and poor user experience.
+
+**Implementation:**
+```typescript
+class SFXController {
+  private lastPlayTimestamps = new Map<string, number>();
+  private throttleDelays = new Map<string, number>();
+
+  /**
+   * Set throttle delay for a specific sound
+   * @param id - Sound effect ID
+   * @param delayMs - Minimum delay in milliseconds between plays
+   */
+  setThrottleDelay(id: SoundEffectId, delayMs: number): void {
+    this.throttleDelays.set(id, Math.max(0, delayMs));
+  }
+
+  /**
+   * Play a sound effect with optional throttling
+   * @param id - Sound effect ID
+   * @param options - Playback options
+   * @param options.throttle - If true, prevents rapid succession plays
+   */
+  play(id: SoundEffectId, options?: PlayOptions & { throttle?: boolean }): PlaybackId {
+    if (!this.isLoaded(id)) {
+      console.warn(`SFX "${id}" not loaded`);
+      return -1;
+    }
+
+    // Check throttle if enabled
+    if (options?.throttle) {
+      const throttleDelay = this.throttleDelays.get(id);
+      if (throttleDelay !== undefined) {
+        const now = performance.now();
+        const lastPlay = this.lastPlayTimestamps.get(id);
+
+        if (lastPlay !== undefined && now - lastPlay < throttleDelay) {
+          // Throttled - skip playback
+          return -1;
+        }
+
+        // Update timestamp for successful play
+        this.lastPlayTimestamps.set(id, now);
+      }
+    }
+
+    // Play the sound...
+    return this.adapter.playSFX(id, options);
+  }
+
+  /**
+   * Clear throttle delay and timestamp for a sound
+   */
+  clearThrottleDelay(id: SoundEffectId): void {
+    this.throttleDelays.delete(id);
+    this.lastPlayTimestamps.delete(id);
+  }
+}
+```
+
+**Configuration Example:**
+```typescript
+// In useAudioPreloader or initialization code
+sfxController.setThrottleDelay('ball-peg-hit', 50);  // Max once per 50ms
+sfxController.setThrottleDelay('ui-button-tap', 100); // Max once per 100ms
+
+// Usage in collision handler
+sfxController.play('ball-peg-hit', { throttle: true });
+```
+
+**Performance Characteristics:**
+- **O(1)** timestamp lookup and storage using Map
+- Uses native `performance.now()` for high-precision timing
+- Zero memory allocation per play attempt
+- Independent throttling per sound ID
+- Opt-in per call (doesn't affect non-throttled plays)
+- Configurable per-sound delay thresholds
+```
+
+### 5.4 Music Ducking on SFX Trigger
 
 **Requirement**: Important SFX should automatically duck music volume temporarily.
 
@@ -740,7 +821,7 @@ class SoundManager {
 }
 ```
 
-### 5.4 State Machine Integration
+### 5.5 State Machine Integration
 
 **Requirement**: Audio must respond automatically to game state changes.
 
@@ -790,7 +871,7 @@ class StateAdapter {
 }
 ```
 
-### 5.5 Volume Persistence
+### 5.6 Volume Persistence
 
 **Requirement**: User volume settings must persist across sessions.
 
@@ -826,7 +907,7 @@ class VolumeController {
 }
 ```
 
-### 5.6 Preloading Strategy
+### 5.7 Preloading Strategy
 
 **Requirement**: Critical sounds must load before gameplay starts; non-critical can lazy-load.
 

@@ -179,6 +179,7 @@ export function detectAndHandlePegCollisions(params: CollisionParams): Collision
   }
 
   // After physics collision, detect ALL pegs the ball is near for visual feedback
+  // Apply same cooldown as physics to prevent duplicate detections across frames
   for (const peg of pegs) {
     const dx = x - peg.x;
     const dy = y - peg.y;
@@ -186,7 +187,17 @@ export function detectAndHandlePegCollisions(params: CollisionParams): Collision
 
     // If ball is touching or very close to peg (within collision radius + small margin)
     if (dist <= PHYSICS.COLLISION_RADIUS + 2) {
-      pegsHitThisFrame.push({ row: peg.row, col: peg.col });
+      // Check cooldown to prevent same peg being recorded multiple frames in a row
+      const pegKey = `${peg.row}-${peg.col}`;
+      const lastHit = recentCollisions.get(pegKey);
+
+      // Add to pegsHit if:
+      // - Never hit before (lastHit === undefined)
+      // - Hit THIS frame (lastHit === frame) - this is the actual collision
+      // - Cooldown period has passed (frame - lastHit >= 10)
+      if (lastHit === undefined || lastHit === frame || frame - lastHit >= 10) {
+        pegsHitThisFrame.push({ row: peg.row, col: peg.col });
+      }
     }
   }
 

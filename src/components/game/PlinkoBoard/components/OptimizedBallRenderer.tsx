@@ -67,6 +67,7 @@
 import type { TrailFrame } from '@/animation/ballAnimationDriver';
 import { getCachedTrailLookup } from '@/animation/trailOptimization';
 import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
+import { useAudio } from '@/audio/context/AudioProvider';
 import type { ValueRef } from '@/types/ref';
 import { useAppConfig } from '@config/AppConfigContext';
 import { getPerformanceSetting } from '@config/appConfig';
@@ -166,6 +167,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
 }: OptimizedBallRendererProps) {
   const { theme } = useTheme();
   const { performance } = useAppConfig();
+  const { sfxController } = useAudio();
   const maxTrailLength = getPerformanceSetting(performance, 'maxTrailLength') ?? sizeTokens.ball.maxTrailLength;
 
   // Refs for ball elements
@@ -317,6 +319,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
       // COLLISION DETECTION: Peg flashes (frame-drop-safe)
       // Check if any pegs were hit between last checked frame and current frame
       if (pegHitFrames) {
+                    // Play peg hit sound
+
         pegHitFrames.forEach((hitFrames, pegId) => {
           const lastChecked = lastCheckedPegFrameRef.current.get(pegId) ?? -1;
 
@@ -326,6 +330,11 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           if (newHits.length > 0) {
             // Peg was hit! Trigger flash imperatively via driver
             driver.updatePegFlash(pegId, true);
+
+            // Play peg hit sound with throttling (prevents audio overlap during rapid collisions)
+            if (sfxController) {
+              sfxController.play('ball-peg-hit', { throttle: true });
+            }
 
             // Update last checked frame for this peg
             lastCheckedPegFrameRef.current.set(pegId, currentFrame);

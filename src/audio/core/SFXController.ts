@@ -1,3 +1,4 @@
+import type { PerformanceAdapter } from '../../utils/platform/performance';
 import { AudioAdapter } from '../adapters/AudioAdapter';
 import { PlayOptions, PlaybackId, SoundEffectId } from '../types';
 import { VolumeController } from './VolumeController';
@@ -19,14 +20,22 @@ interface SoundPool {
 export class SFXController {
   private adapter: AudioAdapter;
   private volumeController: VolumeController;
+  private performanceAdapter: PerformanceAdapter;
   private loadedSounds = new Set<string>();
   private playingSounds = new Map<string, PlaybackId[]>();
   private pools = new Map<string, SoundPool>();
   private simultaneousLimits = new Map<string, number>();
+  private lastPlayTimestamps = new Map<string, number>();
+  private throttleDelays = new Map<string, number>();
 
-  constructor(adapter: AudioAdapter, volumeController: VolumeController) {
+  constructor(
+    adapter: AudioAdapter,
+    volumeController: VolumeController,
+    performanceAdapter: PerformanceAdapter
+  ) {
     this.adapter = adapter;
     this.volumeController = volumeController;
+    this.performanceAdapter = performanceAdapter;
   }
 
   /**
@@ -51,11 +60,31 @@ export class SFXController {
 
   /**
    * Play a sound effect.
+   * @param id - Sound effect ID to play
+   * @param options - Playback options
+   * @param options.throttle - If true, prevents rapid succession plays (uses configured throttle delay)
    */
-  play(id: SoundEffectId, options?: PlayOptions): PlaybackId {
+  play(id: SoundEffectId, options?: PlayOptions & { throttle?: boolean }): PlaybackId {
     if (!this.isLoaded(id)) {
       console.warn(`SFX "${id}" not loaded`);
       return -1;
+    }
+
+    // Check throttle if enabled
+    if (options?.throttle) {
+      const throttleDelay = this.throttleDelays.get(id);
+      if (throttleDelay !== undefined) {
+        const now = this.performanceAdapter.now();
+        const lastPlay = this.lastPlayTimestamps.get(id);
+
+        if (lastPlay !== undefined && now - lastPlay < throttleDelay) {
+          // Throttled - skip playback
+          return -1;
+        }
+
+        // Update timestamp
+        this.lastPlayTimestamps.set(id, now);
+      }
     }
 
     // Apply volume controller's SFX volume
@@ -212,5 +241,47 @@ export class SFXController {
    */
   getSimultaneousLimit(id: SoundEffectId): number {
     return this.simultaneousLimits.get(id) || Infinity;
+  }
+
+  /**
+   * Set throttle delay for a specific sound to prevent rapid succession plays.
+   * @param id - Sound effect ID
+   * @param delayMs - Minimum delay in milliseconds between plays (e.g., 50ms)
+   */
+  setThrottleDelay(id: SoundEffectId, delayMs: number): void {
+    this.throttleDelays.set(id, Math.max(0, delayMs));
+  }
+
+  /**
+   * Get throttle delay for a sound.
+   * @returns Delay in milliseconds, or undefined if not set
+   */
+  getThrottleDelay(id: SoundEffectId): number | undefined {
+    return this.throttleDelays.get(id);
+  }
+
+  /**
+   * Clear throttle delay for a sound.
+   */
+  clearThrottleDelay(id: SoundEffectId): void {
+    this.throttleDelays.delete(id);
+    this.lastPlayTimestamps.delete(id);
+  }
+
+  /**
+   * Clean up all resources and stop all sounds.
+   * Call this when the controller is no longer needed to prevent memory leaks.
+   */
+  cleanup(): void {
+    // Stop all playing sounds
+    this.stopAll();
+
+    // Clear tracking
+    this.loadedSounds.clear();
+    this.playingSounds.clear();
+    this.pools.clear();
+    this.simultaneousLimits.clear();
+    this.lastPlayTimestamps.clear();
+    this.throttleDelays.clear();
   }
 }

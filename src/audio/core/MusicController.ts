@@ -151,4 +151,16 @@ export class MusicController {
       }
     }
   }
+
+  /**
+   * Clean up all resources and stop all music layers.
+   * Call this when the controller is no longer needed to prevent memory leaks.
+   */
+  cleanup(): void {
+    // Stop all music layers
+    this.stopAllLayers(0); // No fade for cleanup
+
+    // Clear tracking
+    this.layers.clear();
+  }
 }

@@ -49,11 +49,20 @@
      - `sfx/error/` - Error sounds
      - `music/` - Music layers and stingers
 
-7. **Unit Tests**
+7. **Memory Management** (`cleanup.test.ts`)
+   - AudioProvider properly cleans up on unmount to prevent memory leaks
+   - Stops all playing sounds before destroying adapter
+   - Unloads all audio files from memory via `adapter.destroy()`
+   - Controllers have `cleanup()` methods that clear tracking maps
+   - Removes event listeners (e.g., visibility change handler)
+   - Safe to call cleanup multiple times (idempotent)
+
+8. **Unit Tests**
    - `src/tests/unit/audio/AudioProvider.test.tsx` - AudioProvider tests (3/5 passing)
    - `src/tests/unit/audio/useAudioPreloader.test.ts` - Preloader hook tests (6/7 passing)
    - `src/tests/unit/components/ThemedButton.test.tsx` - Button sound tests (comprehensive)
-   - Total: 9/12 tests passing, 1 skipped (75% pass rate)
+   - `src/tests/unit/audio/cleanup.test.ts` - Memory management tests (11/11 passing ✅)
+   - Total: 20/23 tests passing, 1 skipped (87% pass rate)
 
 ### How It Works
 
@@ -66,6 +75,14 @@
 6. useAudioPreloader imports and preloads button-press.mp3
 7. Audio system ready - logs "Audio system ready" to console
 
+**Cleanup Flow (on unmount):**
+1. AudioProvider cleanup triggered
+2. SFXController.cleanup() → stops all sounds, clears tracking
+3. MusicController.cleanup() → stops all music, clears layers
+4. WebAudioAdapter.destroy() → unloads all Howl instances, removes listeners
+5. All refs cleared to allow garbage collection
+6. No memory leaks ✅
+
 **Button Click Flow:**
 1. User clicks ThemedButton
 2. handleClick wrapper executes
@@ -77,15 +94,19 @@
 ### Files Created/Modified
 
 **Created:**
-- `src/audio/context/AudioProvider.tsx` - Audio context provider
+- `src/audio/context/AudioProvider.tsx` - Audio context provider with cleanup
 - `src/audio/hooks/useAudioPreloader.ts` - Sound preloader hook
 - `src/tests/unit/audio/AudioProvider.test.tsx` - Provider tests
 - `src/tests/unit/audio/useAudioPreloader.test.ts` - Preloader tests
+- `src/tests/unit/audio/cleanup.test.ts` - Memory management tests ✅
 - `src/tests/unit/components/ThemedButton.test.tsx` - Button tests
 - `src/assets/sounds/` - Complete directory structure (11 subdirectories)
 
 **Modified:**
 - `src/audio/types/SoundEffectId.ts` - Added 'ui-button-press' ID
+- `src/audio/core/SFXController.ts` - Added cleanup() method
+- `src/audio/core/MusicController.ts` - Added cleanup() method
+- `src/audio/adapters/WebAudioAdapter.ts` - destroy() unloads all sounds
 - `src/App.tsx` - Wrapped AudioProvider, added preloader
 - `src/components/controls/ThemedButton.tsx` - Added sound playback
 
@@ -146,13 +167,22 @@ Then open http://localhost:5176/ and click any button to hear the sound.
 2. **Import Alias Resolution**: ThemedButton tests fail due to `@theme` alias resolution in test environment. The component works correctly in production.
 3. **Initial Loading State**: useAudioPreloader test shows `isLoading: true` on initial render due to React 18 concurrent rendering. Not a functional issue.
 
-### Performance Notes
+### Performance & Memory Notes
 
 - Audio files are processed by Vite during build (content hashing, optimization)
 - Preloading happens asynchronously during app initialization
 - Sound playback is non-blocking
 - VolumeController persists user preferences to localStorage
 - Failed sound loads don't crash the app (graceful degradation)
+
+**Memory Management:**
+- ✅ AudioProvider cleanup on unmount prevents memory leaks
+- ✅ All Howl instances are properly unloaded via `howl.unload()`
+- ✅ Event listeners removed (visibility change handler)
+- ✅ Controller tracking maps cleared
+- ✅ All refs set to null for garbage collection
+- ✅ Safe cleanup during initialization (handles race conditions)
+- ✅ Idempotent cleanup (can be called multiple times safely)
 
 ---
 

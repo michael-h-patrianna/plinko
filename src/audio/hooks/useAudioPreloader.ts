@@ -10,6 +10,7 @@ import type { MusicTrackId } from '../types/MusicTrackId';
 import type { SoundEffectId } from '../types/SoundEffectId';
 
 // Sound file imports
+import pegHitSound from '../../assets/sounds/sfx/ball/peg-hit.mp3';
 import buttonPressSound from '../../assets/sounds/sfx/ui/button-press.mp3';
 
 /**
@@ -20,6 +21,10 @@ const SOUND_FILES: Record<string, { id: SoundEffectId; url: string }> = {
   buttonPress: {
     id: 'ui-button-press',
     url: buttonPressSound,
+  },
+  pegHit: {
+    id: 'ball-peg-hit',
+    url: pegHitSound,
   },
 };
 
@@ -77,6 +82,10 @@ export function useAudioPreloader({
           );
         }
       }
+
+      // Configure throttle delays for rapid-fire sounds
+      // Peg hit: Throttle to max once every 50ms (prevents audio overlap during rapid collisions)
+      sfxController.setThrottleDelay('ball-peg-hit', 50);
 
       // Load music tracks
       for (const [key, music] of Object.entries(MUSIC_FILES)) {
