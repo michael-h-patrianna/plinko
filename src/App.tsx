@@ -26,6 +26,8 @@ import { useAnimationDriver } from './theme/animationDrivers';
 import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from './theme/tokens';
 import { LAYOUT } from './constants';
 import { prewarmTrailCache } from './animation/trailOptimization';
+import { AudioProvider, useAudio } from './audio/context/AudioProvider';
+import { useAudioPreloader } from './audio/hooks/useAudioPreloader';
 
 /**
  * Main application content component
@@ -43,6 +45,28 @@ function AppContent({
 
   const { theme } = useTheme();
   const { showToast } = useToast();
+
+  // Initialize and preload audio
+  const { sfxController, musicController, isInitialized } = useAudio();
+  const { isLoaded: audioLoaded, errors: audioErrors } = useAudioPreloader({
+    sfxController,
+    musicController,
+    enabled: isInitialized,
+  });
+
+  // Log audio preload errors
+  useEffect(() => {
+    if (audioErrors.length > 0) {
+      console.warn('Audio preload errors:', audioErrors);
+    }
+  }, [audioErrors]);
+
+  // Log when audio is ready
+  useEffect(() => {
+    if (audioLoaded) {
+      console.log('Audio system ready');
+    }
+  }, [audioLoaded]);
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('drop-position');
   const [showWinner, setShowWinner] = useState(false);
 

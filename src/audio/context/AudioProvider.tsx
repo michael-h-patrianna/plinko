@@ -1,0 +1,97 @@
+/**
+ * AudioProvider - React context for managing sound engine
+ * Initializes audio system and provides controllers to components
+ */
+
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react';
+import { WebAudioAdapter } from '../adapters/WebAudioAdapter';
+import { VolumeController } from '../core/VolumeController';
+import { SFXController } from '../core/SFXController';
+import { MusicController } from '../core/MusicController';
+
+interface AudioContextValue {
+  sfxController: SFXController | null;
+  musicController: MusicController | null;
+  volumeController: VolumeController | null;
+  isInitialized: boolean;
+  initializationError: Error | null;
+}
+
+const AudioContext = createContext<AudioContextValue>({
+  sfxController: null,
+  musicController: null,
+  volumeController: null,
+  isInitialized: false,
+  initializationError: null,
+});
+
+interface AudioProviderProps {
+  children: ReactNode;
+}
+
+export function AudioProvider({ children }: AudioProviderProps) {
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [initializationError, setInitializationError] = useState<Error | null>(null);
+
+  // Use refs to store controllers so they persist across renders
+  const sfxControllerRef = useRef<SFXController | null>(null);
+  const musicControllerRef = useRef<MusicController | null>(null);
+  const volumeControllerRef = useRef<VolumeController | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function initializeAudio() {
+      try {
+        // Create audio adapter
+        const adapter = new WebAudioAdapter();
+        await adapter.initialize();
+
+        if (!mounted) return;
+
+        // Create volume controller and load user preferences
+        const volumeController = new VolumeController();
+        volumeController.loadFromStorage();
+
+        // Create sound controllers
+        const sfxController = new SFXController(adapter, volumeController);
+        const musicController = new MusicController(adapter, volumeController);
+
+        // Store in refs
+        sfxControllerRef.current = sfxController;
+        musicControllerRef.current = musicController;
+        volumeControllerRef.current = volumeController;
+
+        setIsInitialized(true);
+      } catch (error) {
+        if (!mounted) return;
+        console.error('Failed to initialize audio system:', error);
+        setInitializationError(error instanceof Error ? error : new Error('Unknown audio initialization error'));
+      }
+    }
+
+    void initializeAudio();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const contextValue: AudioContextValue = {
+    sfxController: sfxControllerRef.current,
+    musicController: musicControllerRef.current,
+    volumeController: volumeControllerRef.current,
+    isInitialized,
+    initializationError,
+  };
+
+  return <AudioContext.Provider value={contextValue}>{children}</AudioContext.Provider>;
+}
+
+/**
+ * Hook to access audio controllers from any component
+ * @returns Audio context value with controllers and initialization state
+ */
+export function useAudio() {
+  return useContext(AudioContext);
+}
