@@ -316,19 +316,23 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         driver.updateTrail(trailFrames);
       }
 
-      // COLLISION DETECTION: Peg flashes (frame-drop-safe)
-      // Check if any pegs were hit between last checked frame and current frame
+      // COLLISION DETECTION: Peg flashes (frame-drop-safe with look-ahead)
+      // TIMING FIX: Trigger effects 1 frame early to synchronize with visual ball position
+      // The trajectory stores POST-BOUNCE positions, but collisions happen earlier in the frame.
+      // By looking ahead, we trigger effects when the ball VISUALLY appears to hit the peg.
       if (pegHitFrames) {
-                    // Play peg hit sound
+        // Look-ahead: Check for collisions 1 frame in the future
+        const COLLISION_LOOKAHEAD = 1;
+        const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
 
         pegHitFrames.forEach((hitFrames, pegId) => {
           const lastChecked = lastCheckedPegFrameRef.current.get(pegId) ?? -1;
 
-          // Find hits that occurred since last check
-          const newHits = hitFrames.filter(hitFrame => hitFrame > lastChecked && hitFrame <= currentFrame);
+          // Find hits that will occur in the next frame window (inclusive of current frame for frame drops)
+          const newHits = hitFrames.filter(hitFrame => hitFrame > lastChecked && hitFrame <= lookAheadFrame);
 
           if (newHits.length > 0) {
-            // Peg was hit! Trigger flash imperatively via driver
+            // Peg will be hit! Trigger flash imperatively via driver
             driver.updatePegFlash(pegId, true);
 
             // Play peg hit sound with throttling (prevents audio overlap during rapid collisions)
@@ -336,41 +340,44 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
               sfxController.play('ball-peg-hit', { throttle: true });
             }
 
-            // Update last checked frame for this peg
-            lastCheckedPegFrameRef.current.set(pegId, currentFrame);
+            // Update last checked frame for this peg to the earliest hit in this window
+            lastCheckedPegFrameRef.current.set(pegId, Math.min(...newHits));
           }
         });
       }
 
-      // COLLISION DETECTION: Wall flashes (frame-drop-safe)
-      // Check if walls were hit between last checked frame and current frame
+      // COLLISION DETECTION: Wall flashes (frame-drop-safe with look-ahead)
+      // TIMING FIX: Same look-ahead as peg collisions for consistent timing
       if (wallHitFrames) {
+        const COLLISION_LOOKAHEAD = 1;
+        const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
+
         // Check left wall
         const lastCheckedLeft = lastCheckedWallFrameRef.current.left;
         const newLeftHits = wallHitFrames.left.filter(
-          hitFrame => hitFrame > lastCheckedLeft && hitFrame <= currentFrame
+          hitFrame => hitFrame > lastCheckedLeft && hitFrame <= lookAheadFrame
         );
 
         if (newLeftHits.length > 0) {
-          // Left wall was hit! Trigger directional wall bounce via driver with ball Y position
+          // Left wall will be hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('left', true, position.y);
           // NOTE: Screen shake removed - walls now use directional bounce animation
-          // Update last checked frame
-          lastCheckedWallFrameRef.current.left = currentFrame;
+          // Update last checked frame to the earliest hit in this window
+          lastCheckedWallFrameRef.current.left = Math.min(...newLeftHits);
         }
 
         // Check right wall
         const lastCheckedRight = lastCheckedWallFrameRef.current.right;
         const newRightHits = wallHitFrames.right.filter(
-          hitFrame => hitFrame > lastCheckedRight && hitFrame <= currentFrame
+          hitFrame => hitFrame > lastCheckedRight && hitFrame <= lookAheadFrame
         );
 
         if (newRightHits.length > 0) {
-          // Right wall was hit! Trigger directional wall bounce via driver with ball Y position
+          // Right wall will be hit! Trigger directional wall bounce via driver with ball Y position
           driver.updateWallFlash('right', true, position.y);
           // NOTE: Screen shake removed - walls now use directional bounce animation
-          // Update last checked frame
-          lastCheckedWallFrameRef.current.right = currentFrame;
+          // Update last checked frame to the earliest hit in this window
+          lastCheckedWallFrameRef.current.right = Math.min(...newRightHits);
         }
       }
 

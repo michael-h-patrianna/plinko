@@ -1,8 +1,22 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
+import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, './src'),
+      '@game': path.resolve(__dirname, './src/game'),
+      '@utils': path.resolve(__dirname, './src/utils'),
+      '@config': path.resolve(__dirname, './src/config'),
+      '@theme': path.resolve(__dirname, './src/theme'),
+      '@hooks': path.resolve(__dirname, './src/hooks'),
+      '@components': path.resolve(__dirname, './src/components'),
+      '@audio': path.resolve(__dirname, './src/audio'),
+      '@animation': path.resolve(__dirname, './src/animation'),
+    },
+  },
   test: {
     globals: true,
     // Use lightweight Node.js environment by default
