@@ -3,6 +3,36 @@ import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { resetHarnessState } from './fixtures/harness';
 
+// Mock matchMedia for animation drivers, theme tests, and device detection
+const mockMatchMedia = vi.fn().mockImplementation((query: string) => {
+  const mediaQueryList = {
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  };
+  return mediaQueryList;
+});
+
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  configurable: true,
+  value: mockMatchMedia,
+});
+
+// Ensure globalThis.window also has matchMedia
+if (typeof globalThis.window !== 'undefined') {
+  Object.defineProperty(globalThis.window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: mockMatchMedia,
+  });
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   vi.clearAllMocks();

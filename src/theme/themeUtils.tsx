@@ -465,7 +465,12 @@ export function createThemedOverlay(
   opacity: 'light' | 'medium' | 'dark' = 'medium'
 ): string {
   const opacityMap = { light: 0.3, medium: 0.5, dark: 0.8 };
-  return createOverlayBackground(theme.colors.background.overlayDark, opacityMap[opacity]);
+  const targetOpacity = opacityMap[opacity];
+
+  // Use surface.elevated as base color (it's a hex color)
+  const baseColor = theme.colors.surface.elevated || theme.colors.background.secondary || '#1e293b';
+
+  return createOverlayBackground(baseColor, targetOpacity);
 }
 
 /**

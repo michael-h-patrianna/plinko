@@ -1,6 +1,7 @@
 /**
  * Prize claimed confirmation screen with success animation
  * Displays checkmark animation and allows user to close/reset game
+ * Uses PopupOverlay for consistent semi-transparent background
  * @param prize - Prize configuration (not currently used in display)
  * @param onClose - Callback to close and reset the game
  */
@@ -9,6 +10,7 @@ import type { PrizeConfig } from '@game/types';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { PopupOverlay } from '../layout/PopupOverlay';
 
 interface PrizeClaimedProps {
   prize: PrizeConfig;
@@ -19,13 +21,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
   const { AnimatedDiv, AnimatedH2, AnimatedP } = useAnimation();
   const { theme } = useTheme();
   return (
-    <AnimatedDiv
-      className="absolute inset-0 z-50 flex items-center justify-center p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <PopupOverlay zIndex={theme.zIndex[50]} testId="prize-claimed-overlay">
       {/* Success checkmark stamp - single unified element */}
       <AnimatedDiv
         className="absolute pointer-events-none"
@@ -153,6 +149,6 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
           Close
         </ThemedButton>
       </div>
-    </AnimatedDiv>
+    </PopupOverlay>
   );
 }

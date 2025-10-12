@@ -1,6 +1,7 @@
 /**
  * No win result view with encouraging messaging
  * Uses subdued styling and gentle animations, not celebratory
+ * Uses PopupOverlay for consistent semi-transparent background
  * @param prize - Prize configuration with no-win messaging
  * @param onClaim - Callback to try again
  * @param canClaim - Whether the try again button should be enabled
@@ -11,6 +12,8 @@ import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { PopupOverlay } from '../../layout/PopupOverlay';
+import { createThemedOverlay, createTextStyle } from '@theme/themeUtils';
 
 interface NoWinViewProps {
   prize: Prize;
@@ -23,31 +26,9 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
   const { theme } = useTheme();
 
   return (
-    <AnimatedDiv
-      className="absolute inset-0 z-40 flex items-center justify-center p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.2 }}
-    >
-      {/* Main card - subdued colors */}
-      <AnimatedDiv
-        className="rounded-2xl p-8 max-w-sm w-full"
-        style={{
-          background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
-          /* RN-compatible: removed boxShadow, using border for definition */
-          border: `1px solid ${theme.colors.surface.elevated}66`,
-        }}
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{
-          scale: 1,
-          opacity: 1,
-        }}
-        transition={{
-          duration: 0.25,
-          ease: [0.34, 1.56, 0.64, 1],
-        }}
-      >
+    <PopupOverlay zIndex={theme.zIndex[40]} testId="no-win-overlay">
+      {/* Content container - no card background */}
+      <div className="max-w-sm w-full">
         <div role="status" aria-live="polite" className="text-center">
           {/* No win image */}
           <AnimatedImg
@@ -59,10 +40,14 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             transition={{ duration: 0.25, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
           />
 
+          {/* Title - match other views with gradient styling */}
           <AnimatedH2
-            className="text-2xl font-bold mb-4"
+            className="text-3xl font-extrabold mb-6"
             style={{
-              color: theme.colors.text.primary,
+              background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${theme.colors.text.secondary} 100%)`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
               /* RN-compatible: removed textShadow */
             }}
             initial={{ y: 10, opacity: 0 }}
@@ -72,21 +57,27 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             {prize.title}
           </AnimatedH2>
 
-          {/* Encouraging message */}
+          {/* Encouraging message - styled like CurrencyCounter items */}
           <AnimatedDiv
             className="my-6 p-4 rounded-lg"
             style={{
-              background: `${theme.colors.surface.elevated}33`,
-              border: `1px solid ${theme.colors.text.tertiary}33`,
+              background: createThemedOverlay(theme, 'medium'),
+              borderRadius: '12px',
             }}
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.25, delay: 0.4 }}
           >
-            <p className="text-base leading-relaxed" style={{ color: theme.colors.text.secondary }}>
+            <p
+              className="text-base leading-relaxed mb-2"
+              style={createTextStyle('primary', theme)}
+            >
               {prize.description || 'Better luck next time!'}
             </p>
-            <p className="text-sm mt-2" style={{ color: theme.colors.text.tertiary }}>
+            <p
+              className="text-sm"
+              style={createTextStyle('secondary', theme)}
+            >
               Keep trying - your big win could be just around the corner!
             </p>
           </AnimatedDiv>
@@ -102,7 +93,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
             Try Again
           </ThemedButton>
         </div>
-      </AnimatedDiv>
-    </AnimatedDiv>
+      </div>
+    </PopupOverlay>
   );
 }

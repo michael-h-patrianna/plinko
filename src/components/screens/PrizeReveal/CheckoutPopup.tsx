@@ -1,6 +1,8 @@
 /**
  * Simulated checkout popup for purchase offers
  * Displays fake payment information and processes demo purchase with delay
+ * Modal dialog with card background (appropriate for checkout flow)
+ * Uses aligned animation constants for consistency
  * @param isOpen - Whether the popup is currently visible
  * @param price - Price string to display (e.g., "$29.99")
  * @param offerTitle - Title of the offer being purchased
@@ -12,6 +14,7 @@ import { useState } from 'react';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
 import { useAnimationDriver } from '@theme/animationDrivers';
+import { POPUP_ANIMATIONS } from '../../layout/popupAnimations';
 
 interface CheckoutPopupProps {
   isOpen: boolean;
@@ -49,11 +52,17 @@ const { theme } = useTheme();
     <AnimatePresence>
       {isOpen && (
         <AnimatedDiv
-          className="absolute inset-0 z-50 flex items-center justify-center p-6"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          className="absolute inset-0 z-60 flex items-center justify-center p-6"
+          style={{
+            background: theme.colors.background.overlayDark || 'rgba(0, 0, 0, 0.8)',
+          }}
+          initial={POPUP_ANIMATIONS.entrance.initial}
+          animate={POPUP_ANIMATIONS.entrance.animate}
+          exit={POPUP_ANIMATIONS.exit.exit}
+          transition={{
+            duration: POPUP_ANIMATIONS.exit.duration,
+            ease: POPUP_ANIMATIONS.exit.ease,
+          }}
           onClick={onClose}
         >
           <AnimatedDiv
@@ -64,10 +73,13 @@ const { theme } = useTheme();
               border: `1px solid ${theme.colors.border.default}`,
               borderRadius: theme.components.modal.borderRadius,
             }}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+            initial={{ ...POPUP_ANIMATIONS.entrance.initial, scale: 0.9 }}
+            animate={POPUP_ANIMATIONS.entrance.animate}
+            exit={{ ...POPUP_ANIMATIONS.exit.exit, scale: 0.9 }}
+            transition={{
+              duration: POPUP_ANIMATIONS.entrance.duration,
+              ease: POPUP_ANIMATIONS.entrance.ease,
+            }}
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             {/* Close button */}

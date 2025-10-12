@@ -2,6 +2,7 @@
  * Free reward reveal view with quality text animations
  * Uses premium text effects from animations library for professional celebration
  * Handles ALL prize types: GC, SC, spins, XP, randomReward
+ * Uses PopupOverlay for consistent semi-transparent background
  * @param prize - Prize configuration with free rewards
  * @param onClaim - Callback when user claims the prize
  * @param canClaim - Whether the claim button should be enabled
@@ -18,6 +19,7 @@ import { ThemedButton } from '../../controls/ThemedButton';
 import { CurrencyCounter } from '../../effects/CurrencyCounter';
 import { YouWonText } from '../../effects/YouWonText';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { PopupOverlay } from '../../layout/PopupOverlay';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -57,29 +59,9 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
   };
 
   return (
-    <AnimatedDiv
-      className="absolute inset-0 z-40 flex items-center justify-center p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      {/* Main card */}
-      <AnimatedDiv
-        className="rounded-2xl p-8 max-w-md w-full"
-        style={{
-          background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
-          /* RN-compatible: removed boxShadow, using border for definition */
-          border: `1px solid ${theme.colors.surface.elevated}66`,
-        }}
-        initial={{ scale: 0.8, y: 20 }}
-        animate={{ scale: 1, y: 0 }}
-        transition={{
-          duration: 0.4,
-          delay: timing.cardEntrance,
-          ease: [0.34, 1.56, 0.64, 1],
-        }}
-      >
+    <PopupOverlay zIndex={theme.zIndex[40]} testId="free-reward-overlay">
+      {/* Content container - no card background */}
+      <div className="max-w-md w-full">
         <div role="status" aria-live="polite" className="text-center">
           {/* Epic "You Won!" text */}
           <AnimatedDiv
@@ -111,7 +93,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             {hasSC && (
               <CurrencyCounter
                 targetAmount={rewards.sc!}
-                label="Sweeps Coins"
+                label="FREE SC"
                 icon={<img src={scIcon} alt="SC" />}
                 delay={getNextCounterDelay()}
               />
@@ -177,7 +159,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             </ThemedButton>
           </AnimatedDiv>
         </div>
-      </AnimatedDiv>
-    </AnimatedDiv>
+      </div>
+    </PopupOverlay>
   );
 }

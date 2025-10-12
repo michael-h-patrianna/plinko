@@ -1,6 +1,7 @@
 /**
  * Purchase offer reveal view with special deal styling
  * Displays rewards with ribbon banner and price button, opens checkout popup
+ * Uses PopupOverlay for consistent semi-transparent background
  * @param prize - Prize configuration with purchase offer details
  * @param onClaim - Callback when purchase completes
  * @param canClaim - Whether the purchase button should be enabled
@@ -13,6 +14,7 @@ import { ThemedButton } from '../../controls/ThemedButton';
 import { CheckoutPopup } from './CheckoutPopup';
 import { RewardItem } from './RewardItem';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
+import { PopupOverlay } from '../../layout/PopupOverlay';
 
 interface PurchaseOfferViewProps {
   prize: Prize;
@@ -61,50 +63,26 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
 
   return (
     <>
-      <AnimatedDiv
-        className="absolute inset-0 z-40 flex items-center justify-center p-6"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-      >
-        {/* Main card */}
-        <AnimatedDiv
-          className="rounded-2xl p-8 max-w-md w-full overflow-hidden"
-          style={{
-            background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
-            /* RN-compatible: removed boxShadow, using border for definition */
-            border: `1px solid ${theme.colors.surface.elevated}66`,
-          }}
-          initial={{ scale: 0, rotate: -10, opacity: 0 }}
-          animate={{
-            scale: [0, 1.1, 1],
-            rotate: [-10, 5, 0],
-            opacity: [0, 1, 1],
-          }}
-          transition={{
-            duration: 0.25,
-            ease: [0.34, 1.56, 0.64, 1],
-          }}
-        >
-          {/* "SPECIAL" Ribbon */}
+      <PopupOverlay zIndex={theme.zIndex[40]} testId="purchase-offer-overlay">
+        {/* Content container - no card background, but keep decorative elements */}
+        <div className="max-w-md w-full overflow-visible relative">
+          {/* "120% EXTRA" Badge - positioned above title */}
           <AnimatedDiv
-            className="absolute font-bold uppercase rotate-45 whitespace-nowrap"
+            className="font-bold uppercase whitespace-nowrap mx-auto mb-4 w-fit"
             style={{
               color: theme.colors.primary.contrast,
               background: `linear-gradient(135deg, ${theme.colors.status.error} 0%, ${theme.colors.status.error} 100%)`,
               /* RN-compatible: removed boxShadow and textShadow */
-              padding: '4px 32px',
-              fontSize: '10px',
-              top: '12px',
-              right: '-24px',
-              zIndex: 50,
+              padding: '6px 24px',
+              fontSize: '12px',
+              borderRadius: '20px',
+              letterSpacing: '1px',
             }}
-            initial={{ x: 200, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.35, delay: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.35, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
           >
-            SPECIAL
+            120% EXTRA
           </AnimatedDiv>
 
           {/* Sparkles for offer - Cross-platform: linear gradient instead of radial */}
@@ -147,40 +125,60 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
           })}
 
           <div role="status" aria-live="polite" className="text-center">
-            {/* Special Offer header - Cross-platform: removed blur textShadow */}
+            {/* Special Offer header - aligned with other views */}
             <AnimatedH2
-              className="text-3xl font-extrabold mb-2"
+              className="text-3xl font-extrabold mb-6"
               style={{
-                background: `linear-gradient(135deg, ${theme.colors.text.primary} 0%, ${theme.colors.status.warning} 50%, ${theme.colors.status.error} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                color: theme.colors.text.primary,
               }}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ duration: 0.25, delay: 0.3 }}
             >
-              ⭐ Special Offer!
+              {offer.title}
             </AnimatedH2>
 
             {/* Reward grid (offer contents) */}
             {rewardItems.length > 0 && (
-              <AnimatedDiv
-                className="flex flex-wrap gap-3 justify-center my-6"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.25, delay: 0.5 }}
-              >
-                {rewardItems.map((item, index) => (
-                  <RewardItem
-                    key={`${item.type}-${index}`}
-                    {...item}
-                    delay={0.6 + index * 0.1}
-                    index={index}
-                    totalCount={rewardItems.length}
-                  />
-                ))}
-              </AnimatedDiv>
+              <>
+                <AnimatedDiv
+                  className="flex flex-wrap gap-3 justify-center my-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.25, delay: 0.5 }}
+                >
+                  {rewardItems.map((item, index) => (
+                    <div key={`${item.type}-${index}`} style={{ width: '120px' }}>
+                      <RewardItem
+                        {...item}
+                        delay={0.6 + index * 0.1}
+                        index={index}
+                        totalCount={rewardItems.length}
+                      />
+                    </div>
+                  ))}
+                </AnimatedDiv>
+
+                {/* Additional benefits */}
+                <AnimatedDiv
+                  className="text-center mb-6"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: 0.8 }}
+                >
+                  <div
+                    className="text-sm font-medium"
+                    style={{
+                      color: theme.colors.text.secondary,
+                      lineHeight: '1.6',
+                    }}
+                  >
+                    + Live Chat Support
+                    <br />
+                    + Exclusive Gold Coin Games
+                  </div>
+                </AnimatedDiv>
+              </>
             )}
 
             {/* Purchase button with price */}
@@ -203,8 +201,8 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               Limited time offer - claim it now!
             </AnimatedP>
           </div>
-        </AnimatedDiv>
-      </AnimatedDiv>
+        </div>
+      </PopupOverlay>
 
       {/* Checkout popup */}
       <CheckoutPopup

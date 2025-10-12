@@ -201,7 +201,7 @@ const PRODUCTION_PRIZE_POOL: Prize[] = [
     },
     purchaseOffer: {
       offerId: 'offer_001',
-      title: '50% Off Premium Pack',
+      title: 'Exclusive Premium Pack',
       description: 'Get 10,000 GC + 100 SC for half price!',
     },
   },

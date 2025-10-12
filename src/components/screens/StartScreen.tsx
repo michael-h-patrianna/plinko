@@ -1,6 +1,7 @@
 /**
  * Initial start screen displaying game title, prize list, and play button
  * Prize list shows probabilities and supports expandable combo rewards
+ * Uses PopupOverlay for consistent semi-transparent background
  * @param prizes - Array of available prizes with probabilities
  * @param onStart - Callback to start the game
  * @param disabled - Whether the start button should be disabled
@@ -15,6 +16,8 @@ import { useState } from 'react';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
 import { createTextStyle } from '@theme/themeUtils';
+import { PopupOverlay } from '../layout/PopupOverlay';
+import { POPUP_ANIMATIONS } from '../layout/popupAnimations';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -34,76 +37,65 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
   const isGradient = titleGradient.includes('gradient');
 
   return (
-    <AnimatedDiv
-      className="absolute inset-0 z-30 flex flex-col items-center justify-center p-6"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{
-        opacity: 0,
-        scale: 0.95,
-        y: -20
-      }}
-      transition={{
-        duration: 0.4,
-        ease: [0.22, 1, 0.36, 1]
-      }}
-    >
-      {/* Title - using theme */}
-      <AnimatedH1
-        key={titleGradient}
-        className="text-4xl font-extrabold mb-6 text-center"
-        style={{
-          ...(isGradient
-            ? {
-                background: titleGradient,
-                backgroundClip: 'text',
-                WebkitBackgroundClip: 'text',
-                color: 'transparent',
-                WebkitTextFillColor: 'transparent',
-              }
-            : {
-                color: titleGradient,
-              }),
-          fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
-        }}
-        initial={{ scale: 0, rotate: -5 }}
-        animate={{
-          scale: 1,
-          rotate: 0,
-        }}
-        transition={{
-          duration: 0.25,
-          delay: 0.1,
-          ease: [0.34, 1.56, 0.64, 1],
-        }}
-      >
-        Plinko Popup
-      </AnimatedH1>
-
-      {/* Prize list - using theme component styles */}
-      <AnimatedDiv
-        className="p-4 mb-8 w-full max-w-md"
-        style={{
-          background: theme.components.card.background || theme.colors.surface.primary,
-          /* RN-compatible: removed boxShadow, using border for definition */
-          border: theme.components.card.border || `1px solid ${theme.colors.border.default}`,
-          borderRadius: theme.components.card.borderRadius || theme.borderRadius.card,
-        }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{
-          duration: 0.25,
-          delay: 0.2,
-          ease: [0.22, 1, 0.36, 1],
-        }}
-      >
-        <h2
-          className="text-lg font-semibold mb-3 text-center"
-          style={createTextStyle('primary', theme)}
+    <PopupOverlay zIndex={theme.zIndex[30]} testId="start-screen-overlay">
+      {/* Centered content container */}
+      <div className="flex flex-col items-center justify-center w-full max-w-md">
+        {/* Title - using theme */}
+        <AnimatedH1
+          key={titleGradient}
+          className="text-4xl font-extrabold mb-6 text-center"
+          style={{
+            ...(isGradient
+              ? {
+                  background: titleGradient,
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  WebkitTextFillColor: 'transparent',
+                }
+              : {
+                  color: titleGradient,
+                }),
+            fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
+          }}
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+          }}
+          transition={{
+            duration: POPUP_ANIMATIONS.entrance.duration,
+            delay: 0.1,
+            ease: POPUP_ANIMATIONS.entrance.ease,
+          }}
         >
-          Available Prizes
-        </h2>
-        <div className="space-y-2">
+          Plinko Popup
+        </AnimatedH1>
+
+        {/* Prize list - card background is content styling, keep it */}
+        <AnimatedDiv
+          className="p-4 mb-8 w-full"
+          style={{
+            background: theme.components.card.background || theme.colors.surface.primary,
+            /* RN-compatible: removed boxShadow, using border for definition */
+            border: theme.components.card.border || `1px solid ${theme.colors.border.default}`,
+            borderRadius: theme.components.card.borderRadius || theme.borderRadius.card,
+          }}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: POPUP_ANIMATIONS.entrance.duration,
+            delay: 0.2,
+            ease: POPUP_ANIMATIONS.entrance.ease,
+          }}
+        >
+          <h2
+            className="text-lg font-semibold mb-3 text-center"
+            style={createTextStyle('primary', theme)}
+          >
+            Available Prizes
+          </h2>
+          <div className="space-y-2">
           {prizes.map((prize, index) => {
             const prizeType = prize.type;
             const isPurchaseOffer = prizeType === 'purchase';
@@ -244,20 +236,21 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
               </AnimatedDiv>
             );
           })}
-        </div>
-      </AnimatedDiv>
+          </div>
+        </AnimatedDiv>
 
-      {/* Play button */}
-      <ThemedButton
-        onClick={onStart}
-        disabled={disabled}
-        entranceAnimation="hero"
-        delay={0.24}
-        testId="drop-ball-button"
-        className="min-w-[120px] h-14 text-lg"
-      >
-        Drop Ball
-      </ThemedButton>
-    </AnimatedDiv>
+        {/* Play button */}
+        <ThemedButton
+          onClick={onStart}
+          disabled={disabled}
+          entranceAnimation="hero"
+          delay={0.3}
+          testId="drop-ball-button"
+          className="min-w-[120px] h-14 text-lg"
+        >
+          Drop Ball
+        </ThemedButton>
+      </div>
+    </PopupOverlay>
   );
 }

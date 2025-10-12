@@ -40,7 +40,7 @@ const getRewardConfig = (): Record<string, RewardConfigItem> => ({
   },
   sc: {
     icon: scIcon,
-    label: 'SC',
+    label: 'FREE SC',
     getColor: (t) => t.colors.status.warning,
   },
   spins: {
