@@ -1,5 +1,10 @@
 /**
  * Component tests for PlinkoBoard
+ *
+ * JUSTIFIED 'any' USAGE:
+ * - Prize type has optional properties (label vs title) depending on prize source
+ * - Test needs flexibility to handle both MOCK_PRIZES format and production Prize format
+ * - Using 'any' allows test to work with prize data structure evolution
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

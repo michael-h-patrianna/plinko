@@ -19,6 +19,7 @@ vi.spyOn(AudioContext, 'useAudio').mockReturnValue({
   sfxController: mockSfxController as unknown as ReturnType<typeof AudioContext.useAudio>['sfxController'],
   musicController: null,
   volumeController: null,
+  audioAdapter: null,
   isInitialized: true,
   initializationError: null,
 });
@@ -89,6 +90,7 @@ describe('ThemedButton', () => {
       sfxController: null,
       musicController: null,
       volumeController: null,
+      audioAdapter: null,
       isInitialized: false,
       initializationError: null,
     });

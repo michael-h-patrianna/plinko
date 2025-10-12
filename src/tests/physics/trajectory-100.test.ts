@@ -1,5 +1,27 @@
 /**
  * Test 100 trajectories for physics validation
+ *
+ * DETERMINISM REQUIREMENTS:
+ * - This test uses explicit seeds to ensure reproducible results
+ * - Each trajectory uses seed = 10,000,000 + (run * 1234) for deterministic behavior
+ * - Running this test multiple times will always produce identical results
+ * - The same seed always generates the same trajectory, enabling reliable validation
+ *
+ * SEED USAGE:
+ * - Seeds are calculated deterministically: base 10,000,000 + run offset
+ * - Run 0 uses seed 10,000,000, Run 1 uses 10,001,234, etc.
+ * - This ensures each test run uses unique but reproducible seeds
+ *
+ * EXPECTED BEHAVIOR WITH SEEDS:
+ * - generateTrajectory({ seed: 10000000, ... }) always produces same result
+ * - Physics simulation is deterministic when seeded
+ * - Overlap detection, collision handling, and final slot are all reproducible
+ *
+ * @example
+ * // Same seed = same trajectory
+ * const result1 = generateTrajectory({ seed: 10000000, ... });
+ * const result2 = generateTrajectory({ seed: 10000000, ... });
+ * expect(result1).toEqual(result2); // Always passes
  */
 
 import { describe, it, expect } from 'vitest';

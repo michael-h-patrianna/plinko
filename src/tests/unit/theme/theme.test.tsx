@@ -1,6 +1,11 @@
 /**
  * Comprehensive tests for the theme system
  * Tests ThemeContext, ThemeProvider, useTheme hook, theme persistence, and theme structures
+ *
+ * JUSTIFIED 'any' USAGE:
+ * - Recursive theme validation helper needs to traverse unknown object structures
+ * - Using 'any' for recursive validation allows checking deeply nested theme properties
+ * - Type safety is enforced by the validation logic itself, not TypeScript
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-argument */

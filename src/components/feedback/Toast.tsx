@@ -19,6 +19,7 @@ import { useEffect, useCallback } from 'react';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { useTheme } from '../../theme';
 import { colorTokens, opacityTokens, spacingTokens, borderRadiusTokens } from '@theme/tokens';
+import { createCenteredContainer } from '@theme/themeUtils';
 
 export type ToastSeverity = 'success' | 'error' | 'warning' | 'info';
 
@@ -110,9 +111,7 @@ export function Toast({
       }}
       style={{
         position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        gap: `${spacingTokens[3]}px`,
+        ...createCenteredContainer('row', `${spacingTokens[3]}px`),
         padding: `${spacingTokens[3]}px ${spacingTokens[4]}px`,
         marginBottom: `${spacingTokens[2]}px`,
         background: severityStyles.background,
@@ -128,9 +127,7 @@ export function Toast({
       {/* Icon */}
       <div
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          ...createCenteredContainer('row'),
           width: '20px',
           height: '20px',
           borderRadius: '50%',
@@ -154,9 +151,7 @@ export function Toast({
         onClick={handleDismiss}
         aria-label="Dismiss notification"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          ...createCenteredContainer('row'),
           width: '20px',
           height: '20px',
           padding: 0,

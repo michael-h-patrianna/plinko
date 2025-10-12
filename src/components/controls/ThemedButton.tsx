@@ -10,6 +10,7 @@
  */
 
 import { useAnimationDriver } from '@theme/animationDrivers';
+import type { TransitionConfig } from '@theme/animationDrivers/types';
 import { useAudio } from '../../audio/context/AudioProvider';
 import { useTheme } from '../../theme';
 
@@ -60,11 +61,17 @@ export function ThemedButton({
 
   // Animation configuration types
   // Note: Using AnimationConfig and TransitionConfig from animation driver for type safety
-  type AnimationTarget = Record<string, number | number[] | string | undefined>;
+  type AnimationTarget = {
+    scale?: number | number[];
+    rotate?: number | number[];
+    opacity?: number | number[];
+    y?: number | number[];
+    [key: string]: number | number[] | string | undefined;
+  };
 
   let animateTarget: AnimationTarget = { scale: 1, rotate: 0, opacity: 1, y: 0 };
   let initialState: AnimationTarget | undefined = undefined;
-  let entranceTransition: Record<string, number | number[] | string | undefined> | undefined = undefined;
+  let entranceTransition: TransitionConfig | undefined = undefined;
 
   switch (entranceAnimation) {
     case 'hero':
@@ -148,7 +155,7 @@ export function ThemedButton({
       }
       initial={initialState}
       animate={animateTarget}
-      transition={entranceTransition as any}
+      transition={entranceTransition}
       data-testid={testId}
     >
       {/* Button shine effect */}

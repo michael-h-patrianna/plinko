@@ -287,7 +287,7 @@ export function PlinkoBoard({
   // }, [ballState, selectedIndex, slots, theme]);
 
   return (
-    <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto' }}>
+    <div style={{ width: '100%', maxWidth: `${boardWidth}px`, margin: '0 auto', position: 'relative' }}>
       <AnimatedDiv
         className="relative"
         style={{

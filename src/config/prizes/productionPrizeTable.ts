@@ -2,14 +2,14 @@
  * Production prize table with realistic prize configurations
  */
 
-import freeSpinsIcon from '../../assets/free-spins.png';
-import gcIcon from '../../assets/gc.png';
-import gcscIcon from '../../assets/gcsc.png';
-import noWinIcon from '../../assets/nowin.png';
-import offerIcon from '../../assets/offer.png';
-import randomRewardIcon from '../../assets/random_reward.png';
-import scIcon from '../../assets/sc.png';
-import xpIcon from '../../assets/xp.png';
+import freeSpinsIcon from '../../assets/images/free-spins.png';
+import gcIcon from '../../assets/images/gc.png';
+import gcscIcon from '../../assets/images/gcsc.png';
+import noWinIcon from '../../assets/images/nowin.png';
+import offerIcon from '../../assets/images/offer.png';
+import randomRewardIcon from '../../assets/images/random_reward.png';
+import scIcon from '../../assets/images/sc.png';
+import xpIcon from '../../assets/images/xp.png';
 import type { Prize } from '@game/prizeTypes';
 import { createRng, generateSeed } from '@game/rng';
 import {

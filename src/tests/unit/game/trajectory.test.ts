@@ -1,5 +1,28 @@
 /**
  * Tests for trajectory generation
+ *
+ * DETERMINISM REQUIREMENTS:
+ * - All tests use explicit seeds to ensure reproducible results
+ * - Default seed (42) is used throughout for consistency
+ * - Same seed always produces identical trajectory (position, velocity, rotation, slot)
+ *
+ * SEED BEHAVIOR:
+ * - generateTrajectory({ seed: 42, ... }) is fully deterministic
+ * - Trajectory length, points, peg hits, and landed slot are reproducible
+ * - Different seeds produce different trajectories
+ *
+ * EXPECTED BEHAVIOR WITH SEEDS:
+ * - Seed 42: Produces specific trajectory with known characteristics
+ * - Each frame's (x, y, rotation) is exactly reproducible
+ * - Final slot and trajectory length are consistent across runs
+ *
+ * @example
+ * // Deterministic trajectory generation
+ * const params = { boardWidth: 375, boardHeight: 500, pegRows: 10, slotCount: 6, seed: 42 };
+ * const result1 = generateTrajectory(params);
+ * const result2 = generateTrajectory(params);
+ * expect(result1.trajectory).toEqual(result2.trajectory); // Always passes
+ * expect(result1.landedSlot).toBe(result2.landedSlot); // Always passes
  */
 
 import { describe, it, expect } from 'vitest';

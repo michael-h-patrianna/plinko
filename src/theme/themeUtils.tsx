@@ -315,3 +315,251 @@ export function createResponsiveFontSize(
 
   return `${Math.round(fontSize)}px`;
 }
+
+// ===========================
+// PHASE 1 MIGRATION UTILITIES
+// ===========================
+
+/**
+ * Create centered flex container (replaces repetitive centered flexbox patterns)
+ * Cross-platform compatible - uses only flexbox properties
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}
+ *
+ * // After:
+ * style={createCenteredContainer('column', '12px')}
+ * ```
+ *
+ * @param direction - Flex direction (default: 'column')
+ * @param gap - Gap between flex items (optional)
+ * @returns Style object for centered flex container
+ */
+export function createCenteredContainer(
+  direction: 'row' | 'column' = 'column',
+  gap?: string
+): React.CSSProperties {
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: direction,
+    ...(gap && { gap }),
+  };
+}
+
+/**
+ * Create fullscreen overlay preset (replaces repetitive absolute positioning)
+ * Cross-platform compatible - uses inset instead of individual positioning
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 30 }}
+ *
+ * // After:
+ * style={createFullscreenOverlay(30)}
+ * ```
+ *
+ * @param zIndex - Z-index value
+ * @param pointerEvents - Pointer events behavior (default: 'none')
+ * @returns Style object for fullscreen overlay
+ */
+export function createFullscreenOverlay(
+  zIndex: number,
+  pointerEvents: React.CSSProperties['pointerEvents'] = 'none'
+): React.CSSProperties {
+  return {
+    position: 'absolute',
+    inset: 0,
+    zIndex,
+    pointerEvents,
+  };
+}
+
+/**
+ * Create centered absolute element (replaces repetitive centering patterns)
+ * Cross-platform compatible - uses transforms for centering
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+ *
+ * // After:
+ * style={createCenteredAbsolute(10)}
+ * ```
+ *
+ * @param zIndex - Optional z-index value
+ * @returns Style object for centered absolute element
+ */
+export function createCenteredAbsolute(
+  zIndex?: number
+): React.CSSProperties {
+  return {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+    ...(zIndex !== undefined && { zIndex }),
+  };
+}
+
+/**
+ * Create themed text style (replaces direct theme.colors.text.* references)
+ * Provides consistent typography with theme integration
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * style={{ color: theme.colors.text.primary, fontFamily: theme.typography.fontFamily.primary }}
+ *
+ * // After:
+ * style={createTextStyle('primary', theme, { fontSize: '14px', fontWeight: 600 })}
+ * ```
+ *
+ * @param variant - Text color variant from theme
+ * @param theme - Theme object
+ * @param options - Optional typography overrides
+ * @returns Style object for text
+ */
+export function createTextStyle(
+  variant: 'primary' | 'secondary' | 'tertiary' | 'disabled' | 'inverse',
+  theme: Theme,
+  options?: {
+    fontSize?: string;
+    fontWeight?: number;
+    fontFamily?: 'primary' | 'secondary' | 'mono' | 'display';
+  }
+): React.CSSProperties {
+  return {
+    color: theme.colors.text[variant],
+    fontFamily: theme.typography.fontFamily[options?.fontFamily || 'primary'],
+    ...(options?.fontSize && { fontSize: options.fontSize }),
+    ...(options?.fontWeight && { fontWeight: options.fontWeight }),
+  };
+}
+
+/**
+ * Create themed overlay background with opacity presets
+ * Replaces hardcoded rgba() values with theme-aware colors
+ * Cross-platform compatible - converts hex to rgba
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * background: 'rgba(0, 0, 0, 0.5)' // ❌ Hardcoded, bypasses theme
+ *
+ * // After:
+ * background: createThemedOverlay(theme, 'medium') // ✅ Theme-aware
+ * ```
+ *
+ * @param theme - Theme object
+ * @param opacity - Opacity preset ('light' | 'medium' | 'dark')
+ * @returns rgba color string
+ */
+export function createThemedOverlay(
+  theme: Theme,
+  opacity: 'light' | 'medium' | 'dark' = 'medium'
+): string {
+  const opacityMap = { light: 0.3, medium: 0.5, dark: 0.8 };
+  return createOverlayBackground(theme.colors.background.overlayDark, opacityMap[opacity]);
+}
+
+/**
+ * Create themed text with opacity (for secondary/muted text)
+ * Replaces hardcoded rgba() text colors with theme-aware colors
+ * Cross-platform compatible
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * color: 'rgba(255, 255, 255, 0.7)' // ❌ Hardcoded, bypasses theme
+ *
+ * // After:
+ * color: createThemedTextColor(theme, 'secondary', 0.7) // ✅ Theme-aware
+ * ```
+ *
+ * @param theme - Theme object
+ * @param variant - Text color variant ('primary' | 'secondary' | 'tertiary')
+ * @param opacity - Optional opacity override (uses theme default if not provided)
+ * @returns rgba color string or theme color
+ */
+export function createThemedTextColor(
+  theme: Theme,
+  variant: 'primary' | 'secondary' | 'tertiary' = 'secondary',
+  opacity?: number
+): string {
+  const color = theme.colors.text[variant];
+  if (opacity !== undefined) {
+    return createOverlayBackground(color, opacity);
+  }
+  return color;
+}
+
+/**
+ * Create themed shadow text color (for text shadow layers)
+ * Replaces hardcoded rgba() shadow colors with theme-aware shadows
+ * Cross-platform compatible - returns color only (not box-shadow)
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * color: 'rgba(0, 0, 0, 0.15)' // ❌ Hardcoded shadow color
+ *
+ * // After:
+ * color: createThemedShadowColor(theme, 0.15) // ✅ Theme-aware
+ * ```
+ *
+ * @param theme - Theme object
+ * @param opacity - Shadow opacity (0-1)
+ * @returns rgba color string for shadow layer
+ */
+export function createThemedShadowColor(
+  theme: Theme,
+  opacity: number
+): string {
+  return createOverlayBackground(theme.colors.shadows.default, opacity);
+}
+
+/**
+ * Create themed container style with variants
+ * Enhanced version of createCardBackground with preset variants
+ * Cross-platform compatible - no shadows
+ *
+ * @example
+ * ```tsx
+ * // Before:
+ * style={{ background: 'rgba(0, 0, 0, 0.5)', padding: '12px 20px', borderRadius: '12px' }}
+ *
+ * // After:
+ * style={createContainerStyle(theme, 'overlay', { padding: '12px 20px', borderRadius: '12px' })}
+ * ```
+ *
+ * @param theme - Theme object
+ * @param variant - Container variant ('card' | 'overlay' | 'elevated')
+ * @param options - Optional style overrides
+ * @returns Style object for container
+ */
+export function createContainerStyle(
+  theme: Theme,
+  variant: 'card' | 'overlay' | 'elevated' = 'card',
+  options?: {
+    padding?: string;
+    borderRadius?: string;
+  }
+): React.CSSProperties {
+  const backgrounds = {
+    card: theme.components.card.background,
+    overlay: createThemedOverlay(theme, 'medium'),
+    elevated: theme.colors.surface.elevated,
+  };
+
+  return {
+    background: backgrounds[variant],
+    padding: options?.padding || theme.components.card.padding,
+    borderRadius: options?.borderRadius || theme.components.card.borderRadius,
+  };
+}

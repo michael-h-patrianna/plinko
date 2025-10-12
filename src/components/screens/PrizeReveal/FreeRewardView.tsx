@@ -7,11 +7,11 @@
  * @param canClaim - Whether the claim button should be enabled
  */
 
-import spinsIcon from '../../../assets/free-spins.png';
-import gcIcon from '../../../assets/gc.png';
-import randomRewardIcon from '../../../assets/random_reward.png';
-import scIcon from '../../../assets/sc.png';
-import xpIcon from '../../../assets/xp.png';
+import spinsIcon from '../../../assets/images/free-spins.png';
+import gcIcon from '../../../assets/images/gc.png';
+import randomRewardIcon from '../../../assets/images/random_reward.png';
+import scIcon from '../../../assets/images/sc.png';
+import xpIcon from '../../../assets/images/xp.png';
 import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
@@ -66,7 +66,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
     >
       {/* Main card */}
       <AnimatedDiv
-        className="relative rounded-2xl p-8 max-w-md w-full"
+        className="rounded-2xl p-8 max-w-md w-full"
         style={{
           background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
           /* RN-compatible: removed boxShadow, using border for definition */

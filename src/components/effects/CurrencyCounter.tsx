@@ -8,6 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '../../theme';
 import { useAnimationDriver } from '@theme/animationDrivers';
 import { ANIMATION_DURATION } from '../../constants';
+import {
+  createCenteredContainer,
+  createThemedOverlay,
+  createThemedTextColor,
+} from '@theme/themeUtils';
 
 interface CounterIndicator {
   id: number;
@@ -139,11 +144,9 @@ export function CurrencyCounter({
   return (
     <div
       style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '12px',
+        ...createCenteredContainer('row', '12px'),
         padding: '12px 20px',
-        background: 'rgba(0, 0, 0, 0.5)',
+        background: createThemedOverlay(theme, 'medium'),
         borderRadius: '12px',
         position: 'relative',
       }}
@@ -153,9 +156,7 @@ export function CurrencyCounter({
           style={{
             width: '48px',
             height: '48px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
+            ...createCenteredContainer('row'),
             flexShrink: 0,
           }}
         >
@@ -252,7 +253,7 @@ export function CurrencyCounter({
           style={{
             fontSize: '14px',
             fontWeight: 600,
-            color: 'rgba(255, 255, 255, 0.7)',
+            color: createThemedTextColor(theme, 'secondary', 0.7),
             letterSpacing: '0.5px',
             textTransform: 'uppercase',
           }}

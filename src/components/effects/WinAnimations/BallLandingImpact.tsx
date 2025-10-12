@@ -1,13 +1,18 @@
 /**
  * Ball landing impact animation with shockwave ring and glow pulse
  * Subtle, polished effect triggered when ball lands in winning slot
+ *
+ * REFACTORED: Removed key counter useState pattern
+ * - Uses AnimatePresence with trigger-based key management
+ * - Animation lifecycle managed by driver, not React state
+ * - Component key derived from trigger timestamp for proper remounting
+ *
  * @param x - X position of impact
  * @param y - Y position of impact
  * @param color - Color for the impact effect
  * @param trigger - Whether to trigger the animation
  */
 
-import { useEffect, useState } from 'react';
 import { useAnimationDriver } from '@theme/animationDrivers';
 
 interface BallLandingImpactProps {
@@ -20,19 +25,20 @@ interface BallLandingImpactProps {
 export function BallLandingImpact({ x, y, color, trigger }: BallLandingImpactProps) {
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
+  const { AnimatePresence } = driver;
 
-  const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    if (trigger) {
-      setKey((prev) => prev + 1);
-    }
-  }, [trigger]);
-
-  if (!trigger) return null;
+  // Use timestamp-based key for AnimatePresence to ensure proper remounting
+  // When trigger changes from false to true, generate new key for fresh animation
+  const impactKey = trigger ? `impact-${Date.now()}` : 'no-impact';
 
   return (
-    <div key={key} className="absolute pointer-events-none" style={{ left: 0, top: 0, zIndex: 30 }}>
+    <AnimatePresence mode="wait">
+      {trigger && (
+        <div
+          key={impactKey}
+          className="absolute pointer-events-none"
+          style={{ left: 0, top: 0, zIndex: 30 }}
+        >
       {/* Single clean shockwave ring */}
       <AnimatedDiv
         className="absolute"
@@ -78,6 +84,8 @@ export function BallLandingImpact({ x, y, color, trigger }: BallLandingImpactPro
           ease: [0.22, 1, 0.36, 1],
         }}
       />
-    </div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

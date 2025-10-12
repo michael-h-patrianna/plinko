@@ -1,13 +1,39 @@
 /**
- * "You Won!" text animation adapted from animations library
- * Uses theme colors instead of hardcoded golden gradients
- * Premium text reveal with character-by-character animation
+ * "You Won!" text animation component with premium reveal effects
+ *
+ * Displays celebratory text with character-by-character animation,
+ * shadow layers for depth, and responsive sizing for different viewports.
+ *
+ * @example
+ * ```tsx
+ * <YouWonText />
+ * ```
+ *
+ * Features:
+ * - Character-by-character reveal animation
+ * - Multi-layer shadow for 3D depth effect
+ * - Responsive font sizing (32-48px based on viewport)
+ * - Theme-aware colors (uses primary theme colors)
+ * - Cross-platform compatible animations (transforms + opacity only)
+ *
+ * Animation Sequence:
+ * 1. Shadow layers fade in with scale (0.5s)
+ * 2. Characters pop in sequentially (staggered 0.04s each)
+ * 3. Glow burst appears behind each character
  */
 
 import { useMemo } from 'react';
 import { useTheme } from '../../theme';
 import { useAnimationDriver } from '@theme/animationDrivers';
+import {
+  createCenteredContainer,
+  createThemedShadowColor,
+} from '@theme/themeUtils';
 
+/**
+ * Renders "YOU WON!" text with premium animation effects
+ * No props - purely presentational component
+ */
 export function YouWonText() {
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
@@ -33,10 +59,7 @@ export function YouWonText() {
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...createCenteredContainer('column'),
         minHeight: '80px',
         padding: '20px',
         position: 'relative',
@@ -45,9 +68,7 @@ export function YouWonText() {
       <div
         style={{
           position: 'relative',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          ...createCenteredContainer('row'),
           height: '60px',
           whiteSpace: 'nowrap',
         }}
@@ -59,7 +80,7 @@ export function YouWonText() {
             fontSize: `${fontSize}px`,
             fontWeight: 900,
             letterSpacing,
-            color: 'rgba(0, 0, 0, 0.08)',
+            color: createThemedShadowColor(theme, 0.08),
             zIndex: 0,
             whiteSpace: 'nowrap',
             transform: 'translateY(6px)',
@@ -83,7 +104,7 @@ export function YouWonText() {
             fontSize: `${fontSize}px`,
             fontWeight: 900,
             letterSpacing,
-            color: 'rgba(0, 0, 0, 0.15)',
+            color: createThemedShadowColor(theme, 0.15),
             zIndex: 1,
             whiteSpace: 'nowrap',
             transform: 'translateY(3px)',

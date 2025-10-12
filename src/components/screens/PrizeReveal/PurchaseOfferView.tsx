@@ -70,7 +70,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
       >
         {/* Main card */}
         <AnimatedDiv
-          className="relative rounded-2xl p-8 max-w-md w-full overflow-hidden"
+          className="rounded-2xl p-8 max-w-md w-full overflow-hidden"
           style={{
             background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
             /* RN-compatible: removed boxShadow, using border for definition */

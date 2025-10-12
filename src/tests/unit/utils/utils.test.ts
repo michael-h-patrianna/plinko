@@ -1,6 +1,11 @@
 /**
  * Comprehensive unit tests for all utility functions
  * Tests edge cases, error conditions, and boundary conditions
+ *
+ * JUSTIFIED 'any' USAGE:
+ * - Tests need to access private internal state (cachedInfo) to reset device info cache
+ * - Tests manipulate DOM globals (window.ontouchstart) to simulate touch device detection
+ * - Type assertions needed for testing edge cases not covered by standard TypeScript types
  */
 
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */

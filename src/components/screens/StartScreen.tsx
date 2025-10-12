@@ -14,6 +14,7 @@ import { abbreviateNumber } from '@utils/formatNumber';
 import { useState } from 'react';
 import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
+import { createTextStyle } from '@theme/themeUtils';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -98,10 +99,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
       >
         <h2
           className="text-lg font-semibold mb-3 text-center"
-          style={{
-            color: theme.colors.text.primary,
-            fontFamily: theme.typography.fontFamily.primary,
-          }}
+          style={createTextStyle('primary', theme)}
         >
           Available Prizes
         </h2>
@@ -182,11 +180,11 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
                   )}
                   <span
                     className="font-medium flex items-center gap-1"
-                    style={{ color: theme.colors.text.primary }}
+                    style={createTextStyle('primary', theme)}
                   >
                     {displayText}
                     {isCombo && (
-                      <span style={{ color: theme.colors.text.tertiary }}>
+                      <span style={createTextStyle('tertiary', theme)}>
                         {isExpanded ? '▼' : '▶'}
                       </span>
                     )}
@@ -203,7 +201,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
                         background: getPrizeThemeColorWithOpacity(prize, theme, 0.08),
                         marginLeft: '8px',
                         borderRadius: theme.borderRadius.sm,
-                        color: theme.colors.text.secondary,
+                        ...createTextStyle('secondary', theme),
                       }}
                       initial={{
                         opacity: 0,

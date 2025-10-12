@@ -477,7 +477,10 @@ describe('useWinAnimationState', () => {
     it('should include correct event type in telemetry', () => {
       const { result } = renderHook(() => useWinAnimationState('idle'));
 
-      const events: Array<{ type: string; event: string }> = [
+      const events: Array<{
+        type: 'TRIGGER_LANDING_IMPACT' | 'START_ANTICIPATION' | 'SHOW_WIN_REVEAL' | 'RESET_ANIMATIONS';
+        event: string;
+      }> = [
         { type: 'TRIGGER_LANDING_IMPACT', event: 'TRIGGER_LANDING_IMPACT' },
         { type: 'START_ANTICIPATION', event: 'START_ANTICIPATION' },
         { type: 'SHOW_WIN_REVEAL', event: 'SHOW_WIN_REVEAL' },
@@ -488,7 +491,7 @@ describe('useWinAnimationState', () => {
         vi.clearAllMocks();
 
         act(() => {
-          result.current.dispatch({ type } as any);
+          result.current.dispatch({ type });
         });
 
         if ((telemetry.trackStateTransition as ReturnType<typeof vi.fn>).mock.calls.length > 0) {

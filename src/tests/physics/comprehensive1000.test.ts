@@ -1,6 +1,33 @@
 /**
  * Comprehensive 1000-trajectory validation test
  * Verifies that ball physics work correctly across all scenarios
+ *
+ * DETERMINISM REQUIREMENTS:
+ * - This test validates 1000 deterministic trajectories
+ * - Each trajectory uses seed = 20,000,000 + (testNum * 1234) for reproducibility
+ * - Running this test multiple times will always produce identical results
+ * - All physics validations (stuck detection, speed limits, overlap) are deterministic
+ *
+ * SEED USAGE:
+ * - Seeds start at 20,000,000 and increment by 1234 per test
+ * - Test 0: seed 20,000,000, Test 1: seed 20,001,234, etc.
+ * - This ensures broad coverage while maintaining reproducibility
+ *
+ * EXPECTED BEHAVIOR WITH SEEDS:
+ * - Each seed produces a consistent trajectory across runs
+ * - Physics validation results (pass/fail) are deterministic
+ * - Error patterns and failure analysis are reproducible
+ *
+ * MEMORY MANAGEMENT:
+ * - Processes 1000 trajectories with careful memory handling
+ * - Results are accumulated but intermediate trajectories are garbage collected
+ * - Progress logging every 100 tests to monitor execution
+ *
+ * @example
+ * // Same seed = same validation result
+ * const result1 = generateTrajectory({ seed: 20000000, ... });
+ * const result2 = generateTrajectory({ seed: 20000000, ... });
+ * // All validation checks will produce identical pass/fail status
  */
 
 import { describe, it, expect } from 'vitest';

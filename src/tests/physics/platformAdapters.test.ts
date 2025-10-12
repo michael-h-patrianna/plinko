@@ -4,6 +4,13 @@
  * Comprehensive tests for all platform adapters ensuring 100% coverage
  * Tests both success and error cases with proper browser API mocking
  *
+ * JUSTIFIED 'any' USAGE:
+ * - Tests need to access private internal state (cachedInfo) to reset caches between tests
+ * - Tests manipulate browser globals (window, globalThis, performance.memory) for edge cases
+ * - Mock objects with partial implementations require flexible typing
+ * - Type assertions needed when testing SSR scenarios (deleting window object)
+ * - Chrome-specific APIs (performance.memory) not in standard TypeScript DOM types
+ *
  * @vitest-environment jsdom
  */
 

@@ -13,6 +13,7 @@ import { lazy, Suspense, useMemo, useState } from 'react';
 import { useAppConfig } from '@config/AppConfigContext';
 import type { ChoiceMechanic } from './components/DevToolsMenu';
 import type { PerformanceMode } from '@config/appConfig';
+import type { Prize } from '@game/prizeTypes';
 
 // Lazy load the DevToolsMenu - this creates a separate chunk
 const DevToolsMenu = lazy(() =>
@@ -28,16 +29,15 @@ const DevToolsStartScreenOverlay = lazy(() =>
   }))
 );
 
-// Type for the game state returned by usePlinkoGame
-// JUSTIFIED 'any' USAGE: Prize type is not imported to avoid circular dependencies
-// The actual type checking is done at the hook level where Prize type is available
+/**
+ * Type for the game state returned by usePlinkoGame
+ * Contains prize array and internal controls for dev tools
+ */
 interface GameState {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prizes: Array<any>;
+  prizes: Array<Prize>;
   state: string;
   _internal: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    setWinningPrize: (prize: any) => void;
+    setWinningPrize: (prize: Prize) => void;
     setCurrentWinningIndex: (index: number) => void;
     regenerateTrajectoryForSlot: (targetSlotIndex: number) => void;
   };
@@ -108,7 +108,7 @@ export function DevToolsLoader(props: DevToolsLoaderProps) {
         gameState._internal.setCurrentWinningIndex(index);
         // Regenerate trajectory to target this slot so ball lands correctly
         gameState._internal.regenerateTrajectoryForSlot(index);
-        console.log(`[DevTools] Winner set to prize at index ${index}: ${prize.label || prize.type}`);
+        console.log(`[DevTools] Winner set to prize at index ${index}: ${prize.title || prize.type}`);
       }
     };
   }, [gameState]);

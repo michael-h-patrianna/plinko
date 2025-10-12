@@ -1,6 +1,11 @@
 /**
  * Unit tests for useMusicManager hook
  * Tests centralized music management based on game state
+ *
+ * JUSTIFIED 'any' USAGE:
+ * - Mock functions need to be cast to 'any' to use Vitest mock methods (mockReturnValue, mockImplementation)
+ * - TypeScript doesn't know that vi.fn() creates a mock with additional methods
+ * - This is standard practice in Vitest/Jest testing for mocking return values
  */
 
 import { renderHook } from '@testing-library/react';

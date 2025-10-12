@@ -2,9 +2,13 @@
  * Screen shake effect component
  * Applies shake animation to container on ball landing
  * Uses animation driver for cross-platform compatibility
+ *
+ * REFACTORED: Removed useEffect + setTimeout pattern
+ * - Animation lifecycle managed by driver's transition system
+ * - onComplete callback triggered by animation end, not setTimeout
+ * - No React state for animation state, purely declarative
  */
 
-import { useEffect, useState } from 'react';
 import { UI_DELAY } from '../../constants';
 import { useAnimationDriver } from '@theme/animationDrivers';
 
@@ -27,21 +31,8 @@ export function ScreenShake({
   onComplete,
   children,
 }: ScreenShakeProps) {
-  const [isShaking, setIsShaking] = useState(false);
   const driver = useAnimationDriver();
   const AnimatedDiv = driver.createAnimatedComponent('div');
-
-  useEffect(() => {
-    if (active) {
-      setIsShaking(true);
-      const timer = setTimeout(() => {
-        setIsShaking(false);
-        onComplete?.();
-      }, duration);
-
-      return () => clearTimeout(timer);
-    }
-  }, [active, duration, onComplete]);
 
   // Shake intensity configurations (cross-platform compatible)
   // Uses translateX and translateY only (GPU accelerated)
@@ -83,7 +74,7 @@ export function ScreenShake({
         width: '100%',
       }}
       animate={
-        isShaking
+        active
           ? {
               x: currentShake.x,
               y: currentShake.y,
@@ -98,6 +89,7 @@ export function ScreenShake({
         ease: [0.36, 0.07, 0.19, 0.97], // cubic-bezier for natural shake
         times: [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
       }}
+      onAnimationComplete={onComplete}
     >
       {children}
     </AnimatedDiv>

@@ -6,7 +6,7 @@
  * @param canClaim - Whether the try again button should be enabled
  */
 
-import noWinImage from '../../../assets/nowin.png';
+import noWinImage from '../../../assets/images/nowin.png';
 import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
@@ -32,7 +32,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
     >
       {/* Main card - subdued colors */}
       <AnimatedDiv
-        className="relative rounded-2xl p-8 max-w-sm w-full"
+        className="rounded-2xl p-8 max-w-sm w-full"
         style={{
           background: `linear-gradient(135deg, ${theme.colors.background.secondary}e6 0%, ${theme.colors.background.primary}f2 100%)`,
           /* RN-compatible: removed boxShadow, using border for definition */

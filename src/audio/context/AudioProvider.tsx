@@ -14,6 +14,7 @@ interface AudioContextValue {
   sfxController: SFXController | null;
   musicController: MusicController | null;
   volumeController: VolumeController | null;
+  audioAdapter: WebAudioAdapter | null;
   isInitialized: boolean;
   initializationError: Error | null;
 }
@@ -22,6 +23,7 @@ const AudioContext = createContext<AudioContextValue>({
   sfxController: null,
   musicController: null,
   volumeController: null,
+  audioAdapter: null,
   isInitialized: false,
   initializationError: null,
 });
@@ -119,6 +121,7 @@ export function AudioProvider({ children }: AudioProviderProps) {
     sfxController: sfxControllerRef.current,
     musicController: musicControllerRef.current,
     volumeController: volumeControllerRef.current,
+    audioAdapter: adapterRef.current,
     isInitialized,
     initializationError,
   };

@@ -2,8 +2,8 @@
  * UI controls component - title and navigation buttons
  */
 
-import arrowLeftImg from '../../assets/arrow-left.png';
-import arrowRightImg from '../../assets/arrow-right.png';
+import arrowLeftImg from '../../assets/images/arrow-left.png';
+import arrowRightImg from '../../assets/images/arrow-right.png';
 import { useTheme } from '../../theme';
 import { ThemedButton } from './ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
