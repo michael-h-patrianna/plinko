@@ -29,6 +29,7 @@ import { usePlinkoGame } from './hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from './theme';
 import { useAnimationDriver } from './theme/animationDrivers';
 import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from './theme/tokens';
+import { loadDevSettings, saveDevSettings } from '@utils/devToolsPersistence';
 
 /**
  * Main application content component
@@ -69,9 +70,16 @@ function AppContent({
     }
   }, [audioLoaded]);
 
-  const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>('drop-position');
-  const [showWinner, setShowWinner] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(false); // Default: music off
+  // Load persisted dev settings on mount
+  const persistedSettings = useMemo(() => loadDevSettings(), []);
+
+  const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>(persistedSettings.choiceMechanic);
+  const [showWinner, setShowWinner] = useState(persistedSettings.showWinner);
+  const [musicEnabled, setMusicEnabled] = useState(persistedSettings.musicEnabled);
+
+  // Animation lifecycle fix: Increment gameId on each reset to force Framer Motion to treat
+  // each remount as a fresh animation cycle (prevents animation state caching issues)
+  const [gameId, setGameId] = useState(0);
 
   // Error handlers for toast notifications
   const handleGameBoardError = useCallback(() => {
@@ -136,11 +144,30 @@ function AppContent({
         state === 'claimed'
       ) {
         resetGame();
+        setGameId((prev) => prev + 1);
       }
     },
   });
 
   const { isMobile, viewportWidth, lockedBoardWidth, isViewportLocked, shakeActive } = uiState;
+
+  // Restore persisted viewport width on mount (desktop only)
+  useEffect(() => {
+    if (!isMobile && viewportWidth !== persistedSettings.viewportWidth) {
+      // Only restore if we're in a state where viewport can change
+      if (state === 'idle' || state === 'ready') {
+        uiState.handleViewportChange(persistedSettings.viewportWidth, false);
+      }
+    }
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Wrap resetGame to increment gameId for animation lifecycle management
+  const handleResetGame = useCallback(() => {
+    resetGame();
+    setGameId((prev) => prev + 1);
+  }, [resetGame]);
 
   // Manage background music playback based on game state
   useMusicManager({
@@ -153,6 +180,19 @@ function AppContent({
   useEffect(() => {
     setBoardWidthForGame(lockedBoardWidth);
   }, [lockedBoardWidth]);
+
+  // Save dev settings to localStorage whenever they change
+  useEffect(() => {
+    const settings = {
+      choiceMechanic,
+      showWinner,
+      musicEnabled,
+      performanceMode,
+      viewportWidth,
+      themeName: theme.name,
+    };
+    saveDevSettings(settings);
+  }, [choiceMechanic, showWinner, musicEnabled, performanceMode, viewportWidth, theme.name]);
 
   // Memoize computed style objects to prevent recreation on every render
   const devToolsContainerStyle = useMemo(
@@ -178,6 +218,9 @@ function AppContent({
       const shouldReset =
         state === 'ready' || state === 'revealed' || state === 'claimed';
       uiState.handleViewportChange(newWidth, shouldReset);
+      if (shouldReset) {
+        setGameId((prev) => prev + 1);
+      }
     },
     [state, uiState]
   );
@@ -240,7 +283,7 @@ function AppContent({
               <AnimatePresence mode="wait">
                 {(state === 'idle' || state === 'ready') && (
                   <StartScreen
-                    key="start-screen"
+                    key={`start-screen-${gameId}`}
                     prizes={prizes}
                     onStart={startGame}
                     disabled={isLoadingPrizes || Boolean(prizeLoadError) || prizes.length === 0}
@@ -252,7 +295,7 @@ function AppContent({
             </PrizeErrorBoundary>
 
             {/* Main game board with ball - stays visible during celebrating state */}
-            <GameBoardErrorBoundary onReset={resetGame} onError={handleGameBoardError}>
+            <GameBoardErrorBoundary onReset={handleResetGame} onError={handleGameBoardError}>
               <AnimatePresence mode="wait">
                 {state !== 'idle' &&
                   state !== 'ready' &&
@@ -298,10 +341,10 @@ function AppContent({
               <AnimatePresence mode="wait">
                 {state === 'revealed' && selectedPrize && (
                   <PrizeReveal
-                    key="prize-reveal"
+                    key={`prize-reveal-${gameId}`}
                     prize={selectedPrize}
                     onClaim={claimPrize}
-                    onReset={resetGame}
+                    onReset={handleResetGame}
                     canClaim={canClaim}
                   />
                 )}
@@ -312,7 +355,7 @@ function AppContent({
             <PrizeErrorBoundary onError={handlePrizeError}>
               <AnimatePresence mode="wait">
                 {state === 'claimed' && selectedPrize && (
-                  <PrizeClaimed key="prize-claimed" prize={selectedPrize} onClose={resetGame} />
+                  <PrizeClaimed key={`prize-claimed-${gameId}`} prize={selectedPrize} onClose={handleResetGame} />
                 )}
               </AnimatePresence>
             </PrizeErrorBoundary>
@@ -342,7 +385,9 @@ function AppContent({
  * Wraps the app in AppConfigProvider, ThemeProvider, and ToastProvider
  */
 export function App() {
-  const [performanceMode, setPerformanceMode] = useState<PerformanceMode>('high-quality');
+  // Load persisted performance mode on mount
+  const persistedSettings = useMemo(() => loadDevSettings(), []);
+  const [performanceMode, setPerformanceMode] = useState<PerformanceMode>(persistedSettings.performanceMode);
 
   // Pre-warm trail optimization cache on app initialization
   // This eliminates first-frame computation cost by pre-computing all trail lookup tables (1-20 points)

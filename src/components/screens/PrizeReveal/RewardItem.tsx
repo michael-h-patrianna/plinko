@@ -109,8 +109,8 @@ export function RewardItem({
         /* RN-compatible: removed boxShadow, using border for definition */
         border: `1px solid ${borderColor}`,
       }}
-      initial={{ scale: 0, opacity: 0, x: initialX, y: initialY, rotate: arcFromLeft ? -20 : 20 }}
-      animate={{ scale: 1, opacity: 1, x: 0, y: 0, rotate: 0 }}
+      initial={{ scale: 0, x: initialX, y: initialY, rotate: arcFromLeft ? -20 : 20 }}
+      animate={{ scale: 1, x: 0, y: 0, rotate: 0, opacity: [0.3, 1] }}
       transition={{
         duration: 0.4,
         delay,

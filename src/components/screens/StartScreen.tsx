@@ -17,7 +17,6 @@ import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
 import { createTextStyle } from '@theme/themeUtils';
 import { PopupOverlay } from '../layout/PopupOverlay';
-import { POPUP_ANIMATIONS } from '../layout/popupAnimations';
 
 interface StartScreenProps {
   prizes: PrizeConfig[];
@@ -40,7 +39,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
     <PopupOverlay zIndex={theme.zIndex[30]} testId="start-screen-overlay">
       {/* Centered content container */}
       <div className="flex flex-col items-center justify-center w-full max-w-md">
-        {/* Title - using theme */}
+        {/* Title - using theme with premium entrance animation */}
         <AnimatedH1
           key={titleGradient}
           className="text-4xl font-extrabold mb-6 text-center"
@@ -58,21 +57,24 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
                 }),
             fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
           }}
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.85, y: 20, rotate: -2 }}
           animate={{
-            scale: 1,
-            opacity: 1,
+            scale: [0.85, 1.15, 0.98, 1.02, 1],
+            y: [20, -5, 2, 0, 0],
+            rotate: [-2, 1, 0, 0, 0],
+            opacity: [0.3, 1, 1, 1, 1],
           }}
           transition={{
-            duration: POPUP_ANIMATIONS.entrance.duration,
-            delay: 0.1,
-            ease: POPUP_ANIMATIONS.entrance.ease,
+            duration: 0.8,
+            delay: 0,
+            times: [0, 0.4, 0.65, 0.85, 1],
+            ease: [0.34, 1.56, 0.64, 1],
           }}
         >
           Plinko Popup
         </AnimatedH1>
 
-        {/* Prize list - card background is content styling, keep it */}
+        {/* Prize list - card background with diagonal swoosh entrance */}
         <AnimatedDiv
           className="p-4 mb-8 w-full"
           style={{
@@ -81,12 +83,12 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
             border: theme.components.card.border || `1px solid ${theme.colors.border.default}`,
             borderRadius: theme.components.card.borderRadius || theme.borderRadius.card,
           }}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 30, x: -20, scale: 0.9, rotate: -3, opacity: 0.5 }}
+          animate={{ y: 0, x: 0, scale: 1, rotate: 0, opacity: 1 }}
           transition={{
-            duration: POPUP_ANIMATIONS.entrance.duration,
-            delay: 0.2,
-            ease: POPUP_ANIMATIONS.entrance.ease,
+            duration: 0.5,
+            delay: 0.3,
+            ease: [0.34, 1.56, 0.64, 1],
           }}
         >
           <h2
@@ -125,8 +127,8 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
             return (
               <AnimatedDiv
                 key={prize.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ x: -20, scale: 0.95, opacity: 0.3 }}
+                animate={{ x: 0, scale: 1, opacity: 1 }}
                 whileHover={{
                   scale: 1.02,
                   transition: {
@@ -136,8 +138,8 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
                   },
                 }}
                 transition={{
-                  duration: 0.3,
-                  delay: 0.3 + index * 0.05,
+                  duration: 0.35,
+                  delay: 0.5 + index * 0.04,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               >
@@ -196,21 +198,18 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
                         ...createTextStyle('secondary', theme),
                       }}
                       initial={{
-                        opacity: 0,
                         maxHeight: 0,
                         marginTop: 0,
                         paddingTop: 0,
                         paddingBottom: 0,
                       }}
                       animate={{
-                        opacity: 1,
                         maxHeight: 100,
                         marginTop: 4,
                         paddingTop: 8,
                         paddingBottom: 8,
                       }}
                       exit={{
-                        opacity: 0,
                         maxHeight: 0,
                         marginTop: 0,
                         paddingTop: 0,
@@ -239,12 +238,12 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
           </div>
         </AnimatedDiv>
 
-        {/* Play button */}
+        {/* Play button - final element in choreographed sequence */}
         <ThemedButton
           onClick={onStart}
           disabled={disabled}
           entranceAnimation="hero"
-          delay={0.3}
+          delay={0.7}
           testId="drop-ball-button"
           className="min-w-[120px] h-14 text-lg"
         >

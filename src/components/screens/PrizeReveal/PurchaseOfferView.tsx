@@ -1,5 +1,20 @@
 /**
- * Purchase offer reveal view with special deal styling
+ * Purchase offer reveal view with premium choreographed animations
+ *
+ * Features sophisticated orchestrated entrance sequence for purchase flow:
+ * - 120% EXTRA badge: Elastic pop with scale overshoot (0s, 0.5s duration)
+ * - Sparkles: Enhanced decorative particles with scale pop (0.1s, 2s duration)
+ * - Special Offer title: Diagonal swoosh entrance with elastic bounce (0.25s, 0.5s duration)
+ * - Rewards container: Opposite diagonal swoosh (0.4s, 0.5s duration)
+ * - Individual rewards: Enhanced pop with anticipation (0.5s+, 70ms stagger)
+ * - Additional benefits: Subtle fade for secondary content (0.8s, 0.4s duration)
+ * - Purchase button: Elastic hero entrance emphasizing CTA (0.9s, 0.7s duration)
+ * - Limited time text: Quick fade for urgency (1.1s, 0.3s duration)
+ *
+ * All animations are cross-platform safe (transforms + opacity only, no blur/filters/shadows)
+ * Overlapping animations create premium, sophisticated feel (~1.2-1.5s total sequence)
+ * Personality is exciting but refined - premium value proposition vs purely celebratory
+ *
  * Displays rewards with ribbon banner and price button, opens checkout popup
  * Uses PopupOverlay for consistent semi-transparent background
  * @param prize - Prize configuration with purchase offer details
@@ -35,6 +50,20 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
     offer.title.match(/\$[\d.]+/) || ['$29.99'];
   const price = priceMatch[0];
 
+  // Premium choreographed timing - sophisticated overlapping sequence for purchase flow
+  const timing = {
+    badge: 0,                    // 120% EXTRA badge pops in immediately with elastic bounce
+    sparkles: 0.1,               // Sparkles start slightly after badge for layered effect
+    sparkleStagger: 80,          // Tight 80ms stagger for rapid sparkle burst (ms)
+    title: 0.25,                 // Title swooshes in while badge still settling
+    rewardsContainer: 0.4,       // Container swooshes in while title animating (overlap)
+    firstReward: 0.5,            // First reward item pops during container entrance
+    rewardStagger: 70,           // Tight 70ms stagger for rapid-fire reward reveals (ms)
+    benefits: 0.8,               // Benefits fade in as rewards complete
+    purchaseButton: 0.9,         // CTA appears with prominent hero entrance
+    limitedTime: 1.1,            // Urgency text appears near end for time pressure
+  };
+
   const handlePurchaseClick = () => {
     setShowCheckout(true);
   };
@@ -66,7 +95,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
       <PopupOverlay zIndex={theme.zIndex[40]} testId="purchase-offer-overlay">
         {/* Content container - no card background, but keep decorative elements */}
         <div className="max-w-md w-full overflow-visible relative">
-          {/* "120% EXTRA" Badge - positioned above title */}
+          {/* "120% EXTRA" Badge - premium seal entrance with elastic pop */}
           <AnimatedDiv
             className="font-bold uppercase whitespace-nowrap mx-auto mb-4 w-fit"
             style={{
@@ -78,14 +107,24 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               borderRadius: '20px',
               letterSpacing: '1px',
             }}
-            initial={{ y: -20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.35, delay: 0.2, ease: [0.34, 1.56, 0.64, 1] }}
+            initial={{ scale: 0.8, y: -10, rotate: -3 }}
+            animate={{
+              scale: [0.8, 1.15, 0.95, 1],
+              y: [-10, 5, -2, 0],
+              rotate: [-3, 2, -1, 0],
+              opacity: [0.3, 1, 1, 1],
+            }}
+            transition={{
+              duration: 0.5,
+              delay: timing.badge,
+              times: [0, 0.5, 0.75, 1],
+              ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+            }}
           >
             120% EXTRA
           </AnimatedDiv>
 
-          {/* Sparkles for offer - Cross-platform: linear gradient instead of radial */}
+          {/* Sparkles for offer - enhanced decorative particles with scale pop */}
           {Array.from({ length: 4 }).map((_, i) => {
             const colors = [
               theme.colors.game.ball.primary,
@@ -108,16 +147,15 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                   left: '50%',
                   top: '20%',
                 }}
-                initial={{ x: 0, y: 0, opacity: 0, scale: 0 }}
+                initial={{ x: 0, y: 0, scale: 0 }}
                 animate={{
                   x: offsetX,
                   y: [-80, -100],
-                  opacity: [0, 1, 0.6, 0],
-                  scale: [0, 1, 0.6, 0.3],
+                  scale: [0, 1.3, 0.7, 0.3],
                 }}
                 transition={{
                   duration: 2,
-                  delay: i * 0.15,
+                  delay: timing.sparkles + (i * timing.sparkleStagger) / 1000,
                   ease: [0.22, 1, 0.36, 1],
                 }}
               />
@@ -125,15 +163,19 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
           })}
 
           <div role="status" aria-live="polite" className="text-center">
-            {/* Special Offer header - aligned with other views */}
+            {/* Special Offer header - diagonal swoosh entrance with premium feel */}
             <AnimatedH2
               className="text-3xl font-extrabold mb-6"
               style={{
                 color: theme.colors.text.primary,
               }}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.25, delay: 0.3 }}
+              initial={{ x: -30, y: 30, scale: 0.9, rotate: 3, opacity: 0.5 }}
+              animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+              transition={{
+                duration: 0.5,
+                delay: timing.title,
+                ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+              }}
             >
               {offer.title}
             </AnimatedH2>
@@ -143,15 +185,19 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               <>
                 <AnimatedDiv
                   className="flex flex-wrap gap-3 justify-center my-6"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.25, delay: 0.5 }}
+                  initial={{ x: 20, y: 30, scale: 0.95, rotate: -2, opacity: 0.5 }}
+                  animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.5,
+                    delay: timing.rewardsContainer,
+                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                  }}
                 >
                   {rewardItems.map((item, index) => (
                     <div key={`${item.type}-${index}`} style={{ width: '120px' }}>
                       <RewardItem
                         {...item}
-                        delay={0.6 + index * 0.1}
+                        delay={timing.firstReward + (index * timing.rewardStagger) / 1000}
                         index={index}
                         totalCount={rewardItems.length}
                       />
@@ -159,12 +205,16 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                   ))}
                 </AnimatedDiv>
 
-                {/* Additional benefits */}
+                {/* Additional benefits - subtle fade for secondary content */}
                 <AnimatedDiv
                   className="text-center mb-6"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.25, delay: 0.8 }}
+                  initial={{ y: 15, opacity: 0.3 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{
+                    duration: 0.4,
+                    delay: timing.benefits,
+                    ease: [0.22, 1, 0.36, 1], // Smooth ease out
+                  }}
                 >
                   <div
                     className="text-sm font-medium"
@@ -181,22 +231,28 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               </>
             )}
 
-            {/* Purchase button with price */}
+            {/* Purchase button with price - prominent elastic hero entrance for CTA */}
             <ThemedButton
               onClick={handlePurchaseClick}
               disabled={!canClaim}
-              delay={0.5}
+              delay={timing.purchaseButton}
+              entranceAnimation="hero"
               className="w-full min-w-[120px] h-14 text-lg"
               testId="claim-prize-button"
             >
               {price}
             </ThemedButton>
 
+            {/* Limited time text - quick fade for urgency */}
             <AnimatedP
               className="text-slate-400 text-xs mt-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.25, delay: 1.4 }}
+              initial={{ y: 5, opacity: 0.3 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{
+                duration: 0.3,
+                delay: timing.limitedTime,
+                ease: [0.22, 1, 0.36, 1], // Smooth ease out
+              }}
             >
               Limited time offer - claim it now!
             </AnimatedP>

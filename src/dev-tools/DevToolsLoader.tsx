@@ -39,7 +39,7 @@ interface GameState {
   _internal: {
     setWinningPrize: (prize: Prize) => void;
     setCurrentWinningIndex: (index: number) => void;
-    regenerateTrajectoryForSlot: (targetSlotIndex: number) => void;
+    prizeSession: { prizes: Array<Prize>; winningIndex: number } | null;
   };
 }
 
@@ -86,8 +86,9 @@ export function DevToolsLoader(props: DevToolsLoaderProps) {
   const handleSelectWinner = useMemo(() => {
     if (!gameState) return undefined;
 
-    return (index: number) => {
-      const prizes = gameState.prizes;
+    return (visualIndex: number) => {
+      const displayedPrizes = gameState.prizes;
+      const prizeSession = gameState._internal.prizeSession;
 
       // Only allow changing winner before game starts
       if (gameState.state !== 'idle' && gameState.state !== 'ready') {
@@ -95,21 +96,43 @@ export function DevToolsLoader(props: DevToolsLoaderProps) {
         return;
       }
 
-      if (index < 0 || index >= prizes.length) {
-        console.warn(`[DevTools] Invalid prize index: ${index}. Valid range: 0-${prizes.length - 1}`);
+      if (visualIndex < 0 || visualIndex >= displayedPrizes.length) {
+        console.warn(`[DevTools] Invalid prize index: ${visualIndex}. Valid range: 0-${displayedPrizes.length - 1}`);
         return;
       }
 
-      const prize = prizes[index];
-      if (prize) {
-        // Set the winning prize (this is what will be revealed)
-        gameState._internal.setWinningPrize(prize);
-        // Set the visual indicator to show which prize is selected
-        gameState._internal.setCurrentWinningIndex(index);
-        // Regenerate trajectory to target this slot so ball lands correctly
-        gameState._internal.regenerateTrajectoryForSlot(index);
-        console.log(`[DevTools] Winner set to prize at index ${index}: ${prize.title || prize.type}`);
+      if (!prizeSession) {
+        console.warn(`[DevTools] Prize session not loaded yet`);
+        return;
       }
+
+      // Get the prize at the visual position (from potentially swapped array)
+      const clickedPrize = displayedPrizes[visualIndex];
+      if (!clickedPrize) {
+        console.warn(`[DevTools] No prize found at visual index ${visualIndex}`);
+        return;
+      }
+
+      // Find the ORIGINAL index of this prize in the prize session (before any swapping)
+      const originalIndex = prizeSession.prizes.findIndex((p) => p.id === clickedPrize.id);
+
+      if (originalIndex === -1) {
+        console.warn(`[DevTools] Could not find prize ${clickedPrize.id} in original prize session`);
+        return;
+      }
+
+      console.log(`[DevTools] Shift+click on visual index ${visualIndex} (${clickedPrize.title || clickedPrize.type})`);
+      console.log(`[DevTools] Mapped to original index ${originalIndex} in prize session`);
+
+      // ONLY manipulate prize data - no trajectory generation here!
+      // The winning prize is what will be revealed
+      gameState._internal.setWinningPrize(clickedPrize);
+      // The winning index should be the ORIGINAL index in the prize session
+      // This is what PlinkoBoard will use to target the correct slot
+      gameState._internal.setCurrentWinningIndex(originalIndex);
+
+      console.log(`[DevTools] Winner set to: ${clickedPrize.title || clickedPrize.type} (prize session index ${originalIndex})`);
+      console.log(`[DevTools] PlinkoBoard will generate trajectory to target slot ${originalIndex}`);
     };
   }, [gameState]);
 

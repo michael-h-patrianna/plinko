@@ -69,7 +69,6 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     dispatch,
     getBallPosition,
     getCurrentTrajectoryPoint,
-    _regenerateTrajectoryForSlot,
   } = useGameState({
     prizeSession,
     boardWidth,
@@ -78,6 +77,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     choiceMechanic,
     currentFrameRef,
     winningPrize,
+    currentWinningIndex,
     winningPrizeLockedRef,
     setWinningPrize,
     setCurrentWinningIndex,
@@ -160,7 +160,7 @@ export function usePlinkoGame(options: UsePlinkoGameOptions = {}) {
     _internal: {
       setWinningPrize,
       setCurrentWinningIndex,
-      regenerateTrajectoryForSlot: _regenerateTrajectoryForSlot,
+      prizeSession, // Expose original prize session for dev tools
     },
   };
 }

@@ -33,24 +33,23 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
           left: '50%',
           top: '50%',
           zIndex: 5,
+          opacity: 0.35,
         }}
         initial={{
           x: '-50%',
           y: '-50%',
-          scale: 0,
-          opacity: 0
+          scale: 0.8,
         }}
         animate={{
           x: '-50%',
           y: '-50%',
           scale: 1,
-          opacity: 0.35
         }}
         transition={{
           type: 'spring',
-          stiffness: 260,
-          damping: 20,
-          delay: 0.1
+          stiffness: 280,
+          damping: 18,
+          delay: 0
         }}
       >
         {/* Expanding rings - single pulse */}
@@ -65,16 +64,16 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
               border: `2px solid ${theme.colors.status.success}`,
               top: '0',
               left: '0',
+              opacity: 0,
             }}
-            initial={{ scale: 1, opacity: 0 }}
+            initial={{ scale: 1 }}
             animate={{
               scale: 2.5,
-              opacity: 0,
             }}
             transition={{
               duration: 1.2,
-              delay: 0.15 + i * 0.15,
-              ease: 'easeOut',
+              delay: 0.15 + i * 0.1,
+              ease: [0.25, 0.46, 0.45, 0.94],
             }}
           />
         ))}
@@ -82,17 +81,17 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         {/* Checkmark symbol */}
         <AnimatedDiv
           className="absolute inset-0 flex items-center justify-center text-6xl font-bold"
-          style={{ color: theme.colors.status.success }}
-          initial={{ scale: 0, opacity: 0 }}
+          style={{ color: theme.colors.status.success, opacity: 0.6 }}
+          initial={{ scale: 0.7, rotate: -15 }}
           animate={{
             scale: 1,
-            opacity: 0.6
+            rotate: 0,
           }}
           transition={{
             type: 'spring',
-            stiffness: 300,
-            damping: 15,
-            delay: 0.15
+            stiffness: 320,
+            damping: 16,
+            delay: 0.05
           }}
         >
           ✓
@@ -112,15 +111,17 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
             fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
 
           }}
-          initial={{ scale: 0, rotate: -5, opacity: 0 }}
+          initial={{ x: -30, y: 20, scale: 0.85, rotate: -8 }}
           animate={{
+            x: 0,
+            y: 0,
             scale: 1,
             rotate: 0,
-            opacity: 1,
+            opacity: [0.5, 1],
           }}
           transition={{
-            duration: 0.35,
-            delay: 0.5,
+            duration: 0.5,
+            delay: 0.35,
             ease: [0.34, 1.56, 0.64, 1],
           }}
         >
@@ -131,9 +132,9 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         <AnimatedP
           className="mb-8 text-lg"
           style={{ color: theme.colors.text.secondary }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.25, delay: 0.8 }}
+          initial={{ y: 15, opacity: 0.3 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.35, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           Your reward has been claimed successfully.
         </AnimatedP>
@@ -142,7 +143,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         <ThemedButton
           onClick={onClose}
           entranceAnimation="hero"
-          delay={0.32}
+          delay={0.9}
           testId="close-button"
           className="min-w-[120px] h-14 text-lg"
         >

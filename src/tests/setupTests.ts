@@ -18,13 +18,16 @@ const mockMatchMedia = vi.fn().mockImplementation((query: string) => {
   return mediaQueryList;
 });
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  configurable: true,
-  value: mockMatchMedia,
-});
+// Only set matchMedia if running in a DOM environment (JSDOM)
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    configurable: true,
+    value: mockMatchMedia,
+  });
+}
 
-// Ensure globalThis.window also has matchMedia
+// Ensure globalThis.window also has matchMedia if it exists
 if (typeof globalThis.window !== 'undefined') {
   Object.defineProperty(globalThis.window, 'matchMedia', {
     writable: true,
