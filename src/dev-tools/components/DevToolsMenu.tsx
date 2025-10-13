@@ -57,7 +57,6 @@ const CHOICE_MECHANICS: { value: ChoiceMechanic; label: string }[] = [
 
 const PERFORMANCE_MODES: { value: PerformanceMode; label: string; description: string }[] = [
   { value: 'high-quality', label: 'High Quality', description: '60 FPS, trail, full particles' },
-  { value: 'balanced', label: 'Balanced', description: '60 FPS, reduced particles' },
   { value: 'power-saving', label: 'Power Saving', description: '30 FPS, minimal effects' },
 ];
 

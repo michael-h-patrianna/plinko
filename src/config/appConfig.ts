@@ -12,13 +12,12 @@ export interface FeatureFlags {
  * Performance mode configuration
  * Allows parent applications to control quality vs battery trade-offs
  */
-export type PerformanceMode = 'high-quality' | 'balanced' | 'power-saving';
+export type PerformanceMode = 'high-quality' | 'power-saving';
 
 export interface PerformanceConfig {
   /**
    * Performance mode controls quality vs battery consumption
    * - 'high-quality': Full visual effects (60 FPS, all particles, trail effects)
-   * - 'balanced': Moderate quality (60 FPS, reduced particles)
    * - 'power-saving': Battery optimized (30 FPS, minimal particles, no trail)
    * @default 'high-quality'
    */
@@ -45,7 +44,7 @@ export interface PerformanceConfig {
     pegFlashDurationMs?: number;
     /** Enable animation stats logging (debug). Default: false */
     logAnimationStats?: boolean;
-    /** Enable advanced motion effects (squash/stretch, motion blur, speed-based trail intensity). Default: true for high-quality/balanced, false for power-saving */
+    /** Enable advanced motion effects (squash/stretch, motion blur, speed-based trail intensity). Default: true for high-quality, false for power-saving */
     enableMotionEffects?: boolean;
   };
 }
@@ -145,17 +144,6 @@ export function getPerformanceSetting<K extends keyof Required<PerformanceConfig
       pegFlashDurationMs: 300,
       logAnimationStats: false,
       enableMotionEffects: true, // Full motion effects
-    },
-    balanced: {
-      fps: 60,
-      fpsCap: 60,
-      showTrail: true,
-      maxTrailLength: 16,
-      particleMultiplier: 0.7,
-      enableInfiniteAnimations: false,
-      pegFlashDurationMs: 300,
-      logAnimationStats: false,
-      enableMotionEffects: true, // Keep motion effects in balanced mode
     },
     'power-saving': {
       fps: 30,

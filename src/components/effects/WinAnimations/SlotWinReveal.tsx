@@ -37,10 +37,10 @@ export function SlotWinReveal({ x, y, width, height, color, label, isActive }: S
   const particleMultiplier = getPerformanceSetting(performance, 'particleMultiplier') ?? 1.0;
   const enableInfiniteAnimations = getPerformanceSetting(performance, 'enableInfiniteAnimations') ?? true;
 
-  // Calculate ray count based on particle multiplier (12 high-quality, 8 balanced, 6 power-saving)
+  // Calculate ray count based on particle multiplier (12 high-quality, 6 power-saving)
   const rayCount = Math.max(6, Math.round(12 * particleMultiplier));
 
-  // Calculate sparkle count based on particle multiplier (8 high-quality, 6 balanced, 4 power-saving)
+  // Calculate sparkle count based on particle multiplier (8 high-quality, 4 power-saving)
   const sparkleCount = Math.max(4, Math.round(8 * particleMultiplier));
 
   // Memoize sparkle positions to avoid recalculating Math.random() on every render

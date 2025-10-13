@@ -12,6 +12,7 @@ import { useAnimationDriver } from '@theme/animationDrivers';
 import { useEffect } from 'react';
 import { useAudio } from '../../../audio/context/AudioProvider';
 import { useTheme } from '../../../theme';
+import { useAppConfig } from '@config/AppConfigContext';
 import { ConfettiSpiral } from './ConfettiSpiral';
 import { FlashOverlay } from './FlashOverlay';
 import { StarBurst } from './StarBurst';
@@ -30,6 +31,8 @@ export function CelebrationOverlay({
   const AnimatedDiv = driver.createAnimatedComponent('div');
   const { theme } = useTheme();
   const { sfxController } = useAudio();
+  const { performance } = useAppConfig();
+  const isPowerSaving = performance.mode === 'power-saving';
 
   const prizeType = prize.type;
 
@@ -85,8 +88,8 @@ export function CelebrationOverlay({
     );
   }
 
-  // For wins (free or purchase), show confetti and dimming
-  const showConfetti = prizeType === 'free' || (prizeType === 'purchase' && Math.random() > 0.5);
+  // For wins (free or purchase), show confetti and dimming - DISABLE in power-saving mode
+  const showConfetti = !isPowerSaving && (prizeType === 'free' || (prizeType === 'purchase' && Math.random() > 0.5));
 
   // Calculate confetti origin - center of board for maximum visual impact
   const confettiOriginX = '50%';
@@ -121,7 +124,7 @@ export function CelebrationOverlay({
         }}
       />
 
-      {/* Premium celebration choreography - highest z-index to appear above everything */}
+      {/* Premium celebration choreography - ONLY render in non-power-saving mode */}
       {showConfetti && (
         <div
           className="absolute inset-0 pointer-events-none"

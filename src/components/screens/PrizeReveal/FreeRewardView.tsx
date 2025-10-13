@@ -29,6 +29,7 @@ import { CurrencyCounter } from '../../effects/CurrencyCounter';
 import { YouWonText } from '../../effects/YouWonText';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { PopupOverlay } from '../../layout/PopupOverlay';
+import { useAppConfig } from '@config/AppConfigContext';
 
 interface FreeRewardViewProps {
   prize: Prize;
@@ -39,6 +40,10 @@ interface FreeRewardViewProps {
 export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps) {
   const { AnimatedDiv, AnimatedP } = useAnimation();
   const { theme } = useTheme();
+  const { performance } = useAppConfig();
+
+  // Disable complex animations in power-saving mode
+  const isPowerSaving = performance.mode === 'power-saving';
 
   const rewards = prize.freeReward;
   if (!rewards) return null;
@@ -74,53 +79,73 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
       {/* Content container - no card background */}
       <div className="max-w-md w-full">
         <div role="status" aria-live="polite" className="text-center">
-          {/* Epic "You Won!" text with premium elastic bounce entrance */}
+          {/* Epic "You Won!" text with premium elastic bounce entrance (simplified in power-saving mode) */}
           <AnimatedDiv
-            initial={{ scale: 0.85, y: 20, rotate: -2 }}
-            animate={{
-              scale: [0.85, 1.12, 0.98, 1.02, 1],
-              y: [20, -5, 2, 0, 0],
-              rotate: [-2, 1, 0, 0, 0],
-              opacity: [0.3, 1, 1, 1, 1],
-            }}
-            transition={{
-              duration: 0.6,
-              delay: timing.youWonEntrance,
-              times: [0, 0.4, 0.65, 0.85, 1],
-              ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { scale: 0.85, y: 20, rotate: -2 }}
+            animate={
+              isPowerSaving
+                ? { opacity: 1 }
+                : {
+                    scale: [0.85, 1.12, 0.98, 1.02, 1],
+                    y: [20, -5, 2, 0, 0],
+                    rotate: [-2, 1, 0, 0, 0],
+                    opacity: [0.3, 1, 1, 1, 1],
+                  }
+            }
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0, ease: 'easeOut' }
+                : {
+                    duration: 0.6,
+                    delay: timing.youWonEntrance,
+                    times: [0, 0.4, 0.65, 0.85, 1],
+                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                  }
+            }
           >
             <YouWonText />
           </AnimatedDiv>
 
-          {/* All rewards with counter animations - swooshes in diagonally while YouWon is still animating */}
+          {/* All rewards with counter animations - swooshes in diagonally while YouWon is still animating (simplified in power-saving mode) */}
           <AnimatedDiv
             className="flex flex-col gap-4 my-8"
-            initial={{ x: 20, y: 40, scale: 0.9, rotate: 2, opacity: 0.5 }}
-            animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
-            transition={{
-              duration: 0.5,
-              delay: timing.rewardsContainerSwoosh,
-              ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { x: 20, y: 40, scale: 0.9, rotate: 2, opacity: 0.5 }}
+            animate={isPowerSaving ? { opacity: 1 } : { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0.1, ease: 'easeOut' }
+                : {
+                    duration: 0.5,
+                    delay: timing.rewardsContainerSwoosh,
+                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                  }
+            }
           >
-            {/* GC Counter with enhanced pop entrance */}
+            {/* GC Counter with enhanced pop entrance (simplified in power-saving mode) */}
             {hasGC && (() => {
               const { entranceDelay, countingDelay } = getNextCounterTiming();
               return (
                 <AnimatedDiv
-                  initial={{ scale: 0.7, rotate: -5 }}
-                  animate={{
-                    scale: [0.7, 1.1, 1],
-                    rotate: [-5, 2, 0],
-                    opacity: [0.3, 1, 1],
-                  }}
-                  transition={{
-                    duration: timing.counterEntranceDuration / 1000,
-                    delay: entranceDelay,
-                    times: [0, 0.6, 1],
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -5 }}
+                  animate={
+                    isPowerSaving
+                      ? { opacity: 1 }
+                      : {
+                          scale: [0.7, 1.1, 1],
+                          rotate: [-5, 2, 0],
+                          opacity: [0.3, 1, 1],
+                        }
+                  }
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: timing.counterEntranceDuration / 1000,
+                          delay: entranceDelay,
+                          times: [0, 0.6, 1],
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   <CurrencyCounter
                     targetAmount={rewards.gc!}
@@ -132,23 +157,31 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               );
             })()}
 
-            {/* SC Counter with enhanced pop entrance */}
+            {/* SC Counter with enhanced pop entrance (simplified in power-saving mode) */}
             {hasSC && (() => {
               const { entranceDelay, countingDelay } = getNextCounterTiming();
               return (
                 <AnimatedDiv
-                  initial={{ scale: 0.7, rotate: -5 }}
-                  animate={{
-                    scale: [0.7, 1.1, 1],
-                    rotate: [-5, 2, 0],
-                    opacity: [0.3, 1, 1],
-                  }}
-                  transition={{
-                    duration: timing.counterEntranceDuration / 1000,
-                    delay: entranceDelay,
-                    times: [0, 0.6, 1],
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -5 }}
+                  animate={
+                    isPowerSaving
+                      ? { opacity: 1 }
+                      : {
+                          scale: [0.7, 1.1, 1],
+                          rotate: [-5, 2, 0],
+                          opacity: [0.3, 1, 1],
+                        }
+                  }
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: timing.counterEntranceDuration / 1000,
+                          delay: entranceDelay,
+                          times: [0, 0.6, 1],
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   <CurrencyCounter
                     targetAmount={rewards.sc!}
@@ -160,23 +193,31 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               );
             })()}
 
-            {/* Free Spins Counter with enhanced pop entrance */}
+            {/* Free Spins Counter with enhanced pop entrance (simplified in power-saving mode) */}
             {hasSpins && (() => {
               const { entranceDelay, countingDelay } = getNextCounterTiming();
               return (
                 <AnimatedDiv
-                  initial={{ scale: 0.7, rotate: -5 }}
-                  animate={{
-                    scale: [0.7, 1.1, 1],
-                    rotate: [-5, 2, 0],
-                    opacity: [0.3, 1, 1],
-                  }}
-                  transition={{
-                    duration: timing.counterEntranceDuration / 1000,
-                    delay: entranceDelay,
-                    times: [0, 0.6, 1],
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -5 }}
+                  animate={
+                    isPowerSaving
+                      ? { opacity: 1 }
+                      : {
+                          scale: [0.7, 1.1, 1],
+                          rotate: [-5, 2, 0],
+                          opacity: [0.3, 1, 1],
+                        }
+                  }
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: timing.counterEntranceDuration / 1000,
+                          delay: entranceDelay,
+                          times: [0, 0.6, 1],
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   <CurrencyCounter
                     targetAmount={rewards.spins!}
@@ -188,23 +229,31 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               );
             })()}
 
-            {/* XP/Collectible Counter with enhanced pop entrance */}
+            {/* XP/Collectible Counter with enhanced pop entrance (simplified in power-saving mode) */}
             {hasXP && (() => {
               const { entranceDelay, countingDelay } = getNextCounterTiming();
               return (
                 <AnimatedDiv
-                  initial={{ scale: 0.7, rotate: -5 }}
-                  animate={{
-                    scale: [0.7, 1.1, 1],
-                    rotate: [-5, 2, 0],
-                    opacity: [0.3, 1, 1],
-                  }}
-                  transition={{
-                    duration: timing.counterEntranceDuration / 1000,
-                    delay: entranceDelay,
-                    times: [0, 0.6, 1],
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -5 }}
+                  animate={
+                    isPowerSaving
+                      ? { opacity: 1 }
+                      : {
+                          scale: [0.7, 1.1, 1],
+                          rotate: [-5, 2, 0],
+                          opacity: [0.3, 1, 1],
+                        }
+                  }
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: timing.counterEntranceDuration / 1000,
+                          delay: entranceDelay,
+                          times: [0, 0.6, 1],
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   <CurrencyCounter
                     targetAmount={rewards.xp!.amount}
@@ -216,23 +265,31 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
               );
             })()}
 
-            {/* Random Reward with enhanced pop entrance */}
+            {/* Random Reward with enhanced pop entrance (simplified in power-saving mode) */}
             {hasRandomReward && (() => {
               const { entranceDelay, countingDelay } = getNextCounterTiming();
               return (
                 <AnimatedDiv
-                  initial={{ scale: 0.7, rotate: -5 }}
-                  animate={{
-                    scale: [0.7, 1.1, 1],
-                    rotate: [-5, 2, 0],
-                    opacity: [0.3, 1, 1],
-                  }}
-                  transition={{
-                    duration: timing.counterEntranceDuration / 1000,
-                    delay: entranceDelay,
-                    times: [0, 0.6, 1],
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -5 }}
+                  animate={
+                    isPowerSaving
+                      ? { opacity: 1 }
+                      : {
+                          scale: [0.7, 1.1, 1],
+                          rotate: [-5, 2, 0],
+                          opacity: [0.3, 1, 1],
+                        }
+                  }
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: timing.counterEntranceDuration / 1000,
+                          delay: entranceDelay,
+                          times: [0, 0.6, 1],
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   <CurrencyCounter
                     targetAmount={1}
@@ -250,9 +307,13 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
             <AnimatedP
               className="mb-6 text-sm"
               style={{ color: theme.colors.text.secondary }}
-              initial={{ y: 10 }}
-              animate={{ y: 0 }}
-              transition={{ delay: timing.claimButton, duration: 0.3 }}
+              initial={isPowerSaving ? { opacity: 0 } : { y: 10 }}
+              animate={isPowerSaving ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              transition={
+                isPowerSaving
+                  ? { duration: 0.2, delay: 0.3, ease: 'easeOut' }
+                  : { delay: timing.claimButton, duration: 0.3 }
+              }
             >
               {prize.description}
             </AnimatedP>

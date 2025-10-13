@@ -11,6 +11,7 @@ import { useTheme } from '../../theme';
 import { ThemedButton } from '../controls/ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { PopupOverlay } from '../layout/PopupOverlay';
+import { useAppConfig } from '@config/AppConfigContext';
 
 interface PrizeClaimedProps {
   prize: PrizeConfig;
@@ -20,9 +21,14 @@ interface PrizeClaimedProps {
 export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
   const { AnimatedDiv, AnimatedH2, AnimatedP } = useAnimation();
   const { theme } = useTheme();
+  const { performance } = useAppConfig();
+
+  // Disable complex animations in power-saving mode
+  const isPowerSaving = performance.mode === 'power-saving';
+
   return (
     <PopupOverlay zIndex={theme.zIndex[50]} testId="prize-claimed-overlay">
-      {/* Success checkmark stamp - single unified element */}
+      {/* Success checkmark stamp - single unified element (simplified in power-saving mode) */}
       <AnimatedDiv
         className="absolute pointer-events-none"
         style={{
@@ -35,64 +41,87 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
           zIndex: 5,
           opacity: 0.35,
         }}
-        initial={{
-          x: '-50%',
-          y: '-50%',
-          scale: 0.8,
-        }}
+        initial={
+          isPowerSaving
+            ? {
+                x: '-50%',
+                y: '-50%',
+                opacity: 0,
+              }
+            : {
+                x: '-50%',
+                y: '-50%',
+                scale: 0.8,
+              }
+        }
         animate={{
           x: '-50%',
           y: '-50%',
           scale: 1,
+          opacity: 0.35,
         }}
-        transition={{
-          type: 'spring',
-          stiffness: 280,
-          damping: 18,
-          delay: 0
-        }}
+        transition={
+          isPowerSaving
+            ? { duration: 0.2, ease: 'easeOut' }
+            : {
+                type: 'spring',
+                stiffness: 280,
+                damping: 18,
+                delay: 0,
+              }
+        }
       >
-        {/* Expanding rings - single pulse */}
-        {[0, 1, 2].map((i) => (
-          <AnimatedDiv
-            key={`ring-${i}`}
-            className="absolute"
-            style={{
-              width: '120px',
-              height: '120px',
-              borderRadius: '50%',
-              border: `2px solid ${theme.colors.status.success}`,
-              top: '0',
-              left: '0',
-              opacity: 0,
-            }}
-            initial={{ scale: 1 }}
-            animate={{
-              scale: 2.5,
-            }}
-            transition={{
-              duration: 1.2,
-              delay: 0.15 + i * 0.1,
-              ease: [0.25, 0.46, 0.45, 0.94],
-            }}
-          />
-        ))}
+        {/* Expanding rings - single pulse (ONLY render in non-power-saving mode) */}
+        {!isPowerSaving &&
+          [0, 1, 2].map((i) => (
+            <AnimatedDiv
+              key={`ring-${i}`}
+              className="absolute"
+              style={{
+                width: '120px',
+                height: '120px',
+                borderRadius: '50%',
+                border: `2px solid ${theme.colors.status.success}`,
+                top: '0',
+                left: '0',
+                opacity: 0,
+              }}
+              initial={{ scale: 1 }}
+              animate={{
+                scale: 2.5,
+              }}
+              transition={{
+                duration: 1.2,
+                delay: 0.15 + i * 0.1,
+                ease: [0.25, 0.46, 0.45, 0.94],
+              }}
+            />
+          ))}
 
         {/* Checkmark symbol */}
         <AnimatedDiv
           className="absolute inset-0 flex items-center justify-center text-6xl font-bold"
           style={{ color: theme.colors.status.success, opacity: 0.6 }}
-          initial={{ scale: 0.7, rotate: -15 }}
-          animate={{
-            scale: 1,
-            rotate: 0,
-          }}
-          transition={{
-            type: 'spring',
-            stiffness: 320,
-            damping: 16,
-            delay: 0.05
-          }}
+          initial={isPowerSaving ? { opacity: 0 } : { scale: 0.7, rotate: -15 }}
+          animate={
+            isPowerSaving
+              ? { opacity: 0.6 }
+              : {
+                  scale: 1,
+                  rotate: 0,
+                  opacity: 0.6,
+                }
+          }
+          transition={
+            isPowerSaving
+              ? { duration: 0.2, ease: 'easeOut' }
+              : {
+                  type: 'spring',
+                  stiffness: 320,
+                  damping: 16,
+                  delay: 0.05,
+                }
+          }
         >
           ✓
         </AnimatedDiv>
@@ -100,7 +129,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
 
       {/* Centered content container - appears on top of checkmark */}
       <div className="relative flex flex-col items-center text-center" style={{ zIndex: 10 }}>
-        {/* Prize Claimed header - matching StartScreen title style */}
+        {/* Prize Claimed header - matching StartScreen title style (simplified in power-saving mode) */}
         <AnimatedH2
           className="text-4xl font-extrabold mb-6 text-center"
           style={{
@@ -109,21 +138,28 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
             fontFamily: theme.typography.fontFamily.display || theme.typography.fontFamily.primary,
-
           }}
-          initial={{ x: -30, y: 20, scale: 0.85, rotate: -8 }}
-          animate={{
-            x: 0,
-            y: 0,
-            scale: 1,
-            rotate: 0,
-            opacity: [0.5, 1],
-          }}
-          transition={{
-            duration: 0.5,
-            delay: 0.35,
-            ease: [0.34, 1.56, 0.64, 1],
-          }}
+          initial={isPowerSaving ? { opacity: 0 } : { x: -30, y: 20, scale: 0.85, rotate: -8 }}
+          animate={
+            isPowerSaving
+              ? { opacity: 1 }
+              : {
+                  x: 0,
+                  y: 0,
+                  scale: 1,
+                  rotate: 0,
+                  opacity: [0.5, 1],
+                }
+          }
+          transition={
+            isPowerSaving
+              ? { duration: 0.2, delay: 0, ease: 'easeOut' }
+              : {
+                  duration: 0.5,
+                  delay: 0.35,
+                  ease: [0.34, 1.56, 0.64, 1],
+                }
+          }
         >
           Prize Claimed!
         </AnimatedH2>
@@ -132,9 +168,13 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
         <AnimatedP
           className="mb-8 text-lg"
           style={{ color: theme.colors.text.secondary }}
-          initial={{ y: 15, opacity: 0.3 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.35, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          initial={isPowerSaving ? { opacity: 0 } : { y: 15, opacity: 0.3 }}
+          animate={isPowerSaving ? { opacity: 1 } : { y: 0, opacity: 1 }}
+          transition={
+            isPowerSaving
+              ? { duration: 0.2, delay: 0.1, ease: 'easeOut' }
+              : { duration: 0.35, delay: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }
+          }
         >
           Your reward has been claimed successfully.
         </AnimatedP>

@@ -26,6 +26,7 @@ import { ThemedButton } from '../../controls/ThemedButton';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { PopupOverlay } from '../../layout/PopupOverlay';
 import { createThemedOverlay, createTextStyle } from '@theme/themeUtils';
+import { useAppConfig } from '@config/AppConfigContext';
 
 interface NoWinViewProps {
   prize: Prize;
@@ -36,6 +37,10 @@ interface NoWinViewProps {
 export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
   const { AnimatedDiv, AnimatedH2, AnimatedImg } = useAnimation();
   const { theme } = useTheme();
+  const { performance } = useAppConfig();
+
+  // Disable complex animations in power-saving mode
+  const isPowerSaving = performance.mode === 'power-saving';
 
   // Gentle, encouraging choreographed timing - subdued emotional tone
   const timing = {
@@ -50,27 +55,35 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
       {/* Content container - no card background */}
       <div className="max-w-sm w-full">
         <div role="status" aria-live="polite" className="text-center">
-          {/* No win image - gentle settle with upward support */}
+          {/* No win image - gentle settle with upward support (simplified in power-saving mode) */}
           <AnimatedImg
             src={noWinImage}
             alt="No Win"
             className="w-24 h-24 mx-auto mb-4"
-            initial={{ scale: 0.92, y: 12, rotate: -1 }}
-            animate={{
-              scale: [0.92, 1.03, 1],
-              y: [12, -3, 0],
-              rotate: [-1, 0.5, 0],
-              opacity: [0.5, 0.8, 0.8],
-            }}
-            transition={{
-              duration: 0.5,
-              delay: timing.imageEntrance,
-              times: [0, 0.6, 1],
-              ease: [0.34, 1.2, 0.64, 1], // Gentle ease-out-back (subdued)
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { scale: 0.92, y: 12, rotate: -1 }}
+            animate={
+              isPowerSaving
+                ? { opacity: 0.8 }
+                : {
+                    scale: [0.92, 1.03, 1],
+                    y: [12, -3, 0],
+                    rotate: [-1, 0.5, 0],
+                    opacity: [0.5, 0.8, 0.8],
+                  }
+            }
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0, ease: 'easeOut' }
+                : {
+                    duration: 0.5,
+                    delay: timing.imageEntrance,
+                    times: [0, 0.6, 1],
+                    ease: [0.34, 1.2, 0.64, 1], // Gentle ease-out-back (subdued)
+                  }
+            }
           />
 
-          {/* Title - soft reassurance fade with minimal bounce */}
+          {/* Title - soft reassurance fade with minimal bounce (simplified in power-saving mode) */}
           <AnimatedH2
             className="text-3xl font-extrabold mb-6"
             style={{
@@ -80,42 +93,58 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
               backgroundClip: 'text',
               /* RN-compatible: removed textShadow */
             }}
-            initial={{ scale: 0.97, y: 8 }}
-            animate={{
-              scale: [0.97, 1.01, 1],
-              y: [8, -2, 0],
-              opacity: [0.5, 1, 1],
-            }}
-            transition={{
-              duration: 0.4,
-              delay: timing.titleReassurance,
-              times: [0, 0.6, 1],
-              ease: [0.34, 1.15, 0.64, 1], // Very gentle bounce
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { scale: 0.97, y: 8 }}
+            animate={
+              isPowerSaving
+                ? { opacity: 1 }
+                : {
+                    scale: [0.97, 1.01, 1],
+                    y: [8, -2, 0],
+                    opacity: [0.5, 1, 1],
+                  }
+            }
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0.1, ease: 'easeOut' }
+                : {
+                    duration: 0.4,
+                    delay: timing.titleReassurance,
+                    times: [0, 0.6, 1],
+                    ease: [0.34, 1.15, 0.64, 1], // Very gentle bounce
+                  }
+            }
           >
             {prize.title}
           </AnimatedH2>
 
-          {/* Encouraging message - gentle expansion with upward lift */}
+          {/* Encouraging message - gentle expansion with upward lift (simplified in power-saving mode) */}
           <AnimatedDiv
             className="my-6 p-4 rounded-lg"
             style={{
               background: createThemedOverlay(theme, 'medium'),
               borderRadius: '12px',
             }}
-            initial={{ scale: 0.94, y: 10, rotate: -0.5 }}
-            animate={{
-              scale: [0.94, 1.02, 1],
-              y: [10, -2, 0],
-              rotate: [-0.5, 0.3, 0],
-              opacity: [0.5, 1, 1],
-            }}
-            transition={{
-              duration: 0.45,
-              delay: timing.messageExpansion,
-              times: [0, 0.65, 1],
-              ease: [0.34, 1.18, 0.64, 1], // Soft encouraging bounce
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { scale: 0.94, y: 10, rotate: -0.5 }}
+            animate={
+              isPowerSaving
+                ? { opacity: 1 }
+                : {
+                    scale: [0.94, 1.02, 1],
+                    y: [10, -2, 0],
+                    rotate: [-0.5, 0.3, 0],
+                    opacity: [0.5, 1, 1],
+                  }
+            }
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                : {
+                    duration: 0.45,
+                    delay: timing.messageExpansion,
+                    times: [0, 0.65, 1],
+                    ease: [0.34, 1.18, 0.64, 1], // Soft encouraging bounce
+                  }
+            }
           >
             <p
               className="text-base leading-relaxed mb-2"

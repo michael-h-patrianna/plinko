@@ -30,7 +30,7 @@ export function SlotAnticipation({ x, width, color, isActive }: SlotAnticipation
   const particleMultiplier = getPerformanceSetting(performance, 'particleMultiplier') ?? 1.0;
   const enableInfiniteAnimations = getPerformanceSetting(performance, 'enableInfiniteAnimations') ?? true;
 
-  // Calculate particle count based on particle multiplier (8 high-quality, 5-6 balanced, 3-4 power-saving)
+  // Calculate particle count based on particle multiplier (8 high-quality, 3-4 power-saving)
   const particleCount = Math.max(3, Math.round(8 * particleMultiplier));
 
   // Note: particleCount is NOT in dependencies to prevent particles from jumping when performance mode changes

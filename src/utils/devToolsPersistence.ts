@@ -104,5 +104,5 @@ function isValidChoiceMechanic(value: unknown): value is ChoiceMechanic {
  * Type guard for PerformanceMode
  */
 function isValidPerformanceMode(value: unknown): value is PerformanceMode {
-  return value === 'high-quality' || value === 'balanced' || value === 'power-saving';
+  return value === 'high-quality' || value === 'power-saving';
 }

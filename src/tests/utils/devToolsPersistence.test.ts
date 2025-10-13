@@ -50,7 +50,7 @@ describe('devToolsPersistence', () => {
         choiceMechanic: 'none',
         showWinner: true,
         musicEnabled: true,
-        performanceMode: 'balanced',
+        performanceMode: 'power-saving',
         viewportWidth: 414,
         themeName: 'dark',
       };
@@ -218,7 +218,7 @@ describe('devToolsPersistence', () => {
         choiceMechanic: 'drop-position',
         showWinner: true,
         musicEnabled: true,
-        performanceMode: 'balanced',
+        performanceMode: 'high-quality',
         viewportWidth: 414,
         themeName: 'sunset',
       };

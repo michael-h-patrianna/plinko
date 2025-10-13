@@ -30,6 +30,7 @@ import { CheckoutPopup } from './CheckoutPopup';
 import { RewardItem } from './RewardItem';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { PopupOverlay } from '../../layout/PopupOverlay';
+import { useAppConfig } from '@config/AppConfigContext';
 
 interface PurchaseOfferViewProps {
   prize: Prize;
@@ -40,7 +41,11 @@ interface PurchaseOfferViewProps {
 export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferViewProps) {
   const { AnimatedDiv, AnimatedH2, AnimatedP } = useAnimation();
   const { theme } = useTheme();
+  const { performance } = useAppConfig();
   const [showCheckout, setShowCheckout] = useState(false);
+
+  // Disable complex animations in power-saving mode
+  const isPowerSaving = performance.mode === 'power-saving';
 
   const offer = prize.purchaseOffer;
   if (!offer) return null;
@@ -95,7 +100,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
       <PopupOverlay zIndex={theme.zIndex[40]} testId="purchase-offer-overlay">
         {/* Content container - no card background, but keep decorative elements */}
         <div className="max-w-md w-full overflow-visible relative">
-          {/* "120% EXTRA" Badge - premium seal entrance with elastic pop */}
+          {/* "120% EXTRA" Badge - premium seal entrance with elastic pop (simplified in power-saving mode) */}
           <AnimatedDiv
             className="font-bold uppercase whitespace-nowrap mx-auto mb-4 w-fit"
             style={{
@@ -107,75 +112,88 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               borderRadius: '20px',
               letterSpacing: '1px',
             }}
-            initial={{ scale: 0.8, y: -10, rotate: -3 }}
-            animate={{
-              scale: [0.8, 1.15, 0.95, 1],
-              y: [-10, 5, -2, 0],
-              rotate: [-3, 2, -1, 0],
-              opacity: [0.3, 1, 1, 1],
-            }}
-            transition={{
-              duration: 0.5,
-              delay: timing.badge,
-              times: [0, 0.5, 0.75, 1],
-              ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-            }}
+            initial={isPowerSaving ? { opacity: 0 } : { scale: 0.8, y: -10, rotate: -3 }}
+            animate={
+              isPowerSaving
+                ? { opacity: 1 }
+                : {
+                    scale: [0.8, 1.15, 0.95, 1],
+                    y: [-10, 5, -2, 0],
+                    rotate: [-3, 2, -1, 0],
+                    opacity: [0.3, 1, 1, 1],
+                  }
+            }
+            transition={
+              isPowerSaving
+                ? { duration: 0.2, delay: 0, ease: 'easeOut' }
+                : {
+                    duration: 0.5,
+                    delay: timing.badge,
+                    times: [0, 0.5, 0.75, 1],
+                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                  }
+            }
           >
             120% EXTRA
           </AnimatedDiv>
 
-          {/* Sparkles for offer - enhanced decorative particles with scale pop */}
-          {Array.from({ length: 4 }).map((_, i) => {
-            const colors = [
-              theme.colors.game.ball.primary,
-              theme.colors.status.warning,
-              theme.colors.status.error,
-              theme.colors.status.warning,
-            ];
-            const color = colors[i % colors.length];
-            const offsetX = [-50, -30, 30, 50][i];
+          {/* Sparkles for offer - ONLY render in non-power-saving mode to avoid CPU/GPU cost */}
+          {!isPowerSaving &&
+            Array.from({ length: 4 }).map((_, i) => {
+              const colors = [
+                theme.colors.game.ball.primary,
+                theme.colors.status.warning,
+                theme.colors.status.error,
+                theme.colors.status.warning,
+              ];
+              const color = colors[i % colors.length];
+              const offsetX = [-50, -30, 30, 50][i];
 
-            return (
-              <AnimatedDiv
-                key={`sparkle-${i}`}
-                className="absolute rounded-full pointer-events-none"
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  background: `linear-gradient(135deg, ${color} 0%, ${color}aa 50%, transparent 100%)`,
-                  /* RN-compatible: removed boxShadow glow */
-                  left: '50%',
-                  top: '20%',
-                }}
-                initial={{ x: 0, y: 0, scale: 0 }}
-                animate={{
-                  x: offsetX,
-                  y: [-80, -100],
-                  scale: [0, 1.3, 0.7, 0.3],
-                }}
-                transition={{
-                  duration: 2,
-                  delay: timing.sparkles + (i * timing.sparkleStagger) / 1000,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              />
-            );
-          })}
+              return (
+                <AnimatedDiv
+                  key={`sparkle-${i}`}
+                  className="absolute rounded-full pointer-events-none"
+                  style={{
+                    width: '8px',
+                    height: '8px',
+                    background: `linear-gradient(135deg, ${color} 0%, ${color}aa 50%, transparent 100%)`,
+                    /* RN-compatible: removed boxShadow glow */
+                    left: '50%',
+                    top: '20%',
+                  }}
+                  initial={{ x: 0, y: 0, scale: 0 }}
+                  animate={{
+                    x: offsetX,
+                    y: [-80, -100],
+                    scale: [0, 1.3, 0.7, 0.3],
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: timing.sparkles + (i * timing.sparkleStagger) / 1000,
+                    ease: [0.22, 1, 0.36, 1],
+                  }}
+                />
+              );
+            })}
 
           <div role="status" aria-live="polite" className="text-center">
-            {/* Special Offer header - diagonal swoosh entrance with premium feel */}
+            {/* Special Offer header - diagonal swoosh entrance with premium feel (simplified in power-saving mode) */}
             <AnimatedH2
               className="text-3xl font-extrabold mb-6"
               style={{
                 color: theme.colors.text.primary,
               }}
-              initial={{ x: -30, y: 30, scale: 0.9, rotate: 3, opacity: 0.5 }}
-              animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
-              transition={{
-                duration: 0.5,
-                delay: timing.title,
-                ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-              }}
+              initial={isPowerSaving ? { opacity: 0 } : { x: -30, y: 30, scale: 0.9, rotate: 3, opacity: 0.5 }}
+              animate={isPowerSaving ? { opacity: 1 } : { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+              transition={
+                isPowerSaving
+                  ? { duration: 0.2, delay: 0.1, ease: 'easeOut' }
+                  : {
+                      duration: 0.5,
+                      delay: timing.title,
+                      ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                    }
+              }
             >
               {offer.title}
             </AnimatedH2>
@@ -185,13 +203,17 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               <>
                 <AnimatedDiv
                   className="flex flex-wrap gap-3 justify-center my-6"
-                  initial={{ x: 20, y: 30, scale: 0.95, rotate: -2, opacity: 0.5 }}
-                  animate={{ x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
-                  transition={{
-                    duration: 0.5,
-                    delay: timing.rewardsContainer,
-                    ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { x: 20, y: 30, scale: 0.95, rotate: -2, opacity: 0.5 }}
+                  animate={isPowerSaving ? { opacity: 1 } : { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 }}
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.2, ease: 'easeOut' }
+                      : {
+                          duration: 0.5,
+                          delay: timing.rewardsContainer,
+                          ease: [0.34, 1.56, 0.64, 1], // Elastic bounce
+                        }
+                  }
                 >
                   {rewardItems.map((item, index) => (
                     <div key={`${item.type}-${index}`} style={{ width: '120px' }}>
@@ -205,16 +227,20 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
                   ))}
                 </AnimatedDiv>
 
-                {/* Additional benefits - subtle fade for secondary content */}
+                {/* Additional benefits - subtle fade for secondary content (simplified in power-saving mode) */}
                 <AnimatedDiv
                   className="text-center mb-6"
-                  initial={{ y: 15, opacity: 0.3 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{
-                    duration: 0.4,
-                    delay: timing.benefits,
-                    ease: [0.22, 1, 0.36, 1], // Smooth ease out
-                  }}
+                  initial={isPowerSaving ? { opacity: 0 } : { y: 15, opacity: 0.3 }}
+                  animate={isPowerSaving ? { opacity: 1 } : { y: 0, opacity: 1 }}
+                  transition={
+                    isPowerSaving
+                      ? { duration: 0.2, delay: 0.3, ease: 'easeOut' }
+                      : {
+                          duration: 0.4,
+                          delay: timing.benefits,
+                          ease: [0.22, 1, 0.36, 1], // Smooth ease out
+                        }
+                  }
                 >
                   <div
                     className="text-sm font-medium"
@@ -243,16 +269,20 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
               {price}
             </ThemedButton>
 
-            {/* Limited time text - quick fade for urgency */}
+            {/* Limited time text - quick fade for urgency (simplified in power-saving mode) */}
             <AnimatedP
               className="text-slate-400 text-xs mt-3"
-              initial={{ y: 5, opacity: 0.3 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{
-                duration: 0.3,
-                delay: timing.limitedTime,
-                ease: [0.22, 1, 0.36, 1], // Smooth ease out
-              }}
+              initial={isPowerSaving ? { opacity: 0 } : { y: 5, opacity: 0.3 }}
+              animate={isPowerSaving ? { opacity: 1 } : { y: 0, opacity: 1 }}
+              transition={
+                isPowerSaving
+                  ? { duration: 0.2, delay: 0.4, ease: 'easeOut' }
+                  : {
+                      duration: 0.3,
+                      delay: timing.limitedTime,
+                      ease: [0.22, 1, 0.36, 1], // Smooth ease out
+                    }
+              }
             >
               Limited time offer - claim it now!
             </AnimatedP>
