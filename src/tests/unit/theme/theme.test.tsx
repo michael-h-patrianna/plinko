@@ -18,8 +18,6 @@ import { ReactNode } from 'react';
 import { ThemeProvider, useTheme, useThemeValue } from '../../../theme';
 import type { Theme } from '@theme/types';
 import { defaultTheme } from '@theme/themes/defaultTheme';
-import { playFameTheme } from '@theme/themes/playFameTheme';
-import { darkBlueTheme } from '@theme/themes/darkBlueTheme';
 import { brutalistTheme } from '@theme/themes/brutalistTheme';
 import { ThemeSelector } from '../../../dev-tools';
 
@@ -94,12 +92,12 @@ describe('Theme System', () => {
       };
 
       render(
-        <ThemeProvider initialTheme={playFameTheme} themes={[playFameTheme]}>
+        <ThemeProvider initialTheme={brutalistTheme} themes={[brutalistTheme]}>
           <TestComponent />
         </ThemeProvider>
       );
 
-      expect(screen.getByTestId('custom-theme')).toHaveTextContent('PlayFame');
+      expect(screen.getByTestId('custom-theme')).toHaveTextContent('Brutalist');
     });
   });
 
@@ -120,7 +118,7 @@ describe('Theme System', () => {
     });
 
     it('should return all available themes', () => {
-      const allThemes = [defaultTheme, playFameTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -131,7 +129,7 @@ describe('Theme System', () => {
         wrapper,
       });
 
-      expect(result.current.availableThemes).toHaveLength(3);
+      expect(result.current.availableThemes).toHaveLength(2);
       expect(result.current.availableThemes).toEqual(allThemes);
     });
 
@@ -149,7 +147,7 @@ describe('Theme System', () => {
 
   describe('ThemeContext - Theme Switching', () => {
     it('should change theme when setTheme is called', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -161,15 +159,15 @@ describe('Theme System', () => {
       expect(result.current.theme.name).toBe('Default');
 
       act(() => {
-        result.current.setTheme(playFameTheme);
+        result.current.setTheme(brutalistTheme);
       });
 
-      expect(result.current.theme.name).toBe('PlayFame');
-      expect(result.current.themeName).toBe('PlayFame');
+      expect(result.current.theme.name).toBe('Brutalist');
+      expect(result.current.themeName).toBe('Brutalist');
     });
 
     it('should change theme when switchTheme is called with theme name', () => {
-      const allThemes = [defaultTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -181,11 +179,11 @@ describe('Theme System', () => {
       expect(result.current.theme.name).toBe('Default');
 
       act(() => {
-        result.current.switchTheme('Dark Blue');
+        result.current.switchTheme('Brutalist');
       });
 
-      expect(result.current.theme.name).toBe('Dark Blue');
-      expect(result.current.themeName).toBe('Dark Blue');
+      expect(result.current.theme.name).toBe('Brutalist');
+      expect(result.current.themeName).toBe('Brutalist');
     });
 
     it('should not change theme if invalid theme name provided', () => {
@@ -211,7 +209,7 @@ describe('Theme System', () => {
 
   describe('ThemeContext - LocalStorage Persistence', () => {
     it('should persist theme to localStorage when switchTheme is called', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -221,17 +219,17 @@ describe('Theme System', () => {
       const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
       act(() => {
-        result.current.switchTheme('PlayFame');
+        result.current.switchTheme('Brutalist');
       });
 
-      expect(localStorageMock.getItem('plinko-theme')).toBe('PlayFame');
+      expect(localStorageMock.getItem('plinko-theme')).toBe('Brutalist');
     });
 
     it('should load theme from localStorage on mount', async () => {
       // Pre-set localStorage
-      localStorageMock.setItem('plinko-theme', 'Dark Blue');
+      localStorageMock.setItem('plinko-theme', 'Brutalist');
 
-      const allThemes = [defaultTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -242,21 +240,21 @@ describe('Theme System', () => {
 
       // Wait for useEffect to run and load from localStorage
       await waitFor(() => {
-        expect(result.current.theme.name).toBe('Dark Blue');
+        expect(result.current.theme.name).toBe('Brutalist');
       });
     });
 
     it('should use initialTheme if localStorage is empty', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
-        <ThemeProvider initialTheme={playFameTheme} themes={allThemes}>
+        <ThemeProvider initialTheme={brutalistTheme} themes={allThemes}>
           {children}
         </ThemeProvider>
       );
 
       const { result } = renderHook<ReturnType<typeof useTheme>, unknown>(() => useTheme(), { wrapper });
 
-      expect(result.current.theme.name).toBe('PlayFame');
+      expect(result.current.theme.name).toBe('Brutalist');
     });
 
     it('should use initialTheme if localStorage contains invalid theme name', async () => {
@@ -294,7 +292,7 @@ describe('Theme System', () => {
     });
 
     it('should update when theme changes', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -313,18 +311,16 @@ describe('Theme System', () => {
       expect(result.current.name).toBe('Default');
 
       act(() => {
-        result.current.theme.switchTheme('PlayFame');
+        result.current.theme.switchTheme('Brutalist');
       });
 
-      expect(result.current.name).toBe('PlayFame');
+      expect(result.current.name).toBe('Brutalist');
     });
   });
 
   describe('Theme Structures - Required Properties', () => {
     const themes = [
       { name: 'Default', theme: defaultTheme },
-      { name: 'PlayFame', theme: playFameTheme },
-      { name: 'Dark Blue', theme: darkBlueTheme },
       { name: 'Brutalist', theme: brutalistTheme },
     ];
 
@@ -577,16 +573,6 @@ describe('Theme System', () => {
       expect(errors).toEqual([]);
     });
 
-    it('PlayFame theme should have no undefined/null required values', () => {
-      const errors = validateObject(playFameTheme as any, '', optionalPaths);
-      expect(errors).toEqual([]);
-    });
-
-    it('Dark Blue theme should have no undefined/null required values', () => {
-      const errors = validateObject(darkBlueTheme as any, '', optionalPaths);
-      expect(errors).toEqual([]);
-    });
-
     it('Brutalist theme should have no undefined/null required values', () => {
       const errors = validateObject(brutalistTheme as any, '', optionalPaths);
       expect(errors).toEqual([]);
@@ -595,7 +581,7 @@ describe('Theme System', () => {
 
   describe('Theme Switching - Property Updates', () => {
     it('should update all theme properties when switching themes', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -615,22 +601,22 @@ describe('Theme System', () => {
 
       // Switch theme
       act(() => {
-        result.current.switchTheme('PlayFame');
+        result.current.switchTheme('Brutalist');
       });
 
       // All properties should update
-      expect(result.current.theme.colors.primary.main).toBe(playFameTheme.colors.primary.main);
+      expect(result.current.theme.colors.primary.main).toBe(brutalistTheme.colors.primary.main);
       expect(result.current.theme.gradients.buttonPrimary).toBe(
-        playFameTheme.gradients.buttonPrimary
+        brutalistTheme.gradients.buttonPrimary
       );
       expect(result.current.theme.typography.fontFamily.primary).toBe(
-        playFameTheme.typography.fontFamily.primary
+        brutalistTheme.typography.fontFamily.primary
       );
-      expect(result.current.theme.name).toBe('PlayFame');
+      expect(result.current.theme.name).toBe('Brutalist');
     });
 
     it('should update deeply nested properties when switching themes', () => {
-      const allThemes = [defaultTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
           {children}
@@ -644,18 +630,18 @@ describe('Theme System', () => {
       );
 
       act(() => {
-        result.current.switchTheme('Dark Blue');
+        result.current.switchTheme('Brutalist');
       });
 
       expect(result.current.theme.colors.game.ball.primary).toBe(
-        darkBlueTheme.colors.game.ball.primary
+        brutalistTheme.colors.game.ball.primary
       );
     });
   });
 
   describe('ThemeSelector Component', () => {
     it('should render with all theme options', () => {
-      const allThemes = [defaultTheme, playFameTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
 
       render(
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
@@ -664,35 +650,34 @@ describe('Theme System', () => {
       );
 
       expect(screen.getByText('Default')).toBeInTheDocument();
-      expect(screen.getByText('PlayFame')).toBeInTheDocument();
-      expect(screen.getByText('Dark Blue')).toBeInTheDocument();
+      expect(screen.getByText('Brutalist')).toBeInTheDocument();
     });
 
     it('should highlight active theme', () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
 
       render(
-        <ThemeProvider initialTheme={playFameTheme} themes={allThemes}>
+        <ThemeProvider initialTheme={brutalistTheme} themes={allThemes}>
           <ThemeSelector />
         </ThemeProvider>
       );
 
-      const playFameButton = screen.getByText('PlayFame');
+      const brutalistButton = screen.getByText('Brutalist');
       const defaultButton = screen.getByText('Default');
 
       // Active theme should have primary gradient background
-      expect(playFameButton).toHaveStyle({
-        background: playFameTheme.gradients.buttonPrimary,
+      expect(brutalistButton).toHaveStyle({
+        background: brutalistTheme.gradients.buttonPrimary,
       });
 
       // Inactive theme should have elevated surface background
       expect(defaultButton).toHaveStyle({
-        background: playFameTheme.colors.surface.elevated,
+        background: brutalistTheme.colors.surface.elevated,
       });
     });
 
     it('should call switchTheme when a theme button is clicked', async () => {
-      const allThemes = [defaultTheme, playFameTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
 
       const TestWrapper = () => {
         const { themeName } = useTheme();
@@ -712,19 +697,19 @@ describe('Theme System', () => {
 
       expect(screen.getByTestId('current-theme')).toHaveTextContent('Default');
 
-      const playFameButton = screen.getByText('PlayFame');
+      const brutalistButton = screen.getByText('Brutalist');
 
       act(() => {
-        playFameButton.click();
+        brutalistButton.click();
       });
 
       await waitFor(() => {
-        expect(screen.getByTestId('current-theme')).toHaveTextContent('PlayFame');
+        expect(screen.getByTestId('current-theme')).toHaveTextContent('Brutalist');
       });
     });
 
     it('should update highlighted theme after selection', async () => {
-      const allThemes = [defaultTheme, darkBlueTheme];
+      const allThemes = [defaultTheme, brutalistTheme];
 
       render(
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
@@ -732,16 +717,16 @@ describe('Theme System', () => {
         </ThemeProvider>
       );
 
-      const darkBlueButton = screen.getByText('Dark Blue');
+      const brutalistButton = screen.getByText('Brutalist');
 
       act(() => {
-        darkBlueButton.click();
+        brutalistButton.click();
       });
 
       await waitFor(() => {
-        // After clicking, Dark Blue should have the primary gradient
-        expect(darkBlueButton).toHaveStyle({
-          background: darkBlueTheme.gradients.buttonPrimary,
+        // After clicking, Brutalist should have the primary gradient
+        expect(brutalistButton).toHaveStyle({
+          background: brutalistTheme.gradients.buttonPrimary,
         });
       });
     });

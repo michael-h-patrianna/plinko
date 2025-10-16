@@ -4,7 +4,7 @@
 
 import { expect, test } from '@playwright/test';
 
-const THEMES = ['default', 'playFame', 'darkBlue'];
+const THEMES = ['default', 'brutalist'];
 
 test.describe('Theme Switching E2E', () => {
   for (const themeName of THEMES) {

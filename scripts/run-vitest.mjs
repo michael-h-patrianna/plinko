@@ -3,8 +3,6 @@ import { spawn } from 'node:child_process';
 
 const env = {
   ...process.env,
-  PLINKO_TEST_MODE: process.env.PLINKO_TEST_MODE ?? 'deterministic',
-  PLINKO_FIXTURE_SEED: process.env.PLINKO_FIXTURE_SEED ?? '123456789',
 };
 
 const args = process.argv.slice(2);
