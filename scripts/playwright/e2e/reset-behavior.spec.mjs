@@ -8,29 +8,27 @@
  * - State cleanup verification
  */
 
-import { chromium } from 'playwright';
+import { test, expect } from '@playwright/test';
 import {
   waitForElement,
   waitForGameState,
   waitForBallDrop,
   takeScreenshot,
   PLAYWRIGHT_SEEDS,
+  startGameWithDropPosition,
 } from '../test-helpers.mjs';
 
-const BASE_URL = 'http://localhost:3000';
 const SEED = PLAYWRIGHT_SEEDS.gameplayTest;
 
-async function testResetFromReady() {
-  console.log('\n🔄 Testing Reset from Ready State...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
+test.describe('Reset Behavior', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`/?seed=${SEED}&choice=drop-position`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should reset from ready state', async ({ page }) => {
+    console.log('\n🔄 Testing Reset from Ready State...');
+
     await waitForGameState(page, 'ready', { timeout: 5000 });
     console.log('   ✓ Game ready');
 
@@ -42,30 +40,15 @@ async function testResetFromReady() {
     await takeScreenshot(page, 'reset-01-from-ready');
 
     console.log('   ✅ Reset from Ready test passed');
-  } catch (error) {
-    console.error('   ❌ Reset from Ready test failed:', error.message);
-    await takeScreenshot(page, 'reset-ready-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testResetDuringCountdown() {
-  console.log('\n⏱️ Testing Reset during Countdown...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should reset during countdown', async ({ page }) => {
+    console.log('\n⏱️ Testing Reset during Countdown...');
+
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Start game
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     console.log('   ✓ Countdown started');
 
@@ -77,35 +60,20 @@ async function testResetDuringCountdown() {
     console.log('   ✓ Reset successful from countdown');
 
     // Verify game can be played again
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     console.log('   ✓ Game can restart after reset');
 
     console.log('   ✅ Reset during Countdown test passed');
-  } catch (error) {
-    console.error('   ❌ Reset during Countdown test failed:', error.message);
-    await takeScreenshot(page, 'reset-countdown-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testResetDuringAnimation() {
-  console.log('\n🎬 Testing Reset during Ball Drop Animation...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should reset during ball drop animation', async ({ page }) => {
+    console.log('\n🎬 Testing Reset during Ball Drop Animation...');
+
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Start game and drop ball
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     console.log('   ✓ Ball dropping');
@@ -130,35 +98,20 @@ async function testResetDuringAnimation() {
     }
 
     // Verify game can be played again
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     console.log('   ✓ Game can restart after animation reset');
 
     console.log('   ✅ Reset during Animation test passed');
-  } catch (error) {
-    console.error('   ❌ Reset during Animation test failed:', error.message);
-    await takeScreenshot(page, 'reset-animation-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testResetAfterReveal() {
-  console.log('\n🎁 Testing Reset after Prize Reveal...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should reset after prize reveal', async ({ page }) => {
+    console.log('\n🎁 Testing Reset after Prize Reveal...');
+
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Complete full game flow
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -186,31 +139,15 @@ async function testResetAfterReveal() {
     console.log('   ✓ START button enabled');
 
     // Verify can play another round
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     console.log('   ✓ New round started successfully');
 
     console.log('   ✅ Reset after Reveal test passed');
-  } catch (error) {
-    console.error('   ❌ Reset after Reveal test failed:', error.message);
-    await takeScreenshot(page, 'reset-reveal-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testMultipleConsecutiveResets() {
-  console.log('\n🔁 Testing Multiple Consecutive Resets...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should handle multiple consecutive resets', async ({ page }) => {
+    console.log('\n🔁 Testing Multiple Consecutive Resets...');
 
     for (let i = 1; i <= 5; i++) {
       console.log(`   Reset cycle ${i}...`);
@@ -219,7 +156,7 @@ async function testMultipleConsecutiveResets() {
       await waitForGameState(page, 'ready', { timeout: 5000 });
 
       // Start game
-      await page.click('[data-testid="drop-ball-button"]');
+      await startGameWithDropPosition(page); // Handles drop position if enabled
       await waitForGameState(page, 'countdown', { timeout: 3000 });
 
       // Reset immediately
@@ -232,36 +169,21 @@ async function testMultipleConsecutiveResets() {
     await takeScreenshot(page, 'reset-05-multiple');
 
     // Verify game still works after multiple resets
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     console.log('   ✓ Game still functional after multiple resets');
 
     console.log('   ✅ Multiple Consecutive Resets test passed');
-  } catch (error) {
-    console.error('   ❌ Multiple Consecutive Resets test failed:', error.message);
-    await takeScreenshot(page, 'reset-multiple-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testStateCleanupAfterReset() {
-  console.log('\n🧹 Testing State Cleanup after Reset...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+  test('should cleanup state properly after reset', async ({ page }) => {
+    console.log('\n🧹 Testing State Cleanup after Reset...');
+
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Play game to completion
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -302,7 +224,7 @@ async function testStateCleanupAfterReset() {
     }
 
     // Play again and verify different outcome possible
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -317,36 +239,5 @@ async function testStateCleanupAfterReset() {
     await takeScreenshot(page, 'reset-06-cleanup');
 
     console.log('   ✅ State Cleanup test passed');
-  } catch (error) {
-    console.error('   ❌ State Cleanup test failed:', error.message);
-    await takeScreenshot(page, 'reset-cleanup-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function runAllTests() {
-  console.log('🔄 Starting E2E Test: Reset Behavior\n');
-
-  try {
-    await testResetFromReady();
-    await testResetDuringCountdown();
-    await testResetDuringAnimation();
-    await testResetAfterReveal();
-    await testMultipleConsecutiveResets();
-    await testStateCleanupAfterReset();
-
-    console.log('\n✅ All Reset Behavior tests PASSED\n');
-    console.log('All screenshots saved to screenshots/ directory');
-  } catch (error) {
-    console.error('\n❌ Reset Behavior test suite FAILED');
-    throw error;
-  }
-}
-
-// Run all tests
-runAllTests().catch((error) => {
-  console.error('Test execution failed:', error);
-  process.exit(1);
+  });
 });

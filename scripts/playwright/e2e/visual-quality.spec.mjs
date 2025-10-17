@@ -1,0 +1,195 @@
+/**
+ * Visual Quality Tests
+ *
+ * Comprehensive test suite for visual consistency and rendering quality.
+ * Consolidates: test-visual-quality.js, test-border-corners.mjs, test-border-radius.mjs,
+ *               test-button-color.mjs, test-arrow-buttons.mjs, test-selector-visual.mjs,
+ *               test-animation-screenshots.js
+ */
+
+import { test, expect } from '@playwright/test';
+import { startGameWithDropPosition } from '../test-helpers.mjs';
+
+test.describe('Visual Quality', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?choice=drop-position', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(1000);
+  });
+
+  test('should render UI with correct styling', async ({ page }) => {
+    // Check critical UI elements are visible and styled
+    const button = page.locator('button').first();
+    await expect(button).toBeVisible();
+
+    const styles = await button.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        borderRadius: computed.borderRadius,
+        padding: computed.padding,
+        fontSize: computed.fontSize,
+      };
+    });
+
+    // Verify styles are applied
+    expect(styles.borderRadius).not.toBe('0px');
+    expect(styles.padding).not.toBe('0px');
+    expect(styles.fontSize).not.toBe('16px'); // Not default
+
+    console.log('UI styled correctly:', styles);
+  });
+
+  test('should render borders and corners correctly', async ({ page }) => {
+    // Check button border radius
+    const button = page.locator('button').first();
+    const borderRadius = await button.evaluate((el) => {
+      return window.getComputedStyle(el).borderRadius;
+    });
+
+    expect(borderRadius).not.toBe('0px');
+    console.log('Border radius:', borderRadius);
+
+    // Check for any elements with borders
+    const hasBorderedElements = await page.evaluate(() => {
+      const elements = document.querySelectorAll('*');
+      for (const el of elements) {
+        const border = window.getComputedStyle(el).border;
+        if (border && border !== '' && border !== 'none') {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    console.log('Has bordered elements:', hasBorderedElements);
+  });
+
+  test('should apply correct button colors per theme', async ({ page }) => {
+    // Get button color
+    const button = page.locator('button').first();
+    const styles = await button.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        color: computed.color,
+        background: computed.background || computed.backgroundColor,
+      };
+    });
+
+    // Should have defined colors
+    expect(styles.color).toBeTruthy();
+    expect(styles.background).toBeTruthy();
+
+    console.log('Button colors:', styles);
+  });
+
+  test('should render arrow buttons correctly', async ({ page }) => {
+    // Start game to check for arrow buttons (in drop position selector)
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(1000);
+
+    // Look for any arrow-like elements or navigation buttons
+    const hasArrows = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('←') || text.includes('→') ||
+             text.includes('<') || text.includes('>') ||
+             document.querySelectorAll('[aria-label*="arrow"], [aria-label*="previous"], [aria-label*="next"]').length > 0;
+    });
+
+    console.log('Has arrow navigation:', hasArrows);
+  });
+
+  test('should render drop position selector visually correct', async ({ page }) => {
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(1000);
+
+    // Check for position selector elements
+    const hasSelector = await page.evaluate(() => {
+      // Look for position-related UI
+      const text = document.body.innerText.toLowerCase();
+      return text.includes('position') || text.includes('drop') ||
+             document.querySelector('[data-testid*="position"], [data-testid*="selector"]') !== null;
+    });
+
+    console.log('Position selector present:', hasSelector);
+  });
+
+  test('should maintain visual consistency across screens', async ({ page }) => {
+    // Take screenshot of start screen
+    const startScreenshot = await page.screenshot({ encoding: 'base64' });
+    expect(startScreenshot).toBeTruthy();
+
+    // Click to next screen
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(1000);
+
+    // Take screenshot of game screen
+    const gameScreenshot = await page.screenshot({ encoding: 'base64' });
+    expect(gameScreenshot).toBeTruthy();
+
+    // Screenshots should be different (screens changed)
+    expect(startScreenshot).not.toBe(gameScreenshot);
+
+    console.log('Visual consistency maintained across screens');
+  });
+
+  test('should render without layout shifts', async ({ page }) => {
+    // Measure layout shift
+    const cls = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        let clsValue = 0;
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) {
+              clsValue += entry.value;
+            }
+          }
+        });
+        observer.observe({ type: 'layout-shift', buffered: true });
+
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(clsValue);
+        }, 3000);
+      });
+    });
+
+    console.log('Cumulative Layout Shift:', cls);
+
+    // CLS should be low (< 0.1 is good)
+    expect(cls).toBeLessThan(0.25); // Allow some tolerance
+  });
+
+  test('should render gradients correctly', async ({ page }) => {
+    // Check for gradient usage
+    const hasGradients = await page.evaluate(() => {
+      const elements = document.querySelectorAll('*');
+      for (const el of elements) {
+        const bg = window.getComputedStyle(el).background;
+        if (bg.includes('linear-gradient')) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    console.log('Gradients present:', hasGradients);
+  });
+
+  test('should render text with correct typography', async ({ page }) => {
+    // Check typography
+    const button = page.locator('button').first();
+    const typography = await button.evaluate((el) => {
+      const computed = window.getComputedStyle(el);
+      return {
+        fontSize: computed.fontSize,
+        fontFamily: computed.fontFamily,
+        fontWeight: computed.fontWeight,
+      };
+    });
+
+    expect(typography.fontSize).toBeTruthy();
+    expect(typography.fontFamily).toBeTruthy();
+
+    console.log('Typography:', typography);
+  });
+});

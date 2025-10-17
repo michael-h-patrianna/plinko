@@ -35,6 +35,9 @@ Coding agents must follow `docs/meta/styleguide.md` - No exceptions!
    - Maintain 100% test coverage - no exceptions
 7. Do not write summary files or output long summaries of your actions in chat.
 
+## NO TOKEN OR TIME BUDGET
+There is no limit on token or time a task can take. Be thorough. Reason: If you make a mistake now, it will later cost much more time and token to fix it.
+
 ## TEST MEMORY MANAGEMENT
 
 **CRITICAL**: The test suite previously caused memory exhaustion by spawning 13 workers consuming 9GB+ RAM. This has been fixed but requires vigilance.

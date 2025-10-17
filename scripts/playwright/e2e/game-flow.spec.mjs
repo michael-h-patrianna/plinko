@@ -5,33 +5,30 @@
  * Validates visual elements, state transitions, and UI responsiveness.
  */
 
-import { chromium } from 'playwright';
+import { test, expect } from '@playwright/test';
 import {
   waitForElement,
   waitForGameState,
   waitForBallDrop,
   takeScreenshot,
+  startGameWithDropPosition,
   PLAYWRIGHT_SEEDS,
 } from '../test-helpers.mjs';
 
-const BASE_URL = 'http://localhost:3000';
 const SEED = PLAYWRIGHT_SEEDS.gameplayTest;
 
-async function runTest() {
-  console.log('🎮 Starting E2E Test: Complete Game Flow\n');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 }, // iPhone X dimensions
+test.describe('Complete Game Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`/?seed=${SEED}&choice=drop-position`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
   });
-  const page = await context.newPage();
 
-  try {
+  test('should complete full game flow from start to prize claim', async ({ page }) => {
+    console.log('🎮 Starting E2E Test: Complete Game Flow\n');
     // ========================================================================
-    // Step 1: Load game and verify prizes are displayed
+    // Step 1: Verify game loaded and prizes are displayed
     // ========================================================================
-    console.log('Step 1: Loading game...');
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+    console.log('Step 1: Verifying game loaded...');
 
     // Wait for game to be ready
     await waitForGameState(page, 'ready', { timeout: 5000 });
@@ -54,7 +51,7 @@ async function runTest() {
     // Step 2: Click START button and verify countdown
     // ========================================================================
     console.log('\nStep 2: Starting game...');
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position selection if needed
 
     // Wait for countdown state
     await waitForGameState(page, 'countdown', { timeout: 2000 });
@@ -179,17 +176,5 @@ async function runTest() {
 
     console.log('\n✅ Complete Game Flow test PASSED\n');
     console.log('All screenshots saved to screenshots/ directory');
-  } catch (error) {
-    console.error('\n❌ Test FAILED:', error.message);
-    await takeScreenshot(page, 'game-flow-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-// Run test
-runTest().catch((error) => {
-  console.error('Test execution failed:', error);
-  process.exit(1);
+  });
 });

@@ -6,35 +6,31 @@
  * sophistication level of the board-to-prize transition.
  */
 
-import { chromium } from 'playwright';
+import { test, expect } from '@playwright/test';
 import {
   waitForElement,
   waitForGameState,
   takeScreenshot,
+  startGameWithDropPosition,
   PLAYWRIGHT_SEEDS,
 } from '../test-helpers.mjs';
 
-const BASE_URL = 'http://localhost:5176';
 const SEED = PLAYWRIGHT_SEEDS.gameplayTest;
 
-async function runTest() {
-  console.log('🎬 Starting E2E Test: Start Screen to Board Transition\n');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 }, // iPhone X dimensions
+test.describe('Start Screen to Board Transition', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`/?seed=${SEED}&choice=drop-position`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
   });
-  const page = await context.newPage();
 
-  try {
+  test('should smoothly transition from start screen to board', async ({ page }) => {
+    console.log('🎬 Starting E2E Test: Start Screen to Board Transition\n');
     // ========================================================================
-    // Step 1: Load game and verify start screen is visible
+    // Step 1: Verify start screen is visible
     // ========================================================================
-    console.log('Step 1: Loading game and verifying start screen...');
-    await page.goto(`${BASE_URL}?seed=${SEED}`);
+    console.log('Step 1: Verifying start screen...');
 
-    // Wait for page to fully load
-    await page.waitForLoadState('networkidle');
+    // Page already loaded in beforeEach
     console.log('   ✓ Page loaded');
 
     // Verify start screen elements
@@ -60,7 +56,7 @@ async function runTest() {
 
     // Click the start button
     console.log('   Clicking Drop Ball button...');
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page);
 
     // Capture frames during transition (first 600ms)
     const captureInterval = setInterval(async () => {
@@ -154,17 +150,5 @@ async function runTest() {
     console.log('  • No jarring instant transitions');
     console.log('  • Matches sophistication of prize reveal transition');
     console.log('\nScreenshots saved to screenshots/ directory');
-  } catch (error) {
-    console.error('\n❌ Test FAILED:', error.message);
-    await takeScreenshot(page, 'transition-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-// Run test
-runTest().catch((error) => {
-  console.error('Test execution failed:', error);
-  process.exit(1);
+  });
 });

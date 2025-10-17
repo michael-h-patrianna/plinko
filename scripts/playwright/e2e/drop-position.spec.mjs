@@ -5,7 +5,7 @@
  * where the ball should be dropped from (left, center, or right).
  */
 
-import { chromium } from 'playwright';
+import { test, expect } from '@playwright/test';
 import {
   waitForElement,
   waitForGameState,
@@ -14,24 +14,21 @@ import {
   PLAYWRIGHT_SEEDS,
 } from '../test-helpers.mjs';
 
-const BASE_URL = 'http://localhost:3000';
 const SEED = PLAYWRIGHT_SEEDS.gameplayTest;
 
-async function runTest() {
-  console.log('🎯 Starting E2E Test: Drop Position Selection\n');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
+test.describe('Drop Position Selection', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`/?seed=${SEED}&choice=drop-position`, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
   });
-  const page = await context.newPage();
 
-  try {
+  test('should allow selecting left, center, and right positions', async ({ page }) => {
+    console.log('🎯 Starting E2E Test: Drop Position Selection\n');
+
     // ========================================================================
-    // Step 1: Load game with drop-position mechanic enabled
+    // Step 1: Verify game loaded with drop-position mechanic
     // ========================================================================
-    console.log('Step 1: Loading game with drop position mechanic...');
-    await page.goto(`${BASE_URL}?seed=${SEED}&choice=drop-position`);
+    console.log('Step 1: Verifying game with drop position mechanic...');
 
     await waitForGameState(page, 'ready', { timeout: 5000 });
     console.log('   ✓ Game loaded and ready');
@@ -48,25 +45,26 @@ async function runTest() {
     await waitForGameState(page, 'selecting-position', { timeout: 3000 });
     console.log('   ✓ Position selector displayed');
 
-    // Verify position buttons are visible
-    await waitForElement(page, '[data-zone="left"]', { timeout: 2000 });
-    await waitForElement(page, '[data-zone="center"]', { timeout: 2000 });
-    await waitForElement(page, '[data-zone="right"]', { timeout: 2000 });
-    console.log('   ✓ All position buttons visible');
+    // Verify START button is visible
+    await waitForElement(page, 'button:has-text("START")', { timeout: 2000 });
+    console.log('   ✓ START button visible');
 
     await takeScreenshot(page, 'drop-position-02-selector');
 
     // ========================================================================
-    // Step 3: Select left position
+    // Step 3: Use default center position
     // ========================================================================
-    console.log('\nStep 3: Selecting left position...');
-    await page.click('[data-zone="left"]');
+    console.log('\nStep 3: Using default center position...');
+
+    // Click START button to confirm (center is default)
+    await page.click('button:has-text("START")');
+    console.log('   ✓ START button clicked');
 
     // Should transition to countdown
     await waitForGameState(page, 'countdown', { timeout: 2000 });
-    console.log('   ✓ Position selected, countdown started');
+    console.log('   ✓ Countdown started');
 
-    await takeScreenshot(page, 'drop-position-03-left-countdown');
+    await takeScreenshot(page, 'drop-position-03-center-countdown');
 
     // ========================================================================
     // Step 4: Verify ball drops and completes game flow
@@ -81,12 +79,12 @@ async function runTest() {
     await waitForGameState(page, 'landed', { timeout: 5000 });
     console.log('   ✓ Ball landed');
 
-    await takeScreenshot(page, 'drop-position-04-left-landed');
+    await takeScreenshot(page, 'drop-position-04-center-landed');
 
     // ========================================================================
-    // Step 5: Reset and test center position
+    // Step 5: Reset and test left position (using arrow)
     // ========================================================================
-    console.log('\nStep 5: Testing center position...');
+    console.log('\nStep 5: Testing left position (using arrow)...');
 
     // Wait for prize reveal
     await waitForGameState(page, 'revealed', { timeout: 5000 });
@@ -105,22 +103,29 @@ async function runTest() {
     await page.click('[data-testid="drop-ball-button"]');
     await waitForGameState(page, 'selecting-position', { timeout: 3000 });
 
-    // Select center position
-    await page.click('[data-zone="center"]');
-    console.log('   ✓ Center position selected');
+    // Click left arrow twice to get to left position (from center=index 2 to left=index 0)
+    await page.click('button img[alt="Previous"]');
+    await page.waitForTimeout(100);
+    await page.click('button img[alt="Previous"]');
+    await page.waitForTimeout(100);
+    console.log('   ✓ Left arrow clicked twice');
+
+    // Click START button to confirm
+    await page.click('button:has-text("START")');
+    console.log('   ✓ START button clicked for left position');
 
     await waitForGameState(page, 'countdown', { timeout: 2000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
     await waitForGameState(page, 'landed', { timeout: 5000 });
-    console.log('   ✓ Ball landed from center position');
+    console.log('   ✓ Ball landed from left position');
 
-    await takeScreenshot(page, 'drop-position-05-center-landed');
+    await takeScreenshot(page, 'drop-position-05-left-landed');
 
     // ========================================================================
-    // Step 6: Reset and test right position
+    // Step 6: Reset and test right position (using arrow)
     // ========================================================================
-    console.log('\nStep 6: Testing right position...');
+    console.log('\nStep 6: Testing right position (using arrow)...');
 
     await waitForGameState(page, 'revealed', { timeout: 5000 });
     await closeButton.first().click();
@@ -131,9 +136,16 @@ async function runTest() {
     await page.click('[data-testid="drop-ball-button"]');
     await waitForGameState(page, 'selecting-position', { timeout: 3000 });
 
-    // Select right position
-    await page.click('[data-zone="right"]');
-    console.log('   ✓ Right position selected');
+    // Click right arrow twice to get to right position (from center=index 2 to right=index 4)
+    await page.click('button img[alt="Next"]');
+    await page.waitForTimeout(100);
+    await page.click('button img[alt="Next"]');
+    await page.waitForTimeout(100);
+    console.log('   ✓ Right arrow clicked twice');
+
+    // Click START button to confirm
+    await page.click('button:has-text("START")');
+    console.log('   ✓ START button clicked for right position');
 
     await waitForGameState(page, 'countdown', { timeout: 2000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
@@ -145,17 +157,5 @@ async function runTest() {
 
     console.log('\n✅ Drop Position Selection test PASSED\n');
     console.log('All screenshots saved to screenshots/ directory');
-  } catch (error) {
-    console.error('\n❌ Test FAILED:', error.message);
-    await takeScreenshot(page, 'drop-position-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-// Run test
-runTest().catch((error) => {
-  console.error('Test execution failed:', error);
-  process.exit(1);
+  });
 });

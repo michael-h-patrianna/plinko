@@ -17,14 +17,9 @@
     /* Path aliases */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"],
-      "@game/*": ["src/game/*"],
-      "@components/*": ["src/components/*"],
-      "@utils/*": ["src/utils/*"],
-      "@hooks/*": ["src/hooks/*"],
-      "@theme/*": ["src/theme/*"],
-      "@config/*": ["src/config/*"],
-      "@tests/*": ["src/tests/*"]
+      "@plinko": ["src/plinko/index.ts"],
+      "@plinko/*": ["src/plinko/*"],
+      "@demo/*": ["src/demo/*"]
     },
 
     /* Linting */

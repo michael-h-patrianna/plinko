@@ -219,3 +219,58 @@ export async function waitForElementCount(page, selector, expectedCount, options
     { timeout }
   );
 }
+
+/**
+ * Handle drop position selection if needed
+ * If game is in 'selecting-position' state, clicks START button (uses default center position)
+ * If not in that state, does nothing (used for choice=none tests)
+ * @param {import('playwright').Page} page - Playwright page object
+ * @param {object} options - Options
+ * @returns {Promise<boolean>} True if position was selected, false if not needed
+ */
+export async function handleDropPositionIfNeeded(page, options = {}) {
+  const { timeout = 3000 } = options;
+
+  try {
+    // Check if we're in selecting-position state
+    const gameState = await page.evaluate(() => {
+      const gameContainer = document.querySelector('[data-game-state]');
+      return gameContainer ? gameContainer.getAttribute('data-game-state') : null;
+    });
+
+    if (gameState === 'selecting-position') {
+      // Wait for START button to be visible
+      await waitForElement(page, 'button:has-text("START")', { timeout: 2000 });
+
+      // Click START button to confirm (uses default center position)
+      await page.click('button:has-text("START")');
+
+      // Wait for countdown to start
+      await waitForGameState(page, 'countdown', { timeout });
+
+      return true;
+    }
+
+    return false;
+  } catch (error) {
+    // If we can't find the START button or game state, assume choice=none
+    return false;
+  }
+}
+
+/**
+ * Start game and handle drop position selection
+ * Clicks "Drop Ball" button and handles position selection if needed
+ * @param {import('playwright').Page} page - Playwright page object
+ * @param {object} options - Options
+ * @returns {Promise<void>}
+ */
+export async function startGameWithDropPosition(page, options = {}) {
+  const { zone = 'center' } = options;
+
+  // Click drop ball button
+  await page.click('[data-testid="drop-ball-button"]');
+
+  // Handle position selection if needed
+  await handleDropPositionIfNeeded(page, { zone });
+}

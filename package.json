@@ -18,8 +18,15 @@
     "test:watch": "node scripts/vitest-watch.mjs",
     "pretest:coverage": "node scripts/cleanup-vitest.mjs",
     "test:coverage": "node ./scripts/run-vitest.mjs run --coverage",
-    "test:e2e": "node ./scripts/run-playwright.mjs",
-    "test:e2e:headed": "node ./scripts/run-playwright.mjs --headed"
+    "test:e2e": "playwright test --config scripts/playwright/playwright.config.ts",
+    "test:e2e:headed": "playwright test --config scripts/playwright/playwright.config.ts --headed",
+    "test:e2e:debug": "playwright test --config scripts/playwright/playwright.config.ts --debug",
+    "test:e2e:ui": "playwright test --config scripts/playwright/playwright.config.ts --ui",
+    "test:e2e:report": "playwright show-report scripts/playwright/test-results/html",
+    "test:e2e:chrome": "playwright test --config scripts/playwright/playwright.config.ts --project=chromium",
+    "test:e2e:firefox": "playwright test --config scripts/playwright/playwright.config.ts --project=firefox",
+    "test:e2e:webkit": "playwright test --config scripts/playwright/playwright.config.ts --project=webkit",
+    "test:e2e:mobile": "playwright test --config scripts/playwright/playwright.config.ts --project=mobile-chrome --project=mobile-safari"
   },
   "dependencies": {
     "motion": "^12.0.0",

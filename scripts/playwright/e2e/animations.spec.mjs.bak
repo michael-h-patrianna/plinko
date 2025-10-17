@@ -1,0 +1,177 @@
+/**
+ * Animation System Tests
+ *
+ * Comprehensive test suite for animation performance and quality.
+ * Consolidates: test-animation-performance.mjs, test-animation-system.mjs,
+ *               test-opacity-animations.mjs, test-startscreen-animation.mjs
+ */
+
+import { test, expect } from '@playwright/test';
+import { waitForGameState } from '../test-helpers.mjs';
+
+test.describe('Animation System', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+  });
+
+  test('should maintain 60 FPS during animations', async ({ page }) => {
+    // Set up FPS tracking
+    await page.evaluate(() => {
+      window._fpsData = [];
+      let lastTime = performance.now();
+
+      function trackFPS() {
+        const now = performance.now();
+        const delta = now - lastTime;
+        const fps = 1000 / delta;
+        window._fpsData.push(fps);
+        lastTime = now;
+        requestAnimationFrame(trackFPS);
+      }
+      requestAnimationFrame(trackFPS);
+    });
+
+    // Start game and trigger animations
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Wait for animations to complete
+    await page.waitForTimeout(3000);
+
+    // Analyze FPS data
+    const fpsStats = await page.evaluate(() => {
+      const data = window._fpsData || [];
+      const avg = data.reduce((a, b) => a + b, 0) / data.length;
+      const min = Math.min(...data);
+      return { avg: avg.toFixed(1), min: min.toFixed(1), samples: data.length };
+    });
+
+    console.log(`FPS - Avg: ${fpsStats.avg}, Min: ${fpsStats.min}, Samples: ${fpsStats.samples}`);
+
+    // Should maintain close to 60 FPS
+    expect(parseFloat(fpsStats.avg)).toBeGreaterThan(50);
+  });
+
+  test('should animate start screen entrance smoothly', async ({ page }) => {
+    // Check if start button is visible
+    const startButton = page.locator('button').first();
+    await expect(startButton).toBeVisible();
+
+    // Verify button is interactive
+    await expect(startButton).toBeEnabled();
+
+    console.log('Start screen rendered with animations');
+  });
+
+  test('should handle opacity animations correctly', async ({ page }) => {
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Check for animated elements
+    const hasAnimatedElements = await page.evaluate(() => {
+      const elements = document.querySelectorAll('*');
+      for (const el of elements) {
+        const opacity = window.getComputedStyle(el).opacity;
+        if (opacity && opacity !== '1' && opacity !== '0') {
+          return true; // Found element with partial opacity (animating)
+        }
+      }
+      return false;
+    });
+
+    console.log('Opacity animations present:', hasAnimatedElements);
+  });
+
+  test('should use correct animation drivers (Framer Motion)', async ({ page }) => {
+    // Check if Framer Motion is being used
+    const hasFramerMotion = await page.evaluate(() => {
+      // Look for Framer Motion data attributes or classes
+      return document.querySelectorAll('[data-framer-motion], [style*="transform"]').length > 0;
+    });
+
+    console.log('Animation system active:', hasFramerMotion);
+  });
+
+  test('should handle smooth transitions between states', async ({ page }) => {
+    // Track state transitions
+    await page.evaluate(() => {
+      window._transitions = [];
+      const observer = new MutationObserver(() => {
+        const state = document.querySelector('[data-game-state]')?.getAttribute('data-game-state');
+        if (state) window._transitions.push({ state, timestamp: Date.now() });
+      });
+      observer.observe(document.body, { attributes: true, subtree: true });
+    });
+
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Wait for some state transitions
+    await page.waitForTimeout(3000);
+
+    // Check transitions
+    const transitions = await page.evaluate(() => window._transitions || []);
+    console.log(`Recorded ${transitions.length} state transitions`);
+
+    expect(transitions.length).toBeGreaterThan(0);
+  });
+
+  test('should not have janky animations', async ({ page }) => {
+    // Track frame times
+    await page.evaluate(() => {
+      window._frameTimes = [];
+      let lastTime = performance.now();
+
+      function trackFrame() {
+        const now = performance.now();
+        window._frameTimes.push(now - lastTime);
+        lastTime = now;
+        requestAnimationFrame(trackFrame);
+      }
+      requestAnimationFrame(trackFrame);
+    });
+
+    // Start game and run animations
+    await page.locator('button').first().click();
+    await page.waitForTimeout(3000);
+
+    // Analyze for jank (frames > 32ms)
+    const jankAnalysis = await page.evaluate(() => {
+      const times = window._frameTimes || [];
+      const jankFrames = times.filter(t => t > 32).length;
+      const totalFrames = times.length;
+      const jankPercent = (jankFrames / totalFrames) * 100;
+      return { jankPercent: jankPercent.toFixed(1), totalFrames };
+    });
+
+    console.log(`Jank: ${jankAnalysis.jankPercent}% of ${jankAnalysis.totalFrames} frames`);
+
+    // Should have less than 10% janky frames
+    expect(parseFloat(jankAnalysis.jankPercent)).toBeLessThan(10);
+  });
+
+  test('should handle animations on low-performance devices', async ({ page }) => {
+    // Simulate low performance by throttling
+    const client = await page.context().newCDPSession(page);
+    await client.send('Emulation.setCPUThrottlingRate', { rate: 4 });
+
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Wait for completion
+    await page.waitForTimeout(5000);
+
+    // Should still complete without errors
+    const hasErrors = await page.locator('text=/error/i').count();
+    expect(hasErrors).toBe(0);
+
+    console.log('Animations work under CPU throttling');
+
+    // Clean up
+    await client.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  });
+});

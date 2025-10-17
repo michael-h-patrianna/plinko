@@ -6,15 +6,8 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@game': path.resolve(__dirname, './src/game'),
-      '@utils': path.resolve(__dirname, './src/utils'),
-      '@config': path.resolve(__dirname, './src/config'),
-      '@theme': path.resolve(__dirname, './src/theme'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@audio': path.resolve(__dirname, './src/audio'),
-      '@animation': path.resolve(__dirname, './src/animation'),
+      '@plinko': path.resolve(__dirname, './src/plinko'),
+      '@demo': path.resolve(__dirname, './src/demo'),
     },
   },
   test: {
@@ -30,7 +23,7 @@ export default defineConfig({
       ['**/components/**/*.test.ts', 'jsdom'],  // Component unit tests need DOM
       // All other tests (physics, utils, game logic) use Node.js environment
     ],
-    setupFiles: './src/tests/setupTests.ts',
+    setupFiles: './src/plinko/tests/setupTests.ts',
     testTimeout: 20000,
     // Worker configuration to prevent memory exhaustion
     // Limit concurrent workers to prevent spawning 13 processes (one per CPU core)
@@ -52,15 +45,15 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: [
-        'src/**/*.{ts,tsx}',
-        '!src/**/*.d.ts',
-        '!src/tests/**',
+        'src/plinko/**/*.{ts,tsx}',
+        '!src/plinko/**/*.d.ts',
+        '!src/plinko/tests/**',
         '!src/main.tsx',
       ],
       exclude: [
-        'src/game/types.ts',
-        'src/theme/types.ts',
-        'src/config/theme.ts',
+        'src/plinko/game/types.ts',
+        'src/plinko/theme/types.ts',
+        'src/plinko/config/theme.ts',
         '**/node_modules/**',
         '**/dist/**',
       ],

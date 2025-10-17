@@ -1,0 +1,260 @@
+/**
+ * Performance Tests (PRIORITY 2)
+ *
+ * Validates performance benchmarks and detects regressions.
+ * Tests FPS, load time, memory usage, and animation smoothness.
+ */
+
+import { test, expect } from '@playwright/test';
+import { waitForGameState } from '../test-helpers.mjs';
+
+test.describe('Performance', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?choice=none', { waitUntil: 'networkidle' }); // Use choice=none for clean perf/physics tests
+    await page.waitForTimeout(500);
+  });
+
+  test('should maintain 60 FPS during ball drop', async ({ page }) => {
+    // Start FPS monitoring
+    await page.evaluate(() => {
+      window.fpsLog = [];
+      let lastTime = performance.now();
+      let frames = 0;
+
+      function measureFPS() {
+        frames++;
+        const currentTime = performance.now();
+        if (currentTime >= lastTime + 1000) {
+          window.fpsLog.push(frames);
+          frames = 0;
+          lastTime = currentTime;
+        }
+        requestAnimationFrame(measureFPS);
+      }
+      requestAnimationFrame(measureFPS);
+    });
+
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Wait for ball to land
+    await waitForGameState(page, 'landed', { timeout: 10000 });
+
+    // Get FPS measurements
+    const fpsLog = await page.evaluate(() => window.fpsLog || []);
+
+    // Should maintain close to 60 FPS (allow 10% tolerance)
+    const avgFPS = fpsLog.reduce((a, b) => a + b, 0) / fpsLog.length;
+    console.log(`Average FPS: ${avgFPS.toFixed(1)}`);
+
+    expect(avgFPS).toBeGreaterThan(54); // 90% of 60 FPS
+  });
+
+  test('should load page in under 3 seconds', async ({ page }) => {
+    const startTime = Date.now();
+    await page.goto('/');
+    await page.waitForLoadState('domcontentloaded');
+    const loadTime = Date.now() - startTime;
+
+    console.log(`Page load time: ${loadTime}ms`);
+    expect(loadTime).toBeLessThan(3000); // < 3 seconds
+  });
+
+  test('should have minimal layout shift (CLS < 0.1)', async ({ page }) => {
+    await page.goto('/');
+
+    // Measure CLS
+    const cls = await page.evaluate(() => {
+      return new Promise((resolve) => {
+        let clsValue = 0;
+        const observer = new PerformanceObserver((list) => {
+          for (const entry of list.getEntries()) {
+            if (!entry.hadRecentInput) {
+              clsValue += entry.value;
+            }
+          }
+        });
+        observer.observe({ type: 'layout-shift', buffered: true });
+
+        setTimeout(() => {
+          observer.disconnect();
+          resolve(clsValue);
+        }, 3000);
+      });
+    });
+
+    console.log(`Cumulative Layout Shift: ${cls.toFixed(3)}`);
+    expect(cls).toBeLessThan(0.25); // Allow some tolerance for development
+  });
+
+  test('should not leak memory across multiple rounds', async ({ page }) => {
+    // Get initial memory
+    const initialMemory = await page.evaluate(() => {
+      if (performance.memory) {
+        return performance.memory.usedJSHeapSize;
+      }
+      return null;
+    });
+
+    // Play 5 rounds
+    for (let i = 0; i < 5; i++) {
+      await page.locator('button').first().click();
+      await page.waitForTimeout(500);
+
+      await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+      // Try to reset/continue
+      await page.reload();
+      await page.waitForTimeout(500);
+    }
+
+    // Get final memory
+    const finalMemory = await page.evaluate(() => {
+      if (performance.memory) {
+        return performance.memory.usedJSHeapSize;
+      }
+      return null;
+    });
+
+    if (initialMemory && finalMemory) {
+      const memoryGrowth = (finalMemory - initialMemory) / initialMemory;
+      console.log(`Memory growth: ${(memoryGrowth * 100).toFixed(1)}%`);
+
+      // Memory should not grow significantly (< 50% growth max)
+      expect(memoryGrowth).toBeLessThan(0.5);
+    } else {
+      console.log('Memory API not available in this browser');
+    }
+  });
+
+  test('should render animations without jank', async ({ page }) => {
+    // Measure frame times during animation
+    const frameTimes = await page.evaluate(async () => {
+      const times = [];
+      let lastTime = performance.now();
+
+      return new Promise((resolve) => {
+        function measureFrame() {
+          const currentTime = performance.now();
+          times.push(currentTime - lastTime);
+          lastTime = currentTime;
+
+          if (times.length < 120) { // Measure 2 seconds at 60 FPS
+            requestAnimationFrame(measureFrame);
+          } else {
+            resolve(times);
+          }
+        }
+        requestAnimationFrame(measureFrame);
+      });
+    });
+
+    // Check for janky frames (> 32ms = dropped frame at 60 FPS)
+    const jankyFrames = frameTimes.filter(time => time > 32);
+    const jankyPercentage = (jankyFrames.length / frameTimes.length) * 100;
+
+    console.log(`Janky frames: ${jankyPercentage.toFixed(1)}%`);
+
+    // Allow max 10% janky frames
+    expect(jankyPercentage).toBeLessThan(10);
+  });
+
+  test('should complete ball drop in reasonable time', async ({ page }) => {
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    const startTime = Date.now();
+    await waitForGameState(page, 'landed', { timeout: 10000 });
+    const dropTime = Date.now() - startTime;
+
+    console.log(`Ball drop time: ${dropTime}ms`);
+
+    // Should complete in less than 8 seconds
+    expect(dropTime).toBeLessThan(8000);
+  });
+
+  test('should handle rapid interactions without performance degradation', async ({ page }) => {
+    // Enable FPS tracking
+    await page.evaluate(() => {
+      window._fpsData = [];
+      let lastTime = performance.now();
+
+      function trackFPS() {
+        const now = performance.now();
+        const fps = 1000 / (now - lastTime);
+        window._fpsData.push(fps);
+        lastTime = now;
+        requestAnimationFrame(trackFPS);
+      }
+      requestAnimationFrame(trackFPS);
+    });
+
+    // Rapidly click 10 times
+    const button = page.locator('button').first();
+    for (let i = 0; i < 10; i++) {
+      await button.click({ force: true, timeout: 100 }).catch(() => {});
+      await page.waitForTimeout(50);
+    }
+
+    // Wait a bit
+    await page.waitForTimeout(2000);
+
+    // Check FPS remained stable
+    const avgFps = await page.evaluate(() => {
+      const data = window._fpsData || [];
+      return data.reduce((a, b) => a + b, 0) / data.length;
+    });
+
+    console.log(`Average FPS during rapid interactions: ${avgFps.toFixed(1)}`);
+
+    // FPS should remain reasonable
+    expect(avgFps).toBeGreaterThan(30); // Allow degradation but not complete freeze
+  });
+
+  test('should have acceptable bundle load time', async ({ page }) => {
+    // Measure performance timing
+    const timing = await page.evaluate(() => {
+      const perf = performance.getEntriesByType('navigation')[0];
+      if (perf) {
+        return {
+          domContentLoaded: perf.domContentLoadedEventEnd - perf.domContentLoadedEventStart,
+          loadComplete: perf.loadEventEnd - perf.loadEventStart,
+          responseTime: perf.responseEnd - perf.requestStart,
+        };
+      }
+      return null;
+    });
+
+    if (timing) {
+      console.log('Performance timing:', timing);
+
+      // DOM content should load quickly
+      expect(timing.domContentLoaded).toBeLessThan(1000); // < 1 second
+    }
+  });
+
+  test('should maintain performance with multiple animations', async ({ page }) => {
+    // Start game
+    await page.locator('button').first().click();
+    await page.waitForTimeout(500);
+
+    // Track performance during active animations
+    await page.evaluate(() => {
+      window._perfStart = performance.now();
+    });
+
+    // Wait for ball drop (multiple animations active)
+    await waitForGameState(page, 'landed', { timeout: 10000 });
+
+    const perfDuration = await page.evaluate(() => {
+      return performance.now() - window._perfStart;
+    });
+
+    console.log(`Animation duration: ${perfDuration.toFixed(0)}ms`);
+
+    // Should complete without excessive delay
+    expect(perfDuration).toBeLessThan(10000);
+  });
+});

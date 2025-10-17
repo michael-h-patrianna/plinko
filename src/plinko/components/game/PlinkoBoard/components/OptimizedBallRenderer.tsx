@@ -1,0 +1,722 @@
+/**
+ * @component OptimizedBallRenderer
+ *
+ * Performance-optimized ball renderer that uses imperative DOM updates via BallAnimationDriver
+ * to bypass React reconciliation during 60 FPS animation loops.
+ *
+ * PERFORMANCE STRATEGY (as per docs/optimize.md):
+ * - Uses driver.schedule() instead of useSyncExternalStore
+ * - Bypasses React reconciliation for ball/trail updates
+ * - Direct DOM manipulation via refs (no 60 FPS React re-renders)
+ * - Expected CPU reduction: 40-60%
+ * - Maintains 60 FPS target frame rate with minimal main thread blocking
+ *
+ * This component replaces the useSyncExternalStore approach with imperative
+ * updates via the ballAnimationDriver, eliminating 60 FPS React reconciliation.
+ * The driver mutates DOM elements directly through refs while React only renders
+ * the initial structure once.
+ *
+ * ARCHITECTURE:
+ * - Renders static JSX structure with refs attached to ball/glow/trail elements
+ * - Driver receives getter functions (not direct refs) to access current DOM nodes
+ * - Animation loop runs outside React, updating transforms/opacity imperatively
+ * - Maintains fixed pool of trail divs for recycling (no allocations per frame)
+ *
+ * @param {OptimizedBallRendererProps} props - Component props
+ * @param {boolean} props.isSelectingPosition - Whether user is selecting drop position (hides ball)
+ * @param {GameState} props.ballState - Current game state ('idle' | 'ready' | 'countdown' | 'dropping' | 'landed')
+ * @param {boolean} props.showTrail - Whether to render motion trail behind ball
+ * @param {FrameStore} [props.frameStore] - Store providing current animation frame number for synchronization
+ * @param {() => BallPosition | null} [props.getBallPosition] - Function to get current ball position (x, y) and rotation
+ * @param {TrajectoryCache | null} [props.trajectoryCache] - Pre-computed physics values (scaleX, scaleY, trailLength) indexed by frame
+ *
+ * @returns {JSX.Element | null} Ball visual elements with trail, or null if not rendering
+ *
+ * @example
+ * ```tsx
+ * // Typical usage with physics engine integration
+ * const frameStore = useMemo(() => ({
+ *   subscribe: (listener: () => void) => {
+ *     // Subscribe to frame updates
+ *     return unsubscribe;
+ *   },
+ *   getSnapshot: () => currentFrame,
+ *   getCurrentFrame: () => currentFrame,
+ * }), []);
+ *
+ * const getBallPosition = useCallback(() => {
+ *   const trajectory = trajectoryRef.current;
+ *   if (!trajectory) return null;
+ *   const frame = Math.min(currentFrame, trajectory.points.length - 1);
+ *   return trajectory.points[frame];
+ * }, []);
+ *
+ * <OptimizedBallRenderer
+ *   isSelectingPosition={false}
+ *   ballState="dropping"
+ *   showTrail={true}
+ *   frameStore={frameStore}
+ *   getBallPosition={getBallPosition}
+ *   trajectoryCache={trajectoryCache}
+ * />
+ * ```
+ *
+ * @see {@link file://./docs/optimize.md} - Full optimization strategy and performance benchmarks
+ */
+
+import type { TrailFrame } from '@plinko/animation/ballAnimationDriver';
+import { getCachedTrailLookup } from '@plinko/animation/trailOptimization';
+import { useBallAnimationDriver } from '@plinko/animation/useBallAnimationDriver';
+import { useAudio } from '@plinko/audio/context/AudioProvider';
+import type { ValueRef } from '@plinko/types/ref';
+import { useAppConfig } from '@demo/config/AppConfigContext';
+import { getPerformanceSetting } from '@demo/config/appConfig';
+import { getCachedValues } from '@plinko/game/trajectoryCache';
+import type { BallPosition, GameState, TrajectoryCache } from '@plinko/game/types';
+import {
+  animationTokens,
+  borderWidthTokens,
+  opacityTokens,
+  sizeTokens,
+  zIndexTokens,
+} from '@plinko/theme/tokens';
+import { calculateBucketHeight } from '@plinko/utils/slotDimensions';
+import { memo, useEffect, useRef } from 'react';
+import { useTheme } from '../../../../theme';
+import { BallLauncher } from '../../BallLauncher';
+
+/**
+ * Frame store interface for animation frame synchronization.
+ * Provides subscription mechanism, current frame access, and listener notification.
+ */
+interface FrameStore {
+  subscribe: (listener: () => void) => () => void;
+  getSnapshot: () => number;
+  getCurrentFrame: () => number;
+  notifyListeners: () => void;
+}
+
+/**
+ * Calculate trail gradient intensity based on ball speed.
+ * Low speed = desaturated/dim, high speed = saturated/bright
+ * Uses linear gradients only (cross-platform compatible, no radial/conic)
+ *
+ * @param speed - Ball speed in pixels/second
+ * @param baseColor - Base color (e.g., theme.colors.game.ball.primary - must be hex format)
+ * @returns CSS linear gradient with speed-based intensity
+ */
+function calculateTrailGradient(speed: number, baseColor: string): string {
+  // Speed thresholds (px/s)
+  const LOW_SPEED = 200;
+  const HIGH_SPEED = 400;
+
+  // Calculate intensity based on speed
+  let alphaMultiplier = 0.6; // Desaturated for low speed
+
+  if (speed >= HIGH_SPEED) {
+    alphaMultiplier = 1.0; // Fully saturated for high speed
+  } else if (speed > LOW_SPEED) {
+    // Linear interpolation between low and high speed
+    const ratio = (speed - LOW_SPEED) / (HIGH_SPEED - LOW_SPEED);
+    alphaMultiplier = 0.6 + ratio * 0.4; // 0.6 to 1.0
+  }
+
+  // Calculate alpha hex values for gradient stops
+  // Full intensity at start, fading to transparent
+  const alpha1 = Math.round(255 * alphaMultiplier).toString(16).padStart(2, '0');
+  const alpha2 = Math.round(204 * alphaMultiplier).toString(16).padStart(2, '0'); // 80% of full
+  const alpha3 = Math.round(102 * alphaMultiplier).toString(16).padStart(2, '0'); // 40% of full
+
+  return `linear-gradient(135deg, ${baseColor}${alpha1} 0%, ${baseColor}${alpha2} 30%, ${baseColor}${alpha3} 70%, transparent 100%)`;
+}
+
+interface OptimizedBallRendererProps {
+  isSelectingPosition: boolean;
+  ballState: GameState;
+  showTrail: boolean;
+  frameStore?: FrameStore;
+  getBallPosition?: () => BallPosition | null;
+  trajectoryCache?: TrajectoryCache | null;
+  trajectory?: Array<BallPosition & { bucketWallHit?: 'left' | 'right'; bucketFloorHit?: boolean }>;
+  trajectoryLength?: number;
+  onLandingComplete?: () => void;
+  pegHitFrames?: Map<string, number[]>;
+  wallHitFrames?: { left: number[]; right: number[] };
+  currentFrameRef?: ValueRef<number>;
+  slots?: Array<{ x: number; width: number }>;
+  slotHighlightColor?: string;
+  bucketZoneY?: number;
+}
+
+export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
+  isSelectingPosition,
+  ballState,
+  showTrail,
+  frameStore,
+  getBallPosition,
+  trajectoryCache,
+  trajectory,
+  trajectoryLength,
+  onLandingComplete,
+  pegHitFrames,
+  wallHitFrames,
+  currentFrameRef,
+  slots,
+  slotHighlightColor,
+  bucketZoneY,
+}: OptimizedBallRendererProps) {
+  const { theme } = useTheme();
+  const { performance } = useAppConfig();
+  const { sfxController } = useAudio();
+  const maxTrailLength = getPerformanceSetting(performance, 'maxTrailLength') ?? sizeTokens.ball.maxTrailLength;
+
+  // Refs for ball elements
+  const ballMainRef = useRef<HTMLDivElement>(null);
+  const ballGlowOuterRef = useRef<HTMLDivElement>(null);
+  const ballGlowMidRef = useRef<HTMLDivElement>(null);
+
+  // Trail refs pool
+  const trailElementRefs = useRef<(HTMLDivElement | null)[]>(
+    Array(sizeTokens.ball.maxTrailLength).fill(null)
+  );
+
+  // Trail state tracking
+  const trailPointsRef = useRef<{ x: number; y: number }[]>([]);
+
+  // Peg flash tracking - keeps track of last checked frame for each peg
+  const lastCheckedPegFrameRef = useRef<Map<string, number>>(new Map());
+
+  // Wall flash tracking - keeps track of last checked frame for each wall
+  const lastCheckedWallFrameRef = useRef<{ left: number; right: number }>({ left: -1, right: -1 });
+
+  // Slot highlight tracking - keeps track of currently highlighted slot
+  const activeSlotRef = useRef<number | null>(null);
+
+  // Slot collision tracking - keeps track of last frame for wall/floor impacts
+  const lastSlotWallHitFrameRef = useRef<Map<number, number>>(new Map());
+  const lastSlotFloorHitFrameRef = useRef<Map<number, number>>(new Map());
+
+  /**
+   * GETTER PATTERN EXPLANATION (L74-88):
+   * Create stable driverRefs object using useRef instead of useMemo.
+   *
+   * Why use getter functions instead of passing refs directly:
+   * 1. The driver is created before refs are attached to DOM elements (refs.current is null initially)
+   * 2. Getters defer access to .current until the driver actually needs the DOM node
+   * 3. This ensures refs are populated after first render when driver.schedule() executes
+   * 4. Alternative would be recreating driver in useEffect, but that's less efficient
+   *
+   * The driver stores these getters and calls them each time it needs DOM access,
+   * guaranteeing refs.current points to live DOM nodes during animation updates.
+   *
+   * Why useRef instead of useMemo:
+   * - useRef creates a stable object that persists across renders without recreating
+   * - We can mutate driverRefsRef.current.maxTrailLength without triggering driver recreation
+   * - Driver only needs to be created once, then maxTrailLength updates are picked up via the ref
+   */
+  const driverRefsRef = useRef({
+    get ballMain() {
+      return ballMainRef.current;
+    },
+    get ballGlowOuter() {
+      return ballGlowOuterRef.current;
+    },
+    get ballGlowMid() {
+      return ballGlowMidRef.current;
+    },
+    get trailElements() {
+      return trailElementRefs.current;
+    },
+    maxTrailLength,
+  });
+
+  // Update maxTrailLength on the stable ref object (no driver recreation needed)
+  driverRefsRef.current.maxTrailLength = maxTrailLength;
+
+  const driver = useBallAnimationDriver(driverRefsRef.current);
+
+  // Start animation loop when dropping
+  useEffect(() => {
+    if (ballState !== 'dropping' || !frameStore || !getBallPosition || !trajectoryLength || !onLandingComplete) {
+      // Clear trail when not dropping
+      if (ballState === 'idle' || ballState === 'ready') {
+        driver.clearTrail();
+        trailPointsRef.current = [];
+      }
+      return;
+    }
+
+    let currentFrame = 0;
+
+    // PERFORMANCE: This is the SINGLE RAF loop that drives all animation
+    // Previously there were 2 loops (useGameAnimation + driver.schedule)
+    // Now the driver handles frame progression, timing, and completion
+    const TRAJECTORY_FPS = 60;
+    const DISPLAY_FPS = getPerformanceSetting(performance, 'fps') ?? 60;
+
+    // Schedule animation loop using driver with timing config
+    const cancel = driver.schedule(
+      (frame) => {
+        currentFrame = frame;
+
+        // Update frame ref and notify subscribers (pegs, slots)
+        if (currentFrameRef) {
+          currentFrameRef.current = currentFrame;
+        }
+        if (frameStore) {
+          frameStore.notifyListeners();
+        }
+
+      // Get ball position
+      const position = getBallPosition();
+      if (!position) return;
+
+      // Get cached values for this frame
+      const cached = getCachedValues(trajectoryCache, currentFrame);
+
+      // Apply ball transform
+      driver.applyBallTransform({
+        position: { x: position.x, y: position.y, rotation: position.rotation },
+        stretch: { scaleX: cached.scaleX, scaleY: cached.scaleY },
+      });
+
+      // Update trail
+      if (showTrail) {
+        // Add new trail point
+        trailPointsRef.current.unshift({ x: position.x, y: position.y });
+
+        // Trim to dynamic length based on speed (same as Ball.tsx)
+        if (trailPointsRef.current.length > cached.trailLength) {
+          trailPointsRef.current.length = cached.trailLength;
+        }
+
+        // Get pre-computed opacity/scale lookup for current trail length
+        // This eliminates Math.pow() calls: was 20 × 60 FPS = 1,200 operations/sec
+        const trailLookup = getCachedTrailLookup(trailPointsRef.current.length);
+
+        // Calculate motion blur based on horizontal velocity (high-speed effect)
+        // BallPosition includes optional vx/vy for motion blur effects
+        const vx = position.vx ?? 0;
+        const vy = position.vy ?? 0;
+        const absVx = Math.abs(vx);
+        const motionBlurScaleX = absVx > 400 ? Math.min(1.5 + (absVx - 400) / 400, 2.5) : 1;
+
+        // Calculate trail gradient based on speed (speed-based color intensity)
+        const speed = Math.sqrt(vx * vx + vy * vy);
+        const trailGradient = calculateTrailGradient(speed, theme.colors.game.ball.primary);
+
+        // Build trail frames using pre-computed values (O(1) array access)
+        const trailSize = 12;
+        const halfTrailSize = trailSize / 2;
+        const trailFrames: TrailFrame[] = trailPointsRef.current.map((point, i) => ({
+          x: point.x - halfTrailSize,
+          y: point.y - halfTrailSize,
+          opacity: trailLookup[i]?.opacity ?? 0,
+          scale: trailLookup[i]?.scale ?? 0,
+          scaleX: motionBlurScaleX, // Apply motion blur stretch
+          gradient: trailGradient, // Apply speed-based color intensity
+        }));
+
+        driver.updateTrail(trailFrames);
+      }
+
+      // COLLISION DETECTION: Peg flashes (frame-drop-safe with look-ahead)
+      // TIMING FIX: Trigger effects 1 frame early to synchronize with visual ball position
+      // The trajectory stores POST-BOUNCE positions, but collisions happen earlier in the frame.
+      // By looking ahead, we trigger effects when the ball VISUALLY appears to hit the peg.
+      //
+      // NOTE: Collision detection now uses CCD only (physics layer).
+      // False positives eliminated by removing visual feedback pass (2025-10-11).
+      // See docs/collision-review.md for details.
+      if (pegHitFrames && trajectory) {
+        // Look-ahead: Check for collisions 1 frame in the future
+        const COLLISION_LOOKAHEAD = 1;
+        const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
+        const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-collisions below this are inaudible
+
+        pegHitFrames.forEach((hitFrames, pegId) => {
+          const lastChecked = lastCheckedPegFrameRef.current.get(pegId) ?? -1;
+
+          // Find hits that will occur in the next frame window (inclusive of current frame for frame drops)
+          const newHits = hitFrames.filter(hitFrame => hitFrame > lastChecked && hitFrame <= lookAheadFrame);
+
+          if (newHits.length > 0) {
+            // Process ONLY the earliest new hit (prevents sound spam from multiple consecutive collision frames)
+            const collisionFrame = Math.min(...newHits);
+
+            // Update last checked frame FIRST to prevent processing same hit multiple times
+            lastCheckedPegFrameRef.current.set(pegId, collisionFrame);
+
+            // Peg will be hit! Trigger flash imperatively via driver
+            driver.updatePegFlash(pegId, true);
+
+            // Calculate impact speed from trajectory at the collision frame
+            // Only play sound if impact is audible (prevents micro-collision spam during slow movements)
+            const collisionPoint = trajectory[collisionFrame];
+
+            if (collisionPoint && sfxController) {
+              const vx = collisionPoint.vx ?? 0;
+              const vy = collisionPoint.vy ?? 0;
+              const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+              // Play sound ONCE for this collision if velocity is sufficient
+              if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+                sfxController.play('ball-peg-hit', { throttle: true });
+              }
+            }
+          }
+        });
+      }
+
+      // COLLISION DETECTION: Wall flashes (frame-drop-safe with look-ahead)
+      // TIMING FIX: Same look-ahead as peg collisions for consistent timing
+      if (wallHitFrames && trajectory) {
+        const COLLISION_LOOKAHEAD = 1;
+        const lookAheadFrame = currentFrame + COLLISION_LOOKAHEAD;
+        const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-collisions below this are inaudible
+
+        // Check left wall
+        const lastCheckedLeft = lastCheckedWallFrameRef.current.left;
+        const newLeftHits = wallHitFrames.left.filter(
+          hitFrame => hitFrame > lastCheckedLeft && hitFrame <= lookAheadFrame
+        );
+
+        if (newLeftHits.length > 0) {
+          // Left wall will be hit! Trigger directional wall bounce via driver with ball Y position
+          driver.updateWallFlash('left', true, position.y);
+
+          // Calculate impact speed and play sound only if audible
+          const collisionFrame = Math.min(...newLeftHits);
+          const collisionPoint = trajectory[collisionFrame];
+
+          if (collisionPoint && sfxController) {
+            const vx = collisionPoint.vx ?? 0;
+            const vy = collisionPoint.vy ?? 0;
+            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+            if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-wall-hit', { throttle: false });
+            }
+          }
+
+          // Update last checked frame to the earliest hit in this window
+          lastCheckedWallFrameRef.current.left = collisionFrame;
+        }
+
+        // Check right wall
+        const lastCheckedRight = lastCheckedWallFrameRef.current.right;
+        const newRightHits = wallHitFrames.right.filter(
+          hitFrame => hitFrame > lastCheckedRight && hitFrame <= lookAheadFrame
+        );
+
+        if (newRightHits.length > 0) {
+          // Right wall will be hit! Trigger directional wall bounce via driver with ball Y position
+          driver.updateWallFlash('right', true, position.y);
+
+          // Calculate impact speed and play sound only if audible
+          const collisionFrame = Math.min(...newRightHits);
+          const collisionPoint = trajectory[collisionFrame];
+
+          if (collisionPoint && sfxController) {
+            const vx = collisionPoint.vx ?? 0;
+            const vy = collisionPoint.vy ?? 0;
+            const impactSpeed = Math.sqrt(vx * vx + vy * vy);
+
+            if (impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-wall-hit', { throttle: false });
+            }
+          }
+
+          // Update last checked frame to the earliest hit in this window
+          lastCheckedWallFrameRef.current.right = collisionFrame;
+        }
+      }
+
+      // COLLISION DETECTION: Slot highlighting (show which slot ball is above during entire drop)
+      if (slots && slots.length > 0) {
+        let newActiveSlot: number | null = null;
+
+        // Find which slot the ball is above based on X coordinate
+        for (let i = 0; i < slots.length; i++) {
+          const slot = slots[i]!;
+          const slotCenterX = slot.x + slot.width / 2;
+          const distance = Math.abs(position.x - slotCenterX);
+
+          if (distance < slot.width / 2) {
+            newActiveSlot = i;
+            break;
+          }
+        }
+
+        // Update highlighting if active slot changed
+        if (newActiveSlot !== activeSlotRef.current) {
+          // Clear previous slot highlight
+          if (activeSlotRef.current !== null) {
+            driver.updateSlotHighlight(activeSlotRef.current, false);
+          }
+
+          // Set new slot highlight with position, size, and color
+          if (newActiveSlot !== null && slotHighlightColor) {
+            const slot = slots[newActiveSlot]!;
+            const slotHeight = calculateBucketHeight(slot.width);
+            driver.updateSlotHighlight(newActiveSlot, true, slot.x, slot.width, slotHighlightColor, slotHeight);
+          }
+
+          activeSlotRef.current = newActiveSlot;
+        }
+
+        // Update collision effects ONLY when in bucket zone
+        // Check BOTH current frame AND look-ahead frame to catch all collisions
+        // Look-ahead helps with timing, but checking current frame prevents missing first hit
+        if (newActiveSlot !== null && bucketZoneY !== undefined && position.y >= bucketZoneY && trajectory) {
+          const COLLISION_LOOKAHEAD = 1;
+          const lookAheadFrame = Math.min(currentFrame + COLLISION_LOOKAHEAD, (trajectoryLength ?? trajectory.length) - 1);
+
+          // Check both current and look-ahead frames for collisions
+          const currentPoint = trajectory[currentFrame];
+          const lookAheadPoint = trajectory[lookAheadFrame];
+
+          // Combine collision data from both frames (current takes priority for immediate impacts)
+          let wallImpact: 'left' | 'right' | null = null;
+          let floorImpact = false;
+          let impactSpeed = 0;
+          let wallHitFrame = -1;
+          let floorHitFrame = -1;
+
+          // Check current frame first (immediate collision)
+          if (currentPoint) {
+            if (currentPoint.bucketWallHit) {
+              wallImpact = currentPoint.bucketWallHit;
+              wallHitFrame = currentFrame;
+            }
+            if (currentPoint.bucketFloorHit) {
+              floorImpact = true;
+              floorHitFrame = currentFrame;
+            }
+
+            const vx = currentPoint.vx ?? 0;
+            const vy = currentPoint.vy ?? 0;
+            impactSpeed = Math.sqrt(vx * vx + vy * vy);
+          }
+
+          // Check look-ahead frame for upcoming collisions (if current frame had no collision)
+          if (lookAheadPoint && !wallImpact && !floorImpact) {
+            if (lookAheadPoint.bucketWallHit) {
+              wallImpact = lookAheadPoint.bucketWallHit;
+              wallHitFrame = lookAheadFrame;
+            }
+            if (lookAheadPoint.bucketFloorHit) {
+              floorImpact = true;
+              floorHitFrame = lookAheadFrame;
+            }
+
+            const vx = lookAheadPoint.vx ?? 0;
+            const vy = lookAheadPoint.vy ?? 0;
+            impactSpeed = Math.sqrt(vx * vx + vy * vy);
+          }
+
+          // Always update visual collision effects
+          driver.updateSlotCollision(newActiveSlot, wallImpact, floorImpact, impactSpeed);
+
+          // Play wall hit sound ONLY if this is a NEW collision (frame-drop-safe)
+          if (wallImpact && wallHitFrame >= 0 && sfxController) {
+            const lastWallHitFrame = lastSlotWallHitFrameRef.current.get(newActiveSlot) ?? -1;
+
+            // Only play if this collision occurs after the last one we handled
+            // AND the impact has sufficient velocity to be audible (prevents micro-bounce spam)
+            const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-bounces below this are inaudible
+
+            if (wallHitFrame > lastWallHitFrame && impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-slot-hit', { throttle: false });
+              lastSlotWallHitFrameRef.current.set(newActiveSlot, wallHitFrame);
+            } else if (wallHitFrame > lastWallHitFrame) {
+              // Still update last frame even if we don't play sound (prevents queuing up silent impacts)
+              lastSlotWallHitFrameRef.current.set(newActiveSlot, wallHitFrame);
+            }
+          }
+
+          // Play floor hit sound ONLY if this is a NEW collision (frame-drop-safe)
+          if (floorImpact && floorHitFrame >= 0 && sfxController) {
+            const lastFloorHitFrame = lastSlotFloorHitFrameRef.current.get(newActiveSlot) ?? -1;
+
+            // Only play if this collision occurs after the last one we handled
+            // AND the impact has sufficient velocity to be audible (prevents micro-bounce spam)
+            const MIN_AUDIBLE_IMPACT_SPEED = 50; // px/s - micro-bounces below this are inaudible
+
+            if (floorHitFrame > lastFloorHitFrame && impactSpeed >= MIN_AUDIBLE_IMPACT_SPEED) {
+              sfxController.play('ball-slot-hit', { throttle: false });
+              lastSlotFloorHitFrameRef.current.set(newActiveSlot, floorHitFrame);
+            } else if (floorHitFrame > lastFloorHitFrame) {
+              // Still update last frame even if we don't play sound (prevents queuing up silent impacts)
+              lastSlotFloorHitFrameRef.current.set(newActiveSlot, floorHitFrame);
+            }
+          }
+        }
+      }
+      },
+      {
+        totalFrames: trajectoryLength,
+        trajectoryFps: TRAJECTORY_FPS,
+        displayFps: DISPLAY_FPS,
+        onComplete: onLandingComplete,
+      }
+    );
+
+    // Cleanup
+    return () => {
+      cancel();
+      driver.clearTrail();
+      driver.clearAllPegFlashes();
+      driver.clearAllWallFlashes();
+      driver.clearAllSlotHighlights();
+      lastCheckedPegFrameRef.current.clear();
+      lastCheckedWallFrameRef.current = { left: -1, right: -1 };
+      activeSlotRef.current = null;
+      lastSlotWallHitFrameRef.current.clear();
+      lastSlotFloorHitFrameRef.current.clear();
+    };
+  }, [ballState, frameStore, getBallPosition, trajectoryCache, trajectory, trajectoryLength, onLandingComplete, showTrail, driver, performance, pegHitFrames, wallHitFrames, currentFrameRef, slots, slotHighlightColor, bucketZoneY]);
+
+  // Don't render anything during position selection
+  if (isSelectingPosition) {
+    return null;
+  }
+
+  // Get current ball position for launcher rendering
+  const ballPosition = getBallPosition?.() ?? null;
+
+  // Don't render during idle state (before game starts)
+  if (ballState === 'idle') {
+    return null;
+  }
+
+  // Render launcher during ready and countdown states
+  // BUG FIX: Render during 'ready' state so ball element exists in DOM for tests
+  if (ballState === 'ready' || ballState === 'countdown') {
+    if (!ballPosition) {
+      // Trajectory not ready yet, don't render
+      return null;
+    }
+    return (
+      <BallLauncher
+        x={ballPosition.x}
+        y={ballPosition.y}
+        isLaunching={false}
+        isSelected={false}
+        showCountdownPulses={ballState === 'countdown'}
+      />
+    );
+  }
+
+  // Don't render if no position
+  if (!ballPosition) {
+    return null;
+  }
+
+  // Render ball elements (refs will be updated imperatively by driver)
+  return (
+    <>
+      {/* Motion trail - pre-rendered pool updated imperatively */}
+      {showTrail &&
+        Array.from({ length: sizeTokens.ball.maxTrailLength }).map((_, i) => (
+          <div
+            key={`trail-${i}`}
+            ref={(el) => {
+              trailElementRefs.current[i] = el;
+            }}
+            className="absolute rounded-full pointer-events-none"
+            style={{
+              width: '12px',
+              height: '12px',
+              background: `linear-gradient(135deg, ${theme.colors.game.ball.primary} 0%, ${theme.colors.game.ball.primary}CC 30%, ${theme.colors.game.ball.primary}66 70%, transparent 100%)`,
+              willChange: 'transform, opacity',
+              zIndex: zIndexTokens.ballTrail,
+              transition: `transform ${animationTokens.duration.fastest}ms linear, opacity ${animationTokens.duration.fastest}ms linear`,
+              display: 'none', // Initially hidden, updated imperatively
+            }}
+          />
+        ))}
+
+      {/* Outer glow */}
+      <div
+        ref={ballGlowOuterRef}
+        className="absolute pointer-events-none"
+        style={{
+          width: `${sizeTokens.ball.glowOuter}px`,
+          height: `${sizeTokens.ball.glowOuter}px`,
+          background: theme.gradients.ballGlow,
+          opacity: opacityTokens[30],
+          willChange: 'transform',
+          zIndex: zIndexTokens.ballGlow,
+          borderRadius: '50%',
+          transform: ballPosition ? `translate(${ballPosition.x - 20}px, ${ballPosition.y - 20}px)` : undefined,
+        }}
+      />
+
+      {/* Middle glow */}
+      <div
+        ref={ballGlowMidRef}
+        className="absolute pointer-events-none"
+        style={{
+          width: `${sizeTokens.ball.glowMid}px`,
+          height: `${sizeTokens.ball.glowMid}px`,
+          background: theme.gradients.ballGlow,
+          opacity: opacityTokens[50],
+          willChange: 'transform',
+          zIndex: zIndexTokens.ballGlowMid,
+          borderRadius: '50%',
+          transform: ballPosition ? `translate(${ballPosition.x - 14}px, ${ballPosition.y - 14}px)` : undefined,
+        }}
+      />
+
+      {/* Main ball */}
+      <div
+        ref={ballMainRef}
+        className="absolute pointer-events-none"
+        style={{
+          width: `${sizeTokens.ball.diameter}px`,
+          height: `${sizeTokens.ball.diameter}px`,
+          background: theme.gradients.ballMain,
+          border: `${borderWidthTokens[1]}px solid ${theme.colors.game.ball.secondary}`,
+          willChange: 'transform',
+          zIndex: zIndexTokens.ball,
+          position: 'relative',
+          overflow: 'hidden',
+          borderRadius: '50%',
+          transformOrigin: 'center center',
+          transform: ballPosition ? `translate(${ballPosition.x - 7}px, ${ballPosition.y - 7}px) rotate(${ballPosition.rotation}deg)` : undefined,
+        }}
+        data-state={ballState}
+        data-testid="plinko-ball"
+      >
+        {/* Glossy highlight */}
+        <div
+          style={{
+            position: 'absolute',
+            top: '15%',
+            left: '20%',
+            width: '45%',
+            height: '45%',
+            background: theme.gradients.shine,
+            borderRadius: '50%',
+            opacity: opacityTokens[90],
+          }}
+        />
+
+        {/* Texture pattern */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: `linear-gradient(45deg, transparent 48%, ${theme.colors.shadows.default}03 50%, transparent 52%)`,
+            borderRadius: '50%',
+            opacity: opacityTokens[30],
+          }}
+        />
+      </div>
+    </>
+  );
+});

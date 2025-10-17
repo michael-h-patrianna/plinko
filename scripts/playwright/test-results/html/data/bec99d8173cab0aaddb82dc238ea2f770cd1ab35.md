@@ -1,0 +1,79 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - button "Dev Tools Settings" [active] [ref=e5] [cursor=pointer]:
+      - img [ref=e6]
+    - generic [ref=e9]:
+      - heading "Dev Tools" [level=3] [ref=e11]
+      - generic [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]: Theme
+          - button "Open Theme Editor" [ref=e15] [cursor=pointer]:
+            - img [ref=e16]
+            - text: Edit
+        - generic [ref=e18]:
+          - button "Default" [ref=e19] [cursor=pointer]
+          - button "Brutalist" [ref=e20] [cursor=pointer]
+      - generic [ref=e21]:
+        - generic [ref=e22]: Choice Mechanic
+        - generic [ref=e23]:
+          - button "None (Classic)" [ref=e24] [cursor=pointer]
+          - button "Drop Position" [ref=e25] [cursor=pointer]
+      - generic [ref=e26]:
+        - generic [ref=e27]: Performance
+        - generic [ref=e28]:
+          - button "High Quality" [ref=e29] [cursor=pointer]
+          - button "Power Saving" [ref=e30] [cursor=pointer]
+      - generic [ref=e31]:
+        - generic [ref=e32]: Audio
+        - button "Music Off" [ref=e33] [cursor=pointer]
+      - generic [ref=e34]:
+        - generic [ref=e35]: Debug
+        - button "Show Winner" [ref=e36] [cursor=pointer]
+  - generic [ref=e39]:
+    - generic [ref=e42]:
+      - heading "Plinko Popup" [level=1] [ref=e43]
+      - generic [ref=e44]:
+        - heading "Available Prizes" [level=2] [ref=e45]
+        - generic [ref=e46]:
+          - generic [ref=e48]:
+            - generic [ref=e49]: 25 Free Spins
+            - generic [ref=e50]: 21%
+          - generic [ref=e52]:
+            - generic [ref=e53]: GC 10k
+            - generic [ref=e54]: 26%
+          - generic [ref=e56]:
+            - generic [ref=e57]: Bronze Wheel
+            - generic [ref=e58]: 13%
+          - generic [ref=e60]:
+            - generic [ref=e61]: SC 250
+            - generic [ref=e62]: 13%
+          - generic [ref=e64]:
+            - generic [ref=e65]: SC 500
+            - generic [ref=e66]: 6%
+          - generic [ref=e68]:
+            - generic [ref=e69]: SC 100
+            - generic [ref=e70]: 21%
+      - button "Drop Ball" [ref=e71] [cursor=pointer]: Drop Ball
+    - generic [ref=e74]:
+      - generic [ref=e147]:
+        - generic [ref=e150]: 25 Spins
+        - generic [ref=e152]: ✕
+      - generic [ref=e154]:
+        - generic [ref=e157]: GC 10k
+        - generic [ref=e159]: ✕
+      - generic [ref=e161]:
+        - img "Bronze Wheel" [ref=e164]
+        - generic [ref=e166]: ✕
+      - generic [ref=e168]:
+        - generic [ref=e171]: SC 250
+        - generic [ref=e173]: ✕
+      - generic [ref=e175]:
+        - generic [ref=e178]: SC 500
+        - generic [ref=e180]: ✕
+      - generic [ref=e182]:
+        - generic [ref=e185]: SC 100
+        - generic [ref=e187]: ✕
+```

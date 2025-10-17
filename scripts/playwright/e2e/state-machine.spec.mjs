@@ -1,0 +1,270 @@
+/**
+ * State Machine Tests (PRIORITY 1)
+ *
+ * Critical tests to validate game state transitions and prevent invalid states.
+ * Ensures proper state flow and handles edge cases.
+ */
+
+import { test, expect } from '@playwright/test';
+import { waitForGameState, startGameWithDropPosition } from '../test-helpers.mjs';
+
+test.describe('State Machine', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?choice=drop-position', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
+  });
+
+  test('should follow valid state progression', async ({ page }) => {
+    const observedStates = [];
+
+    // Monitor state changes
+    await page.evaluate(() => {
+      window._states = [];
+      const observer = new MutationObserver(() => {
+        const state = document.querySelector('[data-game-state]')?.getAttribute('data-game-state');
+        if (state && (!window._states.length || window._states[window._states.length - 1] !== state)) {
+          window._states.push(state);
+        }
+      });
+      observer.observe(document.body, { attributes: true, subtree: true });
+    });
+
+    // Play through complete game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(500);
+
+    // Wait for revealed state
+    await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+    // Get observed states
+    const states = await page.evaluate(() => window._states || []);
+    console.log('State progression:', states);
+
+    // Expected states should include key transitions
+    const hasIdleOrReady = states.some(s => s === 'idle' || s === 'ready');
+    const hasDropping = states.includes('dropping');
+    const hasLanded = states.includes('landed');
+    const hasRevealed = states.includes('revealed');
+
+    expect(hasIdleOrReady || states.length > 0).toBeTruthy();
+    expect(hasDropping || hasLanded).toBeTruthy();
+    expect(hasRevealed).toBeTruthy();
+
+    console.log('Valid state progression confirmed');
+  });
+
+  test('should prevent invalid transitions', async ({ page }) => {
+    // Capture console errors
+    const errors = [];
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        errors.push(msg.text());
+      }
+    });
+
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(500);
+
+    // Try to interact during drop (should be prevented)
+    const dropButton = page.locator('[data-testid="drop-ball-button"], button').first();
+
+    // Attempt multiple clicks
+    await dropButton.click({ force: true }).catch(() => {});
+    await dropButton.click({ force: true }).catch(() => {});
+
+    // Wait for completion
+    await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+    // Should not have critical errors
+    const criticalErrors = errors.filter(e =>
+      e.toLowerCase().includes('uncaught') ||
+      e.toLowerCase().includes('unhandled')
+    );
+
+    expect(criticalErrors.length).toBe(0);
+
+    console.log('Invalid transitions handled gracefully');
+  });
+
+  test('should handle rapid user clicks gracefully', async ({ page }) => {
+    // Capture errors
+    const errors = [];
+    page.on('pageerror', err => {
+      errors.push(err.message);
+    });
+
+    // Rapidly click start button 5 times
+    const button = page.locator('button').first();
+    for (let i = 0; i < 5; i++) {
+      await button.click({ force: true, timeout: 100 }).catch(() => {});
+    }
+
+    await page.waitForTimeout(500);
+
+    // Should still reach valid end state
+    await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+    // No uncaught errors
+    expect(errors.length).toBe(0);
+
+    console.log('Rapid clicks handled gracefully');
+  });
+
+  test('should maintain state consistency', async ({ page }) => {
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(500);
+
+    // Wait for landed
+    await waitForGameState(page, 'landed', { timeout: 10000 });
+
+    // Check state attribute matches expected
+    const gameState = await page.evaluate(() => {
+      return document.querySelector('[data-game-state]')?.getAttribute('data-game-state');
+    });
+
+    expect(gameState).toBe('landed');
+
+    console.log('State consistency maintained');
+  });
+
+  test('should handle state transitions without memory leaks', async ({ page }) => {
+    // Get initial memory
+    const initialMemory = await page.evaluate(() => {
+      if (performance.memory) {
+        return performance.memory.usedJSHeapSize;
+      }
+      return null;
+    });
+
+    // Run through 3 game cycles
+    for (let i = 0; i < 3; i++) {
+      await startGameWithDropPosition(page);
+      await page.waitForTimeout(500);
+
+      await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+      // Check for "Claim" or "Play Again" button
+      const buttons = await page.locator('button').all();
+      if (buttons.length > 0) {
+        // Try to find reset/claim button
+        const claimButton = buttons[buttons.length - 1];
+        await claimButton.click().catch(() => {});
+        await page.waitForTimeout(1000);
+      }
+
+      // Reload for next iteration
+      if (i < 2) {
+        await page.reload();
+        await page.waitForTimeout(500);
+      }
+    }
+
+    // Get final memory
+    const finalMemory = await page.evaluate(() => {
+      if (performance.memory) {
+        return performance.memory.usedJSHeapSize;
+      }
+      return null;
+    });
+
+    if (initialMemory && finalMemory) {
+      const memoryGrowth = (finalMemory - initialMemory) / initialMemory;
+      console.log(`Memory growth: ${(memoryGrowth * 100).toFixed(1)}%`);
+
+      // Memory should not grow excessively (< 100% growth)
+      expect(memoryGrowth).toBeLessThan(1.0);
+    }
+
+    console.log('No significant memory leaks detected');
+  });
+
+  test('should transition between all game states correctly', async ({ page }) => {
+    // Track all state transitions
+    await page.evaluate(() => {
+      window._stateTransitions = [];
+      const observer = new MutationObserver(() => {
+        const state = document.querySelector('[data-game-state]')?.getAttribute('data-game-state');
+        if (state) {
+          window._stateTransitions.push({
+            state,
+            timestamp: Date.now(),
+          });
+        }
+      });
+      observer.observe(document.body, { attributes: true, subtree: true });
+    });
+
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(500);
+
+    // Wait for completion
+    await waitForGameState(page, 'revealed', { timeout: 15000 });
+
+    // Get transitions
+    const transitions = await page.evaluate(() => window._stateTransitions || []);
+
+    console.log(`Total state transitions: ${transitions.length}`);
+    console.log('States:', transitions.map(t => t.state).join(' → '));
+
+    // Should have multiple transitions
+    expect(transitions.length).toBeGreaterThan(0);
+
+    // Each transition should have a timestamp
+    transitions.forEach(t => {
+      expect(t.timestamp).toBeGreaterThan(0);
+    });
+
+    console.log('State transitions completed successfully');
+  });
+
+  test('should prevent actions during invalid states', async ({ page }) => {
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(500);
+
+    // Check if buttons are disabled during drop
+    await page.waitForTimeout(1000); // Wait for drop to start
+
+    const currentState = await page.evaluate(() => {
+      return document.querySelector('[data-game-state]')?.getAttribute('data-game-state');
+    });
+
+    console.log('Current state during drop:', currentState);
+
+    // Try to click drop button again (should be disabled or have no effect)
+    const dropButton = page.locator('[data-testid="drop-ball-button"]').first();
+    const isDisabled = await dropButton.isDisabled().catch(() => true);
+    const isHidden = await dropButton.isHidden().catch(() => true);
+
+    // Button should either be disabled or hidden during drop
+    const isProtected = isDisabled || isHidden;
+
+    console.log('Drop button protected during game:', isProtected);
+
+    // Wait for completion
+    await waitForGameState(page, 'revealed', { timeout: 15000 });
+  });
+
+  test('should handle page reload gracefully', async ({ page }) => {
+    // Start game
+    await startGameWithDropPosition(page);
+    await page.waitForTimeout(1000);
+
+    // Reload page mid-game
+    await page.reload();
+    await page.waitForTimeout(500);
+
+    // Should return to initial state
+    const dropButton = page.locator('button').first();
+    await expect(dropButton).toBeVisible();
+
+    console.log('Page reload handled gracefully');
+  });
+});

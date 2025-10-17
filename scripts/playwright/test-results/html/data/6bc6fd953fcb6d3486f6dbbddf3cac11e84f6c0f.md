@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - button "Dev Tools Settings" [ref=e5] [cursor=pointer]:
+    - img [ref=e6]
+  - generic [ref=e11]:
+    - generic [ref=e14]:
+      - heading "Plinko Popup" [level=1] [ref=e15]
+      - generic [ref=e16]:
+        - heading "Available Prizes" [level=2] [ref=e17]
+        - generic [ref=e18]:
+          - generic [ref=e20] [cursor=pointer]:
+            - generic [ref=e21]:
+              - text: Mega Combo!
+              - generic [ref=e22]: ▶
+            - generic [ref=e23]: 3%
+          - generic [ref=e25]:
+            - generic [ref=e26]: No Win
+            - generic [ref=e27]: 14%
+          - generic [ref=e29]:
+            - generic [ref=e30]: SC 250
+            - generic [ref=e31]: 16%
+          - generic [ref=e33]:
+            - generic [ref=e34]: GC 10k
+            - generic [ref=e35]: 32%
+          - generic [ref=e37] [cursor=pointer]:
+            - generic [ref=e38]:
+              - text: Combo Reward
+              - generic [ref=e39]: ▶
+            - generic [ref=e40]: 22%
+          - generic [ref=e42]:
+            - generic [ref=e43]: 200% Special Offer
+            - generic [ref=e44]: 14%
+      - button "Drop Ball" [ref=e45] [cursor=pointer]: Drop Ball
+    - generic [ref=e47]:
+      - generic [ref=e48]:
+        - generic [ref=e121]:
+          - generic [ref=e124]: SC 100
+          - generic [ref=e126]: ✕
+        - generic [ref=e128]:
+          - img "No Win" [ref=e131]
+          - generic [ref=e133]: ✕
+        - generic [ref=e135]:
+          - generic [ref=e138]: SC 250
+          - generic [ref=e140]: ✕
+        - generic [ref=e142]:
+          - generic [ref=e145]: GC 10k
+          - generic [ref=e147]: ✕
+        - generic [ref=e149]:
+          - generic [ref=e152]: SC 50
+          - generic [ref=e154]: ✕
+        - generic [ref=e156]:
+          - generic [ref=e159]: 200%
+          - generic [ref=e161]: ✕
+        - generic:
+          - generic: "1"
+          - generic: "2"
+      - generic [ref=e163]:
+        - generic [ref=e164]:
+          - generic [ref=e165]: "1"
+          - generic [ref=e166]: SC 100 + 25 Free Spins + GC 10k + Bronze Wheel + 1k Stars
+        - generic [ref=e167]:
+          - generic [ref=e168]: "2"
+          - generic [ref=e169]: SC 50 + GC 5k
+```

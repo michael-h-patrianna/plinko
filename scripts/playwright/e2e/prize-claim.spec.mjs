@@ -8,33 +8,31 @@
  * - Prize display and claim button functionality
  */
 
-import { chromium } from 'playwright';
+import { test, expect } from '@playwright/test';
 import {
   waitForElement,
   waitForGameState,
   waitForBallDrop,
   takeScreenshot,
   PLAYWRIGHT_SEEDS,
+  startGameWithDropPosition,
 } from '../test-helpers.mjs';
 
-const BASE_URL = 'http://localhost:3000';
-
-async function testFreePrizeClaim() {
-  console.log('\n📦 Testing Free Prize Claim...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
+test.describe('Prize Claiming Flow', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/?choice=drop-position', { waitUntil: 'networkidle' });
+    await page.waitForTimeout(500);
   });
-  const page = await context.newPage();
 
-  try {
+  test('should claim free prize reward', async ({ page }) => {
+    console.log('\n📦 Testing Free Prize Claim...');
+
     // Use a seed that lands on a free prize
-    await page.goto(`${BASE_URL}?seed=${PLAYWRIGHT_SEEDS.slot1}`);
+    await page.goto(`/?seed=${PLAYWRIGHT_SEEDS.slot1}&choice=drop-position`, { waitUntil: 'networkidle' });
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Play through game
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -74,31 +72,17 @@ async function testFreePrizeClaim() {
     }
 
     console.log('   ✅ Free Prize Claim test passed');
-  } catch (error) {
-    console.error('   ❌ Free Prize Claim test failed:', error.message);
-    await takeScreenshot(page, 'prize-claim-free-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testNoWinPrize() {
-  console.log('\n🚫 Testing No-Win Prize...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
+  test('should display no-win prize correctly', async ({ page }) => {
+    console.log('\n🚫 Testing No-Win Prize...');
+
     // Use a seed that might land on no-win
-    await page.goto(`${BASE_URL}?seed=${PLAYWRIGHT_SEEDS.slot0}`);
+    await page.goto(`/?seed=${PLAYWRIGHT_SEEDS.slot0}&choice=drop-position`, { waitUntil: 'networkidle' });
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Play through game
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -132,31 +116,17 @@ async function testNoWinPrize() {
     }
 
     console.log('   ✅ No-Win Prize test passed');
-  } catch (error) {
-    console.error('   ❌ No-Win Prize test failed:', error.message);
-    await takeScreenshot(page, 'prize-claim-no-win-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testPurchaseOfferPrize() {
-  console.log('\n💰 Testing Purchase Offer Prize...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
+  test('should display purchase offer prize correctly', async ({ page }) => {
+    console.log('\n💰 Testing Purchase Offer Prize...');
+
     // Use a seed that might land on purchase offer
-    await page.goto(`${BASE_URL}?seed=${PLAYWRIGHT_SEEDS.slot3}`);
+    await page.goto(`/?seed=${PLAYWRIGHT_SEEDS.slot3}&choice=drop-position`, { waitUntil: 'networkidle' });
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Play through game
-    await page.click('[data-testid="drop-ball-button"]');
+    await startGameWithDropPosition(page); // Handles drop position if enabled
     await waitForGameState(page, 'countdown', { timeout: 3000 });
     await waitForGameState(page, 'dropping', { timeout: 5000 });
     await waitForBallDrop(page, { maxWait: 15000 });
@@ -198,26 +168,12 @@ async function testPurchaseOfferPrize() {
     }
 
     console.log('   ✅ Purchase Offer Prize test passed');
-  } catch (error) {
-    console.error('   ❌ Purchase Offer Prize test failed:', error.message);
-    await takeScreenshot(page, 'prize-claim-purchase-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function testMultipleRounds() {
-  console.log('\n🔄 Testing Multiple Claim Rounds...');
-
-  const browser = await chromium.launch({ headless: false });
-  const context = await browser.newContext({
-    viewport: { width: 375, height: 812 },
   });
-  const page = await context.newPage();
 
-  try {
-    await page.goto(`${BASE_URL}?seed=${PLAYWRIGHT_SEEDS.gameplayTest}`);
+  test('should handle multiple consecutive claim rounds', async ({ page }) => {
+    console.log('\n🔄 Testing Multiple Claim Rounds...');
+
+    await page.goto(`/?seed=${PLAYWRIGHT_SEEDS.gameplayTest}&choice=drop-position`, { waitUntil: 'networkidle' });
     await waitForGameState(page, 'ready', { timeout: 5000 });
 
     // Play 3 consecutive rounds
@@ -225,7 +181,7 @@ async function testMultipleRounds() {
       console.log(`   Round ${round}...`);
 
       // Play game
-      await page.click('[data-testid="drop-ball-button"]');
+      await startGameWithDropPosition(page); // Handles drop position if enabled
       await waitForGameState(page, 'countdown', { timeout: 3000 });
       await waitForGameState(page, 'dropping', { timeout: 5000 });
       await waitForBallDrop(page, { maxWait: 15000 });
@@ -249,34 +205,5 @@ async function testMultipleRounds() {
     }
 
     console.log('   ✅ Multiple Claim Rounds test passed');
-  } catch (error) {
-    console.error('   ❌ Multiple Claim Rounds test failed:', error.message);
-    await takeScreenshot(page, 'prize-claim-multiple-ERROR');
-    throw error;
-  } finally {
-    await browser.close();
-  }
-}
-
-async function runAllTests() {
-  console.log('🏆 Starting E2E Test: Prize Claiming Flow\n');
-
-  try {
-    await testFreePrizeClaim();
-    await testNoWinPrize();
-    await testPurchaseOfferPrize();
-    await testMultipleRounds();
-
-    console.log('\n✅ All Prize Claiming tests PASSED\n');
-    console.log('All screenshots saved to screenshots/ directory');
-  } catch (error) {
-    console.error('\n❌ Prize Claiming test suite FAILED');
-    throw error;
-  }
-}
-
-// Run all tests
-runAllTests().catch((error) => {
-  console.error('Test execution failed:', error);
-  process.exit(1);
+  });
 });

@@ -1,13 +1,13 @@
 /**
  * Application entry point
- * Initializes React root and renders the main App component
+ * Initializes React root and renders the demo application
  */
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { App } from './App.tsx';
-import { AppConfigProvider } from './config/AppConfigContext.tsx';
-import './styles/globals.css';
+import { App } from '@demo/App.tsx';
+import { AppConfigProvider } from '@demo/config/AppConfigContext.tsx';
+import '@demo/styles/globals.css';
 
 const rootElement = document.getElementById('root');
 
