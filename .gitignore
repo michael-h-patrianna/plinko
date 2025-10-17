@@ -18,6 +18,7 @@ lerna-debug.log*
 /playwright-report/
 /test-results/
 /.vitest/
+scripts/playwright/test-results
 
 # TypeScript metadata
 *.tsbuildinfo
