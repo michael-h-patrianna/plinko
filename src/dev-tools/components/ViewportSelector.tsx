@@ -15,7 +15,7 @@ interface ViewportSelectorProps {
 }
 
 const VIEWPORT_SIZES = [
-  { width: 320, label: 'iPhone SE', colorKey: 'info' as const },
+  { width: 320, label: 'iPhone SE', colorKey: 'success' as const },
   { width: 360, label: 'Galaxy S8', colorKey: 'success' as const },
   { width: 375, label: 'iPhone 12', colorKey: 'accent' as const },
   { width: 414, label: 'iPhone 14 Pro Max', colorKey: 'warning' as const },

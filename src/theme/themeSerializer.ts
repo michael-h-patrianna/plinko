@@ -82,7 +82,6 @@ export function validateTheme(obj: unknown): ValidationResult {
   validateObject(theme, 'buttons', errors);
   validateObject(theme, 'components', errors);
   validateObject(theme, 'breakpoints', errors);
-  validateObject(theme, 'zIndex', errors);
 
   // Validate nested color properties
   if (theme.colors && typeof theme.colors === 'object') {
@@ -222,20 +221,6 @@ export function validateTheme(obj: unknown): ValidationResult {
     requiredBreakpoints.forEach(breakpoint => {
       if (typeof breakpoints[breakpoint] !== 'string') {
         errors.push(`Missing or invalid property: breakpoints.${breakpoint}`);
-      }
-    });
-  }
-
-  // Validate zIndex
-  if (theme.zIndex && typeof theme.zIndex === 'object') {
-    const zIndex = theme.zIndex as Record<string | number, unknown>;
-    const requiredZIndices = [0, 10, 20, 30, 40, 50, 'auto', 'dropdown', 'modal', 'popover', 'tooltip', 'notification'];
-
-    requiredZIndices.forEach(index => {
-      const value = zIndex[index];
-      const isValid = typeof value === 'number' || typeof value === 'string';
-      if (!isValid) {
-        errors.push(`Missing or invalid property: zIndex.${index}`);
       }
     });
   }

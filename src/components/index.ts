@@ -19,7 +19,6 @@ export { PrizeReveal } from './screens/PrizeReveal';
 export { FreeRewardView } from './screens/PrizeReveal/FreeRewardView';
 export { NoWinView } from './screens/PrizeReveal/NoWinView';
 export { PurchaseOfferView } from './screens/PrizeReveal/PurchaseOfferView';
-export { CheckoutPopup } from './screens/PrizeReveal/CheckoutPopup';
 export { RewardItem } from './screens/PrizeReveal/RewardItem';
 
 // Control components

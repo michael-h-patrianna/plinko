@@ -332,15 +332,10 @@ describe('Theme System', () => {
           expect(theme).toHaveProperty('colors');
           expect(theme).toHaveProperty('gradients');
           expect(theme).toHaveProperty('effects');
-          expect(theme).toHaveProperty('images');
-          expect(theme).toHaveProperty('spacing');
           expect(theme).toHaveProperty('typography');
-          expect(theme).toHaveProperty('animation');
           expect(theme).toHaveProperty('borderRadius');
           expect(theme).toHaveProperty('buttons');
           expect(theme).toHaveProperty('components');
-          expect(theme).toHaveProperty('breakpoints');
-          expect(theme).toHaveProperty('zIndex');
         });
 
         it('should have valid name property', () => {
@@ -390,63 +385,23 @@ describe('Theme System', () => {
         });
 
         it('should have all required effect properties', () => {
-          // RN-COMPATIBLE: shadows and backdrops removed
-          expect(theme.effects).toHaveProperty('glows');
-          expect(theme.effects).toHaveProperty('borders');
           expect(theme.effects).toHaveProperty('transitions');
 
           // Nested effect properties
-          expect(theme.effects.glows).toHaveProperty('sm');
-          expect(theme.effects.borders).toHaveProperty('thin');
-          expect(theme.effects.transitions).toHaveProperty('normal');
+          expect(theme.effects.transitions).toHaveProperty('fast');
         });
 
         it('should have all required typography properties', () => {
           expect(theme.typography).toHaveProperty('fontFamily');
-          expect(theme.typography).toHaveProperty('fontSize');
-          expect(theme.typography).toHaveProperty('fontWeight');
-          expect(theme.typography).toHaveProperty('lineHeight');
-          expect(theme.typography).toHaveProperty('letterSpacing');
 
           // Font families
           expect(theme.typography.fontFamily).toHaveProperty('primary');
           expect(typeof theme.typography.fontFamily.primary).toBe('string');
-
-          // Font sizes
-          expect(theme.typography.fontSize).toHaveProperty('base');
-          expect(theme.typography.fontSize).toHaveProperty('xl');
-
-          // Font weights
-          expect(theme.typography.fontWeight).toHaveProperty('normal');
-          expect(theme.typography.fontWeight).toHaveProperty('bold');
-        });
-
-        it('should have all required animation properties', () => {
-          expect(theme.animation).toHaveProperty('duration');
-          expect(theme.animation).toHaveProperty('easing');
-
-          expect(theme.animation.duration).toHaveProperty('fast');
-          expect(theme.animation.duration).toHaveProperty('normal');
-          expect(theme.animation.duration).toHaveProperty('slow');
-
-          expect(theme.animation.easing).toHaveProperty('linear');
-          expect(theme.animation.easing).toHaveProperty('easeIn');
-        });
-
-        it('should have all required spacing properties', () => {
-          expect(theme.spacing).toHaveProperty('0');
-          expect(theme.spacing).toHaveProperty('1');
-          expect(theme.spacing).toHaveProperty('4');
-          expect(theme.spacing).toHaveProperty('8');
-          expect(theme.spacing).toHaveProperty('16');
         });
 
         it('should have all required borderRadius properties', () => {
-          expect(theme.borderRadius).toHaveProperty('none');
           expect(theme.borderRadius).toHaveProperty('sm');
-          expect(theme.borderRadius).toHaveProperty('md');
-          expect(theme.borderRadius).toHaveProperty('lg');
-          expect(theme.borderRadius).toHaveProperty('full');
+          expect(theme.borderRadius).toHaveProperty('card');
         });
 
         it('should have all required button properties', () => {
@@ -465,18 +420,6 @@ describe('Theme System', () => {
 
           expect(theme.components.card).toHaveProperty('background');
           expect(theme.components.modal).toHaveProperty('background');
-        });
-
-        it('should have valid breakpoints', () => {
-          expect(theme.breakpoints).toHaveProperty('sm');
-          expect(theme.breakpoints).toHaveProperty('md');
-          expect(theme.breakpoints).toHaveProperty('lg');
-        });
-
-        it('should have valid zIndex values', () => {
-          expect(theme.zIndex).toHaveProperty('modal');
-          expect(theme.zIndex).toHaveProperty('dropdown');
-          expect(typeof theme.zIndex.modal).toBe('number');
         });
       });
     });

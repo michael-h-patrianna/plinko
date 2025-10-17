@@ -19,7 +19,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
-import { usePause } from '../../contexts/PauseContext';
 import { useTheme } from '../../theme';
 import { getAllCategories, getMetadataByCategory, type ThemePropertyMetadata } from '../../theme/themeMetadata';
 import { ColorInput, NumberInput, StringInput, SelectInput, GradientInput } from './ThemePropertyInputs';
@@ -280,7 +279,6 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
 
   // Get theme context
   const { theme, setTheme } = useTheme();
-  const { pause, unpause } = usePause();
 
   // Track the original theme for reset functionality
   const [initialTheme, setInitialTheme] = useState<Theme>(theme);
@@ -299,15 +297,6 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     setEditedTheme(theme);
     setInitialTheme(theme);
   }, [theme]);
-
-  // Pause game when editor is open, unpause when closed
-  useEffect(() => {
-    if (isOpen) {
-      pause();
-    } else {
-      unpause();
-    }
-  }, [isOpen, pause, unpause]);
 
   // Toggle accordion section
   const toggleSection = useCallback((category: string) => {
@@ -442,7 +431,6 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="theme-editor-title"
-            data-demo-ui="true"
             style={{
               position: 'fixed',
               top: 0,

@@ -120,8 +120,8 @@ export function Toast({
         minWidth: '280px',
         maxWidth: '400px',
         color: theme.colors.text.primary,
-        fontSize: theme.typography.fontSize.sm,
-        lineHeight: theme.typography.lineHeight.normal,
+        fontSize: '14px',
+        lineHeight: '1.5',
       }}
     >
       {/* Icon */}
@@ -134,7 +134,7 @@ export function Toast({
           background: `linear-gradient(135deg, ${severityStyles.iconColor} 0%, ${severityStyles.iconColor}${Math.round(opacityTokens[80] * 255).toString(16)} 100%)`,
           color: colorTokens.white,
           fontSize: '12px',
-          fontWeight: theme.typography.fontWeight.bold,
+          fontWeight: 700,
           flexShrink: 0,
         }}
       >

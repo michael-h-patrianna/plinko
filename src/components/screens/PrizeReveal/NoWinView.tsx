@@ -51,7 +51,7 @@ export function NoWinView({ prize, onClaim, canClaim }: NoWinViewProps) {
   };
 
   return (
-    <PopupOverlay zIndex={theme.zIndex[40]} testId="no-win-overlay">
+    <PopupOverlay zIndex={40} testId="no-win-overlay">
       {/* Content container - no card background */}
       <div className="max-w-sm w-full">
         <div role="status" aria-live="polite" className="text-center">

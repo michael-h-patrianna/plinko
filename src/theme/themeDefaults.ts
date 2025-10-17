@@ -7,119 +7,21 @@ import {
   ButtonStyle,
   ComponentStyles,
   ThemeBorderRadius,
-  ThemeBreakpoints,
   ThemeButtons,
   ThemeEffects,
-  ThemeSpacing,
-  ThemeZIndex,
 } from './types';
-
-// Default spacing values (in rem/px)
-export const defaultSpacing: ThemeSpacing = {
-  0: '0',
-  0.5: '0.125rem',
-  1: '0.25rem',
-  1.5: '0.375rem',
-  2: '0.5rem',
-  2.5: '0.625rem',
-  3: '0.75rem',
-  3.5: '0.875rem',
-  4: '1rem',
-  5: '1.25rem',
-  6: '1.5rem',
-  7: '1.75rem',
-  8: '2rem',
-  9: '2.25rem',
-  10: '2.5rem',
-  11: '2.75rem',
-  12: '3rem',
-  14: '3.5rem',
-  16: '4rem',
-  20: '5rem',
-  24: '6rem',
-  28: '7rem',
-  32: '8rem',
-  36: '9rem',
-  40: '10rem',
-  44: '11rem',
-  48: '12rem',
-  52: '13rem',
-  56: '14rem',
-  60: '15rem',
-  64: '16rem',
-  72: '18rem',
-  80: '20rem',
-  96: '24rem',
-};
-
-// Default breakpoints
-export const defaultBreakpoints: ThemeBreakpoints = {
-  xs: '475px',
-  sm: '640px',
-  md: '768px',
-  lg: '1024px',
-  xl: '1280px',
-  '2xl': '1536px',
-};
-
-// Default z-index scale
-export const defaultZIndex: ThemeZIndex = {
-  0: 0,
-  10: 10,
-  20: 20,
-  30: 30,
-  40: 40,
-  50: 50,
-  auto: 'auto',
-  dropdown: 1000,
-  modal: 1100,
-  popover: 1200,
-  tooltip: 1300,
-  notification: 1400,
-};
 
 // Default border radius scale
 export const defaultBorderRadius: ThemeBorderRadius = {
-  none: '0',
   sm: '0.125rem',
-  md: '0.375rem',
-  lg: '0.5rem',
-  xl: '0.75rem',
-  '2xl': '1rem',
-  '3xl': '1.5rem',
-  full: '9999px',
-  // Component specific
-  button: '3px',
   card: '0.75rem',
-  input: '3px',
-  modal: '1rem',
-  badge: '0.25rem',
-  chip: '9999px',
 };
 
 // Default effects
 // RN-COMPATIBLE: Removed shadows and backdrops (not compatible with React Native)
 export const defaultEffects: ThemeEffects = {
-  glows: {
-    sm: '0 0 8px',
-    md: '0 0 16px',
-    lg: '0 0 32px',
-    colored: '0 0 24px',
-    success: '0 0 20px rgba(34, 197, 94, 0.5)',
-    error: '0 0 20px rgba(239, 68, 68, 0.5)',
-  },
-  borders: {
-    none: 'none',
-    thin: '1px solid',
-    medium: '2px solid',
-    thick: '4px solid',
-    dashed: '1px dashed',
-    dotted: '1px dotted',
-  },
   transitions: {
     fast: 'all 150ms ease',
-    normal: 'all 300ms ease',
-    slow: 'all 500ms ease',
   },
 };
 
@@ -137,14 +39,14 @@ export function createButtonStyle(
     backgroundActive: options.backgroundActive,
     border,
     borderWidth: options.borderWidth || '2px',
-    borderRadius: options.borderRadius || defaultBorderRadius.button,
+    borderRadius: options.borderRadius || '3px',
     color,
     textTransform: options.textTransform || 'none',
     colorHover: options.colorHover,
     padding: options.padding || { x: '1.5rem', y: '0.75rem' },
     fontSize: options.fontSize || '1rem',
     fontWeight: options.fontWeight || 600,
-    transition: options.transition || defaultEffects.transitions.normal,
+    transition: options.transition || defaultEffects.transitions.fast,
     outline: options.outline,
   };
 }
@@ -169,24 +71,6 @@ export const defaultButtons: ThemeButtons = {
       backgroundHover: 'linear-gradient(135deg, #94a3b8 0%, #64748b 50%, #475569 100%)',
     }
   ),
-  outline: createButtonStyle('transparent', '#3b82f6', '#3b82f6', {
-    backgroundHover: 'rgba(59, 130, 246, 0.1)',
-    outline: true,
-  }),
-  ghost: createButtonStyle('transparent', '#64748b', 'transparent', {
-    backgroundHover: 'rgba(100, 116, 139, 0.1)',
-  }),
-  danger: createButtonStyle('#ef4444', '#ffffff', 'transparent', {
-    backgroundHover: '#dc2626',
-  }),
-  success: createButtonStyle('#22c55e', '#ffffff', 'transparent', {
-    backgroundHover: '#16a34a',
-  }),
-  sizes: {
-    sm: { padding: { x: '1rem', y: '0.5rem' }, fontSize: '0.875rem' },
-    md: { padding: { x: '1.5rem', y: '0.75rem' }, fontSize: '1rem' },
-    lg: { padding: { x: '2rem', y: '1rem' }, fontSize: '1.125rem' },
-  },
 };
 
 // PlayFame button styles - round with specific styling
@@ -214,46 +98,6 @@ export const playFameButtons: ThemeButtons = {
       fontWeight: 700,
     }
   ),
-  outline: createButtonStyle('transparent', '#52d5ff', '#52d5ff', {
-    backgroundHover: 'rgba(82, 213, 255, 0.1)',
-    borderRadius: '9999px',
-    borderWidth: '2px',
-    outline: true,
-    padding: { x: '2rem', y: '0.875rem' },
-    fontWeight: 700,
-  }),
-  ghost: createButtonStyle('transparent', '#c1aff0', 'transparent', {
-    backgroundHover: 'rgba(193, 175, 240, 0.1)',
-    borderRadius: '9999px',
-    padding: { x: '2rem', y: '0.875rem' },
-  }),
-  danger: createButtonStyle(
-    'linear-gradient(180deg, #ff0048 0%, #ae143e 100%)',
-    '#ffffff',
-    'transparent',
-    {
-      backgroundHover: 'linear-gradient(180deg, #ff3366 0%, #ff0048 100%)',
-      borderRadius: '9999px',
-      padding: { x: '2rem', y: '0.875rem' },
-      fontWeight: 700,
-    }
-  ),
-  success: createButtonStyle(
-    'linear-gradient(180deg, #47d631 0%, #1bee02 100%)',
-    '#000000',
-    'transparent',
-    {
-      backgroundHover: 'linear-gradient(180deg, #5af25d 0%, #47d631 100%)',
-      borderRadius: '9999px',
-      padding: { x: '2rem', y: '0.875rem' },
-      fontWeight: 700,
-    }
-  ),
-  sizes: {
-    sm: { padding: { x: '1.5rem', y: '0.625rem' }, fontSize: '0.875rem' },
-    md: { padding: { x: '2rem', y: '0.875rem' }, fontSize: '1rem' },
-    lg: { padding: { x: '2.5rem', y: '1.125rem' }, fontSize: '1.125rem' },
-  },
 };
 
 // Default component styles
@@ -262,40 +106,11 @@ export const defaultComponents: ComponentStyles = {
   card: {
     background: 'rgba(30, 41, 59, 0.9)',
     border: '1px solid rgba(71, 85, 105, 0.3)',
-    borderWidth: '1px',
     borderRadius: defaultBorderRadius.card,
-    padding: '1.5rem',
   },
   modal: {
     background: 'rgba(15, 23, 42, 0.98)',
-    backdropColor: 'rgba(0, 0, 0, 0.7)',
-    borderRadius: defaultBorderRadius.modal,
-    padding: '2rem',
-  },
-  header: {
-    height: '4rem',
-    background: 'rgba(15, 23, 42, 0.95)',
-    borderBottom: '1px solid rgba(71, 85, 105, 0.3)',
-  },
-  input: {
-    background: 'rgba(30, 41, 59, 0.5)',
-    border: '1px solid rgba(71, 85, 105, 0.3)',
-    borderRadius: defaultBorderRadius.input,
-    borderFocus: '2px solid #3b82f6',
-    padding: '0.75rem 1rem',
-  },
-  dropdown: {
-    background: 'rgba(30, 41, 59, 0.98)',
-    border: '1px solid rgba(71, 85, 105, 0.3)',
-    borderRadius: defaultBorderRadius.md,
-    itemHover: 'rgba(71, 85, 105, 0.2)',
-  },
-  tooltip: {
-    background: 'rgba(15, 23, 42, 0.95)',
-    color: '#e2e8f0',
-    borderRadius: defaultBorderRadius.md,
-    padding: '0.5rem 0.75rem',
-    fontSize: '0.875rem',
+    borderRadius: '1rem',
   },
 };
 
@@ -305,39 +120,10 @@ export const playFameComponents: ComponentStyles = {
   card: {
     background: 'linear-gradient(135deg, #311d58 0%, #451668 100%)',
     border: '1px solid #561d86',
-    borderWidth: '1px',
     borderRadius: '1.25rem',
-    padding: '1.75rem',
   },
   modal: {
     background: 'linear-gradient(135deg, #231845 0%, #311d58 100%)',
-    backdropColor: 'rgba(26, 16, 56, 0.9)',
     borderRadius: '1.5rem',
-    padding: '2.5rem',
-  },
-  header: {
-    height: '4.5rem',
-    background: 'linear-gradient(180deg, #1a1038 0%, #231845 100%)',
-    borderBottom: '2px solid #561d86',
-  },
-  input: {
-    background: 'rgba(49, 29, 88, 0.5)',
-    border: '2px solid #561d86',
-    borderRadius: '9999px',
-    borderFocus: '2px solid #a852ff',
-    padding: '0.875rem 1.25rem',
-  },
-  dropdown: {
-    background: 'linear-gradient(135deg, #311d58 0%, #3a1f58 100%)',
-    border: '1px solid #561d86',
-    borderRadius: '1rem',
-    itemHover: 'rgba(168, 82, 255, 0.15)',
-  },
-  tooltip: {
-    background: 'linear-gradient(135deg, #451668 0%, #561d86 100%)',
-    color: '#ffffff',
-    borderRadius: '0.75rem',
-    padding: '0.625rem 1rem',
-    fontSize: '0.875rem',
   },
 };

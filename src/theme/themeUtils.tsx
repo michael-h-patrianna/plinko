@@ -67,28 +67,9 @@ export const createCSSVariables = (theme: Theme): string => {
     cssVars.push(`--gradient-${name}: ${value};`);
   });
 
-  // Spacing
-  Object.entries(theme.spacing).forEach(([name, value]) => {
-    cssVars.push(`--spacing-${name}: ${value}px;`);
-  });
-
-  // Typography
-  Object.entries(theme.typography.fontSize).forEach(([name, value]) => {
-    cssVars.push(`--font-size-${name}: ${value};`);
-  });
-
-  Object.entries(theme.typography.fontWeight).forEach(([name, value]) => {
-    cssVars.push(`--font-weight-${name}: ${value};`);
-  });
-
   // Border radius
   Object.entries(theme.borderRadius).forEach(([name, value]) => {
     cssVars.push(`--radius-${name}: ${value}px;`);
-  });
-
-  // Animation durations
-  Object.entries(theme.animation.duration).forEach(([name, value]) => {
-    cssVars.push(`--duration-${name}: ${value}ms;`);
   });
 
   return cssVars.join('\n  ');
@@ -431,7 +412,7 @@ export function createTextStyle(
   options?: {
     fontSize?: string;
     fontWeight?: number;
-    fontFamily?: 'primary' | 'secondary' | 'mono' | 'display';
+    fontFamily?: 'primary' | 'display';
   }
 ): React.CSSProperties {
   return {
@@ -564,7 +545,7 @@ export function createContainerStyle(
 
   return {
     background: backgrounds[variant],
-    padding: options?.padding || theme.components.card.padding,
+    padding: options?.padding || '16px',
     borderRadius: options?.borderRadius || theme.components.card.borderRadius,
   };
 }

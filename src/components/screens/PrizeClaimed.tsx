@@ -27,7 +27,7 @@ export function PrizeClaimed({ onClose }: PrizeClaimedProps) {
   const isPowerSaving = performance.mode === 'power-saving';
 
   return (
-    <PopupOverlay zIndex={theme.zIndex[50]} testId="prize-claimed-overlay">
+    <PopupOverlay zIndex={50} testId="prize-claimed-overlay">
       {/* Success checkmark stamp - single unified element (simplified in power-saving mode) */}
       <AnimatedDiv
         className="absolute pointer-events-none"

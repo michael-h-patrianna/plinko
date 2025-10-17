@@ -22,11 +22,9 @@
  * @param canClaim - Whether the purchase button should be enabled
  */
 
-import { useState } from 'react';
 import type { Prize } from '@game/prizeTypes';
 import { useTheme } from '../../../theme';
 import { ThemedButton } from '../../controls/ThemedButton';
-import { CheckoutPopup } from './CheckoutPopup';
 import { RewardItem } from './RewardItem';
 import { useAnimation } from '@theme/animationDrivers/useAnimation';
 import { PopupOverlay } from '../../layout/PopupOverlay';
@@ -42,7 +40,6 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
   const { AnimatedDiv, AnimatedH2, AnimatedP } = useAnimation();
   const { theme } = useTheme();
   const { performance } = useAppConfig();
-  const [showCheckout, setShowCheckout] = useState(false);
 
   // Disable complex animations in power-saving mode
   const isPowerSaving = performance.mode === 'power-saving';
@@ -70,11 +67,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
   };
 
   const handlePurchaseClick = () => {
-    setShowCheckout(true);
-  };
-
-  const handlePurchaseComplete = () => {
-    setShowCheckout(false);
+    // Go directly to prize claimed
     onClaim();
   };
 
@@ -96,8 +89,7 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
   }
 
   return (
-    <>
-      <PopupOverlay zIndex={theme.zIndex[40]} testId="purchase-offer-overlay">
+    <PopupOverlay zIndex={40} testId="purchase-offer-overlay">
         {/* Content container - no card background, but keep decorative elements */}
         <div className="max-w-md w-full overflow-visible relative">
           {/* "120% EXTRA" Badge - premium seal entrance with elastic pop (simplified in power-saving mode) */}
@@ -289,15 +281,5 @@ export function PurchaseOfferView({ prize, onClaim, canClaim }: PurchaseOfferVie
           </div>
         </div>
       </PopupOverlay>
-
-      {/* Checkout popup */}
-      <CheckoutPopup
-        isOpen={showCheckout}
-        price={price}
-        offerTitle={offer.title}
-        onClose={() => setShowCheckout(false)}
-        onPurchase={handlePurchaseComplete}
-      />
-    </>
   );
 }

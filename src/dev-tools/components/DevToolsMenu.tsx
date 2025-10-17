@@ -11,7 +11,6 @@
  */
 
 import { useState, useRef, useEffect } from 'react';
-import { usePause } from '../../contexts/PauseContext';
 import { useTheme } from '../../theme';
 import { isMobileDevice } from '@utils/deviceDetection';
 import { useAnimationDriver } from '@theme/animationDrivers';
@@ -120,21 +119,11 @@ export function DevToolsMenu({
   const [isThemeEditorOpen, setIsThemeEditorOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const { themeName, availableThemes, switchTheme } = useTheme();
-  const { pause, unpause } = usePause();
 
   const driver = useAnimationDriver();
   const AnimatedButton = driver.createAnimatedComponent('button');
   const AnimatedDiv = driver.createAnimatedComponent('div');
   const { AnimatePresence } = driver;
-
-  // Pause game when menu is open, unpause when closed
-  useEffect(() => {
-    if (isOpen) {
-      pause();
-    } else {
-      unpause();
-    }
-  }, [isOpen, pause, unpause]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -153,7 +142,7 @@ export function DevToolsMenu({
   const isMobile = isMobileDevice();
 
   return (
-    <div className="fixed bottom-4 right-4 z-50" ref={menuRef} data-demo-ui="true">
+    <div className="fixed bottom-4 right-4 z-50" ref={menuRef}>
       {/* Gear Icon Button */}
       <AnimatedButton
         onClick={() => setIsOpen(!isOpen)}

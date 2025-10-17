@@ -2,172 +2,13 @@
  * Comprehensive tests for PrizeReveal sub-components
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '../../testUtils';
-import { CheckoutPopup } from '@components/screens/PrizeReveal/CheckoutPopup';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '../../testUtils';
 import { FreeRewardView } from '@components/screens/PrizeReveal/FreeRewardView';
 import { PurchaseOfferView } from '@components/screens/PrizeReveal/PurchaseOfferView';
 import { NoWinView } from '@components/screens/PrizeReveal/NoWinView';
 import { RewardItem } from '@components/screens/PrizeReveal/RewardItem';
 import type { PrizeConfig } from '@game/types';
-
-// ============================================================================
-// CheckoutPopup Component Tests
-// ============================================================================
-describe('CheckoutPopup Component', () => {
-  const mockOnClose = vi.fn();
-  const mockOnPurchase = vi.fn();
-
-  beforeEach(() => {
-    mockOnClose.mockClear();
-    mockOnPurchase.mockClear();
-    vi.useFakeTimers();
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('should not render when closed', () => {
-    render(
-      <CheckoutPopup
-        isOpen={false}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    expect(screen.queryByText('Checkout')).not.toBeInTheDocument();
-  });
-
-  it('should render when open', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    expect(screen.getByText('Checkout')).toBeInTheDocument();
-    expect(screen.getByText('200% Bonus')).toBeInTheDocument();
-    expect(screen.getByText('$29.99')).toBeInTheDocument();
-  });
-
-  it('should display card information', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    expect(screen.getByText('Card ending in 4242')).toBeInTheDocument();
-    expect(screen.getByText('Expires 12/25')).toBeInTheDocument();
-  });
-
-  it('should call onClose when close button clicked', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    const closeButton = screen.getByText('×');
-    fireEvent.click(closeButton);
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
-  });
-
-  it('should call onClose when backdrop clicked', () => {
-    const { container } = render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    const backdrop = container.querySelector('.absolute.inset-0');
-    if (backdrop) {
-      fireEvent.click(backdrop);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
-    }
-  });
-
-  it('should show purchase button with price', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$49.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    expect(screen.getByText('Purchase for $49.99')).toBeInTheDocument();
-  });
-
-  it.skip('should show processing state when purchasing', async () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-
-    const purchaseButton = screen.getByText('Purchase for $29.99');
-    fireEvent.click(purchaseButton);
-
-    await waitFor(() => {
-      expect(screen.getByText('Processing...')).toBeInTheDocument();
-    });
-  });
-
-  it.skip('should call onPurchase after delay', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-
-    const purchaseButton = screen.getByText('Purchase for $29.99');
-    fireEvent.click(purchaseButton);
-
-    act(() => {
-      vi.advanceTimersByTime(1500);
-    });
-
-    expect(mockOnPurchase).toHaveBeenCalledTimes(1);
-  });
-
-  it('should show demo disclaimer', () => {
-    render(
-      <CheckoutPopup
-        isOpen={true}
-        price="$29.99"
-        offerTitle="200% Bonus"
-        onClose={mockOnClose}
-        onPurchase={mockOnPurchase}
-      />
-    );
-    expect(screen.getByText(/This is a demo checkout/i)).toBeInTheDocument();
-  });
-});
 
 // ============================================================================
 // FreeRewardView Component Tests
@@ -311,27 +152,10 @@ describe('PurchaseOfferView Component', () => {
     expect(screen.getByText(/1000/)).toBeInTheDocument();
   });
 
-  it('should show checkout popup when button clicked', () => {
+  it('should call onClaim when button clicked', () => {
     render(<PurchaseOfferView prize={purchasePrize} onClaim={mockOnClaim} canClaim={true} />);
     fireEvent.click(screen.getByText('$29.99'));
-    expect(screen.getByText('Checkout')).toBeInTheDocument();
-  });
-
-  it('should close checkout popup', () => {
-    render(<PurchaseOfferView prize={purchasePrize} onClaim={mockOnClaim} canClaim={true} />);
-
-    // Open checkout
-    const priceButton = screen.getByRole('button', { name: '$29.99' });
-    fireEvent.click(priceButton);
-    expect(screen.getByText('Checkout')).toBeInTheDocument();
-
-    // Close checkout
-    const closeButton = screen.getByText('×');
-    fireEvent.click(closeButton);
-
-    // Verify we can open it again (proves it was closed)
-    fireEvent.click(priceButton);
-    expect(screen.getByText('Checkout')).toBeInTheDocument();
+    expect(mockOnClaim).toHaveBeenCalledTimes(1);
   });
 
   it('should disable purchase button when canClaim is false', () => {

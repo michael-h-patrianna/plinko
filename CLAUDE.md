@@ -19,6 +19,7 @@ WHY: Tracks progress, maintains focus
 ## MANDATORY CODE STYLE AND ARCHITECTURE RULES
 Coding agents must follow `docs/meta/styleguide.md` - No exceptions!
 
+
 ## MANDATORY EXECUTION PROTOCOL
 1. Always complete all tasks fully. Do not simplify approaches, do not skip tasks.
 2. Always keep tests up to date and maintain 100% test coverage.
@@ -32,6 +33,7 @@ Coding agents must follow `docs/meta/styleguide.md` - No exceptions!
    - All tests must be in `src/tests/` or `scripts/playwright/`
    - Run ALL tests before considering task complete
    - Maintain 100% test coverage - no exceptions
+7. Do not write summary files or output long summaries of your actions in chat.
 
 ## TEST MEMORY MANAGEMENT
 

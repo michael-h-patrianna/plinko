@@ -41,7 +41,7 @@ export function StartScreen({ prizes, onStart, disabled, winningIndex, showWinne
   const isGradient = titleGradient.includes('gradient');
 
   return (
-    <PopupOverlay zIndex={theme.zIndex[30]} testId="start-screen-overlay">
+    <PopupOverlay zIndex={30} testId="start-screen-overlay">
       {/* Centered content container */}
       <div className="flex flex-col items-center justify-center w-full max-w-md">
         {/* Title - using theme with premium entrance animation (simplified in power-saving mode) */}

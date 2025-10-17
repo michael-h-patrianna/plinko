@@ -17,7 +17,7 @@ export function ThemeSelector() {
       <div
         className="bg-black/20 backdrop-blur-sm rounded-lg p-3"
         style={{
-          background: theme.colors.background.overlay,
+          background: theme.colors.background.overlayDark,
           border: `1px solid ${theme.colors.border.default}`,
         }}
       >

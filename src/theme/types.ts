@@ -30,15 +30,6 @@ export interface ButtonStyle {
 export interface ThemeButtons {
   primary: ButtonStyle;
   secondary: ButtonStyle;
-  outline: ButtonStyle;
-  ghost: ButtonStyle;
-  danger: ButtonStyle;
-  success: ButtonStyle;
-  sizes: {
-    sm: { padding: { x: string; y: string }; fontSize: string };
-    md: { padding: { x: string; y: string }; fontSize: string };
-    lg: { padding: { x: string; y: string }; fontSize: string };
-  };
 }
 
 // Component-specific styles
@@ -47,40 +38,11 @@ export interface ComponentStyles {
   card: {
     background: string;
     border: string;
-    borderWidth: string;
     borderRadius: string | number;
-    padding: string;
   };
   modal: {
     background: string;
-    backdropColor: string;
     borderRadius: string | number;
-    padding: string;
-  };
-  header: {
-    height: string;
-    background: string;
-    borderBottom: string;
-  };
-  input: {
-    background: string;
-    border: string;
-    borderRadius: string | number;
-    borderFocus: string;
-    padding: string;
-  };
-  dropdown: {
-    background: string;
-    border: string;
-    borderRadius: string | number;
-    itemHover: string;
-  };
-  tooltip: {
-    background: string;
-    color: string;
-    borderRadius: string | number;
-    padding: string;
-    fontSize: string;
   };
 }
 
@@ -89,8 +51,6 @@ export interface ThemeColors {
   background: {
     primary: string;
     secondary: string;
-    tertiary: string;
-    overlay: string;
     overlayDark: string;
   };
 
@@ -105,7 +65,6 @@ export interface ThemeColors {
   primary: {
     main: string;
     light: string;
-    dark: string;
     contrast: string;
   };
 
@@ -113,8 +72,6 @@ export interface ThemeColors {
   accent: {
     main: string;
     light: string;
-    dark: string;
-    contrast: string;
   };
 
   // Text colors
@@ -124,8 +81,6 @@ export interface ThemeColors {
     tertiary: string;
     disabled: string;
     inverse: string;
-    link: string;
-    linkHover: string;
   };
 
   // Status colors
@@ -133,10 +88,9 @@ export interface ThemeColors {
     success: string;
     warning: string;
     error: string;
-    info: string;
   };
 
-  // Prize colors
+  // Prize colors (accessed via mapper, but kept for theme definition completeness)
   prizes: {
     orange: {
       main: string;
@@ -171,21 +125,16 @@ export interface ThemeColors {
       primary: string;
       secondary: string;
       highlight: string;
-      shadow: string;
       borderRadius: string | number;
     };
     peg: {
-      default: string;
-      active: string;
       highlight: string;
       borderRadius: string | number;
-      shadow: string;
     };
     slot: {
       border: string;
       borderWidth: string;
       borderRadius: string | number;
-      glow: string;
       background: string;
       // Optional per-slot style overrides for themes with limited colors (like brutalist)
       // Index-based array where slotStyles[0] applies to first slot, etc.
@@ -202,10 +151,8 @@ export interface ThemeColors {
       borderRadius: string | number;
     };
     board: {
-      background: string;
       border: string;
       borderRadius: string | number;
-      shadow: string;
     };
   };
 
@@ -213,33 +160,23 @@ export interface ThemeColors {
   border: {
     default: string;
     light: string;
-    dark: string;
-    focus: string;
   };
 
   // Shadow colors (for colored shadows)
   shadows: {
     default: string;
-    colored: string;
-    glow: string;
   };
 }
 
 export interface ThemeGradients {
   // Background gradients
-  backgroundMain: string;
-  backgroundOverlay: string;
   backgroundCard: string;
-  backgroundHeader: string;
 
   // Button gradients
   buttonPrimary: string;
-  buttonSecondary: string;
-  buttonSuccess: string;
   buttonDanger: string;
-  buttonOutline?: string; // Optional for outline buttons
 
-  // Prize gradients
+  // Prize gradients (accessed via mapper)
   prizeOrange: string;
   prizeYellow: string;
   prizeEmerald: string;
@@ -249,7 +186,6 @@ export interface ThemeGradients {
   // Effect gradients
   glow: string;
   shine: string;
-  shimmer: string;
 
   // Ball gradients
   ballMain: string;
@@ -257,245 +193,31 @@ export interface ThemeGradients {
 
   // Peg gradients
   pegDefault: string;
-  pegActive: string;
-
-  // Slot gradients
-  slotBackground: string;
-  slotHighlight: string;
-  slotWin: string;
 
   // Text gradients
-  textGradient?: string;
   titleGradient?: string;
 }
 
 export interface ThemeEffects {
-  // Glow effects (using gradients instead of blur)
-  // RN-COMPATIBLE: Uses color values, not CSS box-shadow
-  glows: {
-    sm: string;
-    md: string;
-    lg: string;
-    colored: string;
-    success: string;
-    error: string;
-  };
-
-  // Border styles
-  // RN-COMPATIBLE: Border style definitions
-  borders: {
-    none: string;
-    thin: string;
-    medium: string;
-    thick: string;
-    dashed: string;
-    dotted: string;
-  };
-
   // Transitions
   // RN-COMPATIBLE: Timing definitions (implementation differs between web/RN)
   transitions: {
     fast: string;
-    normal: string;
-    slow: string;
   };
 }
 
-export interface ThemeImages {
-  // Logo and branding
-  logo?: string;
-  logoSmall?: string;
-  favicon?: string;
-
-  // Background images
-  backgroundPattern?: string;
-  backgroundTexture?: string;
-  backgroundGradientImage?: string;
-
-  // Prize icons
-  prizeIcons?: {
-    coins?: string;
-    spins?: string;
-    bonus?: string;
-    jackpot?: string;
-    xp?: string;
-    randomReward?: string;
-  };
-
-  // Game elements
-  gameElements?: {
-    star?: string;
-    sparkle?: string;
-    confetti?: string;
-    particle?: string;
-  };
-
-  // UI elements
-  uiElements?: {
-    loader?: string;
-    spinner?: string;
-    checkmark?: string;
-    close?: string;
-  };
-}
-
-export interface ThemeSpacing {
-  0: string;
-  0.5: string;
-  1: string;
-  1.5: string;
-  2: string;
-  2.5: string;
-  3: string;
-  3.5: string;
-  4: string;
-  5: string;
-  6: string;
-  7: string;
-  8: string;
-  9: string;
-  10: string;
-  11: string;
-  12: string;
-  14: string;
-  16: string;
-  20: string;
-  24: string;
-  28: string;
-  32: string;
-  36: string;
-  40: string;
-  44: string;
-  48: string;
-  52: string;
-  56: string;
-  60: string;
-  64: string;
-  72: string;
-  80: string;
-  96: string;
-}
 
 export interface ThemeTypography {
   fontFamily: {
     primary: string;
-    secondary?: string;
-    mono?: string;
     display?: string; // For headings
   };
-  fontSize: {
-    xs: string;
-    sm: string;
-    base: string;
-    lg: string;
-    xl: string;
-    '2xl': string;
-    '3xl': string;
-    '4xl': string;
-    '5xl': string;
-    '6xl': string;
-    '7xl': string;
-    '8xl': string;
-    '9xl': string;
-  };
-  fontWeight: {
-    thin: number;
-    extralight: number;
-    light: number;
-    normal: number;
-    medium: number;
-    semibold: number;
-    bold: number;
-    extrabold: number;
-    black: number;
-  };
-  lineHeight: {
-    none: number;
-    tight: number;
-    snug: number;
-    normal: number;
-    relaxed: number;
-    loose: number;
-  };
-  letterSpacing: {
-    tighter: string;
-    tight: string;
-    normal: string;
-    wide: string;
-    wider: string;
-    widest: string;
-  };
-  textTransform?: {
-    uppercase?: string;
-    lowercase?: string;
-    capitalize?: string;
-  };
 }
 
-export interface ThemeAnimation {
-  duration: {
-    instant: number;
-    fast: number;
-    normal: number;
-    slow: number;
-    slower: number;
-    slowest: number;
-  };
-  easing: {
-    linear: string;
-    easeIn: string;
-    easeOut: string;
-    easeInOut: string;
-    bounce: string;
-    elastic: string;
-    sharp: string;
-    smooth: string;
-  };
-  keyframes?: {
-    [key: string]: string;
-  };
-}
 
 export interface ThemeBorderRadius {
-  none: string;
   sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  '2xl': string;
-  '3xl': string;
-  full: string;
-  // Component specific
-  button: string;
   card: string;
-  input: string;
-  modal: string;
-  badge: string;
-  chip: string;
-}
-
-export interface ThemeBreakpoints {
-  xs: string;
-  sm: string;
-  md: string;
-  lg: string;
-  xl: string;
-  '2xl': string;
-}
-
-export interface ThemeZIndex {
-  0: number;
-  10: number;
-  20: number;
-  30: number;
-  40: number;
-  50: number;
-  auto: string;
-  dropdown: number;
-  modal: number;
-  popover: number;
-  tooltip: number;
-  notification: number;
 }
 
 export interface Theme {
@@ -504,15 +226,10 @@ export interface Theme {
   colors: ThemeColors;
   gradients: ThemeGradients;
   effects: ThemeEffects;
-  images: ThemeImages;
-  spacing: ThemeSpacing;
   typography: ThemeTypography;
-  animation: ThemeAnimation;
   borderRadius: ThemeBorderRadius;
   buttons: ThemeButtons;
   components: ComponentStyles;
-  breakpoints: ThemeBreakpoints;
-  zIndex: ThemeZIndex;
 }
 
 export type ThemeMode = 'light' | 'dark' | 'custom';

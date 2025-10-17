@@ -75,7 +75,7 @@ export function FreeRewardView({ prize, onClaim, canClaim }: FreeRewardViewProps
   };
 
   return (
-    <PopupOverlay zIndex={theme.zIndex[40]} testId="free-reward-overlay">
+    <PopupOverlay zIndex={40} testId="free-reward-overlay">
       {/* Content container - no card background */}
       <div className="max-w-md w-full">
         <div role="status" aria-live="polite" className="text-center">
