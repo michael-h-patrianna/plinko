@@ -106,7 +106,8 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(1000);
+      // Immediate stop to prevent overlapping playback on reset
+      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(0);
     });
 
     it('should stop all music when returning to ready state', () => {
@@ -118,7 +119,8 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(1000);
+      // Immediate stop to prevent overlapping playback on reset
+      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(0);
     });
   });
 
@@ -245,8 +247,8 @@ describe('useMusicManager', () => {
   describe('Loop Alternation', () => {
     it('should set up loop alternation when start-loop is playing', () => {
       vi.useFakeTimers();
-      (mockMusicController.isLayerPlaying as any).mockImplementation((id: string) =>
-        id === 'music-start-loop'
+      (mockMusicController.isLayerPlaying as any).mockImplementation(
+        (id: string) => id === 'music-start-loop'
       );
 
       renderHook(() =>
@@ -275,8 +277,8 @@ describe('useMusicManager', () => {
 
     it('should set up loop alternation when game-loop is playing', () => {
       vi.useFakeTimers();
-      (mockMusicController.isLayerPlaying as any).mockImplementation((id: string) =>
-        id === 'music-game-loop'
+      (mockMusicController.isLayerPlaying as any).mockImplementation(
+        (id: string) => id === 'music-game-loop'
       );
 
       renderHook(() =>

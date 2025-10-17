@@ -11,9 +11,9 @@
  * - No orphan states (all states have exit paths)
  */
 
-import { useReducer, useEffect, useRef } from 'react';
 import type { GameState } from '@plinko/game/types';
 import { trackStateTransition } from '@plinko/utils/telemetry';
+import { useEffect, useReducer, useRef } from 'react';
 
 // ============================================================================
 // STATE MACHINE TYPES
@@ -23,19 +23,19 @@ import { trackStateTransition } from '@plinko/utils/telemetry';
  * Win animation states
  */
 export type WinAnimationState =
-  | 'idle'              // No animations active
-  | 'landing-impact'    // Ball has landed, showing impact effect
-  | 'anticipation'      // Building suspense with particles
-  | 'win-reveal';       // Revealing the win with full animation
+  | 'idle' // No animations active
+  | 'landing-impact' // Ball has landed, showing impact effect
+  | 'anticipation' // Building suspense with particles
+  | 'win-reveal'; // Revealing the win with full animation
 
 /**
  * Events that trigger state transitions
  */
 export type WinAnimationEvent =
-  | { type: 'TRIGGER_LANDING_IMPACT' }      // Ball state changed to 'landed'
-  | { type: 'START_ANTICIPATION' }          // Impact duration complete
-  | { type: 'SHOW_WIN_REVEAL' }             // Anticipation duration complete
-  | { type: 'RESET_ANIMATIONS' };           // Return to idle state
+  | { type: 'TRIGGER_LANDING_IMPACT' } // Ball state changed to 'landed'
+  | { type: 'START_ANTICIPATION' } // Impact duration complete
+  | { type: 'SHOW_WIN_REVEAL' } // Anticipation duration complete
+  | { type: 'RESET_ANIMATIONS' }; // Return to idle state
 
 /**
  * Animation state context
@@ -162,9 +162,7 @@ export interface UseWinAnimationStateReturn extends WinAnimationContext {
  * @param ballState - Current game state
  * @returns Animation state context and dispatch function
  */
-export function useWinAnimationState(
-  ballState: GameState
-): UseWinAnimationStateReturn {
+export function useWinAnimationState(ballState: GameState): UseWinAnimationStateReturn {
   const [context, dispatch] = useReducer(winAnimationReducer, INITIAL_STATE);
 
   // Track previous ballState to detect transitions
@@ -200,7 +198,6 @@ export function useWinAnimationState(
     if (ballState !== 'landed' && context.state !== 'idle' && prevBallState !== null) {
       dispatch({ type: 'RESET_ANIMATIONS' });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ballState]);
 
   return {

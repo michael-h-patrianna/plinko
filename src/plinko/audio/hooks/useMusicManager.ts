@@ -3,9 +3,9 @@
  * Handles music loop alternation and volume transitions based on game state
  */
 
+import type { GameState } from '@plinko/game/types';
 import { useEffect, useRef } from 'react';
 import type { MusicController } from '../core/MusicController';
-import type { GameState } from '@plinko/game/types';
 
 interface UseMusicManagerOptions {
   musicController: MusicController | null;
@@ -34,6 +34,29 @@ export function useMusicManager({
   const loopCleanupRef = useRef<(() => void) | null>(null);
   const celebrationTimerRef = useRef<NodeJS.Timeout | null>(null);
   const setupAttemptedRef = useRef(false);
+  // Session guard: increment to invalidate any pending timers on reset/toggle
+  const sessionIdRef = useRef(0);
+
+  // Hard toggle handling: when music is disabled from devtools, stop everything immediately
+  useEffect(() => {
+    if (!musicController) return;
+    if (!musicEnabled) {
+      // Stop all music instantly and clear any scheduled transitions/timers
+      musicController.stopAllLayers(0);
+      // Invalidate any pending scheduled callbacks
+      sessionIdRef.current += 1;
+      if (loopCleanupRef.current) {
+        loopCleanupRef.current();
+        loopCleanupRef.current = null;
+      }
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+        celebrationTimerRef.current = null;
+      }
+      // Allow alternation to be set up again when re-enabled
+      setupAttemptedRef.current = false;
+    }
+  }, [musicController, musicEnabled]);
 
   // Handle music start on game start
   useEffect(() => {
@@ -60,7 +83,14 @@ export function useMusicManager({
   // Handle music loop alternation
   // Sets up continuous alternation between start-loop and game-loop
   useEffect(() => {
-    console.log('[Alternation] Effect running, musicController:', !!musicController, 'musicEnabled:', musicEnabled, 'gameState:', gameState);
+    console.log(
+      '[Alternation] Effect running, musicController:',
+      !!musicController,
+      'musicEnabled:',
+      musicEnabled,
+      'gameState:',
+      gameState
+    );
 
     if (!musicController || !musicEnabled) {
       console.log('[Alternation] Early return - no controller or music disabled');
@@ -69,8 +99,7 @@ export function useMusicManager({
 
     // Check if both tracks are loaded
     const bothLoaded =
-      musicController.isLoaded('music-start-loop') &&
-      musicController.isLoaded('music-game-loop');
+      musicController.isLoaded('music-start-loop') && musicController.isLoaded('music-game-loop');
 
     console.log('[Alternation] Both tracks loaded:', bothLoaded);
     if (!bothLoaded) return;
@@ -80,7 +109,12 @@ export function useMusicManager({
     const isGameLoopPlaying = musicController.isLayerPlaying('music-game-loop');
     const hasActiveMusic = isStartLoopPlaying || isGameLoopPlaying;
 
-    console.log('[Alternation] Music playing check - startLoop:', isStartLoopPlaying, 'gameLoop:', isGameLoopPlaying);
+    console.log(
+      '[Alternation] Music playing check - startLoop:',
+      isStartLoopPlaying,
+      'gameLoop:',
+      isGameLoopPlaying
+    );
     console.log('[Alternation] setupAttemptedRef.current:', setupAttemptedRef.current);
 
     // If alternation is already running (setupAttemptedRef is true) and music is playing,
@@ -92,18 +126,25 @@ export function useMusicManager({
 
     // Recursive function to set up alternation that chains itself
     const setupAlternation = (fromTrack: 'music-start-loop' | 'music-game-loop') => {
+      const localSession = sessionIdRef.current;
       const toTrack = fromTrack === 'music-start-loop' ? 'music-game-loop' : 'music-start-loop';
 
       console.log(`[Alternation] Setting up ${fromTrack} → ${toTrack}`);
 
       // After a delay, set up the transition for the current loop
       const setupTimer = setTimeout(() => {
-        console.log(`[Alternation] Delay complete, calling transitionAtLoopBoundary for ${fromTrack} → ${toTrack}`);
+        // Abort if a reset/toggle occurred
+        if (localSession !== sessionIdRef.current) return;
+        console.log(
+          `[Alternation] Delay complete, calling transitionAtLoopBoundary for ${fromTrack} → ${toTrack}`
+        );
 
         // Calculate crossfade duration based on BPM - use 1 beat
         const crossfadeDuration = musicController.getBeatsInMs(1);
 
-        console.log(`[Alternation] Using ${crossfadeDuration.toFixed(0)}ms crossfade (1 beat at ${musicController.getMusicBPM()} BPM)`);
+        console.log(
+          `[Alternation] Using ${crossfadeDuration.toFixed(0)}ms crossfade (1 beat at ${musicController.getMusicBPM()} BPM)`
+        );
 
         const cleanup = musicController.transitionAtLoopBoundary(fromTrack, toTrack, {
           fadeOutFrom: crossfadeDuration,
@@ -122,6 +163,8 @@ export function useMusicManager({
         console.log(`[Alternation] Scheduling next alternation setup in ${nextSetupDelay}ms`);
 
         const nextSetupTimer = setTimeout(() => {
+          // Abort if a reset/toggle occurred
+          if (localSession !== sessionIdRef.current) return;
           console.log(`[Alternation] Checking if ${toTrack} is playing for next setup...`);
           const isPlaying = musicController.isLayerPlaying(toTrack);
           console.log(`[Alternation] ${toTrack} playing: ${isPlaying}`);
@@ -179,14 +222,24 @@ export function useMusicManager({
 
     // Stop all music when returning to start screen (reset)
     if (gameState === 'idle' || gameState === 'ready') {
-      console.log('Game reset - stopping all music');
-      musicController.stopAllLayers(1000);
+      console.log('Game reset - stopping all music immediately');
+      // Stop instantly to avoid overlapping with next session
+      musicController.stopAllLayers(0);
+      // Invalidate any pending scheduled callbacks
+      sessionIdRef.current += 1;
 
       // Clean up loop alternation
       if (loopCleanupRef.current) {
         loopCleanupRef.current();
         loopCleanupRef.current = null;
       }
+      // Clear any pending celebration restore timers
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+        celebrationTimerRef.current = null;
+      }
+      // Ensure alternation can be re-initialized cleanly next session
+      setupAttemptedRef.current = false;
       return;
     }
 
@@ -213,7 +266,7 @@ export function useMusicManager({
       case 'countdown':
         // User clicked start button - fade to 25%
         console.log(`Countdown started - fading all playing tracks to 25%`);
-        tracksToUpdate.forEach(track => {
+        tracksToUpdate.forEach((track) => {
           musicController.fadeLayerVolume(track, 0.25, 400);
         });
         break;
@@ -221,7 +274,7 @@ export function useMusicManager({
       case 'dropping':
         // Countdown finished, ball is dropping - quickly fade to 36% over 200ms
         console.log(`Ball dropping - quickly fading all playing tracks to 36% (200ms)`);
-        tracksToUpdate.forEach(track => {
+        tracksToUpdate.forEach((track) => {
           musicController.fadeLayerVolume(track, 0.36, 200);
         });
         break;
@@ -229,32 +282,38 @@ export function useMusicManager({
       case 'landed':
         // Ball has landed - fade to 25%
         console.log(`Ball landed - fading all playing tracks to 25%`);
-        tracksToUpdate.forEach(track => {
+        tracksToUpdate.forEach((track) => {
           musicController.fadeLayerVolume(track, 0.25, 300);
         });
         break;
 
-      case 'celebrating':
+      case 'celebrating': {
         // Ball landed, celebration starting - duck to 25%, then restore after ~1s
         console.log(`Celebrating - ducking all playing tracks to 25%`);
-        tracksToUpdate.forEach(track => {
+        tracksToUpdate.forEach((track) => {
           musicController.fadeLayerVolume(track, 0.25, 300);
         });
 
         // After ~1 second (approximate celebration duration), fade back to 36%
+        const localSession = sessionIdRef.current;
         celebrationTimerRef.current = setTimeout(() => {
+          // Abort if a reset/toggle occurred
+          if (localSession !== sessionIdRef.current) return;
           console.log(`Celebration ending - restoring all playing tracks to 36%`);
           // Re-check which tracks are playing at this time
           const currentTracks: ('music-start-loop' | 'music-game-loop')[] = [];
-          if (musicController.isLayerPlaying('music-start-loop')) currentTracks.push('music-start-loop');
-          if (musicController.isLayerPlaying('music-game-loop')) currentTracks.push('music-game-loop');
+          if (musicController.isLayerPlaying('music-start-loop'))
+            currentTracks.push('music-start-loop');
+          if (musicController.isLayerPlaying('music-game-loop'))
+            currentTracks.push('music-game-loop');
 
-          currentTracks.forEach(track => {
+          currentTracks.forEach((track) => {
             musicController.fadeLayerVolume(track, 0.36, 500);
           });
           celebrationTimerRef.current = null;
         }, 1000);
         break;
+      }
 
       case 'revealed':
         // Prize revealed - maintain current volume (already at 36% from celebration end)

@@ -9,7 +9,7 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the entire SoundToggle component to avoid asset import issues
 vi.mock('@demo/components/SoundToggle', () => ({
@@ -31,9 +31,10 @@ const localStorageMock = (() => {
   return {
     getItem: (key: string) => store[key] || null,
     setItem: (key: string, value: string) => {
-      store[key] = value.toString();
+      store[key] = value;
     },
     removeItem: (key: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
       delete store[key];
     },
     clear: () => {

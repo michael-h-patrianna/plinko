@@ -17,6 +17,17 @@ The main entry point is `DevToolsLoader` (`src/demo/components/DevTools/DevTools
 
 The menu itself is animated using the cross-platform animation driver (`useAnimationDriver`). All motion primitives comply with the same constraints as the production UI (transforms + opacity only).
 
+## Audio
+
+Dev tools include a Music toggle that controls background music during gameplay.
+
+Behavior and guarantees:
+
+- Toggle Off: Stops all music immediately and clears any scheduled transitions; no reload required.
+- Game reset: A reset (returning to Idle/Ready) fully stops music immediately. Music does not continue after a reset and will not overlap with the next session.
+- Restart: Music only starts again when gameplay begins (entering selecting-position) and only if the Music toggle is On.
+- Volume changes: During gameplay, volume transitions apply to the active loop (and both during crossfades) to avoid abrupt changes.
+
 ## Settings persistence
 
 All dev tools settings are automatically persisted to `localStorage` and restored on page load, ensuring configuration survives refreshes and rebuilds. The demo persistence helper lives in `src/demo/utils/devToolsPersistence.ts`.

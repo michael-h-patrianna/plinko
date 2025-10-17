@@ -173,7 +173,9 @@ export class WebAudioAdapter implements AudioAdapter {
       // Instead, we need to let it continue playing (and potentially loop) while fading,
       // then stop it after the fade completes.
 
-      console.log(`[WebAudioAdapter] Fading out ${id} over ${fadeOutMs}ms (current volume: ${currentVolume}, looping: ${wasLooping})`);
+      console.log(
+        `[WebAudioAdapter] Fading out ${id} over ${fadeOutMs}ms (current volume: ${currentVolume}, looping: ${wasLooping})`
+      );
 
       // Start fade to 0
       howl.fade(currentVolume, 0, fadeOutMs);
@@ -236,7 +238,7 @@ export class WebAudioAdapter implements AudioAdapter {
     if (!howl) {
       return 0;
     }
-    return howl.seek() as number;
+    return howl.seek();
   }
 
   /**
@@ -263,14 +265,18 @@ export class WebAudioAdapter implements AudioAdapter {
     }
 
     const duration = howl.duration();
-    const currentSeek = howl.seek() as number;
+    const currentSeek = howl.seek();
     const timeUntilLoopEnd = (duration - currentSeek) * 1000; // Convert to ms
 
-    console.log(`[${id}] Duration: ${duration}s, Current position: ${currentSeek}s, Time until loop end: ${(timeUntilLoopEnd / 1000).toFixed(2)}s`);
+    console.log(
+      `[${id}] Duration: ${duration}s, Current position: ${currentSeek}s, Time until loop end: ${(timeUntilLoopEnd / 1000).toFixed(2)}s`
+    );
 
     // If we'd wait too long, transition immediately
     if (timeUntilLoopEnd > maxWaitMs) {
-      console.log(`[${id}] Would wait ${(timeUntilLoopEnd / 1000).toFixed(2)}s - transitioning immediately instead`);
+      console.log(
+        `[${id}] Would wait ${(timeUntilLoopEnd / 1000).toFixed(2)}s - transitioning immediately instead`
+      );
       setTimeout(callback, 0);
       return () => {};
     }

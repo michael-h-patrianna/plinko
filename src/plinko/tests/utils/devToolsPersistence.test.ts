@@ -2,39 +2,40 @@
  * Unit tests for dev tools persistence utility
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
-  loadDevSettings,
-  saveDevSettings,
   clearDevSettings,
   DEFAULT_DEV_SETTINGS,
+  loadDevSettings,
+  saveDevSettings,
   type DevToolsSettings,
 } from '@demo/utils/devToolsPersistence';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 describe('devToolsPersistence', () => {
   // Mock localStorage
   let localStorageMock: { [key: string]: string };
 
   beforeEach(() => {
-    // Reset localStorage mock
     localStorageMock = {};
-
     global.localStorage = {
       getItem: vi.fn((key: string) => localStorageMock[key] || null),
       setItem: vi.fn((key: string, value: string) => {
         localStorageMock[key] = value;
       }),
       removeItem: vi.fn((key: string) => {
+        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
         delete localStorageMock[key];
       }),
       clear: vi.fn(() => {
         localStorageMock = {};
       }),
-      length: 0,
-      key: vi.fn(() => null),
+      get length() {
+        return Object.keys(localStorageMock).length;
+      },
+      key: vi.fn((index: number) => Object.keys(localStorageMock)[index] || null),
     } as Storage;
+    vi.clearAllMocks();
   });
-
   afterEach(() => {
     vi.clearAllMocks();
   });

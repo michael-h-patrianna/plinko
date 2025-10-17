@@ -8,34 +8,34 @@
  * - Initial bundle: ~4.6kb (vs 34kb without optimization)
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { LazyMotion } from 'motion/react';
+import { DevToolsLoader, type ChoiceMechanic } from '@demo/components/DevTools';
+import { ErrorBoundary } from '@demo/components/ErrorBoundary';
+import { ToastProvider, useToast } from '@demo/components/Toast';
+import { AppConfigProvider } from '@demo/config/AppConfigContext';
+import type { PerformanceMode } from '@demo/config/appConfig';
+import { loadDevSettings, saveDevSettings } from '@demo/utils/devToolsPersistence';
 import { prewarmTrailCache } from '@plinko/animation/trailOptimization';
 import { AudioProvider, useAudio } from '@plinko/audio/context/AudioProvider';
 import { useAudioPreloader } from '@plinko/audio/hooks/useAudioPreloader';
 import { useMusicManager } from '@plinko/audio/hooks/useMusicManager';
 import { ScreenShake } from '@plinko/components/effects/ScreenShake';
 import { CelebrationOverlay } from '@plinko/components/effects/celebrations';
-import { ToastProvider, useToast } from '@demo/components/Toast';
 import { Countdown } from '@plinko/components/game/Countdown';
 import { PlinkoBoard } from '@plinko/components/game/PlinkoBoard/PlinkoBoard';
-import { ErrorBoundary } from '@demo/components/ErrorBoundary';
 import { GameBoardErrorBoundary } from '@plinko/components/layout/GameBoardErrorBoundary';
 import { PopupContainer } from '@plinko/components/layout/PopupContainer';
 import { PrizeErrorBoundary } from '@plinko/components/layout/PrizeErrorBoundary';
 import { PrizeClaimed } from '@plinko/components/screens/PrizeClaimed';
 import { PrizeReveal } from '@plinko/components/screens/PrizeReveal';
 import { StartScreen } from '@plinko/components/screens/StartScreen';
-import { AppConfigProvider } from '@demo/config/AppConfigContext';
-import type { PerformanceMode } from '@demo/config/appConfig';
 import { LAYOUT } from '@plinko/constants/dimensions';
-import { DevToolsLoader, type ChoiceMechanic } from '@demo/components/DevTools';
 import { useAppUIState } from '@plinko/hooks/useAppUIState';
 import { usePlinkoGame } from '@plinko/hooks/usePlinkoGame';
 import { ThemeProvider, themes, useTheme } from '@plinko/theme';
 import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 import { getContainerPadding, getDevToolsStyles, getGameContainerStyles } from '@plinko/theme/tokens';
-import { loadDevSettings, saveDevSettings } from '@demo/utils/devToolsPersistence';
+import { LazyMotion } from 'motion/react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 /**
  * Main application content component
@@ -94,7 +94,7 @@ function AppContent({
   }, []);
 
   const [choiceMechanic, setChoiceMechanic] = useState<ChoiceMechanic>(
-    (urlParams.choice ?? persistedSettings.choiceMechanic) as ChoiceMechanic
+    urlParams.choice ?? persistedSettings.choiceMechanic
   );
   const [showWinner, setShowWinner] = useState(persistedSettings.showWinner);
   const [musicEnabled, setMusicEnabled] = useState(persistedSettings.musicEnabled);
@@ -182,7 +182,6 @@ function AppContent({
       }
     }
     // Only run on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Wrap resetGame to increment gameId for animation lifecycle management

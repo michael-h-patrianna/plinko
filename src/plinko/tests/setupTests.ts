@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom';
-import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { afterEach, beforeEach, vi } from 'vitest';
 import { resetHarnessState } from './fixtures/harness';
 
 // Mock storage adapter to avoid localStorage dependency in Node environment
@@ -11,9 +11,15 @@ vi.mock('@plinko/utils/platform/storage/index.web.ts', () => {
   return {
     storageAdapter: {
       getItem: vi.fn(async (key: string) => mockStorage.get(key) ?? null),
-      setItem: vi.fn(async (key: string, value: string) => { mockStorage.set(key, value); }),
-      removeItem: vi.fn(async (key: string) => { mockStorage.delete(key); }),
-      clear: vi.fn(async () => { mockStorage.clear(); }),
+      setItem: vi.fn(async (key: string, value: string) => {
+        mockStorage.set(key, value);
+      }),
+      removeItem: vi.fn(async (key: string) => {
+        mockStorage.delete(key);
+      }),
+      clear: vi.fn(async () => {
+        mockStorage.clear();
+      }),
       getAllKeys: vi.fn(async () => Array.from(mockStorage.keys())),
     },
   };
@@ -78,7 +84,11 @@ afterEach(() => {
    * 3. This is a test-only optimization, not production code
    */
   // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
-  if (typeof globalThis !== 'undefined' && 'gc' in globalThis && typeof (globalThis as any).gc === 'function') {
+  if (
+    typeof globalThis !== 'undefined' &&
+    'gc' in globalThis &&
+    typeof (globalThis as any).gc === 'function'
+  ) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     (globalThis as any).gc();
   }
