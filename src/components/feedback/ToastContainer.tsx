@@ -7,9 +7,12 @@
  * CROSS-PLATFORM CONSTRAINTS:
  * ✅ Uses only transforms and opacity for positioning
  * ❌ No blur, box shadows, or filters
+ *
+ * BUNDLE SIZE OPTIMIZATION:
+ * ✅ Uses AnimatePresence from motion/react (loaded via LazyMotion)
  */
 
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
 import { Toast, type ToastProps } from './Toast';
 import { spacingTokens, zIndexTokens } from '@theme/tokens';
 

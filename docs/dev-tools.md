@@ -17,6 +17,61 @@ The main entry point is `DevToolsLoader`, a lazy-loaded wrapper that renders `De
 
 The menu itself is animated using the cross-platform animation driver (`useAnimationDriver`). All motion primitives comply with the same constraints as the production UI (transforms + opacity only).
 
+## Settings persistence
+
+All dev tools settings are automatically persisted to `localStorage` and restored on page load, ensuring configuration survives refreshes and rebuilds. The persistence layer lives in `src/utils/devToolsPersistence.ts`.
+
+### Persisted settings
+
+The following settings are saved under the `plinko-dev-settings` key:
+
+- **`choiceMechanic`** – Game choice mechanic (`'none'` | `'drop-position'`)
+- **`showWinner`** – Debug flag to display winning item
+- **`musicEnabled`** – Background music toggle
+- **`performanceMode`** – Performance preset (`'high-quality'` | `'balanced'` | `'power-saving'`)
+- **`viewportWidth`** – Desktop viewport simulation size (pixels)
+- **`themeName`** – Visual theme name
+
+> **Note:** Theme persistence uses a separate key (`plinko-theme`) managed by the theme system.
+
+### Implementation details
+
+**Loading:**
+- Settings are loaded once on mount using `useMemo` to avoid redundant reads
+- Each setting is validated with runtime type guards to handle corrupted data
+- Missing or invalid settings fall back to sensible defaults
+
+**Saving:**
+- A `useEffect` hook in `App.tsx` automatically saves settings whenever any value changes
+- All localStorage operations are wrapped in try-catch blocks with console warnings
+- Storage quota errors are handled gracefully
+
+**Viewport restoration:**
+- On desktop devices, viewport width is restored after UI state initializes
+- Ensures the simulated device size persists across sessions
+
+### Storage structure
+
+Settings are stored as a JSON object:
+
+```json
+{
+  "choiceMechanic": "drop-position",
+  "showWinner": false,
+  "musicEnabled": true,
+  "performanceMode": "balanced",
+  "viewportWidth": 375,
+  "themeName": "brutalist"
+}
+```
+
+### Error handling
+
+The persistence layer includes robust error handling for:
+- **Corrupted data:** Invalid JSON or unexpected types revert to defaults
+- **Storage quota exceeded:** Save failures log warnings without breaking the app
+- **Missing localStorage:** Gracefully degrades when storage is unavailable (e.g., private browsing)
+
 ## Enabling the tools
 
 Dev tools are controlled by `featureFlags.devToolsEnabled` in `AppConfig`:
@@ -60,17 +115,26 @@ printf "VITE_ENABLE_DEV_TOOLS=true\n" > .env.production.local
 
 ## Testing
 
-Manual QA checklist:
+### Manual QA checklist
 
 - Toggle each theme and ensure the selection is persisted after a reload.
 - Switch performance modes and confirm the win animations/ball trail respond accordingly.
 - Enable drop-position mechanic, verify countdown pauses, and confirm the chosen drop zone influences the trajectory.
 - Attempt to change viewport during a drop; the selector should be disabled with a warning.
+- Change multiple settings, refresh the page, and verify all settings are restored correctly.
 
-Automation ideas:
+### Automated tests
 
+**Unit tests** (`src/tests/utils/devToolsPersistence.test.ts`):
+- Loading, saving, and clearing settings
+- Type guard validation for all setting properties
+- Error handling for corrupt data and storage failures
+- Round-trip persistence tests
+
+**Integration tests:**
 - Component tests with `renderWithProviders` to verify the menu renders the expected sections when the flag is enabled.
 - Playwright smoke tests to ensure the flag gating works (menu absent in production preview, present when env var is set).
+- Browser automation test (`scripts/playwright/test-devtools-persistence.mjs`) that changes settings, refreshes the page, and verifies restoration.
 
 ## Security & deployment
 
@@ -78,8 +142,24 @@ Automation ideas:
 - Keep the flag disabled for end-user builds unless QA explicitly needs it.
 - When the menu is disabled, the lazy-loaded chunk is not requested, so bundle size for production remains unaffected.
 
+## Future enhancements
+
+Potential improvements to the dev tools:
+
+- **Reset to defaults button** – Quick way to restore all settings to initial values
+- **Export/import settings** – Save/load configurations as JSON files for sharing test scenarios
+- **Settings profiles** – Pre-configured sets of settings for common testing workflows
+- **Cross-tab sync** – Use storage events to sync settings across multiple browser tabs
+
 ## Related documentation
 
 - [`docs/architecture.md`](./architecture.md) – project layout and layering, including dev tools boundaries.
 - [`docs/power-saving-mode.md`](./power-saving-mode.md) – details on performance presets surfaced in the menu.
 - [`docs/theming.md`](./theming.md) – explains how the theme switcher works under the hood.
+
+## Implementation files
+
+- `src/dev-tools/` – Dev tools components and menu
+- `src/utils/devToolsPersistence.ts` – Settings persistence utility
+- `src/tests/utils/devToolsPersistence.test.ts` – Unit tests for persistence
+- `scripts/playwright/test-devtools-persistence.mjs` – Browser automation test

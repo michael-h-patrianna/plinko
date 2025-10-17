@@ -17,7 +17,8 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import { usePause } from '../../contexts/PauseContext';
 import { useTheme } from '../../theme';
 import { getAllCategories, getMetadataByCategory, type ThemePropertyMetadata } from '../../theme/themeMetadata';
@@ -413,7 +414,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
       {isOpen && (
         <>
           {/* Overlay */}
-          <motion.div
+          <m.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -432,7 +433,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
           />
 
           {/* Drawer */}
-          <motion.div
+          <m.div
             ref={drawerRef}
             initial={{ opacity: 0, x: '100%' }}
             animate={{ opacity: 1, x: 0 }}
@@ -639,7 +640,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
                 Reset
               </button>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Responsive styles for mobile */}
           <style>

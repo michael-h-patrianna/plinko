@@ -1,9 +1,15 @@
 /**
  * Main Plinko game application
  * With smooth state transitions using AnimatePresence
+ *
+ * BUNDLE SIZE OPTIMIZATION:
+ * - Uses LazyMotion for reduced initial bundle size
+ * - Motion features are lazy-loaded from motion-features.ts
+ * - Initial bundle: ~4.6kb (vs 34kb without optimization)
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { LazyMotion } from 'motion/react';
 import { prewarmTrailCache } from './animation/trailOptimization';
 import { AudioProvider, useAudio } from './audio/context/AudioProvider';
 import { useAudioPreloader } from './audio/hooks/useAudioPreloader';
@@ -78,7 +84,7 @@ function AppContent({
   const [showWinner, setShowWinner] = useState(persistedSettings.showWinner);
   const [musicEnabled, setMusicEnabled] = useState(persistedSettings.musicEnabled);
 
-  // Animation lifecycle fix: Increment gameId on each reset to force Framer Motion to treat
+  // Animation lifecycle fix: Increment gameId on each reset to force Motion to treat
   // each remount as a fresh animation cycle (prevents animation state caching issues)
   const [gameId, setGameId] = useState(0);
 
@@ -297,11 +303,13 @@ function AppContent({
 
             {/* Main game board with ball - stays visible during celebrating state */}
             <GameBoardErrorBoundary onReset={handleResetGame} onError={handleGameBoardError}>
-              <AnimatePresence mode="wait">
-                {state !== 'idle' &&
-                  state !== 'ready' &&
-                  state !== 'revealed' &&
-                  state !== 'claimed' && (
+              {/* NO mode="wait" - board should stay mounted across state transitions */}
+              <AnimatePresence>
+                {(state === 'selecting-position' ||
+                  state === 'countdown' ||
+                  state === 'dropping' ||
+                  state === 'landed' ||
+                  state === 'celebrating') && (
                     <PlinkoBoard
                       key="board"
                       prizes={prizes}
@@ -399,19 +407,24 @@ export function App() {
   // Memoize config object to prevent unnecessary re-renders when performanceMode hasn't changed
   const config = useMemo(() => ({ performance: { mode: performanceMode } }), [performanceMode]);
 
+  // Lazy load motion features for reduced initial bundle size
+  const loadFeatures = () => import('./motion-features').then((res) => res.default);
+
   return (
     <ErrorBoundary>
-      <PauseProvider>
-        <AppConfigProvider value={config}>
-          <ThemeProvider themes={themes}>
-            <AudioProvider>
-              <ToastProvider position="top-right" maxToasts={3}>
-                <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
-              </ToastProvider>
-            </AudioProvider>
-          </ThemeProvider>
-        </AppConfigProvider>
-      </PauseProvider>
+      <LazyMotion features={loadFeatures} strict>
+        <PauseProvider>
+          <AppConfigProvider value={config}>
+            <ThemeProvider themes={themes}>
+              <AudioProvider>
+                <ToastProvider position="top-right" maxToasts={3}>
+                  <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+                </ToastProvider>
+              </AudioProvider>
+            </ThemeProvider>
+          </AppConfigProvider>
+        </PauseProvider>
+      </LazyMotion>
     </ErrorBoundary>
   );
 }

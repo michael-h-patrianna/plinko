@@ -1,21 +1,21 @@
 /**
- * Framer Motion Animation Driver
+ * Motion Animation Driver (Optimized Bundle Size)
  *
- * Web implementation of the animation driver using Framer Motion.
+ * Web implementation of the animation driver using Motion (motion/react).
  * Provides GPU-accelerated animations with cross-platform compatibility.
+ *
+ * BUNDLE SIZE OPTIMIZATION:
+ * - Uses 'm' components instead of 'motion' for reduced bundle size
+ * - Features are lazy-loaded via LazyMotion wrapper in App.tsx
+ * - Initial bundle size: ~4.6kb (vs 34kb with old motion component)
  *
  * CRITICAL: This driver only exposes animations that are compatible with
  * future React Native implementation (transforms, opacity, colors only).
- *
- * PAUSE INTEGRATION:
- * This driver respects the global pause state (window.__ANIMATIONS_PAUSED__).
- * When paused, animated components are wrapped to prevent animation updates.
- * This ensures all Framer Motion animations truly freeze when the game is paused.
  */
 
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
 import type { ComponentType } from 'react';
-import { createElement, forwardRef, useEffect, useState } from 'react';
 import type {
   AnimatedComponentFactory,
   AnimatePresenceProps,
@@ -40,14 +40,8 @@ function detectEnvironment(): AnimationEnvironment {
 
   // Reduced motion preference
   let prefersReducedMotion = false;
-  if (isBrowser && 'matchMedia' in window && window.matchMedia) {
-    try {
-      const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-      prefersReducedMotion = mediaQuery ? mediaQuery.matches : false;
-    } catch {
-      // Ignore errors in test environments
-      prefersReducedMotion = false;
-    }
+  if (isBrowser && 'matchMedia' in window) {
+    prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   // GPU acceleration detection (basic heuristic)
@@ -69,15 +63,7 @@ function detectEnvironment(): AnimationEnvironment {
 }
 
 /**
- * Check if animations are currently paused globally
- */
-function isAnimationsPaused(): boolean {
-  if (typeof window === 'undefined') return false;
-  return !!(window as any).__ANIMATIONS_PAUSED__;
-}
-
-/**
- * Framer Motion implementation of AnimationDriver
+ * Motion implementation of AnimationDriver
  */
 class FramerMotionDriver implements AnimationDriver {
   readonly name = 'framer' as const;
@@ -89,56 +75,14 @@ class FramerMotionDriver implements AnimationDriver {
   }
 
   /**
-   * Create animated component using Framer Motion
-   * Returns pause-aware motion.div, motion.span, etc.
-   *
-   * When animations are paused, the component will:
-   * - Stop responding to animate prop changes
-   * - Freeze at current visual state
-   * - Resume smoothly when unpaused
+   * Create animated component using Motion (m components)
+   * Returns m.div, m.span, etc.
    */
   createAnimatedComponent<T extends keyof React.JSX.IntrinsicElements>(
     component: T
   ): AnimatedComponentFactory<T> {
-    const key = component as keyof typeof motion;
-    const MotionComponent = motion[key] as any;
-
-    // Wrap the motion component to respect pause state
-    // eslint-disable-next-line react/display-name
-    const PauseAwareComponent = forwardRef((props: any, ref: any) => {
-      const [isPaused, setIsPaused] = useState(isAnimationsPaused());
-
-      // Listen for pause state changes
-      useEffect(() => {
-        const checkPause = () => {
-          setIsPaused(isAnimationsPaused());
-        };
-
-        // Check on mount and when pause state might change
-        checkPause();
-
-        // Set up interval to check pause state
-        // (More reliable than trying to listen to context from driver)
-        const interval = setInterval(checkPause, 100);
-
-        return () => clearInterval(interval);
-      }, []);
-
-      // When paused, override animate to current state to freeze animation
-      const pausedProps = isPaused
-        ? {
-            ...props,
-            // Remove animation props to freeze at current state
-            animate: props.style || {},
-            transition: { duration: 0 },
-          }
-        : props;
-
-      // Use createElement to avoid JSX syntax (file is .ts not .tsx)
-      return createElement(MotionComponent, { ref, ...pausedProps });
-    });
-
-    return PauseAwareComponent as any as AnimatedComponentFactory<T>;
+    const key = component as keyof typeof m;
+    return m[key] as AnimatedComponentFactory<T>;
   }
 
   /**

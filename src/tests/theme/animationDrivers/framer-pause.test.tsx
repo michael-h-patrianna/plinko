@@ -10,8 +10,8 @@
  * @vitest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
 import { act } from 'react';
 import { PauseProvider } from '../../../contexts/PauseContext';
 import { FramerMotionDriver } from '../../../theme/animationDrivers/framer';

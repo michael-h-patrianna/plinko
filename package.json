@@ -22,7 +22,7 @@
     "test:e2e:headed": "node ./scripts/run-playwright.mjs --headed"
   },
   "dependencies": {
-    "framer-motion": "^12.23.22",
+    "motion": "^12.0.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "zod": "^4.1.12"

@@ -204,7 +204,8 @@ describe('Pause System Integration', () => {
       </PauseProvider>
     );
 
-    const gameAnimation = screen.getByTestId('game-animation') as HTMLElement;
+    // Verify game animation exists
+    expect(screen.getByTestId('game-animation')).toBeTruthy();
 
     // Pause
     await act(async () => {
