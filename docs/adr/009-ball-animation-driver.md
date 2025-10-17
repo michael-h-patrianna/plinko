@@ -1,4 +1,4 @@
-# ADR 009: Ball Animation Driver with Imperative DOM Updates
+This document was intentionally removed. The project no longer retains ADRs or historical design documents. See `docs/animation-pipeline.md` and `src/plinko/animation/` for the current implementation.
 
 ## Status
 

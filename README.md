@@ -1,16 +1,14 @@
-# Plinko Game - Deterministic Physics Engine
+# Plinko – Deterministic Prize Game (React + TS)
 
-A React + TypeScript implementation of a Plinko game with **100% guaranteed outcomes** and **completely realistic physics**. Built for applications requiring predetermined results (sweepstakes, demos) while maintaining natural ball movement.
+Portable, deterministic Plinko with realistic physics and a clean public API. The source of truth for the package lives in `src/plinko/`; a demo host app lives in `src/demo/`.
 
-## 🎯 Key Features
+## 🎯 Highlights
 
-- ✅ **100% Success Rate**: Ball always lands in target slot (validated with 10,000+ test runs)
-- 🎮 **Realistic Physics**: Complete collision detection, gravity, restitution, and bucket physics
-- 🔬 **Zero Overlaps**: Ball never clips through pegs (< 0.2px tolerance)
-- ⚡ **60 FPS Animation**: Smooth trajectory playback with 300-600 frame sequences
-- 🧪 **Comprehensive Testing**: 10,000 trajectory validation with 100% pass rate
-- 🎨 **375px Fixed Width**: Optimized for popup/modal display
-- 📐 **CCD Collision Detection**: Line-circle intersection prevents tunneling
+- ✅ Deterministic outcomes with realistic physics
+- 🔒 Zero overlap CCD collision detection (line–circle intersection)
+- ⚡ 60 FPS animation via drivers; cached frame data
+- 🧪 Deterministic tests and E2E harness
+- 🧩 Public API from `@plinko` for components, hooks, theme, and audio
 
 ## 🚀 Quick Start
 
@@ -44,7 +42,7 @@ npm run preview
 
 ### Testing
 
-Vitest cleanup runs automatically before every test command, so you don't need to manually kill stray workers. Interactive watch mode is intentionally locked down—only set `ALLOW_VITEST_WATCH=1` when you truly need it, and prefer the standard `npm test` run for automation.
+Tests are orchestrated via scripts under `scripts/`. Cleanup runs before each test run to avoid stray workers. Prefer `npm test` for CI-style runs.
 
 ```bash
 # Run all tests
@@ -60,58 +58,50 @@ npm test -- trajectory-comprehensive.test.ts
 ALLOW_VITEST_WATCH=1 npm run test:watch
 ```
 
-## 📊 Test Results
+## 📊 Test Snapshot
+
+Representative current results (deterministic seeds and fixtures maintained by the harnesses):
 
 ```
-✅ Basic Tests: 100% pass
-✅ 100 Trajectory Test: 100% success, 0 overlaps
-✅ 10,000 Trajectory Test: 100% success, 0 overlaps, 0 teleportation
+✅ Basic tests: pass
+✅ 100 trajectories: 0 overlaps
+✅ 10,000 trajectories: 0 overlaps, no teleportation
 ```
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Layout
 
-### Project Structure
+### Project structure (high level)
 
 ```
-plinko/
-├── src/
-│   ├── game/
-│   │   ├── trajectory.ts       # Physics engine (CORE)
-│   │   ├── rng.ts             # Deterministic RNG
-│   │   ├── stateMachine.ts    # Game state
-│   │   └── types.ts           # Type definitions
-│   ├── components/
-│   │   ├── Ball.tsx           # Ball rendering & animation
-│   │   ├── PlinkoBoard/
-│   │   │   ├── PlinkoBoard.tsx
-│   │   │   └── Peg.tsx
-│   │   └── PrizeSlots.tsx
-│   ├── tests/
-│   │   ├── trajectory.test.ts
-│   │   ├── trajectory-100.test.ts
-│   │   └── trajectory-comprehensive.test.ts
-│   └── App.tsx
-├── docs/
-│   └── architecture.md         # Detailed technical docs
-├── scripts/
-│   ├── cleanup-vitest.mjs      # Kills stray Vitest workers before runs
-│   ├── vitest-watch.mjs        # Guarded watch wrapper (requires ALLOW_VITEST_WATCH=1)
-│   ├── playwright/             # Playwright/Puppeteer harnesses & manual UI check scripts
-│   └── tools/                  # Deterministic physics + analysis utilities (Node CLI)
-├── screenshots/                # Output from Playwright/Puppeteer runs (always store assets here)
-└── package.json
+src/
+  demo/                   # Demo host app (providers, dev tools, local motion features)
+  plinko/                 # Portable game package (public API)
+    animation/            # Ball animation drivers, pooling
+    audio/                # Audio system (providers, SFX/music controllers)
+    components/           # Presentational React components and screens
+    config/               # AppConfig and tokens
+    constants/            # Layout/physics constants
+    game/                 # Physics, RNG, prize domain, state machine
+      trajectory/         # Simulation, CCD collisions, bucket physics
+    hooks/                # Orchestration hooks (usePlinkoGame et al.)
+    theme/                # Tokens, themes, animation drivers
+    utils/platform/       # Typed adapters (.web.ts / .native.ts)
+docs/
+  architecture.md         # Canonical architecture guide
+  INTEGRATION_GUIDE.md    # Host integration (imports, motion features wrapper)
+  RESET_ORCHESTRATION.md  # Reset lifecycle contract
+  dev-tools.md            # QA/dev tooling
 ```
 
 ## 🛠 Configuration & Feature Flags
 
-The Plinko app reads runtime configuration from a central `AppConfig` object that can be overridden by the host shell.
+Runtime configuration flows through `AppConfigProvider` and can be overridden by host shells.
 
 ### Default Behaviour
 
-- The default configuration lives in `src/config/appConfig.ts` and is provided to the tree via `AppConfigProvider` (configured in `src/App.tsx`).
-- Feature flags are grouped under `featureFlags`—currently only `devToolsEnabled` and `dropPositionMechanicEnabled` are exposed.
-- Prize data is supplied by a `PrizeProvider` implementation. The default provider wraps the legacy production prize table while exposing deterministic `load`/`loadSync` APIs for host overrides.
-  - The bundled provider always generates **six** prize slots (`DEFAULT_PRODUCTION_PRIZE_COUNT`). Hosts can override the count by passing `{ count: <desired slots> }` when constructing the provider.
+- Default config and tokens live in `src/plinko/config/` and are provided via `AppConfigProvider`.
+- Feature flags are grouped under `featureFlags` (e.g., dev tools, performance mode, drop position mechanic).
+- Prize data comes from a `PrizeProvider`. A default deterministic provider is bundled; hosts can override.
 
 ### Dev Tools
 
@@ -138,35 +128,16 @@ npm run build
 
 See [docs/dev-tools.md](docs/dev-tools.md) for complete dev tools documentation.
 
-### Overriding in a Host Application
+### Overriding in a host application
 
 ```tsx
-import { AppConfigProvider } from './config/AppConfigContext';
+import { AppConfigProvider } from '@plinko/config';
 
 const hostOverrides = {
   featureFlags: {
     devToolsEnabled: false,
   },
-  prizeProvider: {
-    async load({ seedOverride }) {
-      const response = await fetch(`/api/prize-session?seed=${seedOverride ?? ''}`);
-      const payload = await response.json();
-      return {
-        prizes: payload.prizes,
-        winningIndex: payload.winningIndex,
-        seed: payload.seed,
-        source: 'remote',
-      };
-    },
-    loadSync({ seedOverride }) {
-      // Optional: hydrate from SSR payload or deterministic fixture
-      const session = window.__BOOTSTRAP_PRIZE_SESSION__;
-      if (!session) {
-        throw new Error('Prize session missing from bootstrap data');
-      }
-      return { ...session, seed: seedOverride ?? session.seed };
-    },
-  },
+  prizeProvider: yourPrizeProvider,
 };
 
 root.render(
@@ -191,7 +162,7 @@ All LLM coding agents **must** keep generated artifacts inside their designated 
 | Temporary experiments | `src/dev-tools/` | Use this sandbox for throwaway UI/physics experiments; remove when finished. |
 | 🚫 Forbidden | project root | Keep the top level clean—no new scripts, screenshots, or scratch files belong here. |
 
-## 🔧 How It Works
+## 🔧 How it works (high level)
 
 ### The Core Innovation
 
@@ -204,7 +175,7 @@ This implementation uses a **brute-force search** approach to find natural initi
 
 **Why this works**: Plinko is a chaotic system. Tiny changes in starting position (imperceptible to users) create completely different trajectories due to cascading peg collisions.
 
-### Physics Engine
+### Physics engine
 
 **Constants:**
 ```typescript
@@ -259,13 +230,11 @@ generateTrajectory({
 
 ## 📖 Documentation
 
-See [docs/architecture.md](docs/architecture.md) for comprehensive technical documentation including:
-- Detailed physics engine explanation
-- CCD (Continuous Collision Detection) algorithm
-- Bucket physics implementation
-- Testing strategy and validation
-- Performance optimization tips
-- Debugging guide
+Start here:
+- [docs/INTEGRATION_GUIDE.md](docs/INTEGRATION_GUIDE.md) – public API and host integration
+- [docs/architecture.md](docs/architecture.md) – system overview, layers, modules
+- [docs/RESET_ORCHESTRATION.md](docs/RESET_ORCHESTRATION.md) – reset lifecycle and guarantees
+- [docs/dev-tools.md](docs/dev-tools.md) – QA/dev tooling
 
 ## 🧪 Testing Philosophy
 
@@ -296,48 +265,35 @@ Max overlap: 0.00px
 Unnatural movements: 0
 ```
 
-## 🎮 Usage Examples
+## 🎮 Usage
 
-### Basic Usage
+Render the game using the public API:
 
-```typescript
-import { generateTrajectory } from './game/trajectory';
+```tsx
+import {
+  usePlinkoGame,
+  PlinkoBoard,
+  StartScreen,
+  ThemeProvider,
+  AudioProvider,
+  themes
+} from '@plinko';
 
-// Generate trajectory to slot 3
-const trajectory = generateTrajectory({
-  boardWidth: 375,
-  boardHeight: 500,
-  pegRows: 10,
-  slotCount: 7,
-  selectedIndex: 3,
-  seed: Date.now()
-});
+export function PlinkoExperience() {
+  const game = usePlinkoGame();
 
-// Animate ball
-trajectory.forEach((point, frame) => {
-  updateBallPosition(point.x, point.y, point.rotation);
-});
+  return (
+    <AudioProvider>
+      <ThemeProvider theme={themes.default}>
+        {game.state === 'idle' && <StartScreen onStart={game.startGame} />}
+        <PlinkoBoard {...game.boardProps} />
+      </ThemeProvider>
+    </AudioProvider>
+  );
+}
 ```
 
-### Deterministic Testing
-
-```typescript
-// Same seed always produces same trajectory
-const traj1 = generateTrajectory({ ...params, seed: 42 });
-const traj2 = generateTrajectory({ ...params, seed: 42 });
-
-// traj1 === traj2 (identical frame-by-frame)
-```
-
-### Query Parameter Testing
-
-```
-http://localhost:5173/?seed=12345
-```
-
-Same seed = same prize + same trajectory (reproducible for debugging)
-
-## 🔬 Physics Validation
+## 🔬 Physics validation
 
 ### Collision Detection Quality
 
@@ -372,7 +328,7 @@ for (let i = 1; i < trajectory.length; i++) {
 }
 ```
 
-## 🎯 Key Technical Decisions
+## 🎯 Key technical decisions
 
 ### Why Deterministic Physics?
 
@@ -426,7 +382,7 @@ for (let i = 1; i < trajectory.length; i++) {
 - WASM compilation (10x speed boost)
 - Spatial hashing (reduce collision checks)
 
-## 🎨 Visual Configuration
+## 🎨 Visual configuration
 
 ### Board Dimensions
 ```typescript
@@ -444,7 +400,7 @@ BALL_RADIUS: 7       // Visual size
 BORDER_WIDTH: 8      // Wall thickness
 ```
 
-## 🐛 Debugging Tips
+## 🐛 Debugging tips
 
 ### Common Issues
 
@@ -475,7 +431,7 @@ if (DEBUG) {
 }
 ```
 
-## 🚀 Future Enhancements
+## 🚀 Future enhancements
 
 - [ ] Multi-ball support
 - [ ] Custom peg layouts
@@ -486,7 +442,7 @@ if (DEBUG) {
 - [ ] Trajectory caching
 - [ ] WASM optimization
 
-## 🔗 Related Projects
+## 🔗 Related projects
 
 This architecture can be adapted for:
 - Pachinko machines
@@ -494,7 +450,7 @@ This architecture can be adapted for:
 - Prize wheel spinners
 - Any physics game requiring predetermined outcomes
 
-## 📝 Tech Stack
+## 📝 Tech stack
 
 - **React 18.3** - UI framework
 - **TypeScript 5.6** - Type safety

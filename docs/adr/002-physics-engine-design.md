@@ -1,4 +1,4 @@
-# ADR 002: Physics Engine Design
+This document was intentionally removed. The project no longer retains ADRs or historical design documents. For current implementation, see `src/plinko/game/` and `docs/board-geometry.md`.
 
 **Status:** Superseded by ADR 007 (Collision Detection)
 **Date:** 2025-10-09

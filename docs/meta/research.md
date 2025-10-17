@@ -73,177 +73,19 @@ Patrianna operates online sweepstakes casinos with 4 in-house brands and 5 B2B b
 
 **Primary Goals:**
 1. Create engaging Plinko mini-game with predetermined outcomes
-2. Achieve realistic physics appearance using optimized animation techniques
-3. Maintain 60fps performance on web and mobile
-4. Enable complete brand customization without code deployment
-5. Support 3-8 prize configurations dynamically
+> Deprecated – superseded by current canonical docs
 
-**Non-Goals:**
-- Genuine physics-based outcome determination (outcomes are predetermined)
-- Wagering or betting mechanics (promotional feature only)
-- Backend integration (handled by existing Random Rewards system)
-- Multi-ball simultaneous gameplay (single ball per game instance)
+This document contained exploratory research and historical requirements. As of the 2025 refactor, we no longer keep legacy narratives or history in the repository.
 
-### 1.4 Success Criteria
+Please refer to the live, canonical references instead:
 
-**Technical Success:**
-- 60fps animation performance (16.7ms frame budget) on target devices
-- Physics appears realistic to 95% of user test group
-- Identical visual behavior across web and mobile platforms (allowing for platform rendering differences)
-- Prize customization changes deployable without code modifications
+- docs/architecture.md – up-to-date architecture overview and boundaries
+- docs/RESET_ORCHESTRATION.md – reset lifecycle and sequencing
+- docs/animation-driver.md and docs/animation-pipeline.md – rendering/animation
+- docs/INTEGRATION_GUIDE.md – how to consume the package API (@plinko)
+- src/plinko/utils/platform/README.md – platform adapter contracts
 
-**User Experience Success:**
-- Game completion time: 3-8 seconds from drop to prize reveal
-- No perceived lag or animation stuttering
-- Smooth ball trajectory with realistic peg collisions
-- Exciting prize reveal animation
-
----
-
-## 2. System Architecture
-
-### 2.1 High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                    Retool Backoffice                    │
-│  ┌──────────────────┐      ┌──────────────────────┐    │
-│  │  Prize Tables    │      │  Template Config     │    │
-│  │  (3-8 prizes)    │─────→│  (title, mini-game)  │    │
-│  └──────────────────┘      └──────────────────────┘    │
-└────────────────────────────────┬────────────────────────┘
-                                 │
-                                 ↓
-┌─────────────────────────────────────────────────────────┐
-│              Backend (Java/Kafka/PostgreSQL)            │
-│  - Selects prize based on probability                   │
-│  - Creates reward instance with predetermined outcome   │
-│  - Returns: { prizeIndex: 2, prizes: [...] }          │
-└────────────────────────────────┬────────────────────────┘
-                                 │
-                                 ↓
-        ┌────────────────────────┴────────────────────────┐
-        │                                                  │
-        ↓                                                  ↓
-┌─────────────────────┐                        ┌─────────────────────┐
-│    Web Platform     │                        │   Mobile Platform   │
-│  ┌───────────────┐  │                        │  ┌───────────────┐  │
-│  │   Next.js     │  │                        │  │ React Native  │  │
-│  │   React       │  │                        │  │   Expo        │  │
-│  └───────────────┘  │                        │  └───────────────┘  │
-│  ┌───────────────┐  │                        │  ┌───────────────┐  │
-│  │ Framer Motion │  │                        │  │  Reanimated   │  │
-│  │  (Animation)  │  │                        │  │    + Moti     │  │
-│  └───────────────┘  │                        │  └───────────────┘  │
-│  ┌───────────────┐  │                        │  ┌───────────────┐  │
-│  │  Matter.js    │  │                        │  │  Matter.js    │  │
-│  │  (Physics)    │  │                        │  │  (Physics)    │  │
-│  └───────────────┘  │                        │  └───────────────┘  │
-│  ┌───────────────┐  │                        │  ┌───────────────┐  │
-│  │ WebGL/Canvas  │  │                        │  │  React Native │  │
-│  │  (Rendering)  │  │                        │  │     Skia      │  │
-│  └───────────────┘  │                        │  └───────────────┘  │
-└─────────────────────┘                        └─────────────────────┘
-```
-
-### 2.2 Component Architecture
-
-**Shared Logic Layer (TypeScript)**
-```
-@patrianna/plinko-core/
-├── physics/
-│   ├── trajectoryCalculator.ts    # Predetermined path algorithm
-│   ├── collisionSimulator.ts      # Realistic collision physics
-│   └── outcomeMapper.ts            # Maps prize index to trajectory
-├── game/
-│   ├── stateMachine.ts             # Game state management (FSM)
-│   ├── prizeManager.ts             # Prize configuration handling
-│   └── animationController.ts      # Animation orchestration
-└── utils/
-    ├── deterministicMath.ts        # Cross-platform math functions
-    └── performanceMonitor.ts       # FPS/frame time tracking
-```
-
-**Platform-Specific Rendering**
-```
-# Web (packages/web-plinko/)
-├── components/
-│   ├── PlinkoBoard.tsx             # WebGL/Canvas board renderer
-│   ├── PlinkoBall.tsx              # Framer Motion ball animation
-│   └── PrizeSlots.tsx              # Prize display components
-└── hooks/
-    └── usePlinkoPhysics.ts         # Web-specific physics integration
-
-# Mobile (packages/mobile-plinko/)
-├── components/
-│   ├── PlinkoBoard.tsx             # React Native Skia renderer
-│   ├── PlinkoBall.tsx              # Moti/Reanimated ball animation
-│   └── PrizeSlots.tsx              # Prize display components
-└── hooks/
-    └── usePlinkoPhysics.ts         # Mobile-specific physics integration
-```
-
-### 2.3 Data Flow
-
-**Game Initialization:**
-1. Backend provides: `{ prizeIndex: number, prizes: Prize[] }`
-2. Frontend calculates predetermined trajectory to slot `prizeIndex`
-3. Physics engine initialized with calculated initial conditions
-4. Animation begins with predetermined path
-
-**Animation Execution:**
-1. Ball drops from top with calculated initial velocity/position
-2. Collision events detected at each peg (visual only, outcome predetermined)
-3. Ball trajectory follows predetermined path with realistic physics appearance
-4. Ball arrives at target slot matching `prizeIndex`
-5. Prize reveal animation triggered
-6. User claims prize via button (backend credit request)
-
-### 2.4 State Management
-
-**Finite State Machine (FSM) Pattern:**
-```typescript
-enum GameState {
-  INITIALIZING = 'initializing',
-  READY = 'ready',
-  DROPPING = 'dropping',
-  LANDED = 'landed',
-  REVEALING_PRIZE = 'revealing_prize',
-  COMPLETED = 'completed',
-  ERROR = 'error'
-}
-
-interface GameContext {
-  prizeIndex: number;
-  prizes: Prize[];
-  ballPosition: { x: number, y: number };
-  trajectory: TrajectoryPoint[];
-  currentFrame: number;
-}
-```
-
-**State Transitions:**
-- INITIALIZING → READY: Trajectory calculated, physics initialized
-- READY → DROPPING: User initiates ball drop
-- DROPPING → LANDED: Ball reaches target slot
-- LANDED → REVEALING_PRIZE: Prize animation begins
-- REVEALING_PRIZE → COMPLETED: User claims prize
-
----
-
-## 3. Predetermined Physics Implementation
-
-### 3.1 Core Challenge
-
-The fundamental challenge is creating a ball trajectory that:
-1. Leads to a specific predetermined prize slot
-2. Appears to follow realistic physics (gravity, collisions, bounce)
-3. Cannot be distinguished from genuinely random physics by users
-
-### 3.2 Trajectory Calculation Algorithms
-
-**Approach 1: Inverse Kinematics with Dual Quaternions**
-
+If you need background context, consult Git history offline. This file is intentionally minimized to keep docs current and actionable.
 Based on research from arXiv paper "Direct Kinematics, Inverse Kinematics, and Motion Planning of 1-DoF Rational Linkages":
 
 ```typescript

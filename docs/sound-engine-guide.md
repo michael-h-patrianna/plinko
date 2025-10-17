@@ -11,10 +11,10 @@ Clear, actionable instructions for using the Plinko sound engine.
 Do this once at app startup:
 
 ```typescript
-import { WebAudioAdapter } from '@/audio/adapters/WebAudioAdapter';
-import { VolumeController } from '@/audio/core/VolumeController';
-import { SFXController } from '@/audio/core/SFXController';
-import { MusicController } from '@/audio/core/MusicController';
+import { WebAudioAdapter } from '@plinko/audio/adapters/WebAudioAdapter';
+import { VolumeController } from '@plinko/audio/core/VolumeController';
+import { SFXController } from '@plinko/audio/core/SFXController';
+import { MusicController } from '@plinko/audio/core/MusicController';
 
 // Create audio adapter
 const adapter = new WebAudioAdapter();
@@ -37,10 +37,10 @@ const musicController = new MusicController(adapter, volumeController);
 
 ```typescript
 // Import audio files
-import buttonTapSound from '@/assets/sounds/sfx/ui/button-tap.mp3';
-import pegHitSound from '@/assets/sounds/sfx/ball/peg-hit.mp3';
-import baseMusic from '@/assets/sounds/music/base-layer.mp3';
-import tensionMusic from '@/assets/sounds/music/tension-layer.mp3';
+import buttonTapSound from '@plinko/assets/sounds/sfx/ui/button-tap.mp3';
+import pegHitSound from '@plinko/assets/sounds/sfx/ball/peg-hit.mp3';
+import baseMusic from '@plinko/assets/sounds/music/base-layer.mp3';
+import tensionMusic from '@plinko/assets/sounds/music/tension-layer.mp3';
 
 // Load sound effects
 await sfxController.loadSound('ui-button-tap', buttonTapSound);
@@ -217,7 +217,7 @@ Open browser console:
 
 ```javascript
 // Load and test a sound
-import('@/assets/sounds/sfx/ui/button-hover.mp3').then(module => {
+import('@plinko/assets/sounds/sfx/ui/button-hover.mp3').then(module => {
   sfxController.loadSound('ui-button-hover', module.default);
   sfxController.play('ui-button-hover');
 });

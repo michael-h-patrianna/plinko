@@ -1,4 +1,4 @@
-# ADR 003: State Machine Pattern
+This document was intentionally removed. The project no longer retains ADRs or historical design documents. For current implementation, see `src/plinko/game/stateMachine.ts` and `docs/architecture.md`.
 
 **Status:** Accepted
 **Date:** 2025-10-09

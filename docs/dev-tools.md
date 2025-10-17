@@ -1,16 +1,16 @@
-# Developer Tools
+# Developer tools
 
 ## Overview
 
-The developer tooling lives under `src/dev-tools/` and provides guarded controls for QA, prototyping, and local debugging. The menu is feature-flagged through `AppConfigProvider` so production builds remain clean by default. This guide explains the available controls, how they integrate with the rest of the app, and how to enable them in different environments.
+The developer tooling lives under the demo host app at `src/demo/components/DevTools/` and provides guarded controls for QA, prototyping, and local debugging. The menu is feature-flagged through `AppConfigProvider` so production builds remain clean by default. This guide explains the available controls, how they integrate with the rest of the app, and how to enable them in different environments.
 
 ## Feature summary
 
-The main entry point is `DevToolsLoader`, a lazy-loaded wrapper that renders `DevToolsMenu` only when the `devToolsEnabled` flag is `true`.
+The main entry point is `DevToolsLoader` (`src/demo/components/DevTools/DevToolsLoader.tsx`), a lazy-loaded wrapper that renders `DevToolsMenu` only when the `devToolsEnabled` flag is `true`.
 
 `DevToolsMenu` exposes four control groups:
 
-1. **Theme switching** – cycles through registered themes (`src/theme/themes/*`). Changes are persisted via `storageAdapter` so the selection survives reloads.
+1. **Theme switching** – cycles through registered themes (`src/plinko/theme/themes/*`). Changes are persisted via the demo persistence helper so the selection survives reloads.
 2. **Choice mechanic toggle** – switches between the classic deterministic mode (`none`) and the drop-position mechanic (`drop-position`). When drop-position is enabled, `useGameState` pauses the countdown and waits for the user to select a drop zone before dropping the ball.
 3. **Performance mode selector** – surfaces the same `PerformanceMode` values as `AppConfig` (`high-quality`, `balanced`, `power-saving`). The selection updates the config provider, which feeds into the ball animation driver and win effects. See [`docs/power-saving-mode.md`](./power-saving-mode.md).
 4. **Viewport presets** – desktop-only buttons that lock the game container to common device widths (iPhone SE, Galaxy S8, iPhone 12, iPhone 14 Pro Max). During gameplay the viewport selector is disabled to prevent geometry mismatches mid-drop.
@@ -19,7 +19,7 @@ The menu itself is animated using the cross-platform animation driver (`useAnima
 
 ## Settings persistence
 
-All dev tools settings are automatically persisted to `localStorage` and restored on page load, ensuring configuration survives refreshes and rebuilds. The persistence layer lives in `src/utils/devToolsPersistence.ts`.
+All dev tools settings are automatically persisted to `localStorage` and restored on page load, ensuring configuration survives refreshes and rebuilds. The demo persistence helper lives in `src/demo/utils/devToolsPersistence.ts`.
 
 ### Persisted settings
 
@@ -32,7 +32,7 @@ The following settings are saved under the `plinko-dev-settings` key:
 - **`viewportWidth`** – Desktop viewport simulation size (pixels)
 - **`themeName`** – Visual theme name
 
-> **Note:** Theme persistence uses a separate key (`plinko-theme`) managed by the theme system.
+> Note: Theme persistence uses a separate key managed by the theme system under `src/plinko/theme`.
 
 ### Implementation details
 
@@ -74,10 +74,10 @@ The persistence layer includes robust error handling for:
 
 ## Enabling the tools
 
-Dev tools are controlled by `featureFlags.devToolsEnabled` in `AppConfig`:
+Dev tools are controlled by `featureFlags.devToolsEnabled` in the demo `AppConfig` (`src/demo/config/appConfig.ts`):
 
 ```ts
-import { AppConfigProvider, createDefaultAppConfig } from '@/config/appConfig';
+import { AppConfigProvider, createDefaultAppConfig } from '@demo/config/appConfig';
 
 const config = createDefaultAppConfig();
 // Toggle flag as needed
@@ -92,7 +92,7 @@ config.featureFlags.devToolsEnabled = true;
 
 | Build type | Flag default | Notes |
 | --- | --- | --- |
-| `npm run dev` | `true` | Menu is visible immediately. |
+| `npm run dev` | `true` | Menu is visible immediately in the demo app. |
 | `npm run build` | `false` | Menu is stripped from the main bundle unless re-enabled via environment variable. |
 | Production with `VITE_ENABLE_DEV_TOOLS=true` | `true` | Use for QA/staging bundles. |
 
@@ -110,8 +110,8 @@ printf "VITE_ENABLE_DEV_TOOLS=true\n" > .env.production.local
 
 - Always import `DevToolsLoader` instead of `DevToolsMenu` directly. The loader handles lazy loading and feature-flag checks.
 - `DevToolsMenu` props come from `usePlinkoGame` and config providers: viewport width, choice mechanic setter, and performance setter.
-- When adding new dev-only controls, keep them in `src/dev-tools/components/` and extend the menu sections. Double-check the RN compatibility of any styling (no shadows/filters).
-- Expose new controls by adding optional callbacks/values to `DevToolsMenuProps` and wiring them from `DevToolsLoader` or higher-level components (`App.tsx`).
+- When adding new dev-only controls, keep them under `src/demo/components/DevTools/` and extend the menu sections. Double-check the RN compatibility of any styling (no shadows/filters).
+- Expose new controls by adding optional callbacks/values to `DevToolsMenuProps` and wiring them from `DevToolsLoader` or higher-level components (`src/demo/App.tsx`).
 
 ## Testing
 
@@ -125,18 +125,18 @@ printf "VITE_ENABLE_DEV_TOOLS=true\n" > .env.production.local
 
 ### Automated tests
 
-**Unit tests** (`src/tests/utils/devToolsPersistence.test.ts`):
+Unit tests (example locations):
 - Loading, saving, and clearing settings
 - Type guard validation for all setting properties
 - Error handling for corrupt data and storage failures
 - Round-trip persistence tests
 
-**Integration tests:**
+Integration tests:
 - Component tests with `renderWithProviders` to verify the menu renders the expected sections when the flag is enabled.
 - Playwright smoke tests to ensure the flag gating works (menu absent in production preview, present when env var is set).
 - Browser automation test (`scripts/playwright/test-devtools-persistence.mjs`) that changes settings, refreshes the page, and verifies restoration.
 
-## Security & deployment
+## Security and deployment
 
 - Dev tools never expose secrets or mutate production-only state.
 - Keep the flag disabled for end-user builds unless QA explicitly needs it.
@@ -159,7 +159,7 @@ Potential improvements to the dev tools:
 
 ## Implementation files
 
-- `src/dev-tools/` – Dev tools components and menu
-- `src/utils/devToolsPersistence.ts` – Settings persistence utility
-- `src/tests/utils/devToolsPersistence.test.ts` – Unit tests for persistence
-- `scripts/playwright/test-devtools-persistence.mjs` – Browser automation test
+- `src/demo/components/DevTools/` – Dev tools components and menu
+- `src/demo/utils/devToolsPersistence.ts` – Settings persistence utility
+- `src/plinko/tests` – Unit/integration tests
+- `scripts/playwright/` – E2E tests and helpers

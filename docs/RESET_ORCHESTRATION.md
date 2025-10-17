@@ -1,8 +1,8 @@
-# Reset Orchestration
+# Reset orchestration
 
 ## Overview
 
-The reset coordinator (`useResetCoordinator`) provides a centralized, ordered mechanism for resetting the Plinko game to its initial state. This document explains the reset flow, timing, dependencies, and implementation details.
+The reset coordinator (`useResetCoordinator` in `src/plinko/hooks/useResetCoordinator.ts`) provides a centralized, ordered mechanism for resetting the Plinko game to its initial state. This document explains the reset flow, timing, dependencies, and implementation details.
 
 **Why centralized reset?**
 - Prevents partial resets (missing a cleanup step)
@@ -13,7 +13,7 @@ The reset coordinator (`useResetCoordinator`) provides a centralized, ordered me
 
 ---
 
-## Table of Contents
+## Table of contents
 
 - [Reset Phases](#reset-phases)
 - [Sequence Diagrams](#sequence-diagrams)
@@ -26,13 +26,13 @@ The reset coordinator (`useResetCoordinator`) provides a centralized, ordered me
 
 ---
 
-## Reset Phases
+## Reset phases
 
 The reset coordinator executes 5 phases in strict sequential order:
 
 ### Phase 1: Animation Cleanup
 
-**Purpose:** Stop all animations and reset frame counter
+Purpose: Stop all animations and reset frame counter
 
 ```typescript
 // Stop animation loop
@@ -40,36 +40,36 @@ refs.currentFrameRef.current = 0;
 resetFrame();
 ```
 
-**What it cleans:**
+What it cleans:
 - Animation frame counter
 - RequestAnimationFrame loops
 - Animation timers
 - Ball animation driver state
 
-**Why first?**
+Why first?
 - Prevents animations from accessing soon-to-be-cleared state
 - Ensures no RAF callbacks fire during reset
 - Releases animation resources immediately
 
 ### Phase 2: State Machine Reset
 
-**Purpose:** Return state machine to idle state
+Purpose: Return state machine to idle state
 
 ```typescript
 dispatch({ type: 'RESET_REQUESTED' });
 ```
 
-**State transition:**
+State transition:
 - Any state → `idle`
 
-**Side effects:**
+Side effects:
 - Clears trajectory
 - Clears trajectory cache
 - Resets game context
 
 ### Phase 3: Prize State Cleanup
 
-**Purpose:** Clear all prize-related state
+Purpose: Clear all prize-related state
 
 ```typescript
 setWinningPrize(null);
@@ -78,47 +78,47 @@ setPrizeSession(null);
 setPrizes([]);
 ```
 
-**What it clears:**
+What it clears:
 - Winning prize reference
 - Winning slot index
 - Prize session data
 - Prizes array (UI state)
 
-**Why after state machine?**
+Why after state machine?
 - State machine transition must complete before clearing data
 - Prevents state machine from accessing null prizes during transition
 
 ### Phase 4: Lock Release
 
-**Purpose:** Release ref-based locks and set flags
+Purpose: Release ref-based locks and set flags
 
 ```typescript
 refs.winningPrizeLockedRef.current = false;
 refs.forceFreshSeedRef.current = true;
 ```
 
-**What it unlocks:**
+What it unlocks:
 - `winningPrizeLockedRef` - Allows new prize selection
 - `forceFreshSeedRef` - Forces fresh seed (ignores URL overrides)
 
-**Why after state cleanup?**
+Why after state cleanup?
 - Ensures no effect observes unlocked state with stale data
 - Prevents race conditions in prize loading
 
 ### Phase 5: Re-initialization Trigger
 
-**Purpose:** Trigger new session initialization
+Purpose: Trigger new session initialization
 
 ```typescript
 setSessionKey((key) => key + 1);
 ```
 
-**What it triggers:**
+What it triggers:
 - `usePrizeSession` re-initialization
 - Fresh prize loading
 - New seed generation (if `forceFreshSeedRef` is true)
 
-**Why last?**
+Why last?
 - All cleanup must complete before starting new session
 - Ensures clean slate for initialization effects
 
@@ -126,7 +126,7 @@ setSessionKey((key) => key + 1);
 
 ## Sequence Diagrams
 
-### Full Reset Flow
+### Full reset flow
 
 ```mermaid
 sequenceDiagram
@@ -173,7 +173,7 @@ sequenceDiagram
     Hook-->>UI: state = 'idle'
 ```
 
-### State Transitions During Reset
+### State transitions during reset
 
 ```mermaid
 stateDiagram-v2
@@ -223,7 +223,7 @@ stateDiagram-v2
     Idle --> [*]: Ready for new game
 ```
 
-### Race Condition Prevention
+### Race condition prevention
 
 ```mermaid
 sequenceDiagram
@@ -258,7 +258,7 @@ sequenceDiagram
 
 ---
 
-## State Transitions
+## State transitions
 
 ### Valid Reset Entry States
 
@@ -291,9 +291,9 @@ Reset can be called from any state:
 
 ---
 
-## Timing & Dependencies
+## Timing and dependencies
 
-### Critical Timing Requirements
+### Critical timing requirements
 
 1. **Animation must stop before state clears**
    - Otherwise: RAF callbacks access null state
@@ -315,7 +315,7 @@ Reset can be called from any state:
    - Otherwise: New session initializes with partial state
    - Solution: Phase 5 runs last
 
-### Dependency Graph
+### Dependency graph
 
 ```
 Phase 1 (Animation)
@@ -331,9 +331,9 @@ Phase 5 (Re-init Trigger)
 
 ---
 
-## Implementation Details
+## Implementation details
 
-### Using flushSync for Consistency
+### Using flushSync for consistency
 
 The coordinator uses `flushSync` to batch Phases 2-3 synchronously:
 
@@ -354,7 +354,7 @@ flushSync(() => {
 refs.winningPrizeLockedRef.current = false;
 ```
 
-**Why flushSync?**
+Why flushSync?
 
 Without `flushSync`, React batches state updates asynchronously. This creates race conditions:
 
@@ -362,13 +362,13 @@ Without `flushSync`, React batches state updates asynchronously. This creates ra
 2. **Prize Lock Race:** `winningPrizeLockedRef` is cleared while state updates are pending, allowing effects to see stale data
 3. **Session Key Race:** New session key triggers re-init before previous state is fully cleared
 
-**Performance Impact:**
+Performance impact:
 
 - Minimal: Reset happens 1-2 times per game session (not during 60 FPS animation)
 - Measured: <5ms total reset time
 - Benefit: Eliminates race conditions that cause bugs
 
-### Concurrency Guard
+### Concurrency guard
 
 ```typescript
 const resetInProgressRef = useRef(false);
@@ -390,19 +390,19 @@ const reset = useCallback(() => {
 }, [refs, resetFrame, dispatch, setters]);
 ```
 
-**Why guard?**
+Why guard?
 
 - User clicks reset multiple times quickly
 - Programmatic reset called during transition
 - Error during reset triggers another reset
 
-**Effect:**
+Effect:
 
 - Only one reset can execute at a time
 - Subsequent calls are ignored until current reset completes
 - Idempotent: safe to call reset multiple times
 
-### Stable Parameters
+### Stable parameters
 
 ```typescript
 export function useResetCoordinator(
@@ -420,7 +420,7 @@ export function useResetCoordinator(
 ): UseResetCoordinatorResult
 ```
 
-**Why stable parameters?**
+Why stable parameters?
 
 - Prevents unnecessary re-renders
 - `dispatch` is stable (from `useReducer`)
@@ -430,11 +430,11 @@ export function useResetCoordinator(
 
 ---
 
-## Race Condition Prevention
+## Race condition prevention
 
-### Race 1: State Machine vs Prize Loading
+### Race 1: State machine vs prize loading
 
-**Problem:**
+Problem:
 ```typescript
 // Without flushSync
 dispatch({ type: 'RESET_REQUESTED' }); // Scheduled
@@ -444,7 +444,7 @@ refs.winningPrizeLockedRef.current = false;
 // Prize loading effect sees unlocked + stale winning prize
 ```
 
-**Solution:**
+Solution:
 ```typescript
 // With flushSync - all updates complete synchronously
 flushSync(() => {
@@ -455,15 +455,15 @@ refs.winningPrizeLockedRef.current = false;
 // Prize loading effect now sees unlocked + null prize (correct)
 ```
 
-### Race 2: Animation Frame vs State
+### Race 2: Animation frame vs state
 
-**Problem:**
+Problem:
 ```typescript
 // RAF callback fires
 const point = trajectory.points[currentFrame]; // trajectory is null!
 ```
 
-**Solution:**
+Solution:
 ```typescript
 // Phase 1: Stop animations FIRST
 currentFrameRef.current = 0;
@@ -472,9 +472,9 @@ resetFrame(); // Cancels all RAF loops
 dispatch({ type: 'RESET_REQUESTED' });
 ```
 
-### Race 3: Session Key vs Cleanup
+### Race 3: Session key vs cleanup
 
-**Problem:**
+Problem:
 ```typescript
 // Increment session key first
 setSessionKey(key + 1);
@@ -482,7 +482,7 @@ setSessionKey(key + 1);
 setPrizeSession(null); // Too late!
 ```
 
-**Solution:**
+Solution:
 ```typescript
 // Clear all state first (Phases 1-4)
 setPrizeSession(null);
@@ -495,11 +495,11 @@ setSessionKey(key + 1);
 
 ---
 
-## Testing Strategy
+## Testing strategy
 
-### Unit Tests
+### Unit tests
 
-**Test reset phases:**
+Test reset phases:
 ```typescript
 describe('useResetCoordinator', () => {
   it('should execute phases in order', () => {
@@ -522,7 +522,7 @@ describe('useResetCoordinator', () => {
 });
 ```
 
-**Test concurrency guard:**
+Test concurrency guard:
 ```typescript
 it('should reject concurrent resets', () => {
   const { result } = renderHook(() => useResetCoordinator(...));
@@ -536,7 +536,7 @@ it('should reject concurrent resets', () => {
 });
 ```
 
-**Test ref cleanup:**
+Test ref cleanup:
 ```typescript
 it('should reset all refs', () => {
   const refs = {
@@ -555,9 +555,9 @@ it('should reset all refs', () => {
 });
 ```
 
-### Integration Tests
+### Integration tests
 
-**Test full game reset:**
+Test full game reset:
 ```typescript
 it('should reset complete game flow', () => {
   const { result } = renderHook(() => usePlinkoGame());
@@ -582,12 +582,12 @@ it('should reset complete game flow', () => {
 
 ### Problem: Reset doesn't clear state
 
-**Symptoms:**
+Symptoms:
 - Old prize still visible after reset
 - Ball animation continues after reset
 - State stuck in non-idle state
 
-**Diagnosis:**
+Diagnosis:
 ```typescript
 // Check if reset is being called
 console.log('[Reset] Starting reset...');
@@ -603,7 +603,7 @@ console.log('[Reset Phase 2] State machine reset');
 // ... etc
 ```
 
-**Solutions:**
+Solutions:
 - Ensure `resetGame()` is called from UI
 - Check concurrency guard isn't stuck
 - Verify all setters are passed to coordinator
@@ -611,12 +611,12 @@ console.log('[Reset Phase 2] State machine reset');
 
 ### Problem: Race condition during reset
 
-**Symptoms:**
+Symptoms:
 - Effects run with stale data
 - Prize loads before cleanup completes
 - Animation accesses null trajectory
 
-**Diagnosis:**
+Diagnosis:
 ```typescript
 // Add logging to effects
 useEffect(() => {
@@ -625,18 +625,18 @@ useEffect(() => {
 }, [winningPrizeLockedRef.current]);
 ```
 
-**Solutions:**
+Solutions:
 - Ensure `flushSync` is used for Phases 2-3
 - Check phase ordering (animation first, re-init last)
 - Verify refs are cleared AFTER state updates
 
 ### Problem: Reset takes too long
 
-**Symptoms:**
+Symptoms:
 - Visible delay between reset click and idle state
 - UI frozen during reset
 
-**Diagnosis:**
+Diagnosis:
 ```typescript
 // Measure reset time
 const start = performance.now();
@@ -645,7 +645,7 @@ const duration = performance.now() - start;
 console.log('[Reset] Duration:', duration, 'ms');
 ```
 
-**Solutions:**
+Solutions:
 - Profile which phase is slow
 - Check for expensive cleanup operations
 - Ensure no synchronous I/O during reset
@@ -653,11 +653,11 @@ console.log('[Reset] Duration:', duration, 'ms');
 
 ### Problem: State machine doesn't return to idle
 
-**Symptoms:**
+Symptoms:
 - Reset completes but state is not 'idle'
 - Can't start new game
 
-**Diagnosis:**
+Diagnosis:
 ```typescript
 // Check state machine transition
 console.log('[Reset] Before:', state);
@@ -665,19 +665,17 @@ dispatch({ type: 'RESET_REQUESTED' });
 console.log('[Reset] After:', state);
 ```
 
-**Solutions:**
+Solutions:
 - Verify state machine has `RESET_REQUESTED` handler
 - Check all states have transition to `idle`
 - Ensure dispatch is from `useReducer` (stable reference)
 
 ---
 
-## Related Documentation
+## Related documentation
 
-- [ADR 005: Reset Coordinator Pattern](/docs/adr/005-reset-coordinator.md) - Design decisions
-- [Architecture Guide](/docs/architecture.md) - System overview
-- [State Machine Pattern](/docs/adr/003-state-machine-pattern.md) - State management
-- [Game Orchestration](/docs/game-orchestration.md) - Hook composition
+- [Architecture](/docs/architecture.md) – System overview and layering
+- [Dev tools](/docs/dev-tools.md) – Feature flags and QA controls
 
 ---
 
@@ -691,9 +689,9 @@ The reset coordinator provides:
 4. **Clean state guarantee** - All state cleared before re-init
 5. **Testability** - Single contract to test
 
-**Key Takeaways:**
+Key takeaways:
 
-- Always use `resetCoordinator.reset()`, never manual cleanup
+- Always use the reset coordinator entry point, never manual cleanup
 - Phases must run in order (dependencies between phases)
 - `flushSync` is critical for preventing race conditions
 - Reset is idempotent (safe to call multiple times)

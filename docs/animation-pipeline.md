@@ -4,8 +4,8 @@
 
 The animation pipeline provides a two-tier architecture for smooth, cross-platform motion:
 
-1. **Animation Driver** (`src/theme/animationDrivers/`) - Declarative animations for UI components (mount/unmount, interactions, layout transitions)
-2. **Ball Animation Driver** (`src/animation/`) - High-frequency 60 FPS imperative loop for game physics playback
+1. **Animation driver** (`src/plinko/theme/animationDrivers/`) - Declarative animations for UI components (mount/unmount, interactions, layout transitions)
+2. **Ball animation driver** (`src/plinko/animation/`) - High-frequency 60 FPS imperative loop for game physics playback
 
 This separation ensures UI animations can be declarative and React-friendly while ball physics bypass React reconciliation for maximum performance.
 
@@ -40,10 +40,10 @@ This separation ensures UI animations can be declarative and React-friendly whil
 
 ### Architecture
 
-The animation driver abstraction lives in `src/theme/animationDrivers/`:
+The animation driver abstraction lives in `src/plinko/theme/animationDrivers/`:
 
 ```
-src/theme/animationDrivers/
+src/plinko/theme/animationDrivers/
 ├── index.ts                 # Barrel exports
 ├── types.ts                 # AnimationDriver interface, configs, presets
 ├── framer.ts               # Web implementation (Framer Motion)
@@ -81,7 +81,7 @@ interface AnimationDriver {
 Hook for accessing the current platform's animation driver:
 
 ```tsx
-import { useAnimationDriver } from '@/theme/animationDrivers';
+import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 
 function MyComponent() {
   const driver = useAnimationDriver();
@@ -104,7 +104,7 @@ function MyComponent() {
 Non-React context access (tests, utilities):
 
 ```typescript
-import { getAnimationDriver } from '@/theme/animationDrivers';
+import { getAnimationDriver } from '@plinko/theme/animationDrivers';
 
 const driver = getAnimationDriver('auto'); // or 'framer' | 'moti'
 const config = driver.getSpringConfig('gentle');
@@ -292,10 +292,10 @@ class MotiDriver implements AnimationDriver {
 
 ### Architecture
 
-High-frequency physics playback lives in `src/animation/`:
+High-frequency physics playback lives in `src/plinko/animation/`:
 
 ```
-src/animation/
+src/plinko/animation/
 ├── index.ts                      # Barrel exports
 ├── ballAnimationDriver.ts        # Shared contract (interface)
 ├── ballAnimationDriver.web.ts    # Web RAF implementation
@@ -363,7 +363,7 @@ sequenceDiagram
 Hook for accessing the ball animation driver:
 
 ```tsx
-import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
+import { useBallAnimationDriver } from '@plinko/animation/useBallAnimationDriver';
 
 function GameBoard({ trajectory }: { trajectory: Trajectory }) {
   const driver = useBallAnimationDriver();
@@ -671,7 +671,7 @@ function Component() {
 
 **After:**
 ```tsx
-import { useAnimationDriver } from '@/theme/animationDrivers';
+import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 
 function Component() {
   const driver = useAnimationDriver();
@@ -738,9 +738,7 @@ useEffect(() => {
 
 ---
 
-## Related Documentation
+## Related documentation
 
-- [Animation Driver ADR](/docs/adr/009-ball-animation-driver.md) - Design decisions
-- [Theme System](/docs/theming.md) - Token integration
-- [Cross-Platform Architecture](/docs/adr/001-cross-platform-architecture.md) - Platform strategy
-- [Performance Optimization](/docs/power-saving-mode.md) - Frame rate management
+- [Theming](/docs/theming.md) – Token integration
+- [Power saving mode](/docs/power-saving-mode.md) – Frame rate management

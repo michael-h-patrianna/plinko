@@ -266,7 +266,7 @@ export * from './MusicTrackId';
 export * from './Config';
 
 // Re-export game state types (assuming they exist)
-export type { GameState } from '@/game/stateMachine';
+export type { GameState } from '@plinko/game/stateMachine';
 ```
 
 **Acceptance Criteria:**

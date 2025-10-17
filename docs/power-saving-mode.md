@@ -52,7 +52,7 @@ Override individual values per host requirement (for example, 45 FPS with no tra
 ## How it works
 
 1. **FPS throttling** – `useBallAnimationDriver` reads `fpsCap` and schedules frame updates accordingly. On the web implementation this divides the RAF loop, effectively running every other frame when capped at 30 FPS.
-2. **Trail culling** – the trajectory cache (`src/game/trajectoryCache.ts`) precalculates trail lengths per frame. `showTrail` and `maxTrailLength` control how many pooled nodes are activated by the ball animation driver.
+2. **Trail culling** – the trajectory cache (`src/plinko/game/trajectoryCache.ts`) precalculates trail lengths per frame. `showTrail` and `maxTrailLength` control how many pooled nodes are activated by the ball animation driver.
 3. **Particle counts** – win animations in `src/components/effects/WinAnimations/*` multiply their base counts by `particleMultiplier`. We clamp counts to sane minimums (e.g., at least 3 particles) so visuals remain legible.
 4. **Infinite animations** – celebratory loops (`repeat: Infinity`) are skipped when `enableInfiniteAnimations` is `false`. This eliminates idle background work while waiting on the claim CTA.
 5. **Peg flashes** – `pegFlashDurationMs` tunes the debounce for peg highlight animations. In lower modes the flashes resolve faster to reduce GPU load.

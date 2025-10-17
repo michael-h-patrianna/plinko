@@ -47,7 +47,7 @@ All animation configs intentionally support only GPU-friendly properties: `trans
 Use `useAnimationDriver()` inside React components:
 
 ```tsx
-import { useAnimationDriver } from '@/theme/animationDrivers';
+import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 
 const driver = useAnimationDriver();
 const AnimatedDiv = driver.createAnimatedComponent('div');
@@ -82,7 +82,7 @@ High-frequency ball animation is handled separately from the generic driver:
 Access the driver via the hook:
 
 ```tsx
-import { useBallAnimationDriver } from '@/animation/useBallAnimationDriver';
+import { useBallAnimationDriver } from '@plinko/animation/useBallAnimationDriver';
 
 const { schedule, applyBallTransform, updateTrail } = useBallAnimationDriver();
 ```
@@ -149,4 +149,4 @@ On reset, call `clearTrail()`, `clearAllPegFlashes()`, and `clearAllSlotHighligh
 
 - [`docs/game-orchestration.md`](./game-orchestration.md) – how the driver integrates with `usePlinkoGame`.
 - [`docs/theming.md`](./theming.md) – token-driven styling referenced by animated components.
-- [`docs/platform-adapters.md`](./platform-adapters.md) – timing adapter (`animationAdapter`) used by the ball animation driver.
+- Platform adapters: see `src/plinko/utils/platform/README.md` for the timing adapter (`performance`/`animation`) used by the ball animation driver.

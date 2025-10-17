@@ -1,4 +1,4 @@
-# ADR 005: Reset Coordinator Pattern
+This document was intentionally removed. The project no longer retains ADRs or historical design documents. See `docs/RESET_ORCHESTRATION.md` for the current reset coordinator.
 
 ## Status
 

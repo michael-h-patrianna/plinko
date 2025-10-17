@@ -1,10 +1,10 @@
 # Board Geometry Reference
 
-`src/game/boardGeometry.ts` is the single source of truth for Plinko board dimensions, physics constants, responsive sizing, and helper utilities shared by the physics engine and the renderer. This document summarises the available constants and helpers, explains how they interact with other game modules, and highlights the constraints that keep the implementation portable between React web and React Native.
+`src/plinko/game/boardGeometry.ts` is the single source of truth for Plinko board dimensions, physics constants, responsive sizing, and helper utilities shared by the physics engine and the renderer. This document summarises the available constants and helpers, explains how they interact with other game modules, and highlights the constraints that keep the implementation portable between React web and React Native.
 
 ## Why this module matters
 
-- Every simulation step (`src/game/trajectory/simulation.ts`) reads constants from here.
+- Every simulation step (`src/plinko/game/trajectory/simulation.ts`) reads constants from here.
 - UI components render pegs, slots, and drop zones using the same helpers, guaranteeing visual/physics alignment.
 - Reset orchestration and dev tools depend on geometry helpers when re-computing trajectories or highlighting slots.
 - New board layouts (different slot counts, row counts) must go through this module to stay deterministic.
@@ -84,7 +84,7 @@ Returns:
 - `slotWidth` and `playableWidth`
 - `bucketZoneY` / `bucketHeight` / `bucketFloorY`
 
-Internally this calls the shared utility `src/utils/slotDimensions.ts` to keep bucket sizing consistent with the visual layout.
+Internally this calls the shared utility `src/plinko/utils/slotDimensions.ts` to keep bucket sizing consistent with the visual layout.
 
 Other helpers:
 
@@ -100,8 +100,8 @@ Other helpers:
 
 ## Integration points
 
-- `src/game/trajectory/simulation.ts` reads `PHYSICS` constants, calls `generatePegLayout`, and relies on slot helpers to clamp positions.
-- `src/game/trajectory/bucket.ts` uses `getSlotBoundaries` and `calculateBucketDimensions` to simulate wall/floor collisions.
+- `src/plinko/game/trajectory/simulation.ts` reads `PHYSICS` constants, calls `generatePegLayout`, and relies on slot helpers to clamp positions.
+- `src/plinko/game/trajectory/bucket.ts` uses `getSlotBoundaries` and `calculateBucketDimensions` to simulate wall/floor collisions.
 - UI components render pegs and slots using the same helpers to avoid visual drift.
 - Dev tools and reset logic depend on `getDropZoneRange` when regenerating deterministic trajectories for the choice mechanic.
 
@@ -113,7 +113,7 @@ Other helpers:
 
 ## Testing
 
-Related specs live in `src/tests/boardGeometry.test.ts` and integration suites under `src/tests/physics/`. When adjusting constants or helper logic:
+Related specs live under `src/plinko/tests/` (see physics and integration suites). When adjusting constants or helper logic:
 
 1. Run unit tests: `npm test -- boardGeometry.test.ts`.
 2. Run deterministic regression: `npm test -- trajectory-100.test.ts` (quick) and `npm test -- trajectory-comprehensive.test.ts` (full sweep).

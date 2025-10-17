@@ -1,4 +1,4 @@
-# Developer Onboarding Guide
+# Developer onboarding guide
 
 Welcome to the Plinko codebase! This guide will walk you through the architecture, key concepts, and common workflows to help you become productive quickly.
 
@@ -34,8 +34,8 @@ Welcome to the Plinko codebase! This guide will walk you through the architectur
 - Dev tools for QA and debugging
 
 **Tech Stack:**
-- React 18 (TypeScript)
-- Framer Motion (web animations)
+- React (TypeScript)
+- Motion/Framer Motion (web animations)
 - Vitest (unit tests)
 - Playwright (E2E tests)
 - Vite (build tool)
@@ -63,7 +63,7 @@ npm run test:e2e
 npm run build
 ```
 
-### Dev Tools
+### Dev tools
 
 Press the debug panel toggle (bottom-right) to access:
 - Viewport size control (mobile/desktop testing)
@@ -75,7 +75,7 @@ Press the debug panel toggle (bottom-right) to access:
 
 ### Configuration
 
-**Environment Variables:**
+**Environment variables:**
 - `VITE_ENABLE_DEV_TOOLS` - Enable dev tools panel (default: `true` in dev)
 - `VITE_ENABLE_SOUND` - Enable audio system (default: `true`)
 
@@ -83,30 +83,30 @@ Press the debug panel toggle (bottom-right) to access:
 
 ## Architecture at a Glance
 
-The codebase follows a three-layer architecture:
+The codebase follows a three-layer architecture. The portable game package lives under `src/plinko/`; the demo host app lives under `src/demo/`:
 
 ```
 ┌─────────────────────────────────────────────────┐
 │          UI Layer (React Components)            │
-│  src/components/  src/theme/  src/dev-tools/   │
+│  src/plinko/components/  src/plinko/theme/   │
 └─────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────┐
 │      Orchestration Layer (React Hooks)          │
-│          src/hooks/  src/animation/             │
+│          src/plinko/hooks/  src/plinko/animation/             │
 └─────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────┐
 │      Game Core (Framework-Free Logic)           │
-│    src/game/  src/game/trajectory/  src/game/physics/  │
+│    src/plinko/game/  src/plinko/game/trajectory/  │
 └─────────────────────────────────────────────────┘
 ```
 
 **Layer Responsibilities:**
 
-1. **UI Layer** - Presentational components, layout, theming, error boundaries
-2. **Orchestration Layer** - State management, animation coordination, side effects
-3. **Game Core** - Pure TypeScript: physics, trajectory, state machine, prize logic
+1. **UI Layer** - Presentational components, layout, theming, error boundaries (`src/plinko/components`, `src/plinko/theme`)
+2. **Orchestration Layer** - State management, animation coordination, side effects (`src/plinko/hooks`, `src/plinko/animation`)
+3. **Game Core** - Pure TypeScript: physics, trajectory, state machine, prize logic (`src/plinko/game`)
 
 ---
 
@@ -116,7 +116,7 @@ Let's trace the flow from app start to prize claim:
 
 ### 1. App Initialization
 
-**File:** `src/App.tsx`
+**File (demo host):** `src/demo/App.tsx`
 
 ```tsx
 export function App() {
@@ -125,9 +125,7 @@ export function App() {
     <AppConfigProvider>
       <ThemeProvider>
         <AudioProvider>
-          <ToastProvider>
-            <AppContent />
-          </ToastProvider>
+          <AppContent />
         </AudioProvider>
       </ThemeProvider>
     </AppConfigProvider>
@@ -139,11 +137,11 @@ export function App() {
 - `AppConfigProvider` - Performance settings, feature flags
 - `ThemeProvider` - Theme tokens, theme switching
 - `AudioProvider` - SFX and music controllers
-- `ToastProvider` - Notifications and error messages
+- App-level toasts are demo-only; production hosts can wire their own notification system
 
 ### 2. Game Hook Initialization
 
-**File:** `src/hooks/usePlinkoGame.ts`
+**File:** `src/plinko/hooks/usePlinkoGame.ts`
 
 ```tsx
 function AppContent() {
@@ -174,7 +172,7 @@ function AppContent() {
 
 ### 3. Prize Loading
 
-**File:** `src/hooks/usePrizeSession.ts`
+**File:** `src/plinko/hooks/usePrizeSession.ts`
 
 ```typescript
 // Fetches prizes from provider
@@ -196,7 +194,7 @@ const { prizes, winningPrize, isLoading } = usePrizeSession({
 
 ### 4. User Starts Game
 
-**File:** `src/components/screens/StartScreen.tsx`
+**File:** `src/plinko/components/screens/StartScreen.tsx`
 
 ```tsx
 <StartScreen
@@ -212,7 +210,7 @@ const { prizes, winningPrize, isLoading } = usePrizeSession({
 
 ### 5. Trajectory Generation
 
-**File:** `src/game/trajectory/index.ts`
+**File:** `src/plinko/game/trajectory/index.ts`
 
 ```typescript
 // When state machine enters 'countdown'
@@ -235,7 +233,7 @@ const trajectory = generateTrajectory({
 
 ### 6. Countdown & Animation
 
-**File:** `src/components/game/Countdown.tsx` → `src/components/game/Ball.tsx`
+**File:** `src/plinko/components/game/Countdown.tsx` → `src/plinko/components/game/Ball.tsx`
 
 ```tsx
 // Countdown: 3... 2... 1...
@@ -247,7 +245,7 @@ const trajectory = generateTrajectory({
 
 **Animation flow:**
 ```typescript
-// src/animation/useBallAnimationDriver.ts
+// src/plinko/animation/useBallAnimationDriver.ts
 const driver = useBallAnimationDriver();
 
 driver.schedule((frameIndex) => {
@@ -259,7 +257,7 @@ driver.schedule((frameIndex) => {
 
 ### 7. Landing & Celebration
 
-**File:** `src/components/game/Ball.tsx`
+**File:** `src/plinko/components/game/Ball.tsx`
 
 ```typescript
 // Ball reaches final position
@@ -282,7 +280,7 @@ onLandingComplete();  // Dispatches LANDING_COMPLETED
 
 ### 8. Prize Reveal
 
-**File:** `src/components/screens/PrizeReveal.tsx`
+**File:** `src/plinko/components/screens/PrizeReveal.tsx`
 
 ```tsx
 // State: celebrating → revealed
@@ -296,7 +294,7 @@ onLandingComplete();  // Dispatches LANDING_COMPLETED
 
 ### 9. Prize Claimed
 
-**File:** `src/components/screens/PrizeClaimed.tsx`
+**File:** `src/plinko/components/screens/PrizeClaimed.tsx`
 
 ```tsx
 // State: revealed → claimed
@@ -308,7 +306,7 @@ onLandingComplete();  // Dispatches LANDING_COMPLETED
 
 ### 10. Reset Flow
 
-**File:** `src/hooks/useResetCoordinator.ts`
+**File:** `src/plinko/hooks/useResetCoordinator.ts`
 
 ```typescript
 resetGame();  // Executes 5-phase reset
@@ -330,7 +328,7 @@ winningPrizeLockedRef.current = false;
 setSessionKey(key => key + 1);
 ```
 
-**Result:** App returns to `idle` state, ready for next game.
+Result: App returns to `idle` state, ready for next game.
 
 ---
 
@@ -338,59 +336,30 @@ setSessionKey(key => key + 1);
 
 ```
 src/
-├── animation/              # Ball animation driver, trail optimization
-├── assets/                 # Images, sounds, fonts
-├── audio/                  # Audio system (SFX, music controllers)
-│   ├── adapters/          # Platform-specific audio implementations
-│   ├── context/           # AudioProvider, hooks
-│   ├── core/              # AudioController, SoundManager
-│   └── utils/             # Throttling, helpers
-├── components/            # React UI components
-│   ├── controls/         # Buttons, inputs
-│   ├── effects/          # Celebrations, screen shake, particles
-│   ├── feedback/         # Toast notifications
-│   ├── game/             # PlinkoBoard, Ball, Pegs, Slots
-│   ├── layout/           # Error boundaries, containers
-│   ├── screens/          # StartScreen, PrizeReveal, PrizeClaimed
-│   └── ui/               # Reusable primitives (Badge, Card, etc.)
-├── config/                # App configuration, prize providers
-│   └── prizes/           # Prize data, prize sets
-├── constants/             # Game constants (LAYOUT, PHYSICS)
-├── dev-tools/             # Debug panel (lazy loaded)
-├── game/                  # Pure game logic (framework-free)
-│   ├── physics/          # Physics engine, collision detection
-│   ├── trajectory/       # Trajectory generation, search algorithms
-│   ├── boardGeometry.ts  # Peg positions, drop zones
-│   ├── prizeProvider.ts  # Prize loading contract
-│   ├── stateMachine.ts   # Game state machine
-│   └── trajectoryCache.ts # Performance cache for animations
-├── hooks/                 # React hooks (orchestration layer)
-│   ├── useAppUIState.ts   # Viewport, shake management
-│   ├── useGameAnimation.ts # Frame store
-│   ├── useGameState.ts    # State machine integration
-│   ├── usePlinkoGame.ts   # Main game hook
-│   ├── usePrizeSession.ts # Prize loading
-│   └── useResetCoordinator.ts # Reset orchestration
-├── styles/                # Global CSS
-├── tests/                 # Test suites
-│   ├── fixtures/         # Test data
-│   ├── integration/      # Integration tests
-│   ├── physics/          # Physics validation
-│   ├── regression/       # Regression tests
-│   ├── safeguards/       # Invariant tests
-│   └── unit/             # Unit tests
-├── theme/                 # Design system
-│   ├── animationDrivers/ # Cross-platform animation abstraction
-│   ├── themes/           # Theme definitions
-│   ├── context.tsx       # ThemeProvider
-│   ├── themeUtils.tsx    # Style utilities
-│   └── tokens.ts         # Design tokens
-├── types/                 # Shared TypeScript types
-├── utils/                 # Utility functions
-│   ├── formatting/       # Color, text utilities
-│   └── platform/         # Platform adapters (crypto, storage, etc.)
-├── App.tsx               # Root app component
-└── main.tsx              # Entry point
+├── demo/                  # Demo host app (providers, dev tools)
+│   ├── App.tsx            # Reference application using the package
+│   ├── components/DevTools/   # Dev tools (feature-flagged, lazy-loaded)
+│   └── utils/devToolsPersistence.ts # Demo persistence helper
+└── plinko/                # Portable game package (public API)
+  ├── animation/         # Ball animation driver, trail optimization
+  ├── assets/            # Images, sounds, fonts
+  ├── audio/             # Audio system (SFX, music controllers)
+  │   ├── context/       # AudioProvider, hooks
+  │   └── hooks/         # Audio hooks
+  ├── components/        # React UI components (game, effects, screens, ui)
+  ├── config/            # Prize configuration utilities
+  ├── constants/         # Game constants
+  ├── game/              # Pure game logic (framework-free)
+  │   ├── trajectory/    # Trajectory generation, search algorithms
+  │   ├── boardGeometry.ts  # Peg positions, drop zones
+  │   ├── prizeProvider.ts  # Prize loading contract
+  │   ├── stateMachine.ts   # Game state machine
+  │   └── trajectoryCache.ts # Performance cache for animations
+  ├── hooks/             # React hooks (orchestration layer)
+  ├── tests/             # Package tests
+  ├── theme/             # Design system (tokens, themes, animation drivers)
+  ├── types/             # Shared TypeScript types
+  └── utils/             # Utilities (formatting, slot dimensions, platform)
 ```
 
 ---
@@ -399,7 +368,7 @@ src/
 
 ### 1. State Machine
 
-**File:** `src/game/stateMachine.ts`
+**File:** `src/plinko/game/stateMachine.ts`
 
 The game uses a finite state machine for predictable flow:
 
@@ -430,7 +399,7 @@ idle → ready → countdown → dropping → landed → celebrating → reveale
 
 ### 2. Deterministic Physics
 
-**File:** `src/game/trajectory/index.ts`
+**File:** `src/plinko/game/trajectory/index.ts`
 
 All physics simulations are deterministic (seeded RNG):
 
@@ -448,7 +417,7 @@ const trajectory2 = generateTrajectory({ seed: 12345, targetSlot: 3 });
 
 ### 3. Trajectory Cache
 
-**File:** `src/game/trajectoryCache.ts`
+**File:** `src/plinko/game/trajectoryCache.ts`
 
 Pre-computes animation data to avoid per-frame calculations:
 
@@ -469,12 +438,12 @@ interface TrajectoryCache {
 
 ### 4. Token System
 
-**File:** `src/theme/tokens.ts`
+**File:** `src/plinko/theme/tokens.ts`
 
 All design values centralized:
 
 ```typescript
-import { spacingTokens, colorTokens, gradientTokens } from '@/theme/tokens';
+import { spacingTokens, colorTokens, gradientTokens } from '@plinko/theme/tokens';
 
 // Always use tokens instead of magic numbers
 style={{
@@ -484,11 +453,11 @@ style={{
 }}
 ```
 
-See [Token System Guide](/docs/token-system.md) for full details.
+See theming docs for details (`docs/theming.md`).
 
 ### 5. Animation Driver
 
-**File:** `src/theme/animationDrivers/`
+**File:** `src/plinko/theme/animationDrivers/`
 
 Cross-platform animation abstraction:
 
@@ -509,11 +478,11 @@ const AnimatedDiv = driver.createAnimatedComponent('div');
 - Web: Framer Motion
 - React Native: Moti (future)
 
-See [Animation Pipeline](/docs/animation-pipeline.md) for details.
+See [Animation pipeline](/docs/animation-pipeline.md) for details.
 
 ### 6. Reset Orchestration
 
-**File:** `src/hooks/useResetCoordinator.ts`
+**File:** `src/plinko/hooks/useResetCoordinator.ts`
 
 Centralized reset logic prevents partial resets:
 
@@ -529,7 +498,7 @@ resetCoordinator.reset();
 // 5. Re-initialization
 ```
 
-See [ADR 005](/docs/adr/005-reset-coordinator.md) for rationale.
+See [Reset orchestration](/docs/RESET_ORCHESTRATION.md) for rationale.
 
 ---
 
@@ -538,8 +507,8 @@ See [ADR 005](/docs/adr/005-reset-coordinator.md) for rationale.
 ### Pattern 1: Component with Animation
 
 ```tsx
-import { useAnimationDriver } from '@/theme/animationDrivers';
-import { spacingTokens, colorTokens } from '@/theme/tokens';
+import { useAnimationDriver } from '@plinko/theme/animationDrivers';
+import { spacingTokens, colorTokens } from '@plinko/theme/tokens';
 
 function AnimatedCard({ children }: PropsWithChildren) {
   const driver = useAnimationDriver();
@@ -620,7 +589,7 @@ function useGameFeature() {
 
 ```tsx
 // Use adapters for platform-specific features
-import { storageAdapter } from '@/utils/platform/storage';
+import { storageAdapter } from '@plinko/utils/platform/storage';
 
 // Works on web and React Native
 const theme = await storageAdapter.getItem('theme');
@@ -675,7 +644,7 @@ export const myTokenCategory = {
 } as const;
 
 // Usage
-import { myTokenCategory } from '@/theme/tokens';
+import { myTokenCategory } from '@plinko/theme/tokens';
 style={{ color: myTokenCategory.myToken }}
 ```
 
@@ -729,7 +698,7 @@ if (import.meta.env.DEV) {
 
 ### Unit Tests
 
-**Location:** `src/tests/unit/`
+**Location:** `src/plinko/tests/unit/`
 
 Test pure logic, hooks, utilities:
 
@@ -749,7 +718,7 @@ describe('generateTrajectory', () => {
 
 ### Integration Tests
 
-**Location:** `src/tests/integration/`
+**Location:** `src/plinko/tests/integration/`
 
 Test hook composition, state flow:
 
@@ -815,38 +784,36 @@ src/tests/
 - Wire up in `App.tsx` with `AnimatePresence`
 
 **...change physics behavior:**
-- Modify `src/game/physics/` or `src/game/trajectory/`
-- Update tests in `src/tests/physics/`
+- Modify modules under `src/plinko/game/trajectory/` and `src/plinko/game/boardGeometry.ts`
+- Update tests in `src/plinko/tests/physics/`
 - Document changes in `docs/board-geometry.md`
 
 **...add a new animation:**
 - Use `useAnimationDriver()` hook
-- Follow patterns in `src/components/effects/`
+- Follow patterns in `src/plinko/components/effects/`
 - Ensure cross-platform compatibility (no blur, shadows)
 
 **...modify the state machine:**
-- Edit `src/game/stateMachine.ts`
-- Update event handlers in `src/hooks/useGameState.ts`
-- Add tests in `src/tests/unit/hooks/useGameState.test.ts`
+- Edit `src/plinko/game/stateMachine.ts`
+- Update event handlers in `src/plinko/hooks/useGameState.ts`
+- Add tests in `src/plinko/tests/unit/hooks/useGameState.test.ts`
 
 **...add design tokens:**
-- Add to `src/theme/tokens.ts`
+- Add to `src/plinko/theme/tokens.ts`
 - Use in components via imports
-- Document in `docs/token-system.md`
+- See `docs/theming.md`
 
 **...debug a reset issue:**
-- Check `src/hooks/useResetCoordinator.ts`
+- Check `src/plinko/hooks/useResetCoordinator.ts`
 - Review reset phases in order
-- Check telemetry with `coordinator.getResetMetrics()`
 
 **...add audio effects:**
-- Add sound file to `src/assets/sounds/`
-- Register in sound manifest
+- Add sound file under `src/plinko/assets/sounds/` (if used) or host-provided assets
 - Use `sfxController.play('sound-id')`
 - See `docs/sound-engine-guide.md`
 
 **...optimize performance:**
-- Check `src/config/appConfig.ts` for performance modes
+- Check demo config in `src/demo/config/appConfig.ts` for performance modes
 - Use React DevTools Profiler
 - Consider `useMemo`, `useCallback` for expensive ops
 - See `docs/power-saving-mode.md`
@@ -871,30 +838,26 @@ Now that you understand the architecture, here are recommended learning paths:
 3. Understand trajectory generation in `src/game/trajectory/`
 4. Write a unit test for a game logic function
 
-### For Full-Stack Developers
+### For full‑stack developers
 
 1. Trace happy path walkthrough (above)
 2. Study hook composition in `src/hooks/usePlinkoGame.ts`
-3. Review reset orchestration in [ADR 005](/docs/adr/005-reset-coordinator.md)
+3. Review reset orchestration in [`docs/RESET_ORCHESTRATION.md`](./RESET_ORCHESTRATION.md)
 4. Make a small feature change end-to-end
 
 ### Deep Dives
 
-**Physics & Simulation:**
-- [Board Geometry](/docs/board-geometry.md)
-- [Collision Detection](/docs/adr/007-ccd-collision-detection.md)
+**Physics & simulation:**
+- [Board geometry](/docs/board-geometry.md)
 
-**State Management:**
-- [State Machine Pattern](/docs/adr/003-state-machine-pattern.md)
-- [Reset Orchestration](/docs/adr/005-reset-coordinator.md)
+**State management:**
+- [Reset orchestration](/docs/RESET_ORCHESTRATION.md)
 
-**Cross-Platform:**
-- [Cross-Platform Architecture](/docs/adr/001-cross-platform-architecture.md)
-- [Platform Adapters](/docs/platform-adapters.md)
+**Cross‑platform:**
+- Platform adapters: see `src/plinko/utils/platform/README.md`
 
 **Audio:**
-- [Sound Engine](/docs/sound-engine.md)
-- [Sound Design Concept](/docs/sound-design-concept.md)
+- [Sound engine](/docs/sound-engine.md)
 
 ---
 
@@ -902,8 +865,8 @@ Now that you understand the architecture, here are recommended learning paths:
 
 **Documentation:**
 - Architecture: `/docs/architecture.md`
-- ADRs: `/docs/adr/`
-- Style Guide: `/docs/meta/styleguide.md`
+- Theming: `/docs/theming.md`
+- Dev tools: `/docs/dev-tools.md`
 
 **Code Comments:**
 - Most modules have detailed JSDoc comments
@@ -923,7 +886,7 @@ Now that you understand the architecture, here are recommended learning paths:
 
 You now have a solid foundation for working in the Plinko codebase. Remember:
 
-- Follow the [Style Guide](/docs/meta/styleguide.md)
+- Follow repo style (Prettier + ESLint)
 - Use tokens instead of magic numbers
 - Test your changes (unit + integration)
 - Update documentation for new features

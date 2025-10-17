@@ -1,4 +1,4 @@
-# Illusion of Choice: User Agency Mechanisms for Predetermined-Outcome Plinko
+This document was intentionally removed. The project no longer retains meta guides or historical notes.
 
 ## Overview
 

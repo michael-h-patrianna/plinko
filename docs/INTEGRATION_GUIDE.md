@@ -444,12 +444,22 @@ npm test
 
 ### Bundle Size
 
-The game uses LazyMotion for reduced bundle size:
+Use LazyMotion to keep bundle size small. Create a tiny local wrapper that re-exports Motion's feature bundle and lazy-load it:
 
-```typescript
+1) Create `src/motion-features.ts` in your app:
+
+```ts
+// src/motion-features.ts
+import { domAnimation } from 'motion/react';
+export default domAnimation;
+```
+
+2) Wire it up with LazyMotion:
+
+```ts
 import { LazyMotion } from 'motion/react';
 
-const loadFeatures = () => import('@plinko/motion-features').then(res => res.default);
+const loadFeatures = () => import('./motion-features').then(m => m.default);
 
 function App() {
   return (

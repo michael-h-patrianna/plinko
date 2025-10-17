@@ -1568,7 +1568,7 @@ src/
 
 ```typescript
 // App.tsx
-import { SoundProvider } from '@/audio';
+import { AudioProvider } from '@plinko';
 
 function App() {
   return (
@@ -1592,7 +1592,7 @@ function App() {
 
 ```typescript
 // Countdown.tsx
-import { useSoundEngine } from '@/audio';
+import { useAudio } from '@plinko';
 
 export function Countdown({ onComplete }: CountdownProps) {
   const { playSFX } = useSoundEngine();
@@ -1614,7 +1614,7 @@ export function Countdown({ onComplete }: CountdownProps) {
 
 ```typescript
 // PlinkoBoard.tsx
-import { useSoundEngine } from '@/audio';
+import { useAudio } from '@plinko';
 
 export function PlinkoBoard() {
   const { playPegHit } = useSoundEngine();
@@ -1631,7 +1631,7 @@ export function PlinkoBoard() {
 
 ```typescript
 // Settings.tsx
-import { useSoundEngine } from '@/audio';
+import { useAudio } from '@plinko';
 
 export function Settings() {
   const {
