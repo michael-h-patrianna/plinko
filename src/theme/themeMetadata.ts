@@ -1,6 +1,23 @@
 /**
  * Theme Metadata Schema
  * Provides metadata for every theme property to enable dynamic form generation in the theme editor UI
+ *
+ * Total metadata entries: 279 (cleaned up from 325+)
+ *
+ * REMOVED (nonsensical/fixed values - 46 entries):
+ * - All spacing.* entries (34 removed) - spacing is a fixed scale, not editable
+ * - borderRadius.none (1 removed) - always "0", not editable
+ * - Numeric zIndex entries: 0, 10, 20, 30, 40, 50, auto (7 removed) - fixed constants
+ * - Unused fontSize: 7xl, 8xl, 9xl (3 removed) - never used in codebase
+ * - Unused gradients.buttonOutline (1 removed) - no references found
+ *
+ * KEPT (actually editable and used):
+ * - All colors, gradients (used), typography (used sizes only)
+ * - Animation durations and easing functions
+ * - Border radius (semantic values: sm, md, lg, xl, 2xl, 3xl, full, component-specific)
+ * - Effects (glows, borders, transitions)
+ * - All button variants and component styles
+ * - Breakpoints and semantic zIndex values (modal, dropdown, tooltip, etc.)
  */
 
 export type PropertyType = 'color' | 'number' | 'string' | 'boolean' | 'gradient' | 'select' | 'object';
@@ -663,13 +680,6 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
     category: 'Gradients - Buttons',
     path: 'gradients.buttonDanger'
   },
-  'gradients.buttonOutline': {
-    displayTitle: 'Outline Button Gradient',
-    description: 'Optional gradient for outline buttons',
-    type: 'gradient',
-    category: 'Gradients - Buttons',
-    path: 'gradients.buttonOutline'
-  },
 
   // ===========================
   // GRADIENTS - PRIZES
@@ -911,34 +921,13 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
     category: 'Typography - Font Size',
     path: 'typography.fontSize.6xl'
   },
-  'typography.fontSize.7xl': {
-    displayTitle: '7X Large',
-    description: '7X large font size',
-    type: 'string',
-    category: 'Typography - Font Size',
-    path: 'typography.fontSize.7xl'
-  },
-  'typography.fontSize.8xl': {
-    displayTitle: '8X Large',
-    description: '8X large font size',
-    type: 'string',
-    category: 'Typography - Font Size',
-    path: 'typography.fontSize.8xl'
-  },
-  'typography.fontSize.9xl': {
-    displayTitle: '9X Large',
-    description: '9X large font size',
-    type: 'string',
-    category: 'Typography - Font Size',
-    path: 'typography.fontSize.9xl'
-  },
 
   // ===========================
   // TYPOGRAPHY - FONT WEIGHT
   // ===========================
   'typography.fontWeight.thin': {
     displayTitle: 'Thin',
-    description: 'Thin font weight (100)',
+    description: 'Lightest font weight for delicate text',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.thin',
@@ -947,7 +936,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.extralight': {
     displayTitle: 'Extra Light',
-    description: 'Extra light font weight (200)',
+    description: 'Very light font weight for subtle text',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.extralight',
@@ -956,7 +945,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.light': {
     displayTitle: 'Light',
-    description: 'Light font weight (300)',
+    description: 'Light font weight for secondary text',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.light',
@@ -965,7 +954,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.normal': {
     displayTitle: 'Normal',
-    description: 'Normal font weight (400)',
+    description: 'Standard font weight for body text',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.normal',
@@ -974,7 +963,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.medium': {
     displayTitle: 'Medium',
-    description: 'Medium font weight (500)',
+    description: 'Medium font weight for slightly emphasized text',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.medium',
@@ -983,7 +972,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.semibold': {
     displayTitle: 'Semi Bold',
-    description: 'Semi bold font weight (600)',
+    description: 'Semi-bold font weight for subheadings',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.semibold',
@@ -992,7 +981,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.bold': {
     displayTitle: 'Bold',
-    description: 'Bold font weight (700)',
+    description: 'Bold font weight for headings and emphasis',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.bold',
@@ -1001,7 +990,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.extrabold': {
     displayTitle: 'Extra Bold',
-    description: 'Extra bold font weight (800)',
+    description: 'Very bold font weight for strong emphasis',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.extrabold',
@@ -1010,7 +999,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.fontWeight.black': {
     displayTitle: 'Black',
-    description: 'Black font weight (900)',
+    description: 'Heaviest font weight for maximum impact',
     type: 'number',
     category: 'Typography - Font Weight',
     path: 'typography.fontWeight.black',
@@ -1023,7 +1012,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   // ===========================
   'typography.lineHeight.none': {
     displayTitle: 'None',
-    description: 'No line height (1.0)',
+    description: 'Minimal line height for compact text',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.none',
@@ -1032,7 +1021,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.lineHeight.tight': {
     displayTitle: 'Tight',
-    description: 'Tight line height (1.25)',
+    description: 'Tight line spacing for headings',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.tight',
@@ -1041,7 +1030,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.lineHeight.snug': {
     displayTitle: 'Snug',
-    description: 'Snug line height (1.375)',
+    description: 'Slightly condensed line spacing',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.snug',
@@ -1050,7 +1039,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.lineHeight.normal': {
     displayTitle: 'Normal',
-    description: 'Normal line height (1.5)',
+    description: 'Standard line spacing for body text',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.normal',
@@ -1059,7 +1048,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.lineHeight.relaxed': {
     displayTitle: 'Relaxed',
-    description: 'Relaxed line height (1.625)',
+    description: 'Comfortable line spacing for readability',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.relaxed',
@@ -1068,7 +1057,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'typography.lineHeight.loose': {
     displayTitle: 'Loose',
-    description: 'Loose line height (2.0)',
+    description: 'Generous line spacing for maximum readability',
     type: 'number',
     category: 'Typography - Line Height',
     path: 'typography.lineHeight.loose',
@@ -1081,344 +1070,95 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   // ===========================
   'typography.letterSpacing.tighter': {
     displayTitle: 'Tighter',
-    description: 'Tighter letter spacing (-0.05em)',
+    description: 'Condensed letter spacing for compact text',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.tighter'
   },
   'typography.letterSpacing.tight': {
     displayTitle: 'Tight',
-    description: 'Tight letter spacing (-0.025em)',
+    description: 'Slightly condensed letter spacing',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.tight'
   },
   'typography.letterSpacing.normal': {
     displayTitle: 'Normal',
-    description: 'Normal letter spacing (0)',
+    description: 'Standard letter spacing',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.normal'
   },
   'typography.letterSpacing.wide': {
     displayTitle: 'Wide',
-    description: 'Wide letter spacing (0.025em)',
+    description: 'Slightly expanded letter spacing',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.wide'
   },
   'typography.letterSpacing.wider': {
     displayTitle: 'Wider',
-    description: 'Wider letter spacing (0.05em)',
+    description: 'Expanded letter spacing for emphasis',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.wider'
   },
   'typography.letterSpacing.widest': {
     displayTitle: 'Widest',
-    description: 'Widest letter spacing (0.1em)',
+    description: 'Maximum letter spacing for dramatic effect',
     type: 'string',
     category: 'Typography - Letter Spacing',
     path: 'typography.letterSpacing.widest'
   },
 
   // ===========================
-  // SPACING
-  // ===========================
-  'spacing.0': {
-    displayTitle: 'Spacing 0',
-    description: 'Zero spacing (0px)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.0'
-  },
-  'spacing.0.5': {
-    displayTitle: 'Spacing 0.5',
-    description: 'Extra tiny spacing (0.125rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.0.5'
-  },
-  'spacing.1': {
-    displayTitle: 'Spacing 1',
-    description: 'Tiny spacing (0.25rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.1'
-  },
-  'spacing.1.5': {
-    displayTitle: 'Spacing 1.5',
-    description: 'Extra small spacing (0.375rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.1.5'
-  },
-  'spacing.2': {
-    displayTitle: 'Spacing 2',
-    description: 'Small spacing (0.5rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.2'
-  },
-  'spacing.2.5': {
-    displayTitle: 'Spacing 2.5',
-    description: 'Small-medium spacing (0.625rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.2.5'
-  },
-  'spacing.3': {
-    displayTitle: 'Spacing 3',
-    description: 'Medium spacing (0.75rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.3'
-  },
-  'spacing.3.5': {
-    displayTitle: 'Spacing 3.5',
-    description: 'Medium-large spacing (0.875rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.3.5'
-  },
-  'spacing.4': {
-    displayTitle: 'Spacing 4',
-    description: 'Large spacing (1rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.4'
-  },
-  'spacing.5': {
-    displayTitle: 'Spacing 5',
-    description: 'Extra large spacing (1.25rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.5'
-  },
-  'spacing.6': {
-    displayTitle: 'Spacing 6',
-    description: 'Spacing level 6 (1.5rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.6'
-  },
-  'spacing.7': {
-    displayTitle: 'Spacing 7',
-    description: 'Spacing level 7 (1.75rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.7'
-  },
-  'spacing.8': {
-    displayTitle: 'Spacing 8',
-    description: 'Spacing level 8 (2rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.8'
-  },
-  'spacing.9': {
-    displayTitle: 'Spacing 9',
-    description: 'Spacing level 9 (2.25rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.9'
-  },
-  'spacing.10': {
-    displayTitle: 'Spacing 10',
-    description: 'Spacing level 10 (2.5rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.10'
-  },
-  'spacing.11': {
-    displayTitle: 'Spacing 11',
-    description: 'Spacing level 11 (2.75rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.11'
-  },
-  'spacing.12': {
-    displayTitle: 'Spacing 12',
-    description: 'Spacing level 12 (3rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.12'
-  },
-  'spacing.14': {
-    displayTitle: 'Spacing 14',
-    description: 'Spacing level 14 (3.5rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.14'
-  },
-  'spacing.16': {
-    displayTitle: 'Spacing 16',
-    description: 'Spacing level 16 (4rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.16'
-  },
-  'spacing.20': {
-    displayTitle: 'Spacing 20',
-    description: 'Spacing level 20 (5rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.20'
-  },
-  'spacing.24': {
-    displayTitle: 'Spacing 24',
-    description: 'Spacing level 24 (6rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.24'
-  },
-  'spacing.28': {
-    displayTitle: 'Spacing 28',
-    description: 'Spacing level 28 (7rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.28'
-  },
-  'spacing.32': {
-    displayTitle: 'Spacing 32',
-    description: 'Spacing level 32 (8rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.32'
-  },
-  'spacing.36': {
-    displayTitle: 'Spacing 36',
-    description: 'Spacing level 36 (9rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.36'
-  },
-  'spacing.40': {
-    displayTitle: 'Spacing 40',
-    description: 'Spacing level 40 (10rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.40'
-  },
-  'spacing.44': {
-    displayTitle: 'Spacing 44',
-    description: 'Spacing level 44 (11rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.44'
-  },
-  'spacing.48': {
-    displayTitle: 'Spacing 48',
-    description: 'Spacing level 48 (12rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.48'
-  },
-  'spacing.52': {
-    displayTitle: 'Spacing 52',
-    description: 'Spacing level 52 (13rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.52'
-  },
-  'spacing.56': {
-    displayTitle: 'Spacing 56',
-    description: 'Spacing level 56 (14rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.56'
-  },
-  'spacing.60': {
-    displayTitle: 'Spacing 60',
-    description: 'Spacing level 60 (15rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.60'
-  },
-  'spacing.64': {
-    displayTitle: 'Spacing 64',
-    description: 'Spacing level 64 (16rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.64'
-  },
-  'spacing.72': {
-    displayTitle: 'Spacing 72',
-    description: 'Spacing level 72 (18rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.72'
-  },
-  'spacing.80': {
-    displayTitle: 'Spacing 80',
-    description: 'Spacing level 80 (20rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.80'
-  },
-  'spacing.96': {
-    displayTitle: 'Spacing 96',
-    description: 'Spacing level 96 (24rem)',
-    type: 'string',
-    category: 'Spacing',
-    path: 'spacing.96'
-  },
-
-  // ===========================
   // BORDER RADIUS
   // ===========================
-  'borderRadius.none': {
-    displayTitle: 'None',
-    description: 'No border radius (0)',
-    type: 'string',
-    category: 'Border Radius',
-    path: 'borderRadius.none'
-  },
   'borderRadius.sm': {
     displayTitle: 'Small',
-    description: 'Small border radius (0.125rem)',
+    description: 'Subtle rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.sm'
   },
   'borderRadius.md': {
     displayTitle: 'Medium',
-    description: 'Medium border radius (0.375rem)',
+    description: 'Moderate rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.md'
   },
   'borderRadius.lg': {
     displayTitle: 'Large',
-    description: 'Large border radius (0.5rem)',
+    description: 'Noticeable rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.lg'
   },
   'borderRadius.xl': {
     displayTitle: 'Extra Large',
-    description: 'Extra large border radius (0.75rem)',
+    description: 'Prominent rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.xl'
   },
   'borderRadius.2xl': {
     displayTitle: '2X Large',
-    description: '2X large border radius (1rem)',
+    description: 'Very rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.2xl'
   },
   'borderRadius.3xl': {
     displayTitle: '3X Large',
-    description: '3X large border radius (1.5rem)',
+    description: 'Extremely rounded corners',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.3xl'
   },
   'borderRadius.full': {
     displayTitle: 'Full',
-    description: 'Full border radius (9999px)',
+    description: 'Fully rounded (circular/pill shape)',
     type: 'string',
     category: 'Border Radius',
     path: 'borderRadius.full'
@@ -1471,7 +1211,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   // ===========================
   'animation.duration.instant': {
     displayTitle: 'Instant',
-    description: 'Instant animation (0ms)',
+    description: 'No animation delay for immediate transitions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.instant',
@@ -1481,7 +1221,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'animation.duration.fast': {
     displayTitle: 'Fast',
-    description: 'Fast animation duration (150ms)',
+    description: 'Quick animation for snappy interactions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.fast',
@@ -1491,7 +1231,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'animation.duration.normal': {
     displayTitle: 'Normal',
-    description: 'Normal animation duration (300ms)',
+    description: 'Standard animation duration for most transitions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.normal',
@@ -1501,7 +1241,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'animation.duration.slow': {
     displayTitle: 'Slow',
-    description: 'Slow animation duration (500ms)',
+    description: 'Slower animation for deliberate transitions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.slow',
@@ -1511,7 +1251,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'animation.duration.slower': {
     displayTitle: 'Slower',
-    description: 'Slower animation duration (700ms)',
+    description: 'Very slow animation for emphasized transitions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.slower',
@@ -1521,7 +1261,7 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   },
   'animation.duration.slowest': {
     displayTitle: 'Slowest',
-    description: 'Slowest animation duration (1000ms)',
+    description: 'Longest animation for dramatic transitions',
     type: 'number',
     category: 'Animation - Duration',
     path: 'animation.duration.slowest',
@@ -2460,67 +2200,6 @@ export const themeMetadata: Record<string, ThemePropertyMetadata> = {
   // ===========================
   // LAYOUT - Z-INDEX
   // ===========================
-  'zIndex.0': {
-    displayTitle: 'Z-Index 0',
-    description: 'Base z-index level (0)',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.0',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.10': {
-    displayTitle: 'Z-Index 10',
-    description: 'Z-index level 10',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.10',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.20': {
-    displayTitle: 'Z-Index 20',
-    description: 'Z-index level 20',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.20',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.30': {
-    displayTitle: 'Z-Index 30',
-    description: 'Z-index level 30',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.30',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.40': {
-    displayTitle: 'Z-Index 40',
-    description: 'Z-index level 40',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.40',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.50': {
-    displayTitle: 'Z-Index 50',
-    description: 'Z-index level 50',
-    type: 'number',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.50',
-    min: -100,
-    max: 10000
-  },
-  'zIndex.auto': {
-    displayTitle: 'Z-Index Auto',
-    description: 'Auto z-index (follows stacking context)',
-    type: 'string',
-    category: 'Layout - Z-Index',
-    path: 'zIndex.auto'
-  },
   'zIndex.dropdown': {
     displayTitle: 'Dropdown Z-Index',
     description: 'Z-index for dropdown menus',

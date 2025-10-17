@@ -18,6 +18,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePause } from '../../contexts/PauseContext';
 import { useTheme } from '../../theme';
 import { getAllCategories, getMetadataByCategory, type ThemePropertyMetadata } from '../../theme/themeMetadata';
 import { ColorInput, NumberInput, StringInput, SelectInput, GradientInput } from './ThemePropertyInputs';
@@ -278,8 +279,12 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
 
   // Get theme context
   const { theme, setTheme } = useTheme();
+  const { pause, unpause } = usePause();
 
-  // Local state for editing (doesn't update theme context until Apply is clicked)
+  // Track the original theme for reset functionality
+  const [initialTheme, setInitialTheme] = useState<Theme>(theme);
+
+  // Local state for editing (updates theme context in real-time)
   const [editedTheme, setEditedTheme] = useState<Theme>(theme);
 
   // Track which accordion sections are open (default: Basic Info is open)
@@ -288,10 +293,20 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
   // Get all categories from metadata
   const categories = getAllCategories();
 
-  // Update editedTheme when theme changes externally
+  // Update both editedTheme and initialTheme when theme changes externally
   useEffect(() => {
     setEditedTheme(theme);
+    setInitialTheme(theme);
   }, [theme]);
+
+  // Pause game when editor is open, unpause when closed
+  useEffect(() => {
+    if (isOpen) {
+      pause();
+    } else {
+      unpause();
+    }
+  }, [isOpen, pause, unpause]);
 
   // Toggle accordion section
   const toggleSection = useCallback((category: string) => {
@@ -306,10 +321,12 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     });
   }, []);
 
-  // Handle property change
+  // Handle property change - applies changes in real-time
   const handleChange = useCallback((path: string, value: any) => {
-    setEditedTheme((prev) => setValueByPath(prev, path, value));
-  }, []);
+    const newTheme = setValueByPath(editedTheme, path, value);
+    setEditedTheme(newTheme);
+    setTheme(newTheme); // Apply immediately!
+  }, [editedTheme, setTheme]);
 
   // Handle Load Theme
   const handleLoadTheme = useCallback(() => {
@@ -323,6 +340,8 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     const loadedTheme = await importThemeFromFile(file);
     if (loadedTheme) {
       setEditedTheme(loadedTheme);
+      setInitialTheme(loadedTheme);
+      setTheme(loadedTheme); // Apply immediately!
       console.log('Theme loaded successfully:', loadedTheme.name);
     } else {
       console.error('Failed to load theme - invalid file');
@@ -333,7 +352,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, []);
+  }, [setTheme]);
 
   // Handle Save Theme
   const handleSaveTheme = useCallback(() => {
@@ -342,17 +361,13 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     console.log('Theme exported:', filename);
   }, [editedTheme]);
 
-  // Handle Reset
+  // Handle Reset - resets to the initial theme (before any edits)
   const handleReset = useCallback(() => {
-    setEditedTheme(theme);
+    setEditedTheme(initialTheme);
+    setTheme(initialTheme);
     console.log('Theme reset to original');
-  }, [theme]);
+  }, [initialTheme, setTheme]);
 
-  // Handle Apply
-  const handleApply = useCallback(() => {
-    setTheme(editedTheme);
-    console.log('Theme applied:', editedTheme.name);
-  }, [editedTheme, setTheme]);
 
   // Focus trap - keep focus inside drawer when open
   useEffect(() => {
@@ -426,6 +441,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="theme-editor-title"
+            data-demo-ui="true"
             style={{
               position: 'fixed',
               top: 0,
@@ -551,92 +567,21 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
               style={{
                 padding: '16px 20px',
                 display: 'flex',
-                flexDirection: 'column',
                 gap: '8px',
                 ...STYLES.footer,
               }}
             >
-              {/* Top row: Load, Save, Reset */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  style={{
-                    flex: 1,
-                    padding: '10px 16px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.2s',
-                    ...STYLES.secondaryButton,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                  onClick={handleLoadTheme}
-                  aria-label="Load theme from file"
-                >
-                  Load Theme
-                </button>
-                <button
-                  style={{
-                    flex: 1,
-                    padding: '10px 16px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.2s',
-                    ...STYLES.secondaryButton,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                  onClick={handleSaveTheme}
-                  aria-label="Save theme to file"
-                >
-                  Save Theme
-                </button>
-                <button
-                  style={{
-                    flex: 1,
-                    padding: '10px 16px',
-                    borderRadius: '6px',
-                    fontSize: '14px',
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.2s',
-                    ...STYLES.secondaryButton,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.opacity = '0.9';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.opacity = '1';
-                  }}
-                  onClick={handleReset}
-                  aria-label="Reset to original theme"
-                >
-                  Reset
-                </button>
-              </div>
-
-              {/* Bottom row: Apply (full width, primary button) */}
+              {/* Load, Save, Reset buttons */}
               <button
                 style={{
-                  width: '100%',
-                  padding: '12px 16px',
+                  flex: 1,
+                  padding: '10px 16px',
                   borderRadius: '6px',
-                  fontSize: '15px',
-                  fontWeight: 600,
+                  fontSize: '14px',
+                  fontWeight: 500,
                   cursor: 'pointer',
                   transition: 'opacity 0.2s',
-                  ...STYLES.button,
+                  ...STYLES.secondaryButton,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.opacity = '0.9';
@@ -644,10 +589,54 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
                 onMouseLeave={(e) => {
                   e.currentTarget.style.opacity = '1';
                 }}
-                onClick={handleApply}
-                aria-label="Apply theme changes"
+                onClick={handleLoadTheme}
+                aria-label="Load theme from file"
               >
-                Apply Changes
+                Load Theme
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                  ...STYLES.secondaryButton,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onClick={handleSaveTheme}
+                aria-label="Save theme to file"
+              >
+                Save Theme
+              </button>
+              <button
+                style={{
+                  flex: 1,
+                  padding: '10px 16px',
+                  borderRadius: '6px',
+                  fontSize: '14px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'opacity 0.2s',
+                  ...STYLES.secondaryButton,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.9';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1';
+                }}
+                onClick={handleReset}
+                aria-label="Reset to original theme"
+              >
+                Reset
               </button>
             </div>
           </motion.div>

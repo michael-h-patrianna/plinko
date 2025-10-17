@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 const STYLES = {
   label: {
@@ -25,10 +26,11 @@ const STYLES = {
     borderRadius: '4px',
     fontSize: '11px',
     maxWidth: '200px',
-    position: 'absolute' as const,
-    zIndex: 1000,
+    position: 'fixed' as const,
+    zIndex: 10001, // Above theme editor drawer (10000)
     whiteSpace: 'normal' as const,
-    lineHeight: '1.4'
+    lineHeight: '1.4',
+    pointerEvents: 'none' as const // Prevent tooltip from blocking mouse events
   },
   tooltipButton: {
     background: 'transparent',
@@ -57,31 +59,62 @@ export function Tooltip({ content }: TooltipProps) {
   const [position, setPosition] = useState({ top: 0, left: 0 });
   const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-  const handleToggle = () => {
-    if (!visible && buttonRef.current) {
+  const updatePosition = () => {
+    if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.bottom + 4,
-        left: rect.left - 100 + rect.width / 2 // Center tooltip over button
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX - 100 + rect.width / 2 // Center tooltip over button
       });
+    }
+  };
+
+  const handleToggle = () => {
+    if (!visible) {
+      updatePosition();
     }
     setVisible(!visible);
   };
 
   const handleMouseEnter = () => {
-    if (buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + 4,
-        left: rect.left - 100 + rect.width / 2
-      });
-    }
+    updatePosition();
     setVisible(true);
   };
 
   const handleMouseLeave = () => {
     setVisible(false);
   };
+
+  // Update position on scroll or resize when tooltip is visible
+  useEffect(() => {
+    if (!visible) return;
+
+    const handleScrollOrResize = () => {
+      updatePosition();
+    };
+
+    window.addEventListener('scroll', handleScrollOrResize, true); // Capture phase for all scrollable containers
+    window.addEventListener('resize', handleScrollOrResize);
+
+    return () => {
+      window.removeEventListener('scroll', handleScrollOrResize, true);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [visible]);
+
+  const tooltipContent = visible ? (
+    <div
+      id="tooltip-content"
+      role="tooltip"
+      style={{
+        ...STYLES.tooltip,
+        top: position.top,
+        left: position.left
+      }}
+    >
+      {content}
+    </div>
+  ) : null;
 
   return (
     <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -97,19 +130,7 @@ export function Tooltip({ content }: TooltipProps) {
       >
         ?
       </button>
-      {visible && (
-        <div
-          id="tooltip-content"
-          role="tooltip"
-          style={{
-            ...STYLES.tooltip,
-            top: position.top,
-            left: position.left
-          }}
-        >
-          {content}
-        </div>
-      )}
+      {tooltipContent && createPortal(tooltipContent, document.body)}
     </div>
   );
 }

@@ -1,0 +1,55 @@
+/**
+ * Global pause system CSS
+ *
+ * Pauses all animations and transitions when body has data-paused="true"
+ * Excludes demo UI (DevTools, ThemeEditor) from pause
+ *
+ * CROSS-PLATFORM COMPATIBLE:
+ * - Uses only animation-play-state and transition (no blur/filters)
+ * - Works with transforms, opacity, colors
+ * - Safe for future React Native port
+ *
+ * NOTE: This CSS handles CSS animations/transitions only.
+ * Framer Motion (JS-driven) animations are paused via the animation driver.
+ */
+
+/* Pause all CSS animations and transitions when game is paused */
+body[data-paused='true'] *,
+body[data-paused='true'] *::before,
+body[data-paused='true'] *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+/* Exclude demo UI from pause (DevTools, ThemeEditor) */
+body[data-paused='true'] [data-demo-ui='true'],
+body[data-paused='true'] [data-demo-ui='true'] *,
+body[data-paused='true'] [data-demo-ui='true'] *::before,
+body[data-paused='true'] [data-demo-ui='true'] *::after {
+  animation-play-state: running !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+/* Ensure Framer Motion elements in demo UI are not affected by pause */
+body[data-paused='true'] [data-demo-ui='true'] [data-animation-paused='true'] {
+  will-change: auto !important;
+  animation-play-state: running !important;
+}
+
+/* Visual indicator for pause state (optional - can be removed if not desired) */
+body[data-paused='true']::before {
+  content: 'PAUSED';
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 9999;
+  pointer-events: none;
+  letter-spacing: 0.1em;
+}

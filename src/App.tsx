@@ -23,6 +23,7 @@ import { StartScreen } from './components/screens/StartScreen';
 import { AppConfigProvider } from './config/AppConfigContext';
 import type { PerformanceMode } from './config/appConfig';
 import { LAYOUT } from './constants';
+import { PauseProvider } from './contexts/PauseContext';
 import { DevToolsLoader, type ChoiceMechanic } from './dev-tools';
 import { useAppUIState } from './hooks/useAppUIState';
 import { usePlinkoGame } from './hooks/usePlinkoGame';
@@ -400,15 +401,17 @@ export function App() {
 
   return (
     <ErrorBoundary>
-      <AppConfigProvider value={config}>
-        <ThemeProvider themes={themes}>
-          <AudioProvider>
-            <ToastProvider position="top-right" maxToasts={3}>
-              <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
-            </ToastProvider>
-          </AudioProvider>
-        </ThemeProvider>
-      </AppConfigProvider>
+      <PauseProvider>
+        <AppConfigProvider value={config}>
+          <ThemeProvider themes={themes}>
+            <AudioProvider>
+              <ToastProvider position="top-right" maxToasts={3}>
+                <AppContent performanceMode={performanceMode} setPerformanceMode={setPerformanceMode} />
+              </ToastProvider>
+            </AudioProvider>
+          </ThemeProvider>
+        </AppConfigProvider>
+      </PauseProvider>
     </ErrorBoundary>
   );
 }

@@ -10,3 +10,4 @@ export { useViewportManager } from './useViewportManager';
 export { useShakeController } from './useShakeController';
 export { useAppUIState } from './useAppUIState';
 export { useWinAnimationState } from './useWinAnimationState';
+export { useAnimationPause } from './useAnimationPause';
