@@ -117,16 +117,32 @@ describe('State Machine', () => {
     });
   });
 
-  describe('landed -> revealed transition', () => {
-    it('should transition to revealed on REVEAL_CONFIRMED', () => {
+  describe('landed -> celebrating -> revealed transition', () => {
+    it('should transition to celebrating on CELEBRATION_COMPLETED', () => {
       const result = transition('landed', mockContext, {
+        type: 'CELEBRATION_COMPLETED',
+      });
+
+      expect(result.state).toBe('celebrating');
+    });
+
+    it('should transition from celebrating to revealed on REVEAL_CONFIRMED', () => {
+      // First transition to celebrating
+      const celebratingResult = transition('landed', mockContext, {
+        type: 'CELEBRATION_COMPLETED',
+      });
+
+      expect(celebratingResult.state).toBe('celebrating');
+
+      // Then transition to revealed
+      const result = transition('celebrating', celebratingResult.context, {
         type: 'REVEAL_CONFIRMED',
       });
 
       expect(result.state).toBe('revealed');
     });
 
-    it('should transition to idle on RESET_REQUESTED', () => {
+    it('should transition to idle on RESET_REQUESTED from landed', () => {
       const result = transition('landed', mockContext, {
         type: 'RESET_REQUESTED',
       });
@@ -196,7 +212,13 @@ describe('State Machine', () => {
       context = result.context;
       expect(context.prize).toEqual(mockContext.prize);
 
-      // landed -> revealed
+      // landed -> celebrating
+      result = transition(state, context, { type: 'CELEBRATION_COMPLETED' });
+      state = result.state;
+      context = result.context;
+      expect(context.prize).toEqual(mockContext.prize);
+
+      // celebrating -> revealed
       result = transition(state, context, { type: 'REVEAL_CONFIRMED' });
       state = result.state;
       context = result.context;

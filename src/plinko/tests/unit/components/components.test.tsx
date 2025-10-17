@@ -409,8 +409,10 @@ describe('Slot Component', () => {
   it('should position slot correctly', () => {
     render(<Slot index={0} prize={mockPrize} x={100} width={50} />);
     const slot = screen.getByTestId('slot-0');
-    expect(slot.style.left).toBe('100px');
-    expect(slot.style.width).toBe('50px');
+    // Slot position is on parent container, not the slot element itself
+    const container = slot.parentElement?.parentElement; // slot -> 3D flip container -> position container
+    expect(container?.style.left).toBe('100px');
+    expect(container?.style.width).toBe('50px');
   });
 
   it('should render prize title', () => {
@@ -473,9 +475,11 @@ describe('Slot Component', () => {
     expect(badge).toHaveStyle({ width: '12px', height: '12px' });
   });
 
-  it('should show combo badge when comboBadgeNumber provided', () => {
-    render(<Slot index={0} prize={mockPrize} x={50} width={60} comboBadgeNumber={2} />);
-    expect(screen.getByText('2')).toBeInTheDocument();
+  it('should accept comboBadgeNumber prop (badge rendered by PlinkoBoard)', () => {
+    // Combo badges are now rendered by PlinkoBoard, not by Slot component
+    // This test verifies the prop is accepted without error
+    const { container } = render(<Slot index={0} prize={mockPrize} x={50} width={60} comboBadgeNumber={2} />);
+    expect(container.querySelector('[data-testid="slot-0"]')).toBeInTheDocument();
   });
 
   it('should render icon when prize has slotIcon', () => {
@@ -498,7 +502,9 @@ describe('Slot Component', () => {
       />
     );
     const slot = screen.getByTestId('slot-0');
-    expect(slot.style.width).toBe('35px');
+    // Width is on parent container
+    const container = slot.parentElement?.parentElement;
+    expect(container?.style.width).toBe('35px');
   });
 });
 

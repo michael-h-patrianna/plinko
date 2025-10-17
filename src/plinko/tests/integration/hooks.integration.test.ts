@@ -147,7 +147,19 @@ describe('Hook Interactions Integration Tests', () => {
         expect(gameResult.current.state).toBe('ready');
       });
 
-      // Verify trajectory was generated
+      // In 'ready' state, trajectory is intentionally empty
+      // It will be generated when startGame() is called
+      expect(gameResult.current.trajectory.length).toBe(0);
+
+      // Start the game to generate trajectory
+      act(() => {
+        gameResult.current.startGame();
+      });
+
+      // Now in countdown state, trajectory should be generated
+      await waitFor(() => {
+        expect(gameResult.current.state).toBe('countdown');
+      });
       expect(gameResult.current.trajectory.length).toBeGreaterThan(0);
 
       // Verify winning prize is set
@@ -260,7 +272,9 @@ describe('Hook Interactions Integration Tests', () => {
       });
 
       const originalWinningPrize = prizeResult.current.winningPrize;
-      const originalTrajectory = gameResult.current.trajectory;
+
+      // In ready state, trajectory is empty (will be generated after drop position selection)
+      expect(gameResult.current.trajectory.length).toBe(0);
 
       // Start game with drop position mechanic
       act(() => {
@@ -280,8 +294,7 @@ describe('Hook Interactions Integration Tests', () => {
       // Winning prize should remain immutable
       expect(prizeResult.current.winningPrize).toBe(originalWinningPrize);
 
-      // But trajectory should be regenerated
-      expect(gameResult.current.trajectory).not.toBe(originalTrajectory);
+      // Trajectory should now be generated (was empty before)
       expect(gameResult.current.trajectory.length).toBeGreaterThan(0);
 
       // Prizes array should be re-swapped

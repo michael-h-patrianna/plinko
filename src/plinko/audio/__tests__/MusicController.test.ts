@@ -185,7 +185,7 @@ describe('MusicController', () => {
     // Wait for async callback
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(mockAdapter.onMusicLoopEnd).toHaveBeenCalledWith('music-base', expect.any(Function));
+    expect(mockAdapter.onMusicLoopEnd).toHaveBeenCalledWith('music-base', expect.any(Function), 20000);
     expect(mockAdapter.stopMusic).toHaveBeenCalledWith('music-base', 0);
     expect(mockAdapter.playMusic).toHaveBeenCalledWith('music-tension', 0);
     expect(typeof cleanup).toBe('function');

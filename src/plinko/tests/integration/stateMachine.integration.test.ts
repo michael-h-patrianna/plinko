@@ -131,24 +131,38 @@ describe('State Machine Integration Tests', () => {
         })
       );
 
-      // 5. landed → revealed (REVEAL_CONFIRMED)
-      const step5 = transition(state, context, { type: 'REVEAL_CONFIRMED' });
+      // 5. landed → celebrating (CELEBRATION_COMPLETED)
+      const step5 = transition(state, context, { type: 'CELEBRATION_COMPLETED' });
       state = step5.state;
       context = step5.context;
-      expect(state).toBe('revealed');
+      expect(state).toBe('celebrating');
       expect(context.prize).toEqual(mockPrize); // Context preserved
       expect(telemetry.trackStateTransition).toHaveBeenCalledWith(
         expect.objectContaining({
           fromState: 'landed',
+          toState: 'celebrating',
+          event: 'CELEBRATION_COMPLETED',
+        })
+      );
+
+      // 6. celebrating → revealed (REVEAL_CONFIRMED)
+      const step6 = transition(state, context, { type: 'REVEAL_CONFIRMED' });
+      state = step6.state;
+      context = step6.context;
+      expect(state).toBe('revealed');
+      expect(context.prize).toEqual(mockPrize); // Context preserved
+      expect(telemetry.trackStateTransition).toHaveBeenCalledWith(
+        expect.objectContaining({
+          fromState: 'celebrating',
           toState: 'revealed',
           event: 'REVEAL_CONFIRMED',
         })
       );
 
-      // 6. revealed → claimed (CLAIM_REQUESTED)
-      const step6 = transition(state, context, { type: 'CLAIM_REQUESTED' });
-      state = step6.state;
-      context = step6.context;
+      // 7. revealed → claimed (CLAIM_REQUESTED)
+      const step7 = transition(state, context, { type: 'CLAIM_REQUESTED' });
+      state = step7.state;
+      context = step7.context;
       expect(state).toBe('claimed');
       expect(context.prize).toEqual(mockPrize); // Context preserved
       expect(telemetry.trackStateTransition).toHaveBeenCalledWith(
@@ -159,10 +173,10 @@ describe('State Machine Integration Tests', () => {
         })
       );
 
-      // 7. claimed → idle (RESET_REQUESTED)
-      const step7 = transition(state, context, { type: 'RESET_REQUESTED' });
-      state = step7.state;
-      context = step7.context;
+      // 8. claimed → idle (RESET_REQUESTED)
+      const step8 = transition(state, context, { type: 'RESET_REQUESTED' });
+      state = step8.state;
+      context = step8.context;
       expect(state).toBe('idle');
       expect(context).toEqual(initialContext); // Context reset
       expect(telemetry.trackStateTransition).toHaveBeenCalledWith(
@@ -173,8 +187,8 @@ describe('State Machine Integration Tests', () => {
         })
       );
 
-      // Verify telemetry was called for each transition
-      expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(7);
+      // Verify telemetry was called for each transition (now 8 transitions instead of 7)
+      expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(8);
     });
 
     it('should preserve context data through all transitions', () => {
@@ -205,6 +219,7 @@ describe('State Machine Integration Tests', () => {
         { type: 'DROP_REQUESTED' as const },
         { type: 'COUNTDOWN_COMPLETED' as const },
         { type: 'LANDING_COMPLETED' as const },
+        { type: 'CELEBRATION_COMPLETED' as const },
         { type: 'REVEAL_CONFIRMED' as const },
       ];
 
@@ -470,7 +485,7 @@ describe('State Machine Integration Tests', () => {
       expect(result.context.currentFrame).toBe(0); // Frame reset for new drop
     });
 
-    it('should preserve all context fields through landed → revealed → claimed', () => {
+    it('should preserve all context fields through landed → celebrating → revealed → claimed', () => {
       const context: GameContext = {
         selectedIndex: 3,
         trajectory: mockTrajectory,
@@ -481,8 +496,17 @@ describe('State Machine Integration Tests', () => {
         dropZone: 'center',
       };
 
-      // landed → revealed
-      const revealed = transition('landed', context, { type: 'REVEAL_CONFIRMED' });
+      // landed → celebrating
+      const celebrating = transition('landed', context, { type: 'CELEBRATION_COMPLETED' });
+      expect(celebrating.context.selectedIndex).toBe(3);
+      expect(celebrating.context.trajectory).toEqual(mockTrajectory);
+      expect(celebrating.context.currentFrame).toBe(150);
+      expect(celebrating.context.prize).toEqual(mockPrize);
+      expect(celebrating.context.seed).toBe(54321);
+      expect(celebrating.context.dropZone).toBe('center');
+
+      // celebrating → revealed
+      const revealed = transition(celebrating.state, celebrating.context, { type: 'REVEAL_CONFIRMED' });
       expect(revealed.context.selectedIndex).toBe(3);
       expect(revealed.context.trajectory).toEqual(mockTrajectory);
       expect(revealed.context.currentFrame).toBe(150);
@@ -547,6 +571,7 @@ describe('State Machine Integration Tests', () => {
         { type: 'DROP_REQUESTED' as const },
         { type: 'COUNTDOWN_COMPLETED' as const },
         { type: 'LANDING_COMPLETED' as const },
+        { type: 'CELEBRATION_COMPLETED' as const },
         { type: 'REVEAL_CONFIRMED' as const },
         { type: 'CLAIM_REQUESTED' as const },
         { type: 'RESET_REQUESTED' as const },
@@ -564,7 +589,7 @@ describe('State Machine Integration Tests', () => {
         }
       }
 
-      expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(7);
+      expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(8);
       expect(telemetry.trackStateError).not.toHaveBeenCalled();
     });
   });

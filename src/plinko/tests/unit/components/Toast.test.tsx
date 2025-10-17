@@ -6,7 +6,7 @@
 
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup, fireEvent, act } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/react';
 import { Toast } from '@demo/components/Toast/Toast';
 import { ToastContainer } from '@demo/components/Toast/ToastContainer';
 import { ToastProvider, useToast } from '@demo/components/Toast/ToastContext';
@@ -275,10 +275,29 @@ describe('ToastProvider and useToast', () => {
   });
 
   it('should limit number of toasts to maxToasts', () => {
+    // Custom test component with duration=0 to prevent auto-dismiss during test
+    function TestComponentNoDismiss() {
+      const { showToast } = useToast();
+
+      return (
+        <div>
+          <button onClick={() => showToast({ message: 'Test message', severity: 'info', duration: 0 })}>
+            Show Info Toast
+          </button>
+          <button onClick={() => showToast({ message: 'Success!', severity: 'success', duration: 0 })}>
+            Show Success Toast
+          </button>
+          <button onClick={() => showToast({ message: 'Error occurred', severity: 'error', duration: 0 })}>
+            Show Error Toast
+          </button>
+        </div>
+      );
+    }
+
     render(
       <ThemeProvider themes={themes}>
         <ToastProvider maxToasts={2}>
-          <TestComponent />
+          <TestComponentNoDismiss />
         </ToastProvider>
       </ThemeProvider>
     );
@@ -288,18 +307,12 @@ describe('ToastProvider and useToast', () => {
     const errorButton = screen.getByText('Show Error Toast');
 
     // Show 3 toasts, but max is 2
-    act(() => {
-      fireEvent.click(infoButton);
-      fireEvent.click(successButton);
-      fireEvent.click(errorButton);
-    });
+    // The provider should keep only the last 2 (Success! and Error occurred)
+    fireEvent.click(infoButton);
+    fireEvent.click(successButton);
+    fireEvent.click(errorButton);
 
-    // Advance timers to allow exit animations to complete
-    act(() => {
-      vi.runAllTimers();
-    });
-
-    // Only the last 2 toasts should be visible
+    // Only the last 2 toasts should be visible (slice keeps last maxToasts items)
     expect(screen.queryByText('Test message')).not.toBeInTheDocument();
     expect(screen.getByText('Success!')).toBeInTheDocument();
     expect(screen.getByText('Error occurred')).toBeInTheDocument();

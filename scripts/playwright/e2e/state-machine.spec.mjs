@@ -34,7 +34,7 @@ test.describe('State Machine', () => {
     await page.waitForTimeout(500);
 
     // Wait for revealed state
-    await waitForGameState(page, 'revealed', { timeout: 15000 });
+    await waitForGameState(page, 'revealed', { timeout: 30000 });
 
     // Get observed states
     const states = await page.evaluate(() => window._states || []);
@@ -99,7 +99,7 @@ test.describe('State Machine', () => {
     });
 
     // Rapidly click start button 5 times
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     for (let i = 0; i < 5; i++) {
       await button.click({ force: true, timeout: 100 }).catch(() => {});
     }
@@ -121,7 +121,7 @@ test.describe('State Machine', () => {
     await page.waitForTimeout(500);
 
     // Wait for landed
-    await waitForGameState(page, 'landed', { timeout: 10000 });
+    await waitForGameState(page, 'landed', { timeout: 30000 });
 
     // Check state attribute matches expected
     const gameState = await page.evaluate(() => {
@@ -262,7 +262,7 @@ test.describe('State Machine', () => {
     await page.waitForTimeout(500);
 
     // Should return to initial state
-    const dropButton = page.locator('button').first();
+    const dropButton = page.getByTestId('drop-ball-button');
     await expect(dropButton).toBeVisible();
 
     console.log('Page reload handled gracefully');

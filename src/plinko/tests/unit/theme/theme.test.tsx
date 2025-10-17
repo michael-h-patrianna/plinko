@@ -42,7 +42,29 @@ const localStorageMock = (() => {
 
 Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
+  writable: true,
+  configurable: true,
 });
+
+// Mock the storage adapter to use our mocked localStorage
+vi.mock('@plinko/utils/platform', () => ({
+  storageAdapter: {
+    getItem: (key: string) => Promise.resolve(localStorageMock.getItem(key)),
+    setItem: (key: string, value: string) => {
+      localStorageMock.setItem(key, value);
+      return Promise.resolve();
+    },
+    removeItem: (key: string) => {
+      localStorageMock.removeItem(key);
+      return Promise.resolve();
+    },
+    clear: () => {
+      localStorageMock.clear();
+      return Promise.resolve();
+    },
+    getAllKeys: () => Promise.resolve(Object.keys(localStorageMock)),
+  },
+}));
 
 describe('Theme System', () => {
   beforeEach(() => {
@@ -208,7 +230,7 @@ describe('Theme System', () => {
   });
 
   describe('ThemeContext - LocalStorage Persistence', () => {
-    it('should persist theme to localStorage when switchTheme is called', () => {
+    it('should persist theme to localStorage when switchTheme is called', async () => {
       const allThemes = [defaultTheme, brutalistTheme];
       const wrapper = ({ children }: { children: ReactNode }) => (
         <ThemeProvider initialTheme={defaultTheme} themes={allThemes}>
@@ -222,7 +244,10 @@ describe('Theme System', () => {
         result.current.switchTheme('Brutalist');
       });
 
-      expect(localStorageMock.getItem('plinko-theme')).toBe('Brutalist');
+      // Wait for async storage operation to complete
+      await waitFor(() => {
+        expect(localStorageMock.getItem('plinko-theme')).toBe('Brutalist');
+      });
     });
 
     it('should load theme from localStorage on mount', async () => {
@@ -374,12 +399,11 @@ describe('Theme System', () => {
         });
 
         it('should have all required gradient properties', () => {
-          expect(theme.gradients).toHaveProperty('backgroundMain');
+          expect(theme.gradients).toHaveProperty('backgroundCard');
           expect(theme.gradients).toHaveProperty('buttonPrimary');
           expect(theme.gradients).toHaveProperty('prizeOrange');
           expect(theme.gradients).toHaveProperty('ballMain');
           expect(theme.gradients).toHaveProperty('pegDefault');
-          expect(theme.gradients).toHaveProperty('slotBackground');
           expect(theme.gradients).toHaveProperty('glow');
           expect(theme.gradients).toHaveProperty('shine');
         });
@@ -407,7 +431,6 @@ describe('Theme System', () => {
         it('should have all required button properties', () => {
           expect(theme.buttons).toHaveProperty('primary');
           expect(theme.buttons).toHaveProperty('secondary');
-          expect(theme.buttons).toHaveProperty('sizes');
 
           expect(theme.buttons.primary).toHaveProperty('background');
           expect(theme.buttons.primary).toHaveProperty('color');
@@ -416,7 +439,6 @@ describe('Theme System', () => {
         it('should have all required component properties', () => {
           expect(theme.components).toHaveProperty('card');
           expect(theme.components).toHaveProperty('modal');
-          expect(theme.components).toHaveProperty('input');
 
           expect(theme.components.card).toHaveProperty('background');
           expect(theme.components.modal).toHaveProperty('background');

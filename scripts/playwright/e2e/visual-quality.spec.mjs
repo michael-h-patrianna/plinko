@@ -18,7 +18,7 @@ test.describe('Visual Quality', () => {
 
   test('should render UI with correct styling', async ({ page }) => {
     // Check critical UI elements are visible and styled
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     await expect(button).toBeVisible();
 
     const styles = await button.evaluate((el) => {
@@ -40,7 +40,7 @@ test.describe('Visual Quality', () => {
 
   test('should render borders and corners correctly', async ({ page }) => {
     // Check button border radius
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     const borderRadius = await button.evaluate((el) => {
       return window.getComputedStyle(el).borderRadius;
     });
@@ -65,7 +65,7 @@ test.describe('Visual Quality', () => {
 
   test('should apply correct button colors per theme', async ({ page }) => {
     // Get button color
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     const styles = await button.evaluate((el) => {
       const computed = window.getComputedStyle(el);
       return {
@@ -177,7 +177,7 @@ test.describe('Visual Quality', () => {
 
   test('should render text with correct typography', async ({ page }) => {
     // Check typography
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     const typography = await button.evaluate((el) => {
       const computed = window.getComputedStyle(el);
       return {

@@ -9,8 +9,7 @@ import { ScreenShake } from '@plinko/components/effects/ScreenShake';
 import { YouWonText } from '@plinko/components/effects/YouWonText';
 import { Peg } from '@plinko/components/game/PlinkoBoard/Peg';
 import { render, screen, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { ThemeProvider } from '../../../theme';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock animation driver props interface for test mocks only
 interface MockAnimatedComponentProps {
@@ -55,15 +54,10 @@ vi.mock('../../../theme/animationDrivers', () => ({
   }),
 }));
 
-// Helper to wrap components in ThemeProvider
-const renderWithTheme = (component: React.ReactElement) => {
-  return render(<ThemeProvider>{component}</ThemeProvider>);
-};
-
 describe('Animation Migration Tests', () => {
   describe('Peg Component', () => {
     it('should render without inline CSS @keyframes', () => {
-      const { container } = renderWithTheme(
+      const { container } = render(
         <Peg
           row={0}
           col={0}
@@ -72,24 +66,13 @@ describe('Animation Migration Tests', () => {
         />
       );
 
-      // NOTE: Peg component uses inline styles for performance (imperative DOM updates)
-      // This is an intentional architecture decision to avoid 3000+ React re-renders/sec
-      // The styles use cross-platform safe transforms (translateX/Y, scale, opacity)
+      // Verify no inline style tags exist
       const styleTags = container.querySelectorAll('style');
-
-      // Verify styles only use cross-platform safe properties if present
-      styleTags.forEach(tag => {
-        const content = tag.textContent || '';
-        // Should NOT use blur, filter, radial gradients
-        expect(content).not.toContain('blur');
-        expect(content).not.toContain('filter:');
-        expect(content).not.toContain('radial-gradient');
-        expect(content).not.toContain('conic-gradient');
-      });
+      expect(styleTags.length).toBe(0);
     });
 
-    it('should use cross-platform safe animations in CSS', async () => {
-      const { container } = renderWithTheme(
+    it('should use animation driver for pulse ring animation', async () => {
+      const { container } = render(
         <Peg
           row={0}
           col={0}
@@ -98,26 +81,15 @@ describe('Animation Migration Tests', () => {
         />
       );
 
-      // Peg uses CSS keyframes for performance, verify they're cross-platform safe
-      const styleTags = container.querySelectorAll('style');
-      styleTags.forEach(tag => {
-        const content = tag.textContent || '';
-        // Verify uses of cross-platform safe properties in animations
-        if (content.includes('@keyframes')) {
-          // Should use: transform, translate, scale, opacity
-          // Should NOT use: blur, filter, textShadow
-          expect(content).not.toContain('blur');
-          expect(content).not.toContain('filter:');
-          expect(content).not.toContain('text-shadow');
-          // NOTE: box-shadow is used for glow effect on peg hit
-          // This is a known limitation that will need alternative for React Native
-          // (e.g., using a separate absolutely positioned element with opacity gradient)
-        }
+      // Wait for animation trigger
+      await waitFor(() => {
+        const animatedElements = container.querySelectorAll('[data-animated="true"]');
+        expect(animatedElements.length).toBeGreaterThan(0);
       });
     });
 
     it('should use cross-platform safe transforms (scale, opacity)', async () => {
-      const { container } = renderWithTheme(
+      const { container } = render(
         <Peg
           row={0}
           col={0}
@@ -147,7 +119,7 @@ describe('Animation Migration Tests', () => {
     it('should not import CSS file', () => {
       // This test verifies that ScreenShake.css is not imported
       // by checking that the component renders without className references
-      renderWithTheme(
+      render(
         <ScreenShake active={false}>
           <div>Test content</div>
         </ScreenShake>
@@ -158,7 +130,7 @@ describe('Animation Migration Tests', () => {
     });
 
     it('should use animation driver for shake transforms', () => {
-      const { container } = renderWithTheme(
+      const { container } = render(
         <ScreenShake active={true} intensity="medium">
           <div>Shaking content</div>
         </ScreenShake>
@@ -181,7 +153,7 @@ describe('Animation Migration Tests', () => {
       const intensities: Array<'low' | 'medium' | 'high'> = ['low', 'medium', 'high'];
 
       intensities.forEach((intensity) => {
-        const { container } = renderWithTheme(
+        const { container } = render(
           <ScreenShake active={true} intensity={intensity}>
             <div>Content</div>
           </ScreenShake>
@@ -208,12 +180,8 @@ describe('Animation Migration Tests', () => {
       vi.useFakeTimers();
     });
 
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
     it('should not import CSS file', () => {
-      const { container } = renderWithTheme(
+      const { container } = render(
         <CurrencyCounter targetAmount={1000} label="GC" />
       );
 
@@ -222,41 +190,43 @@ describe('Animation Migration Tests', () => {
       expect(classElements.length).toBe(0);
     });
 
-    it('should use animation driver for pop animation', () => {
-      const { container } = renderWithTheme(
+    it('should use animation driver for pop animation', async () => {
+      const { container } = render(
         <CurrencyCounter targetAmount={500} label="GC" />
       );
 
       // Fast-forward to trigger animation
       vi.advanceTimersByTime(100);
 
-      // Check synchronously after advancing timers
-      const animatedElements = container.querySelectorAll('[data-animated="true"]');
-      expect(animatedElements.length).toBeGreaterThan(0);
+      await waitFor(() => {
+        const animatedElements = container.querySelectorAll('[data-animated="true"]');
+        expect(animatedElements.length).toBeGreaterThan(0);
+      });
     });
 
-    it('should use cross-platform safe scale animation', () => {
-      const { container } = renderWithTheme(
+    it('should use cross-platform safe scale animation', async () => {
+      const { container } = render(
         <CurrencyCounter targetAmount={500} label="GC" />
       );
 
       vi.advanceTimersByTime(100);
 
-      // Check synchronously after advancing timers
-      const animatedElement = container.querySelector('[data-animated="true"]');
-      if (animatedElement) {
-        const animateData = animatedElement.getAttribute('data-animate');
-        const animate = JSON.parse(animateData || '{}');
+      await waitFor(() => {
+        const animatedElement = container.querySelector('[data-animated="true"]');
+        if (animatedElement) {
+          const animateData = animatedElement.getAttribute('data-animate');
+          const animate = JSON.parse(animateData || '{}');
 
-        // Verify scale animation (cross-platform safe)
-        expect(animate).toHaveProperty('scale');
-        expect(animate).not.toHaveProperty('filter');
-        expect(animate).not.toHaveProperty('blur');
-      }
+          // Verify scale animation (cross-platform safe)
+          expect(animate).toHaveProperty('scale');
+          expect(animate).not.toHaveProperty('filter');
+          expect(animate).not.toHaveProperty('blur');
+        }
+      });
     });
 
     it('should use inline styles instead of CSS classes', () => {
-      const { container } = renderWithTheme(
+      const { container } = render(
         <CurrencyCounter targetAmount={1000} label="GC" />
       );
 
@@ -269,7 +239,7 @@ describe('Animation Migration Tests', () => {
 
   describe('YouWonText Component', () => {
     it('should not import CSS file', () => {
-      const { container } = renderWithTheme(<YouWonText />);
+      const { container } = render(<YouWonText />);
 
       // Verify no CSS classes from YouWonText.css
       const classElements = container.querySelectorAll('[class*="you-won"]');
@@ -277,14 +247,14 @@ describe('Animation Migration Tests', () => {
     });
 
     it('should use animation driver for character animations', () => {
-      const { container } = renderWithTheme(<YouWonText />);
+      const { container } = render(<YouWonText />);
 
       const animatedElements = container.querySelectorAll('[data-animated="true"]');
       expect(animatedElements.length).toBeGreaterThan(0);
     });
 
     it('should use cross-platform safe transforms', () => {
-      const { container } = renderWithTheme(<YouWonText />);
+      const { container } = render(<YouWonText />);
 
       const animatedElements = container.querySelectorAll('[data-animated="true"]');
       animatedElements.forEach((element) => {
@@ -315,7 +285,7 @@ describe('Animation Migration Tests', () => {
     });
 
     it('should use linear gradients only (no radial)', () => {
-      const { container } = renderWithTheme(<YouWonText />);
+      const { container } = render(<YouWonText />);
 
       // Check all inline styles for gradient usage
       const allElements = container.querySelectorAll('*');
@@ -334,9 +304,14 @@ describe('Animation Migration Tests', () => {
 
   describe('Cross-Platform Compatibility', () => {
     it('should not use any CSS animation keywords', () => {
-      // NOTE: Peg component intentionally uses CSS keyframes for performance
-      // so we exclude it from this test
       const components = [
+        <Peg
+          key="peg"
+          row={0}
+          col={0}
+          x={100}
+          y={100}
+        />,
         <ScreenShake key="shake" active={false}>
           <div>Test</div>
         </ScreenShake>,
@@ -345,7 +320,7 @@ describe('Animation Migration Tests', () => {
       ];
 
       components.forEach((component) => {
-        const { container } = renderWithTheme(component);
+        const { container } = render(component);
 
         // Check for CSS animation properties
         const allElements = container.querySelectorAll('*');
@@ -357,7 +332,7 @@ describe('Animation Migration Tests', () => {
           expect(style.animationName).toBe('');
         });
 
-        // Check for @keyframes in style tags (should use animation driver instead)
+        // Check for @keyframes in style tags
         const styleTags = container.querySelectorAll('style');
         styleTags.forEach((styleTag) => {
           expect(styleTag.textContent).not.toContain('@keyframes');
@@ -376,7 +351,7 @@ describe('Animation Migration Tests', () => {
       ];
 
       components.forEach((component) => {
-        const { container } = renderWithTheme(component);
+        const { container } = render(component);
         const animatedElements = container.querySelectorAll('[data-animated="true"]');
 
         animatedElements.forEach((element) => {

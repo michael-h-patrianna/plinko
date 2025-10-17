@@ -6,6 +6,8 @@
  * - Mock functions need to be cast to 'any' to use Vitest mock methods (mockReturnValue, mockImplementation)
  * - TypeScript doesn't know that vi.fn() creates a mock with additional methods
  * - This is standard practice in Vitest/Jest testing for mocking return values
+ *
+ * @vitest-environment jsdom
  */
 
 import { renderHook } from '@testing-library/react';
@@ -31,6 +33,8 @@ describe('useMusicManager', () => {
       stopAllLayers: vi.fn(),
       transitionAtLoopBoundary: vi.fn().mockReturnValue(() => {}),
       cleanup: vi.fn(),
+      getMusicBPM: vi.fn().mockReturnValue(112),
+      getBeatsInMs: vi.fn().mockReturnValue(535), // ~535ms per beat at 112 BPM
     } as unknown as MusicController;
   });
 
@@ -240,6 +244,7 @@ describe('useMusicManager', () => {
 
   describe('Loop Alternation', () => {
     it('should set up loop alternation when start-loop is playing', () => {
+      vi.useFakeTimers();
       (mockMusicController.isLayerPlaying as any).mockImplementation((id: string) =>
         id === 'music-start-loop'
       );
@@ -252,18 +257,24 @@ describe('useMusicManager', () => {
         })
       );
 
+      // Fast-forward past the 10 second setup delay
+      vi.advanceTimersByTime(10000);
+
       expect(mockMusicController.transitionAtLoopBoundary).toHaveBeenCalledWith(
         'music-start-loop',
         'music-game-loop',
         expect.objectContaining({
-          fadeOutFrom: 500,
-          fadeInTo: 500,
+          fadeOutFrom: 535,
+          fadeInTo: 535,
           inheritVolume: true, // Should inherit volume at transition time
         })
       );
+
+      vi.useRealTimers();
     });
 
     it('should set up loop alternation when game-loop is playing', () => {
+      vi.useFakeTimers();
       (mockMusicController.isLayerPlaying as any).mockImplementation((id: string) =>
         id === 'music-game-loop'
       );
@@ -276,18 +287,24 @@ describe('useMusicManager', () => {
         })
       );
 
+      // Fast-forward past the 10 second setup delay
+      vi.advanceTimersByTime(10000);
+
       expect(mockMusicController.transitionAtLoopBoundary).toHaveBeenCalledWith(
         'music-game-loop',
         'music-start-loop',
         expect.objectContaining({
-          fadeOutFrom: 500,
-          fadeInTo: 500,
+          fadeOutFrom: 535,
+          fadeInTo: 535,
           inheritVolume: true, // Should inherit volume at transition time
         })
       );
+
+      vi.useRealTimers();
     });
 
     it('should clean up loop alternation on unmount', () => {
+      vi.useFakeTimers();
       const mockCleanup = vi.fn();
       (mockMusicController.transitionAtLoopBoundary as any).mockReturnValue(mockCleanup);
       (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
@@ -300,9 +317,14 @@ describe('useMusicManager', () => {
         })
       );
 
+      // Fast-forward past the 10 second setup delay to trigger alternation setup
+      vi.advanceTimersByTime(10000);
+
       unmount();
 
       expect(mockCleanup).toHaveBeenCalled();
+
+      vi.useRealTimers();
     });
   });
 

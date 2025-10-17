@@ -3,8 +3,25 @@ import { afterEach, beforeEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { resetHarnessState } from './fixtures/harness';
 
+// Mock storage adapter to avoid localStorage dependency in Node environment
+// Note: Tests that specifically test the storage adapter should call vi.unmock()
+const mockStorage = new Map<string, string>();
+
+vi.mock('@plinko/utils/platform/storage/index.web.ts', () => {
+  return {
+    storageAdapter: {
+      getItem: vi.fn(async (key: string) => mockStorage.get(key) ?? null),
+      setItem: vi.fn(async (key: string, value: string) => { mockStorage.set(key, value); }),
+      removeItem: vi.fn(async (key: string) => { mockStorage.delete(key); }),
+      clear: vi.fn(async () => { mockStorage.clear(); }),
+      getAllKeys: vi.fn(async () => Array.from(mockStorage.keys())),
+    },
+  };
+});
+
 // Mock matchMedia for animation drivers, theme tests, and device detection
-const mockMatchMedia = vi.fn().mockImplementation((query: string) => {
+// This MUST return a proper MediaQueryList object, never undefined
+const mockMatchMedia = (query: string) => {
   const mediaQueryList = {
     matches: false,
     media: query,
@@ -16,24 +33,19 @@ const mockMatchMedia = vi.fn().mockImplementation((query: string) => {
     dispatchEvent: vi.fn(),
   };
   return mediaQueryList;
-});
+};
 
-// Only set matchMedia if running in a DOM environment (JSDOM)
+// Set matchMedia on global object (for Node environment)
+global.matchMedia = mockMatchMedia as any;
+
+// Also set on window if it exists (JSDOM environment)
 if (typeof window !== 'undefined') {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    configurable: true,
-    value: mockMatchMedia,
-  });
+  window.matchMedia = mockMatchMedia as any;
 }
 
 // Ensure globalThis.window also has matchMedia if it exists
-if (typeof globalThis.window !== 'undefined') {
-  Object.defineProperty(globalThis.window, 'matchMedia', {
-    writable: true,
-    configurable: true,
-    value: mockMatchMedia,
-  });
+if (typeof globalThis !== 'undefined' && globalThis.window) {
+  globalThis.window.matchMedia = mockMatchMedia as any;
 }
 
 beforeEach(() => {

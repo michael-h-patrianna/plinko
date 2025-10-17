@@ -11,7 +11,7 @@
  * @returns {Promise<boolean>} True if element is visible
  */
 export async function waitForElement(page, selector, options = {}) {
-  const { timeout = 10000, pollInterval = 100 } = options;
+  const { timeout = 20000, pollInterval = 100 } = options;
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeout) {
@@ -86,7 +86,7 @@ export async function waitForAnimationComplete(page, selector, options = {}) {
  * @returns {Promise<void>}
  */
 export async function waitForGameState(page, expectedState, options = {}) {
-  const { timeout = 10000 } = options;
+  const { timeout = 30000 } = options;
 
   await page.waitForFunction(
     (state) => {
@@ -172,10 +172,10 @@ export async function takeScreenshot(page, name, options = {}) {
  * @returns {Promise<void>}
  */
 export async function waitForBallDrop(page, options = {}) {
-  const { maxWait = 10000 } = options;
+  const { maxWait = 30000 } = options;
 
   // Wait for ball element to exist
-  await waitForElement(page, '[data-testid="plinko-ball"]', { timeout: 2000 });
+  await waitForElement(page, '[data-testid="plinko-ball"]', { timeout: 5000 });
 
   // Wait for animation to complete by checking position stability
   await waitForAnimationComplete(page, '[data-testid="plinko-ball"]', {

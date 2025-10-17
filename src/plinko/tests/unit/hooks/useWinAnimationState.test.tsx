@@ -6,7 +6,7 @@
 
 import type { GameState } from '@plinko/game/types';
 import { useWinAnimationState } from '@plinko/hooks/useWinAnimationState';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import * as telemetry from '@plinko/utils/telemetry';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -77,7 +77,7 @@ describe('useWinAnimationState', () => {
       });
     });
 
-    it('should transition to anticipation after impact duration (200ms)', async () => {
+    it('should transition to anticipation after impact duration (200ms)', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'dropping' as GameState } }
@@ -92,11 +92,8 @@ describe('useWinAnimationState', () => {
         vi.advanceTimersByTime(200);
       });
 
-      // Should transition to anticipation
-      await waitFor(() => {
-        expect(result.current.state).toBe('anticipation');
-      });
-
+      // State is updated synchronously, check immediately
+      expect(result.current.state).toBe('anticipation');
       expect(result.current.showLandingImpact).toBe(false);
       expect(result.current.showAnticipation).toBe(true);
       expect(result.current.showWinReveal).toBe(false);
@@ -109,7 +106,7 @@ describe('useWinAnimationState', () => {
       });
     });
 
-    it('should transition to win-reveal after total duration (800ms)', async () => {
+    it('should transition to win-reveal after total duration (800ms)', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'dropping' as GameState } }
@@ -124,11 +121,8 @@ describe('useWinAnimationState', () => {
         vi.advanceTimersByTime(800);
       });
 
-      // Should transition to win-reveal
-      await waitFor(() => {
-        expect(result.current.state).toBe('win-reveal');
-      });
-
+      // State is updated synchronously, check immediately
+      expect(result.current.state).toBe('win-reveal');
       expect(result.current.showLandingImpact).toBe(false);
       expect(result.current.showAnticipation).toBe(false);
       expect(result.current.showWinReveal).toBe(true);
@@ -141,7 +135,7 @@ describe('useWinAnimationState', () => {
       });
     });
 
-    it('should complete full sequence: idle -> landing-impact -> anticipation -> win-reveal', async () => {
+    it('should complete full sequence: idle -> landing-impact -> anticipation -> win-reveal', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'dropping' as GameState } }
@@ -158,17 +152,13 @@ describe('useWinAnimationState', () => {
       act(() => {
         vi.advanceTimersByTime(200);
       });
-      await waitFor(() => {
-        expect(result.current.state).toBe('anticipation');
-      });
+      expect(result.current.state).toBe('anticipation');
 
       // After another 600ms (total 800ms)
       act(() => {
         vi.advanceTimersByTime(600);
       });
-      await waitFor(() => {
-        expect(result.current.state).toBe('win-reveal');
-      });
+      expect(result.current.state).toBe('win-reveal');
 
       // Verify telemetry tracked all transitions
       expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(3);
@@ -180,7 +170,7 @@ describe('useWinAnimationState', () => {
   // ============================================================================
 
   describe('reset behavior', () => {
-    it('should reset to idle when ballState changes away from landed', async () => {
+    it('should reset to idle when ballState changes away from landed', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'dropping' as GameState } }
@@ -193,11 +183,8 @@ describe('useWinAnimationState', () => {
       // Ball state changes (e.g., user claims prize)
       rerender({ ballState: 'claimed' as GameState });
 
-      // Should reset to idle
-      await waitFor(() => {
-        expect(result.current.state).toBe('idle');
-      });
-
+      // Should reset to idle immediately
+      expect(result.current.state).toBe('idle');
       expect(result.current.showLandingImpact).toBe(false);
       expect(result.current.showAnticipation).toBe(false);
       expect(result.current.showWinReveal).toBe(false);
@@ -233,7 +220,7 @@ describe('useWinAnimationState', () => {
       expect(result.current.state).toBe('idle');
     });
 
-    it('should handle rapid state changes without orphaning states', async () => {
+    it('should handle rapid state changes without orphaning states', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'idle' as GameState } }
@@ -245,10 +232,8 @@ describe('useWinAnimationState', () => {
       rerender({ ballState: 'landed' as GameState });
       rerender({ ballState: 'idle' as GameState });
 
-      // Should end up in idle
-      await waitFor(() => {
-        expect(result.current.state).toBe('idle');
-      });
+      // Should end up in idle immediately
+      expect(result.current.state).toBe('idle');
 
       // No animations active
       expect(result.current.showLandingImpact).toBe(false);
@@ -368,7 +353,7 @@ describe('useWinAnimationState', () => {
   // ============================================================================
 
   describe('edge cases', () => {
-    it('should handle starting with landed state', async () => {
+    it('should handle starting with landed state', () => {
       const { result } = renderHook(() => useWinAnimationState('landed'));
 
       // Should immediately transition to landing-impact
@@ -379,9 +364,8 @@ describe('useWinAnimationState', () => {
         vi.advanceTimersByTime(800);
       });
 
-      await waitFor(() => {
-        expect(result.current.state).toBe('win-reveal');
-      });
+      // State is updated synchronously, check immediately
+      expect(result.current.state).toBe('win-reveal');
     });
 
     it('should handle unmount during animation sequence', () => {
@@ -433,7 +417,7 @@ describe('useWinAnimationState', () => {
   // ============================================================================
 
   describe('telemetry integration', () => {
-    it('should track all state transitions with correct data', async () => {
+    it('should track all state transitions with correct data', () => {
       const { result, rerender } = renderHook(
         ({ ballState }) => useWinAnimationState(ballState),
         { initialProps: { ballState: 'dropping' as GameState } }
@@ -448,9 +432,8 @@ describe('useWinAnimationState', () => {
         vi.advanceTimersByTime(800);
       });
 
-      await waitFor(() => {
-        expect(result.current.state).toBe('win-reveal');
-      });
+      // State is updated synchronously, check immediately
+      expect(result.current.state).toBe('win-reveal');
 
       // Verify all transitions were tracked
       expect(telemetry.trackStateTransition).toHaveBeenCalledTimes(3);

@@ -11,6 +11,7 @@ import {
   waitForGameState,
   waitForBallDrop,
   takeScreenshot,
+  initializeWithSeed,
   PLAYWRIGHT_SEEDS,
 } from '../test-helpers.mjs';
 
@@ -18,7 +19,8 @@ const SEED = PLAYWRIGHT_SEEDS.gameplayTest;
 
 test.describe('Drop Position Selection', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(`/?seed=${SEED}&choice=drop-position`, { waitUntil: 'networkidle' });
+    await initializeWithSeed(page, SEED);
+    await page.goto('/?choice=drop-position', { waitUntil: 'networkidle' });
     await page.waitForTimeout(500);
   });
 

@@ -112,9 +112,15 @@ describe('Drop Position Game Flow Integration', () => {
       state = step4.state;
       context = step4.context;
 
-      // Step 5: Prize revealed
-      const step5 = transition(state, context, { type: 'REVEAL_CONFIRMED' });
-      expect(step5.state).toBe('revealed');
+      // Step 5: Celebration starts
+      const step5 = transition(state, context, { type: 'CELEBRATION_COMPLETED' });
+      expect(step5.state).toBe('celebrating');
+      state = step5.state;
+      context = step5.context;
+
+      // Step 6: Prize revealed
+      const step6 = transition(state, context, { type: 'REVEAL_CONFIRMED' });
+      expect(step6.state).toBe('revealed');
     });
   });
 

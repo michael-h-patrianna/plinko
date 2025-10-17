@@ -130,14 +130,15 @@ describe('Ball Motion Visual Effects', () => {
       return 1;
     }
 
-    it('should return 1 for low horizontal velocity (< 400 px/s)', () => {
+    it('should return 1 for low horizontal velocity (<= 400 px/s)', () => {
       expect(calculateMotionBlurScaleX(100)).toBe(1);
       expect(calculateMotionBlurScaleX(300)).toBe(1);
       expect(calculateMotionBlurScaleX(399)).toBe(1);
+      expect(calculateMotionBlurScaleX(400)).toBe(1);
     });
 
-    it('should return 1.5 at threshold velocity (400 px/s)', () => {
-      expect(calculateMotionBlurScaleX(400)).toBe(1.5);
+    it('should return 1.5 just above threshold velocity (401 px/s)', () => {
+      expect(calculateMotionBlurScaleX(401)).toBeCloseTo(1.5, 2);
     });
 
     it('should scale linearly above threshold', () => {

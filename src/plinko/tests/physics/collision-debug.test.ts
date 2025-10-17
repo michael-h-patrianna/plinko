@@ -37,10 +37,11 @@ function doesLineIntersectCircle(
   const dy = y2 - y1;
 
   // Vector from start to circle center
-  const fx = cx - x1;
-  const fy = cy - y1;
+  const fx = x1 - cx;
+  const fy = y1 - cy;
 
-  // Project circle center onto line
+  // Quadratic formula coefficients for line-circle intersection
+  // Solving: (x1 + t*dx - cx)^2 + (y1 + t*dy - cy)^2 = r^2
   const a = dx * dx + dy * dy;
   if (a === 0) return false;
 
@@ -56,7 +57,7 @@ function doesLineIntersectCircle(
   const t1 = (-b - sqrt) / (2 * a);
   const t2 = (-b + sqrt) / (2 * a);
 
-  // Check if intersection is within line segment
+  // Check if intersection is within line segment [0, 1]
   return (t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1) || (t1 < 0 && t2 > 1); // Line passes through circle
 }
 
@@ -69,7 +70,7 @@ describe('Collision Detection Debug', () => {
 
     // Manual calculation
     const dx = 100, dy = 0;
-    const fx = 50, fy = 0;
+    const fx = 0 - 50, fy = 0 - 0; // x1 - cx, y1 - cy
     const a = dx * dx + dy * dy;
     const b = 2 * (fx * dx + fy * dy);
     const c = fx * fx + fy * fy - 10 * 10;

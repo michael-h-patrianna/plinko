@@ -55,7 +55,7 @@ test.describe('Theme System', () => {
 
   test('should maintain UI visibility across theme changes', async ({ page }) => {
     // Verify critical UI elements are visible
-    const dropButton = page.locator('button').first();
+    const dropButton = page.getByTestId('drop-ball-button');
     await expect(dropButton).toBeVisible();
 
     // Check that title/header is visible
@@ -98,7 +98,7 @@ test.describe('Theme System', () => {
 
   test('should render game correctly after theme switch', async ({ page }) => {
     // Click drop ball button
-    const dropButton = page.locator('button').first();
+    const dropButton = page.getByTestId('drop-ball-button');
     await dropButton.click();
     await page.waitForTimeout(500);
 

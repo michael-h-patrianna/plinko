@@ -83,7 +83,7 @@ test.describe('Accessibility', () => {
 
   test('should meet color contrast requirements', async ({ page }) => {
     // Check contrast for main button
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     await expect(button).toBeVisible();
 
     const colors = await button.evaluate((el) => {
@@ -122,7 +122,7 @@ test.describe('Accessibility', () => {
     await page.waitForTimeout(500);
 
     // Start game
-    await page.locator('button').first().click();
+    await page.getByTestId('drop-ball-button').click();
     await page.waitForTimeout(500);
 
     // Animations should be reduced (check if elements exist without long animations)
@@ -141,7 +141,7 @@ test.describe('Accessibility', () => {
     await page.waitForTimeout(500);
 
     // Elements should still be visible
-    const button = page.locator('button').first();
+    const button = page.getByTestId('drop-ball-button');
     await expect(button).toBeVisible();
 
     console.log('High contrast mode handled');

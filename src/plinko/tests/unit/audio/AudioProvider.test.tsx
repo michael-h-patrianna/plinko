@@ -47,6 +47,7 @@ vi.mock('../../../audio/core/MusicController', () => {
   MockMusicController.prototype.loadTrack = vi.fn().mockResolvedValue(undefined);
   MockMusicController.prototype.cleanup = vi.fn();
   MockMusicController.prototype.stopAllLayers = vi.fn();
+  MockMusicController.prototype.setMusicBPM = vi.fn();
 
   return {
     MusicController: MockMusicController,

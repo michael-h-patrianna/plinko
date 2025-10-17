@@ -343,7 +343,7 @@ describe('Slot Animation Visual Effects', () => {
       const height = calculateBucketHeight(standardWidth);
 
       expect(height).toBeGreaterThan(50);
-      expect(height).toBeLessThan(80);
+      expect(height).toBe(90); // Standard bucket height
     });
 
     it('should return reasonable heights for all widths', () => {

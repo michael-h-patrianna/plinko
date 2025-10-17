@@ -110,6 +110,7 @@ describe('WebAudioAdapter - Music', () => {
     unload: ReturnType<typeof vi.fn>;
     seek: ReturnType<typeof vi.fn>;
     duration: ReturnType<typeof vi.fn>;
+    loop: ReturnType<typeof vi.fn>;
   };
   let onloadCallback: (() => void) | undefined;
 
@@ -127,6 +128,7 @@ describe('WebAudioAdapter - Music', () => {
       unload: vi.fn(),
       seek: vi.fn().mockReturnValue(5.0), // 5 seconds into playback
       duration: vi.fn().mockReturnValue(10.0), // 10 second track
+      loop: vi.fn().mockReturnValue(true),
     };
 
     // Setup Howl mock to capture onload and return mockHowl

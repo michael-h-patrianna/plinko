@@ -16,6 +16,9 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+// Unmock storage adapter for these tests since they specifically test it
+vi.unmock('@plinko/utils/platform/storage/index.web.ts');
+
 // Import all adapters
 import { cryptoAdapter } from '@plinko/utils/platform/crypto';
 import { dimensionsAdapter } from '@plinko/utils/platform/dimensions';
@@ -278,6 +281,11 @@ describe('Platform Adapters', () => {
       // Clear cache first
       (deviceInfoAdapter as any).cachedInfo = null;
 
+      // Clear any touch-related properties
+      if ('ontouchstart' in window) {
+        delete (window as any).ontouchstart;
+      }
+
       Object.defineProperty(navigator, 'userAgent', {
         writable: true,
         configurable: true,
@@ -444,7 +452,8 @@ describe('Platform Adapters', () => {
       const value = await storageAdapter.getItem('error-key');
 
       expect(value).toBeNull();
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[Storage] Error getting item:', error);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain('[Platform:WebStorage');
 
       consoleErrorSpy.mockRestore();
     });
@@ -458,7 +467,8 @@ describe('Platform Adapters', () => {
       });
 
       await expect(storageAdapter.setItem('error-key', 'value')).rejects.toThrow('Quota exceeded');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[Storage] Error setting item:', error);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain('[Platform:WebStorage');
 
       consoleErrorSpy.mockRestore();
     });
@@ -472,7 +482,8 @@ describe('Platform Adapters', () => {
       });
 
       await expect(storageAdapter.removeItem('error-key')).rejects.toThrow('Remove error');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[Storage] Error removing item:', error);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain('[Platform:WebStorage');
 
       consoleErrorSpy.mockRestore();
     });
@@ -486,7 +497,8 @@ describe('Platform Adapters', () => {
       });
 
       await expect(storageAdapter.clear()).rejects.toThrow('Clear error');
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[Storage] Error clearing storage:', error);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain('[Platform:WebStorage');
 
       consoleErrorSpy.mockRestore();
     });
@@ -502,7 +514,8 @@ describe('Platform Adapters', () => {
       const keys = await storageAdapter.getAllKeys();
 
       expect(keys).toEqual([]);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('[Storage] Error getting keys:', error);
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy.mock.calls[0]?.[0]).toContain('[Platform:WebStorage');
 
       consoleErrorSpy.mockRestore();
     });
@@ -907,7 +920,21 @@ describe('Platform Adapters', () => {
     });
 
     it('should work together: navigation + storage for param caching', async () => {
-      window.location.search = '?level=5&difficulty=hard';
+      const originalLocation = window.location;
+
+      // Mock location with search params
+      delete (window as any).location;
+      window.location = {
+        href: originalLocation.href,
+        origin: originalLocation.origin,
+        protocol: originalLocation.protocol,
+        host: originalLocation.host,
+        hostname: originalLocation.hostname,
+        port: originalLocation.port,
+        hash: originalLocation.hash,
+        search: '?level=5&difficulty=hard',
+        pathname: originalLocation.pathname,
+      } as any;
 
       const level = navigationAdapter.getParam('level');
       const difficulty = navigationAdapter.getParam('difficulty');
@@ -922,6 +949,13 @@ describe('Platform Adapters', () => {
 
       expect(cachedLevel).toBe('5');
       expect(cachedDifficulty).toBe('hard');
+
+      // Restore location
+      Object.defineProperty(window, 'location', {
+        value: originalLocation,
+        writable: true,
+        configurable: true,
+      });
     });
   });
 });

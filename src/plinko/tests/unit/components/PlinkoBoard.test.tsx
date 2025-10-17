@@ -49,7 +49,8 @@ describe('PlinkoBoard Component', () => {
   it('should render correct number of slots', () => {
     render(<PlinkoBoard {...defaultProps} />);
 
-    const slots = screen.getAllByTestId(/^slot-/);
+    // Get slots by exact pattern "slot-{number}" to avoid matching "slot-anticipation-overlay"
+    const slots = screen.getAllByTestId(/^slot-\d+$/);
     expect(slots.length).toBe(MOCK_PRIZES.length);
   });
 
