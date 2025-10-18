@@ -10,17 +10,20 @@ const mockStorage = new Map<string, string>();
 vi.mock('@plinko/utils/platform/storage/index.web.ts', () => {
   return {
     storageAdapter: {
-      getItem: vi.fn(async (key: string) => mockStorage.get(key) ?? null),
+      getItem: vi.fn(async (key: string) => Promise.resolve(mockStorage.get(key) ?? null)),
       setItem: vi.fn(async (key: string, value: string) => {
         mockStorage.set(key, value);
+        return Promise.resolve();
       }),
       removeItem: vi.fn(async (key: string) => {
         mockStorage.delete(key);
+        return Promise.resolve();
       }),
       clear: vi.fn(async () => {
         mockStorage.clear();
+        return Promise.resolve();
       }),
-      getAllKeys: vi.fn(async () => Array.from(mockStorage.keys())),
+      getAllKeys: vi.fn(async () => Promise.resolve(Array.from(mockStorage.keys()))),
     },
   };
 });
@@ -83,13 +86,13 @@ afterEach(() => {
    * 2. The property only exists in special Node.js runtime mode
    * 3. This is a test-only optimization, not production code
    */
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
+
   if (
     typeof globalThis !== 'undefined' &&
     'gc' in globalThis &&
     typeof (globalThis as any).gc === 'function'
   ) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+     
     (globalThis as any).gc();
   }
 });

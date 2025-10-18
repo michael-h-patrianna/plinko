@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/unbound-method */
+ 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioAdapter } from '../adapters/AudioAdapter';
 import { MusicController } from '../core/MusicController';
@@ -20,9 +20,9 @@ describe('MusicController', () => {
       isMusicPlaying: vi.fn(() => false),
       getMusicSeek: vi.fn(() => 5.0),
       getMusicDuration: vi.fn(() => 10.0),
-      onMusicLoopEnd: vi.fn((_, callback) => {
+      onMusicLoopEnd: vi.fn((_, callback: () => void) => {
         // Immediately call the callback for testing
-        setTimeout(callback, 0);
+        setTimeout(() => callback(), 0);
         return () => {};
       }),
     } as unknown as AudioAdapter;
@@ -185,7 +185,11 @@ describe('MusicController', () => {
     // Wait for async callback
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    expect(mockAdapter.onMusicLoopEnd).toHaveBeenCalledWith('music-base', expect.any(Function), 20000);
+    expect(mockAdapter.onMusicLoopEnd).toHaveBeenCalledWith(
+      'music-base',
+      expect.any(Function),
+      20000
+    );
     expect(mockAdapter.stopMusic).toHaveBeenCalledWith('music-base', 0);
     expect(mockAdapter.playMusic).toHaveBeenCalledWith('music-tension', 0);
     expect(typeof cleanup).toBe('function');

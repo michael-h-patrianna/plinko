@@ -3,13 +3,13 @@
  * Handles prize loading, validation, shuffling, and session persistence
  */
 
-import type { ValueRef } from '@plinko/types/ref';
 import { useAppConfig } from '@demo/config/AppConfigContext';
+import { API_TIMEOUT } from '@plinko/constants/timing';
 import type { PrizeProviderResult } from '@plinko/game/prizeProvider';
 import type { PrizeConfig } from '@plinko/game/types';
+import type { ValueRef } from '@plinko/types/ref';
 import { navigationAdapter } from '@plinko/utils/platform';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { API_TIMEOUT } from '@plinko/constants/timing';
 
 interface UsePrizeSessionOptions {
   seedOverride?: number;
@@ -95,6 +95,8 @@ export function usePrizeSession(options: UsePrizeSessionOptions): UsePrizeSessio
           const result = await prizeProvider.load({ seedOverride: finalSeedOverride });
           return result;
         } catch (err) {
+          // Check if aborted during the async operation (signal state can change)
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
           if (signal.aborted) {
             throw new Error('Operation aborted');
           }

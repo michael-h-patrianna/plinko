@@ -7,9 +7,9 @@
  * - Using 'any' allows test to work with prize data structure evolution
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+ 
+ 
+ 
 
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '../../testUtils';

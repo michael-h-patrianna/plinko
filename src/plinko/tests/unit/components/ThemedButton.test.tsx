@@ -3,11 +3,11 @@
  * Tests button behavior, sound playback, and accessibility
  */
 
+import { ThemedButton } from '@plinko/components/ui/ThemedButton';
 import { render, screen } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import * as AudioContext from '../../../audio/context/AudioProvider';
-import { ThemedButton } from '@plinko/components/ui/ThemedButton';
+import * as useAudioModule from '../../../audio/context/useAudio';
 import { ThemeProvider, themes } from '../../../theme';
 
 // Mock audio context
@@ -15,8 +15,8 @@ const mockSfxController = {
   play: vi.fn(),
 };
 
-vi.spyOn(AudioContext, 'useAudio').mockReturnValue({
-  sfxController: mockSfxController as unknown as ReturnType<typeof AudioContext.useAudio>['sfxController'],
+vi.spyOn(useAudioModule, 'useAudio').mockReturnValue({
+  sfxController: mockSfxController as unknown as ReturnType<typeof useAudioModule.useAudio>['sfxController'],
   musicController: null,
   volumeController: null,
   audioAdapter: null,
@@ -87,7 +87,7 @@ describe('ThemedButton', () => {
 
   it('handles null sfxController gracefully', async () => {
     // Mock useAudio to return null controller
-    vi.spyOn(AudioContext, 'useAudio').mockReturnValueOnce({
+    vi.spyOn(useAudioModule, 'useAudio').mockReturnValueOnce({
       sfxController: null,
       musicController: null,
       volumeController: null,

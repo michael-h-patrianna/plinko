@@ -42,28 +42,36 @@ export function loadDevSettings(): DevToolsSettings {
       return DEFAULT_DEV_SETTINGS;
     }
 
-    const parsed = JSON.parse(stored);
+    const parsed: unknown = JSON.parse(stored);
+
+    // Type guard: ensure parsed is an object before accessing properties
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return DEFAULT_DEV_SETTINGS;
+    }
+
+    // Cast to record for safe property access
+    const data = parsed as Record<string, unknown>;
 
     // Validate and merge with defaults to handle missing fields
     return {
-      choiceMechanic: isValidChoiceMechanic(parsed.choiceMechanic)
-        ? parsed.choiceMechanic
+      choiceMechanic: isValidChoiceMechanic(data.choiceMechanic)
+        ? data.choiceMechanic
         : DEFAULT_DEV_SETTINGS.choiceMechanic,
-      showWinner: typeof parsed.showWinner === 'boolean'
-        ? parsed.showWinner
-        : DEFAULT_DEV_SETTINGS.showWinner,
-      musicEnabled: typeof parsed.musicEnabled === 'boolean'
-        ? parsed.musicEnabled
-        : DEFAULT_DEV_SETTINGS.musicEnabled,
-      performanceMode: isValidPerformanceMode(parsed.performanceMode)
-        ? parsed.performanceMode
+      showWinner:
+        typeof data.showWinner === 'boolean' ? data.showWinner : DEFAULT_DEV_SETTINGS.showWinner,
+      musicEnabled:
+        typeof data.musicEnabled === 'boolean'
+          ? data.musicEnabled
+          : DEFAULT_DEV_SETTINGS.musicEnabled,
+      performanceMode: isValidPerformanceMode(data.performanceMode)
+        ? data.performanceMode
         : DEFAULT_DEV_SETTINGS.performanceMode,
-      viewportWidth: typeof parsed.viewportWidth === 'number'
-        ? parsed.viewportWidth
-        : DEFAULT_DEV_SETTINGS.viewportWidth,
-      themeName: typeof parsed.themeName === 'string'
-        ? parsed.themeName
-        : DEFAULT_DEV_SETTINGS.themeName,
+      viewportWidth:
+        typeof data.viewportWidth === 'number'
+          ? data.viewportWidth
+          : DEFAULT_DEV_SETTINGS.viewportWidth,
+      themeName:
+        typeof data.themeName === 'string' ? data.themeName : DEFAULT_DEV_SETTINGS.themeName,
     };
   } catch (error) {
     console.warn('[DevTools] Failed to load settings from localStorage:', error);

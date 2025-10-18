@@ -19,22 +19,52 @@ import type { GameState } from '../../../game/types';
 describe('useMusicManager', () => {
   let mockMusicController: MusicController;
 
+  // Create mock functions that can be accessed without unbound-method warnings
+  let isLoadedMock: ReturnType<typeof vi.fn>;
+  let playLayerMock: ReturnType<typeof vi.fn>;
+  let stopLayerMock: ReturnType<typeof vi.fn>;
+  let loadTrackMock: ReturnType<typeof vi.fn>;
+  let setLayerVolumeMock: ReturnType<typeof vi.fn>;
+  let fadeLayerVolumeMock: ReturnType<typeof vi.fn>;
+  let isLayerPlayingMock: ReturnType<typeof vi.fn>;
+  let setMusicVolumeMock: ReturnType<typeof vi.fn>;
+  let stopAllLayersMock: ReturnType<typeof vi.fn>;
+  let transitionAtLoopBoundaryMock: ReturnType<typeof vi.fn>;
+  let cleanupMock: ReturnType<typeof vi.fn>;
+  let getMusicBPMMock: ReturnType<typeof vi.fn>;
+  let getBeatsInMsMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
+    // Initialize mock functions
+    isLoadedMock = vi.fn().mockReturnValue(true);
+    playLayerMock = vi.fn();
+    stopLayerMock = vi.fn();
+    loadTrackMock = vi.fn();
+    setLayerVolumeMock = vi.fn();
+    fadeLayerVolumeMock = vi.fn();
+    isLayerPlayingMock = vi.fn().mockReturnValue(false);
+    setMusicVolumeMock = vi.fn();
+    stopAllLayersMock = vi.fn();
+    transitionAtLoopBoundaryMock = vi.fn().mockReturnValue(() => {});
+    cleanupMock = vi.fn();
+    getMusicBPMMock = vi.fn().mockReturnValue(112);
+    getBeatsInMsMock = vi.fn().mockReturnValue(535); // ~535ms per beat at 112 BPM
+
     // Create mock music controller
     mockMusicController = {
-      isLoaded: vi.fn().mockReturnValue(true),
-      playLayer: vi.fn(),
-      stopLayer: vi.fn(),
-      loadTrack: vi.fn(),
-      setLayerVolume: vi.fn(),
-      fadeLayerVolume: vi.fn(),
-      isLayerPlaying: vi.fn().mockReturnValue(false),
-      setMusicVolume: vi.fn(),
-      stopAllLayers: vi.fn(),
-      transitionAtLoopBoundary: vi.fn().mockReturnValue(() => {}),
-      cleanup: vi.fn(),
-      getMusicBPM: vi.fn().mockReturnValue(112),
-      getBeatsInMs: vi.fn().mockReturnValue(535), // ~535ms per beat at 112 BPM
+      isLoaded: isLoadedMock,
+      playLayer: playLayerMock,
+      stopLayer: stopLayerMock,
+      loadTrack: loadTrackMock,
+      setLayerVolume: setLayerVolumeMock,
+      fadeLayerVolume: fadeLayerVolumeMock,
+      isLayerPlaying: isLayerPlayingMock,
+      setMusicVolume: setMusicVolumeMock,
+      stopAllLayers: stopAllLayersMock,
+      transitionAtLoopBoundary: transitionAtLoopBoundaryMock,
+      cleanup: cleanupMock,
+      getMusicBPM: getMusicBPMMock,
+      getBeatsInMs: getBeatsInMsMock,
     } as unknown as MusicController;
   });
 
@@ -52,8 +82,8 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.setLayerVolume).toHaveBeenCalledWith('music-start-loop', 0.36);
-      expect(mockMusicController.playLayer).toHaveBeenCalledWith('music-start-loop', 1000);
+      expect(setLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.36);
+      expect(playLayerMock).toHaveBeenCalledWith('music-start-loop', 1000);
     });
 
     it('should not start music if musicEnabled is false', () => {
@@ -65,7 +95,7 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.playLayer).not.toHaveBeenCalled();
+      expect(playLayerMock).not.toHaveBeenCalled();
     });
 
     it('should not start music if controller is null', () => {
@@ -77,11 +107,11 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.playLayer).not.toHaveBeenCalled();
+      expect(playLayerMock).not.toHaveBeenCalled();
     });
 
     it('should not start music if track is already playing', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -92,7 +122,7 @@ describe('useMusicManager', () => {
       );
 
       // Should not call playLayer again if already playing
-      expect(mockMusicController.playLayer).not.toHaveBeenCalled();
+      expect(playLayerMock).not.toHaveBeenCalled();
     });
   });
 
@@ -107,7 +137,7 @@ describe('useMusicManager', () => {
       );
 
       // Immediate stop to prevent overlapping playback on reset
-      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(0);
+      expect(stopAllLayersMock).toHaveBeenCalledWith(0);
     });
 
     it('should stop all music when returning to ready state', () => {
@@ -120,13 +150,13 @@ describe('useMusicManager', () => {
       );
 
       // Immediate stop to prevent overlapping playback on reset
-      expect(mockMusicController.stopAllLayers).toHaveBeenCalledWith(0);
+      expect(stopAllLayersMock).toHaveBeenCalledWith(0);
     });
   });
 
   describe('Volume Transitions', () => {
     it('should fade to 25% volume on countdown state', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -136,15 +166,11 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.fadeLayerVolume).toHaveBeenCalledWith(
-        'music-start-loop',
-        0.25,
-        400
-      );
+      expect(fadeLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.25, 400);
     });
 
     it('should quickly fade to 36% volume on dropping state (200ms)', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -154,15 +180,11 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.fadeLayerVolume).toHaveBeenCalledWith(
-        'music-start-loop',
-        0.36,
-        200
-      );
+      expect(fadeLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.36, 200);
     });
 
     it('should fade to 25% volume on landed state', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -172,16 +194,12 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.fadeLayerVolume).toHaveBeenCalledWith(
-        'music-start-loop',
-        0.25,
-        300
-      );
+      expect(fadeLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.25, 300);
     });
 
     it('should fade to 25% volume on celebrating state, then restore to 36% after ~1s', () => {
       vi.useFakeTimers();
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -192,11 +210,7 @@ describe('useMusicManager', () => {
       );
 
       // Initial duck to 25%
-      expect(mockMusicController.fadeLayerVolume).toHaveBeenCalledWith(
-        'music-start-loop',
-        0.25,
-        300
-      );
+      expect(fadeLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.25, 300);
 
       // Clear the first call
       vi.clearAllMocks();
@@ -205,17 +219,13 @@ describe('useMusicManager', () => {
       vi.advanceTimersByTime(1000);
 
       // Should restore to 36%
-      expect(mockMusicController.fadeLayerVolume).toHaveBeenCalledWith(
-        'music-start-loop',
-        0.36,
-        500
-      );
+      expect(fadeLayerVolumeMock).toHaveBeenCalledWith('music-start-loop', 0.36, 500);
 
       vi.useRealTimers();
     });
 
     it('should not change volume on revealed state', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -226,11 +236,11 @@ describe('useMusicManager', () => {
       );
 
       // Should not call fadeLayerVolume for revealed state
-      expect(mockMusicController.fadeLayerVolume).not.toHaveBeenCalled();
+      expect(fadeLayerVolumeMock).not.toHaveBeenCalled();
     });
 
     it('should not apply volume changes if music is disabled', () => {
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      isLayerPlayingMock.mockReturnValue(true);
 
       renderHook(() =>
         useMusicManager({
@@ -240,16 +250,14 @@ describe('useMusicManager', () => {
         })
       );
 
-      expect(mockMusicController.fadeLayerVolume).not.toHaveBeenCalled();
+      expect(fadeLayerVolumeMock).not.toHaveBeenCalled();
     });
   });
 
   describe('Loop Alternation', () => {
     it('should set up loop alternation when start-loop is playing', () => {
       vi.useFakeTimers();
-      (mockMusicController.isLayerPlaying as any).mockImplementation(
-        (id: string) => id === 'music-start-loop'
-      );
+      isLayerPlayingMock.mockImplementation((id: string) => id === 'music-start-loop');
 
       renderHook(() =>
         useMusicManager({
@@ -262,7 +270,7 @@ describe('useMusicManager', () => {
       // Fast-forward past the 10 second setup delay
       vi.advanceTimersByTime(10000);
 
-      expect(mockMusicController.transitionAtLoopBoundary).toHaveBeenCalledWith(
+      expect(transitionAtLoopBoundaryMock).toHaveBeenCalledWith(
         'music-start-loop',
         'music-game-loop',
         expect.objectContaining({
@@ -277,9 +285,7 @@ describe('useMusicManager', () => {
 
     it('should set up loop alternation when game-loop is playing', () => {
       vi.useFakeTimers();
-      (mockMusicController.isLayerPlaying as any).mockImplementation(
-        (id: string) => id === 'music-game-loop'
-      );
+      isLayerPlayingMock.mockImplementation((id: string) => id === 'music-game-loop');
 
       renderHook(() =>
         useMusicManager({
@@ -292,7 +298,7 @@ describe('useMusicManager', () => {
       // Fast-forward past the 10 second setup delay
       vi.advanceTimersByTime(10000);
 
-      expect(mockMusicController.transitionAtLoopBoundary).toHaveBeenCalledWith(
+      expect(transitionAtLoopBoundaryMock).toHaveBeenCalledWith(
         'music-game-loop',
         'music-start-loop',
         expect.objectContaining({
@@ -308,8 +314,8 @@ describe('useMusicManager', () => {
     it('should clean up loop alternation on unmount', () => {
       vi.useFakeTimers();
       const mockCleanup = vi.fn();
-      (mockMusicController.transitionAtLoopBoundary as any).mockReturnValue(mockCleanup);
-      (mockMusicController.isLayerPlaying as any).mockReturnValue(true);
+      transitionAtLoopBoundaryMock.mockReturnValue(mockCleanup);
+      isLayerPlayingMock.mockReturnValue(true);
 
       const { unmount } = renderHook(() =>
         useMusicManager({
@@ -342,11 +348,11 @@ describe('useMusicManager', () => {
         { initialProps: { enabled: false } }
       );
 
-      expect(mockMusicController.playLayer).not.toHaveBeenCalled();
+      expect(playLayerMock).not.toHaveBeenCalled();
 
       rerender({ enabled: true });
 
-      expect(mockMusicController.playLayer).toHaveBeenCalledWith('music-start-loop', 1000);
+      expect(playLayerMock).toHaveBeenCalledWith('music-start-loop', 1000);
     });
 
     it('should handle music controller becoming null', () => {

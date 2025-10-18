@@ -64,18 +64,17 @@ class WebDeviceInfoAdapter implements DeviceInfoAdapter {
     }
 
     // Secondary: Check matchMedia for coarse pointer (touch)
-    if (globalThis.window?.matchMedia) {
-      try {
-        if (globalThis.window.matchMedia(this.TOUCH_QUERY).matches) {
-          return true;
-        }
-      } catch {
-        // matchMedia might throw in some test environments
+    // In web environment, matchMedia is always available
+    try {
+      if (window.matchMedia(this.TOUCH_QUERY).matches) {
+        return true;
       }
+    } catch {
+      // matchMedia might throw in some test environments
     }
 
     // Fallback: Legacy ontouchstart check
-    if (globalThis.window && 'ontouchstart' in globalThis.window) {
+    if ('ontouchstart' in window) {
       return true;
     }
 
@@ -129,29 +128,28 @@ class WebDeviceInfoAdapter implements DeviceInfoAdapter {
    */
   private detectDeviceType(hasTouch: boolean): DeviceType {
     // Modern approach: Use matchMedia for responsive breakpoints
-    if (globalThis.window?.matchMedia) {
-      try {
-        // Check userAgentData.mobile first (most reliable for mobile)
-        if (navigator.userAgentData?.mobile) {
-          return 'mobile';
-        }
-
-        // Use media queries for device classification
-        if (globalThis.window.matchMedia(this.MOBILE_QUERY).matches) {
-          return 'mobile';
-        }
-
-        if (globalThis.window.matchMedia(this.TABLET_QUERY).matches) {
-          // Tablet range, but verify with touch
-          return hasTouch ? 'tablet' : 'desktop';
-        }
-
-        if (globalThis.window.matchMedia(this.DESKTOP_QUERY).matches) {
-          return 'desktop';
-        }
-      } catch {
-        // matchMedia might throw in some test environments, fall through to fallback
+    // In web environment, matchMedia is always available
+    try {
+      // Check userAgentData.mobile first (most reliable for mobile)
+      if (navigator.userAgentData?.mobile) {
+        return 'mobile';
       }
+
+      // Use media queries for device classification
+      if (window.matchMedia(this.MOBILE_QUERY).matches) {
+        return 'mobile';
+      }
+
+      if (window.matchMedia(this.TABLET_QUERY).matches) {
+        // Tablet range, but verify with touch
+        return hasTouch ? 'tablet' : 'desktop';
+      }
+
+      if (window.matchMedia(this.DESKTOP_QUERY).matches) {
+        return 'desktop';
+      }
+    } catch {
+      // matchMedia might throw in some test environments, fall through to fallback
     }
 
     // Fallback: Legacy UA-based detection (only when matchMedia unavailable)
@@ -163,7 +161,8 @@ class WebDeviceInfoAdapter implements DeviceInfoAdapter {
     }
 
     const isMobileUA = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(ua);
-    if (isMobileUA || (hasTouch && globalThis.window?.innerWidth && globalThis.window.innerWidth <= 768)) {
+    // In web environment, window.innerWidth is always available
+    if (isMobileUA || (hasTouch && window.innerWidth <= 768)) {
       return 'mobile';
     }
 

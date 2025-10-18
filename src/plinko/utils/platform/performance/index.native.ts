@@ -16,11 +16,7 @@ class NativePerformanceAdapter implements PerformanceAdapter {
 
   now(): number {
     // React Native polyfills performance.now()
-    if (typeof performance !== 'undefined' && performance.now) {
-      return performance.now();
-    }
-    // Fallback to Date.now()
-    return Date.now();
+    return performance.now();
   }
 
   mark(name: string): void {

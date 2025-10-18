@@ -9,11 +9,11 @@
  * @param testId - Test ID for testing
  */
 
+import { useAppConfig } from '@demo/config/AppConfigContext';
 import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 import type { TransitionConfig } from '@plinko/theme/animationDrivers/types';
-import { useAudio } from '../../audio/context/AudioProvider';
+import { useAudio } from '../../audio/context/useAudio';
 import { useTheme } from '../../theme';
-import { useAppConfig } from '@demo/config/AppConfigContext';
 
 type EntranceAnimation = 'fade' | 'hero' | 'none';
 

@@ -5,7 +5,8 @@
 
 import { render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AudioProvider, useAudio } from '../../../audio/context/AudioProvider';
+import { AudioProvider } from '../../../audio/context/AudioProvider';
+import { useAudio } from '../../../audio/context/useAudio';
 
 // Mock the audio adapter
 vi.mock('../../../audio/adapters/WebAudioAdapter', () => {

@@ -7,7 +7,9 @@ async function globalSetup(config: FullConfig) {
   // Any additional global setup here
 
   // Warm up the application
-  const baseURL = config.use?.baseURL || 'http://localhost:5173';
+  // Get baseURL from webServer config or first project's use config
+  const baseURL =
+    config.webServer?.url || config.projects?.[0]?.use?.baseURL || 'http://localhost:5173';
   console.log(`Warming up application at ${baseURL}...`);
 
   const browser = await chromium.launch();

@@ -36,6 +36,7 @@ export class WebAudioAdapter implements AudioAdapter {
     }
 
     this.initialized = true;
+    return Promise.resolve();
   }
 
   /**

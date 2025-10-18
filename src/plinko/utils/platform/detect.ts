@@ -27,10 +27,7 @@ export function detectPlatform(): Platform {
   }
 
   // Web detection (has window and document)
-  if (
-    typeof window !== 'undefined' &&
-    typeof document !== 'undefined'
-  ) {
+  if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     return 'web';
   }
 
@@ -55,8 +52,8 @@ export const isNative = PLATFORM === 'native';
 export function throwNativeNotImplemented(feature: string): never {
   throw new Error(
     `${feature} is not yet implemented for React Native. ` +
-    `This feature is currently web-only. ` +
-    `Please check the platform adapter implementation.`
+      `This feature is currently web-only. ` +
+      `Please check the platform adapter implementation.`
   );
 }
 
@@ -64,7 +61,6 @@ export function throwNativeNotImplemented(feature: string): never {
  * Helper to log warnings for platform-specific behavior
  */
 export function warnPlatformSpecific(message: string): void {
-  if (typeof console !== 'undefined' && console.warn) {
-    console.warn(`[Platform Warning] ${message}`);
-  }
+  // In modern environments, console is always available
+  console.warn(`[Platform Warning] ${message}`);
 }

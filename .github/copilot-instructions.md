@@ -20,6 +20,15 @@ WHEN: Any task with 3+ steps
 WHY: Tracks progress, maintains focus
 ```
 
+## Full Task Completion Protocol
+
+1. **Understand the Task**: Read the entire user request carefully.
+2. **Plan Your Approach**: Outline the steps needed to complete the task.
+3. **Execute Step-by-Step**: Tackle each step methodically, ensuring accuracy.
+4. **Review Your Work**: Double-check for completeness and correctness.
+5. **No Summarization:** Provide only the final output as requested, without additional commentary. Do not create summary files.
+6. **No Task Skipping:** Complete all tasks fully; do not leave any parts unfinished. Do not simplify or skip steps. Everything must be 100% complete.
+
 === END CIB-001===
 
 ## Architecture map
@@ -68,3 +77,16 @@ WHY: Tracks progress, maintains focus
 - Reset lifecycle: `docs/RESET_ORCHESTRATION.md`
 - Platform adapter guides: `docs/platform-adapter-implementation.md`, `src/utils/platform/README.md`
 - Dev tooling behavior: `docs/dev-tools.md`, `README.md`
+
+## Completion Checklist
+
+Consider the following before marking the task complete, otherwise return to address any gaps:
+
+- [ ] All steps of the task have been fully completed, without simplification or skipping
+- [ ] Used mcp**mcp_docker**sequentialthinking for complex tasks
+- [ ] Used todo_write for task management
+- [ ] Followed styleguide and coding conventions
+- [ ] Added unit and integration tests as needed or updated existing tests
+- [ ] Updated reference docs if necessary
+- [ ] Reviewed for completeness and correctness
+- [ ] Provided only the final output as requested, without additional commentary or writing summary files

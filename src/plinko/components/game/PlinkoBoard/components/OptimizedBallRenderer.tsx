@@ -64,22 +64,22 @@
  * @see {@link file://./docs/optimize.md} - Full optimization strategy and performance benchmarks
  */
 
+import { useAppConfig } from '@demo/config/AppConfigContext';
+import { getPerformanceSetting } from '@demo/config/appConfig';
 import type { TrailFrame } from '@plinko/animation/ballAnimationDriver';
 import { getCachedTrailLookup } from '@plinko/animation/trailOptimization';
 import { useBallAnimationDriver } from '@plinko/animation/useBallAnimationDriver';
-import { useAudio } from '@plinko/audio/context/AudioProvider';
-import type { ValueRef } from '@plinko/types/ref';
-import { useAppConfig } from '@demo/config/AppConfigContext';
-import { getPerformanceSetting } from '@demo/config/appConfig';
+import { useAudio } from '@plinko/audio/context/useAudio';
 import { getCachedValues } from '@plinko/game/trajectoryCache';
 import type { BallPosition, GameState, TrajectoryCache } from '@plinko/game/types';
 import {
-  animationTokens,
-  borderWidthTokens,
-  opacityTokens,
-  sizeTokens,
-  zIndexTokens,
+    animationTokens,
+    borderWidthTokens,
+    opacityTokens,
+    sizeTokens,
+    zIndexTokens,
 } from '@plinko/theme/tokens';
+import type { ValueRef } from '@plinko/types/ref';
 import { calculateBucketHeight } from '@plinko/utils/slotDimensions';
 import { memo, useEffect, useRef } from 'react';
 import { useTheme } from '../../../../theme';
@@ -177,7 +177,7 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
 
   // Trail refs pool
   const trailElementRefs = useRef<(HTMLDivElement | null)[]>(
-    Array(sizeTokens.ball.maxTrailLength).fill(null)
+    Array<HTMLDivElement | null>(sizeTokens.ball.maxTrailLength).fill(null)
   );
 
   // Trail state tracking
@@ -260,12 +260,11 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         currentFrame = frame;
 
         // Update frame ref and notify subscribers (pegs, slots)
+        // frameStore is guaranteed to exist due to the guard condition above
         if (currentFrameRef) {
           currentFrameRef.current = currentFrame;
         }
-        if (frameStore) {
-          frameStore.notifyListeners();
-        }
+        frameStore.notifyListeners();
 
       // Get ball position
       const position = getBallPosition();
@@ -470,7 +469,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
         // Look-ahead helps with timing, but checking current frame prevents missing first hit
         if (newActiveSlot !== null && bucketZoneY !== undefined && position.y >= bucketZoneY && trajectory) {
           const COLLISION_LOOKAHEAD = 1;
-          const lookAheadFrame = Math.min(currentFrame + COLLISION_LOOKAHEAD, (trajectoryLength ?? trajectory.length) - 1);
+          // trajectoryLength is guaranteed to be defined by the guard condition
+          const lookAheadFrame = Math.min(currentFrame + COLLISION_LOOKAHEAD, trajectoryLength - 1);
 
           // Check both current and look-ahead frames for collisions
           const currentPoint = trajectory[currentFrame];
@@ -649,7 +649,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           willChange: 'transform',
           zIndex: zIndexTokens.ballGlow,
           borderRadius: '50%',
-          transform: ballPosition ? `translate(${ballPosition.x - 20}px, ${ballPosition.y - 20}px)` : undefined,
+          // ballPosition is guaranteed to be non-null after the guard above
+          transform: `translate(${ballPosition.x - 20}px, ${ballPosition.y - 20}px)`,
         }}
       />
 
@@ -665,7 +666,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           willChange: 'transform',
           zIndex: zIndexTokens.ballGlowMid,
           borderRadius: '50%',
-          transform: ballPosition ? `translate(${ballPosition.x - 14}px, ${ballPosition.y - 14}px)` : undefined,
+          // ballPosition is guaranteed to be non-null after the guard above
+          transform: `translate(${ballPosition.x - 14}px, ${ballPosition.y - 14}px)`,
         }}
       />
 
@@ -684,7 +686,8 @@ export const OptimizedBallRenderer = memo(function OptimizedBallRenderer({
           overflow: 'hidden',
           borderRadius: '50%',
           transformOrigin: 'center center',
-          transform: ballPosition ? `translate(${ballPosition.x - 7}px, ${ballPosition.y - 7}px) rotate(${ballPosition.rotation}deg)` : undefined,
+          // ballPosition is guaranteed to be non-null after the guard above
+          transform: `translate(${ballPosition.x - 7}px, ${ballPosition.y - 7}px) rotate(${ballPosition.rotation}deg)`,
         }}
         data-state={ballState}
         data-testid="plinko-ball"

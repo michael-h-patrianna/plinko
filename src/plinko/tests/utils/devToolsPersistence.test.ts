@@ -14,25 +14,36 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('devToolsPersistence', () => {
   // Mock localStorage
   let localStorageMock: { [key: string]: string };
+  let getItemMock: ReturnType<typeof vi.fn>;
+  let setItemMock: ReturnType<typeof vi.fn>;
+  let removeItemMock: ReturnType<typeof vi.fn>;
+  let clearMock: ReturnType<typeof vi.fn>;
+  let keyMock: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     localStorageMock = {};
+    getItemMock = vi.fn((key: string) => localStorageMock[key] || null);
+    setItemMock = vi.fn((key: string, value: string) => {
+      localStorageMock[key] = value;
+    });
+    removeItemMock = vi.fn((key: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+      delete localStorageMock[key];
+    });
+    clearMock = vi.fn(() => {
+      localStorageMock = {};
+    });
+    keyMock = vi.fn((index: number) => Object.keys(localStorageMock)[index] || null);
+
     global.localStorage = {
-      getItem: vi.fn((key: string) => localStorageMock[key] || null),
-      setItem: vi.fn((key: string, value: string) => {
-        localStorageMock[key] = value;
-      }),
-      removeItem: vi.fn((key: string) => {
-        // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
-        delete localStorageMock[key];
-      }),
-      clear: vi.fn(() => {
-        localStorageMock = {};
-      }),
+      getItem: getItemMock,
+      setItem: setItemMock,
+      removeItem: removeItemMock,
+      clear: clearMock,
       get length() {
         return Object.keys(localStorageMock).length;
       },
-      key: vi.fn((index: number) => Object.keys(localStorageMock)[index] || null),
+      key: keyMock,
     } as Storage;
     vi.clearAllMocks();
   });
@@ -159,10 +170,7 @@ describe('devToolsPersistence', () => {
 
       saveDevSettings(settings);
 
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        'plinko-dev-settings',
-        JSON.stringify(settings)
-      );
+      expect(setItemMock).toHaveBeenCalledWith('plinko-dev-settings', JSON.stringify(settings));
       expect(localStorageMock['plinko-dev-settings']).toBe(JSON.stringify(settings));
     });
 
@@ -192,7 +200,7 @@ describe('devToolsPersistence', () => {
 
       clearDevSettings();
 
-      expect(localStorage.removeItem).toHaveBeenCalledWith('plinko-dev-settings');
+      expect(removeItemMock).toHaveBeenCalledWith('plinko-dev-settings');
       expect(localStorageMock['plinko-dev-settings']).toBeUndefined();
     });
 

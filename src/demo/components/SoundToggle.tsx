@@ -3,9 +3,9 @@
  * Just a clickable icon, no button chrome
  */
 
-import { useAudio } from '@plinko/audio/context/AudioProvider';
 import soundOffIcon from '@/assets/images/sound-off.svg';
 import soundOnIcon from '@/assets/images/sound-on.svg';
+import { useAudio } from '@plinko/audio/context/useAudio';
 import { useCallback, useEffect, useState } from 'react';
 
 export function SoundToggle() {

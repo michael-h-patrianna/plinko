@@ -88,7 +88,7 @@ describe('Animation Migration Tests', () => {
       });
     });
 
-    it('should use cross-platform safe animations in CSS', async () => {
+    it('should use cross-platform safe animations in CSS', () => {
       const { container } = renderWithTheme(
         <Peg
           row={0}

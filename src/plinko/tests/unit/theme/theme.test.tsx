@@ -8,8 +8,8 @@
  * - Type safety is enforced by the validation logic itself, not TypeScript
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
+ 
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor } from '../../testUtils';

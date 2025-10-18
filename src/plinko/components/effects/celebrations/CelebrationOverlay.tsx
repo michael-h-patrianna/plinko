@@ -7,12 +7,12 @@
  * Cross-platform safe: all animations use only transforms and opacity
  */
 
+import { useAppConfig } from '@demo/config/AppConfigContext';
 import type { PrizeConfig } from '@plinko/game/types';
 import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 import { useEffect } from 'react';
-import { useAudio } from '../../../audio/context/AudioProvider';
+import { useAudio } from '../../../audio/context/useAudio';
 import { useTheme } from '../../../theme';
-import { useAppConfig } from '@demo/config/AppConfigContext';
 import { ConfettiSpiral } from './ConfettiSpiral';
 import { FlashOverlay } from './FlashOverlay';
 import { StarBurst } from './StarBurst';
@@ -89,7 +89,8 @@ export function CelebrationOverlay({
   }
 
   // For wins (free or purchase), show confetti and dimming - DISABLE in power-saving mode
-  const showConfetti = !isPowerSaving && (prizeType === 'free' || (prizeType === 'purchase' && Math.random() > 0.5));
+  // Free prizes always show confetti, purchase prizes show it 50% of the time
+  const showConfetti = !isPowerSaving && (prizeType === 'free' || Math.random() > 0.5);
 
   // Calculate confetti origin - center of board for maximum visual impact
   const confettiOriginX = '50%';

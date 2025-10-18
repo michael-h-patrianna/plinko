@@ -6,19 +6,19 @@
  * @param pegRows - Number of peg rows for calculating center position
  */
 
-import { useState, useEffect } from 'react';
-import { useTheme } from '../../theme';
 import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 import {
-  sizeTokens,
-  zIndexTokens,
-  opacityTokens,
-  animationTokens,
-  borderWidthTokens,
-  spacingTokens,
+    animationTokens,
+    borderWidthTokens,
+    opacityTokens,
+    sizeTokens,
+    spacingTokens,
+    zIndexTokens,
 } from '@plinko/theme/tokens';
+import { useEffect, useState } from 'react';
+import { useAudio } from '../../audio/context/useAudio';
+import { useTheme } from '../../theme';
 import { GradientText } from '../ui/GradientText';
-import { useAudio } from '../../audio/context/AudioProvider';
 
 interface CountdownProps {
   onComplete: () => void;

@@ -42,7 +42,7 @@ describe('WebAudioAdapter - Initialization', () => {
 
   it('should not initialize twice', async () => {
     await adapter.initialize();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const volumeFn = vi.mocked(Howler.volume);
     const firstCall = volumeFn.mock.calls.length;
 
@@ -54,7 +54,7 @@ describe('WebAudioAdapter - Initialization', () => {
 
   it('should set global volume', async () => {
     await adapter.initialize();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const volumeFn = vi.mocked(Howler.volume);
 
     adapter.setGlobalVolume(0.5);
@@ -64,7 +64,7 @@ describe('WebAudioAdapter - Initialization', () => {
 
   it('should clamp volume between 0 and 1', async () => {
     await adapter.initialize();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const volumeFn = vi.mocked(Howler.volume);
 
     adapter.setGlobalVolume(1.5);
@@ -76,7 +76,7 @@ describe('WebAudioAdapter - Initialization', () => {
 
   it('should mute and unmute audio', async () => {
     await adapter.initialize();
-    // eslint-disable-next-line @typescript-eslint/unbound-method
+     
     const muteFn = vi.mocked(Howler.mute);
 
     expect(adapter.isMuted()).toBe(false);

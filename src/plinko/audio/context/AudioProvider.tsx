@@ -3,30 +3,13 @@
  * Initializes audio system and provides controllers to components
  */
 
-import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { performanceAdapter } from '../../utils/platform/performance';
 import { WebAudioAdapter } from '../adapters/WebAudioAdapter';
 import { MusicController } from '../core/MusicController';
 import { SFXController } from '../core/SFXController';
 import { VolumeController } from '../core/VolumeController';
-
-interface AudioContextValue {
-  sfxController: SFXController | null;
-  musicController: MusicController | null;
-  volumeController: VolumeController | null;
-  audioAdapter: WebAudioAdapter | null;
-  isInitialized: boolean;
-  initializationError: Error | null;
-}
-
-const AudioContext = createContext<AudioContextValue>({
-  sfxController: null,
-  musicController: null,
-  volumeController: null,
-  audioAdapter: null,
-  isInitialized: false,
-  initializationError: null,
-});
+import { AudioContext, type AudioContextValue } from './AudioContext';
 
 interface AudioProviderProps {
   children: ReactNode;
@@ -127,12 +110,4 @@ export function AudioProvider({ children }: AudioProviderProps) {
   };
 
   return <AudioContext.Provider value={contextValue}>{children}</AudioContext.Provider>;
-}
-
-/**
- * Hook to access audio controllers from any component
- * @returns Audio context value with controllers and initialization state
- */
-export function useAudio() {
-  return useContext(AudioContext);
 }

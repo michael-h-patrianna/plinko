@@ -16,14 +16,14 @@
  * CRITICAL: Uses ONLY hardcoded styles - NO theme context
  */
 
-import { useEffect, useRef, useState, useCallback } from 'react';
-import { AnimatePresence } from 'motion/react';
-import * as m from 'motion/react-m';
 import { useTheme } from '@plinko/theme';
 import { getAllCategories, getMetadataByCategory, type ThemePropertyMetadata } from '@plinko/theme/themeMetadata';
-import { ColorInput, NumberInput, StringInput, SelectInput, GradientInput } from './ThemePropertyInputs';
 import { exportThemeToFile, importThemeFromFile } from '@plinko/theme/themeSerializer';
 import type { Theme } from '@plinko/theme/types';
+import { AnimatePresence } from 'motion/react';
+import * as m from 'motion/react-m';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { ColorInput, GradientInput, NumberInput, SelectInput, StringInput } from './ThemePropertyInputs';
 
 interface ThemeEditorProps {
   isOpen: boolean;
@@ -100,15 +100,19 @@ const STYLES = {
 /**
  * Helper function to get value from nested object by dot notation path
  */
-function getValueByPath(obj: any, path: string): any {
+function getValueByPath(obj: Record<string, unknown>, path: string): unknown {
   const parts = path.split('.');
-  let current = obj;
+  let current: unknown = obj;
 
   for (const part of parts) {
     if (current === null || current === undefined) {
       return undefined;
     }
-    current = current[part];
+    // Type guard: ensure current is an object before accessing properties
+    if (typeof current !== 'object' || Array.isArray(current)) {
+      return undefined;
+    }
+    current = (current as Record<string, unknown>)[part];
   }
 
   return current;
@@ -117,10 +121,10 @@ function getValueByPath(obj: any, path: string): any {
 /**
  * Helper function to set value in nested object by dot notation path
  */
-function setValueByPath(obj: any, path: string, value: any): any {
+function setValueByPath(obj: Record<string, unknown>, path: string, value: unknown): Record<string, unknown> {
   const parts = path.split('.');
-  const newObj = JSON.parse(JSON.stringify(obj)); // Deep clone
-  let current: any = newObj;
+  const newObj = JSON.parse(JSON.stringify(obj)) as Record<string, unknown>; // Deep clone
+  let current: Record<string, unknown> = newObj;
 
   for (let i = 0; i < parts.length - 1; i++) {
     const part = parts[i];
@@ -128,7 +132,11 @@ function setValueByPath(obj: any, path: string, value: any): any {
     if (current[part] === undefined) {
       current[part] = {};
     }
-    current = current[part];
+    // Navigate to next level, ensuring it's an object
+    const next = current[part];
+    if (typeof next === 'object' && next !== null && !Array.isArray(next)) {
+      current = next as Record<string, unknown>;
+    }
   }
 
   const lastPart = parts[parts.length - 1];
@@ -188,8 +196,8 @@ function AccordionSection({ title, isOpen, onToggle, children }: AccordionSectio
  */
 interface PropertyInputProps {
   metadata: ThemePropertyMetadata;
-  value: any;
-  onChange: (value: any) => void;
+  value: unknown;
+  onChange: (value: unknown) => void;
 }
 
 function PropertyInput({ metadata, value, onChange }: PropertyInputProps) {
@@ -200,7 +208,7 @@ function PropertyInput({ metadata, value, onChange }: PropertyInputProps) {
       return (
         <ColorInput
           label={displayTitle}
-          value={value || '#000000'}
+          value={typeof value === 'string' ? value : '#000000'}
           onChange={onChange}
           description={description}
         />
@@ -312,8 +320,8 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
   }, []);
 
   // Handle property change - applies changes in real-time
-  const handleChange = useCallback((path: string, value: any) => {
-    const newTheme = setValueByPath(editedTheme, path, value);
+  const handleChange = useCallback((path: string, value: unknown) => {
+    const newTheme = setValueByPath(editedTheme as unknown as Record<string, unknown>, path, value) as unknown as Theme;
     setEditedTheme(newTheme);
     setTheme(newTheme); // Apply immediately!
   }, [editedTheme, setTheme]);
@@ -323,25 +331,27 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
     fileInputRef.current?.click();
   }, []);
 
-  const handleFileChange = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    void (async () => {
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    const loadedTheme = await importThemeFromFile(file);
-    if (loadedTheme) {
-      setEditedTheme(loadedTheme);
-      setInitialTheme(loadedTheme);
-      setTheme(loadedTheme); // Apply immediately!
-      console.log('Theme loaded successfully:', loadedTheme.name);
-    } else {
-      console.error('Failed to load theme - invalid file');
-      alert('Failed to load theme. Please check that the file is a valid theme JSON file.');
-    }
+      const loadedTheme = await importThemeFromFile(file);
+      if (loadedTheme) {
+        setEditedTheme(loadedTheme);
+        setInitialTheme(loadedTheme);
+        setTheme(loadedTheme); // Apply immediately!
+        console.log('Theme loaded successfully:', loadedTheme.name);
+      } else {
+        console.error('Failed to load theme - invalid file');
+        alert('Failed to load theme. Please check that the file is a valid theme JSON file.');
+      }
 
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    })();
   }, [setTheme]);
 
   // Handle Save Theme
@@ -386,10 +396,10 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
 
         if (e.shiftKey && document.activeElement === firstElement) {
           e.preventDefault();
-          lastElement?.focus();
+          lastElement.focus();
         } else if (!e.shiftKey && document.activeElement === lastElement) {
           e.preventDefault();
-          firstElement?.focus();
+          firstElement.focus();
         }
       }
     };
@@ -536,7 +546,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
                     onToggle={() => toggleSection(category)}
                   >
                     {metadataEntries.map(([, meta]) => {
-                      const value = getValueByPath(editedTheme, meta.path);
+                      const value = getValueByPath(editedTheme as unknown as Record<string, unknown>, meta.path);
                       return (
                         <PropertyInput
                           key={meta.path}

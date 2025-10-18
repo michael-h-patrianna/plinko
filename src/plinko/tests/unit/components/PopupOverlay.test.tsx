@@ -12,9 +12,9 @@ import { defaultTheme } from '@plinko/theme/themes/defaultTheme';
 // Mock useAnimation hook to avoid framer-motion issues in tests
 vi.mock('@plinko/theme/animationDrivers/useAnimation', () => ({
   useAnimation: () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     const createComponent = (tag: string) => ({ children, ...props }: any) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const Component = tag as any;
       return <Component {...props}>{children}</Component>;
     };

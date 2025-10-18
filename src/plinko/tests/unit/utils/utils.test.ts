@@ -8,8 +8,8 @@
  * - Type assertions needed for testing edge cases not covered by standard TypeScript types
  */
 
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
+ 
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { validatePrizeSet, getPrizeByIndex, normalizeProbabilities } from '@plinko/utils/prizeUtils';

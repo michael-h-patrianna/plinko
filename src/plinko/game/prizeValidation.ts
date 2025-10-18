@@ -125,25 +125,23 @@ function validateProbability(
   fieldName: string,
   prizeId?: string
 ): PrizeValidationError | null {
-  return createValidator(value, [isNumber, isFinite, isNonNegative, isInRange01], fieldName, prizeId);
+  return createValidator(
+    value,
+    [isNumber, isFinite, isNonNegative, isInRange01],
+    fieldName,
+    prizeId
+  );
 }
 
 /**
  * Validate CollectibleConfig structure
  */
-function validateCollectibleConfig(
-  config: unknown,
-  prizeId?: string
-): PrizeValidationError[] {
+function validateCollectibleConfig(config: unknown, prizeId?: string): PrizeValidationError[] {
   const errors: PrizeValidationError[] = [];
 
   if (!config || typeof config !== 'object') {
     errors.push(
-      new PrizeValidationError(
-        'CollectibleConfig must be an object',
-        'xp.config',
-        prizeId
-      )
+      new PrizeValidationError('CollectibleConfig must be an object', 'xp.config', prizeId)
     );
     return errors;
   }
@@ -162,10 +160,7 @@ function validateCollectibleConfig(
 /**
  * Validate RandomRewardConfig structure
  */
-function validateRandomRewardConfig(
-  config: unknown,
-  prizeId?: string
-): PrizeValidationError[] {
+function validateRandomRewardConfig(config: unknown, prizeId?: string): PrizeValidationError[] {
   const errors: PrizeValidationError[] = [];
 
   if (!config || typeof config !== 'object') {
@@ -197,13 +192,7 @@ export function validateFreeReward(reward: unknown, prizeId?: string): Validatio
   const errors: PrizeValidationError[] = [];
 
   if (!reward || typeof reward !== 'object') {
-    errors.push(
-      new PrizeValidationError(
-        'FreeReward must be an object',
-        'freeReward',
-        prizeId
-      )
-    );
+    errors.push(new PrizeValidationError('FreeReward must be an object', 'freeReward', prizeId));
     return invalidResult(errors);
   }
 
@@ -229,44 +218,23 @@ export function validateFreeReward(reward: unknown, prizeId?: string): Validatio
 
   // Validate XP if present
   if (freeReward.xp !== undefined) {
-    if (!freeReward.xp || typeof freeReward.xp !== 'object') {
-      errors.push(
-        new PrizeValidationError(
-          'freeReward.xp must be an object',
-          'freeReward.xp',
-          prizeId
-        )
-      );
-    } else {
-      const amountError = validatePositiveNumber(
-        freeReward.xp.amount,
-        'freeReward.xp.amount',
-        prizeId
-      );
-      if (amountError) errors.push(amountError);
+    // TypeScript ensures xp is the correct type when present
+    const amountError = validatePositiveNumber(
+      freeReward.xp.amount,
+      'freeReward.xp.amount',
+      prizeId
+    );
+    if (amountError) errors.push(amountError);
 
-      const configErrors = validateCollectibleConfig(freeReward.xp.config, prizeId);
-      errors.push(...configErrors);
-    }
+    const configErrors = validateCollectibleConfig(freeReward.xp.config, prizeId);
+    errors.push(...configErrors);
   }
 
   // Validate RandomReward if present
   if (freeReward.randomReward !== undefined) {
-    if (!freeReward.randomReward || typeof freeReward.randomReward !== 'object') {
-      errors.push(
-        new PrizeValidationError(
-          'freeReward.randomReward must be an object',
-          'freeReward.randomReward',
-          prizeId
-        )
-      );
-    } else {
-      const configErrors = validateRandomRewardConfig(
-        freeReward.randomReward.config,
-        prizeId
-      );
-      errors.push(...configErrors);
-    }
+    // TypeScript ensures randomReward is the correct type when present
+    const configErrors = validateRandomRewardConfig(freeReward.randomReward.config, prizeId);
+    errors.push(...configErrors);
   }
 
   // At least one reward type must be present
@@ -298,11 +266,7 @@ export function validatePurchaseOffer(offer: unknown, prizeId?: string): Validat
 
   if (!offer || typeof offer !== 'object') {
     errors.push(
-      new PrizeValidationError(
-        'PurchaseOffer must be an object',
-        'purchaseOffer',
-        prizeId
-      )
+      new PrizeValidationError('PurchaseOffer must be an object', 'purchaseOffer', prizeId)
     );
     return invalidResult(errors);
   }
@@ -318,11 +282,7 @@ export function validatePurchaseOffer(offer: unknown, prizeId?: string): Validat
   if (offerIdError) errors.push(offerIdError);
 
   // Validate title (required, non-empty)
-  const titleError = validateNonEmptyString(
-    purchaseOffer.title,
-    'purchaseOffer.title',
-    prizeId
-  );
+  const titleError = validateNonEmptyString(purchaseOffer.title, 'purchaseOffer.title', prizeId);
   if (titleError) errors.push(titleError);
 
   // Validate description (optional, but if present must be string)
@@ -403,11 +363,7 @@ export function validateNoWinPrize(prize: Partial<Prize>): ValidationResult {
   // No-win prizes should not have freeReward or purchaseOffer
   if (prize.freeReward !== undefined) {
     errors.push(
-      new PrizeValidationError(
-        'no_win prize should not have freeReward',
-        'freeReward',
-        prize.id
-      )
+      new PrizeValidationError('no_win prize should not have freeReward', 'freeReward', prize.id)
     );
   }
 
@@ -433,11 +389,7 @@ export function validateFreePrize(prize: Partial<Prize>): ValidationResult {
   // Free prizes must have freeReward
   if (!prize.freeReward) {
     errors.push(
-      new PrizeValidationError(
-        'free prize must have freeReward',
-        'freeReward',
-        prize.id
-      )
+      new PrizeValidationError('free prize must have freeReward', 'freeReward', prize.id)
     );
     return invalidResult(errors);
   }
@@ -461,11 +413,7 @@ export function validatePurchasePrize(prize: Partial<Prize>): ValidationResult {
   // Purchase prizes must have purchaseOffer
   if (!prize.purchaseOffer) {
     errors.push(
-      new PrizeValidationError(
-        'purchase prize must have purchaseOffer',
-        'purchaseOffer',
-        prize.id
-      )
+      new PrizeValidationError('purchase prize must have purchaseOffer', 'purchaseOffer', prize.id)
     );
     return invalidResult(errors);
   }
@@ -506,11 +454,7 @@ export function validatePrize(prize: unknown): ValidationResult {
       return validatePurchasePrize(p);
     default:
       return invalidResult([
-        new PrizeValidationError(
-          `Unknown prize type: ${p.type}`,
-          'type',
-          p.id
-        ),
+        new PrizeValidationError(`Unknown prize type: ${p.type}`, 'type', p.id),
       ]);
   }
 }
@@ -528,12 +472,7 @@ export function validatePrizes(prizes: unknown[]): ValidationResult {
     if (!result.valid) {
       // Add index context to errors
       const indexedErrors = result.errors.map(
-        (err) =>
-          new PrizeValidationError(
-            `Prize[${i}]: ${err.message}`,
-            err.field,
-            err.prizeId
-          )
+        (err) => new PrizeValidationError(`Prize[${i}]: ${err.message}`, err.field, err.prizeId)
       );
       allErrors.push(...indexedErrors);
     }
