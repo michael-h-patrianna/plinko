@@ -8,9 +8,18 @@ import { CurrencyCounter } from '@plinko/components/effects/CurrencyCounter';
 import { ScreenShake } from '@plinko/components/effects/ScreenShake';
 import { YouWonText } from '@plinko/components/effects/YouWonText';
 import { Peg } from '@plinko/components/game/PlinkoBoard/Peg';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ThemeProvider } from '../../../theme';
+
+// Helper to render with ThemeProvider and async wrapper
+const renderWithThemeAsync = async (component: React.ReactElement) => {
+  let result: ReturnType<typeof render>;
+  await act(async () => {
+    result = render(<ThemeProvider>{component}</ThemeProvider>);
+  });
+  return result!;
+};
 
 // Mock animation driver props interface for test mocks only
 interface MockAnimatedComponentProps {
@@ -222,25 +231,29 @@ describe('Animation Migration Tests', () => {
       expect(classElements.length).toBe(0);
     });
 
-    it('should use animation driver for pop animation', () => {
-      const { container } = renderWithTheme(
+    it('should use animation driver for pop animation', async () => {
+      const { container } = await renderWithThemeAsync(
         <CurrencyCounter targetAmount={500} label="GC" />
       );
 
       // Fast-forward to trigger animation
-      vi.advanceTimersByTime(100);
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
 
       // Check synchronously after advancing timers
       const animatedElements = container.querySelectorAll('[data-animated="true"]');
       expect(animatedElements.length).toBeGreaterThan(0);
     });
 
-    it('should use cross-platform safe scale animation', () => {
-      const { container } = renderWithTheme(
+    it('should use cross-platform safe scale animation', async () => {
+      const { container } = await renderWithThemeAsync(
         <CurrencyCounter targetAmount={500} label="GC" />
       );
 
-      vi.advanceTimersByTime(100);
+      await act(async () => {
+        vi.advanceTimersByTime(100);
+      });
 
       // Check synchronously after advancing timers
       const animatedElement = container.querySelector('[data-animated="true"]');

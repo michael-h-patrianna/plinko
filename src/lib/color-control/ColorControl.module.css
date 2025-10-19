@@ -1,0 +1,114 @@
+/* Compact gradient preview button (form control) */
+/* Compact color/gradient preview button (form control) */
+.previewButton {
+  position: relative;
+  width: 100%;
+  height: 40px;
+  border: 1.5px solid #444444;
+  border-radius: 8px;
+  background: #1a1a1a;
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  transition: all 150ms ease-out;
+}
+
+.previewButton:hover {
+  border-color: #666666;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.previewButton:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.previewButton.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkerboard background pattern */
+.checkerboard {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0;
+}
+
+/* Color/Gradient preview */
+.preview {
+  position: absolute;
+  inset: 4px;
+  border-radius: 6px;
+  pointer-events: none; /* Allow clicks to pass through to button */
+}
+
+/* Checkerboard background for transparency */
+.checkerboard {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 28px;
+  border-radius: 4px;
+  background-image:
+    linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+    linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
+  background-size: 8px 8px;
+  background-position:
+    0 0,
+    0 4px,
+    4px -4px,
+    -4px 0px;
+  pointer-events: none; /* Allow clicks to pass through to button */
+}
+
+/* Gradient preview overlay */
+.gradientPreview {
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 28px;
+  border-radius: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Chevron icon */
+.chevron {
+  margin-left: auto;
+  color: #999999;
+  transition: transform 150ms ease-out;
+}
+
+.previewButton:hover:not(.disabled) .chevron {
+  color: #ffffff;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .previewButton {
+    height: 44px;
+    min-width: 140px;
+  }
+
+  .gradientPreview,
+  .checkerboard {
+    width: 36px;
+  }
+}

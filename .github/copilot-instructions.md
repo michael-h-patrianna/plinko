@@ -22,6 +22,8 @@ WHY: Tracks progress, maintains focus
 
 ## Full Task Completion Protocol
 
+There are no time constraints or token limit. Follow these steps for every task:
+
 1. **Understand the Task**: Read the entire user request carefully.
 2. **Plan Your Approach**: Outline the steps needed to complete the task.
 3. **Execute Step-by-Step**: Tackle each step methodically, ensuring accuracy.
@@ -70,6 +72,7 @@ WHY: Tracks progress, maintains focus
 - When exposing `_internal` handles from hooks for tests, gate them behind the existing `_internal` object and document the usage in the relevant test file.
 - Use Playwright specs in `e2e/` for animation-heavy changes; capture evidence into `screenshots/` to keep visual baselines consistent.
 - Update docs if you alter reset orchestration, platform adapters, or animation drivers—`docs/architecture.md`, `docs/platform-adapter-implementation.md`, and `docs/RESET_ORCHESTRATION.md` are the canonical references.
+- Use data-testid attributes for stable element targeting in e2e tests; avoid relying on text content or CSS selectors that may change.
 
 ## Reference docs
 

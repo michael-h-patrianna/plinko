@@ -1,0 +1,210 @@
+/* Backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.4);
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  width: 320px;
+  background: white;
+  border-radius: 12px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideIn 200ms ease-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  position: relative;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  position: relative;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: #111827;
+  background: #f9fafb;
+}
+
+.tab.activeTab {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  background: #f3f4f6;
+  color: #111827;
+}
+
+/* Header - REMOVED, now using tabs */
+
+/* Color space selector */
+.colorSpaceSelector {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px 0;
+}
+
+.colorSpaceTab {
+  flex: 1;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.colorSpaceTab:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.colorSpaceTab.active {
+  background: #eff6ff;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Canvas container */
+.canvasContainer {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Hue slider container */
+.hueSliderContainer {
+  padding: 0 16px 16px;
+}
+
+/* Gradient bar container */
+.gradientBarContainer {
+  padding: 0 16px 16px;
+}
+
+/* Angle control */
+.angleControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.angleControl label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.angleInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.angleInput {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  text-align: right;
+  background: white;
+}
+
+.angleInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.angleInputGroup span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* Stops container */
+.stopsContainer {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .modal {
+    width: calc(100vw - 32px);
+    max-width: 400px;
+  }
+}

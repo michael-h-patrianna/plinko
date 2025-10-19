@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, act } from '../../testUtils';
+import { render, renderAsync, screen, fireEvent, act } from '../../testUtils';
 import { BallLauncher } from '@plinko/components/game/BallLauncher';
 import { Countdown } from '@plinko/components/game/Countdown';
 import { StartScreen } from '@plinko/components/screens/StartScreen';
@@ -88,79 +88,79 @@ describe('Countdown Component', () => {
     vi.restoreAllMocks();
   });
 
-  it('should render countdown starting at 3', () => {
-    render(<Countdown onComplete={vi.fn()} />);
+  it('should render countdown starting at 3', async () => {
+    await renderAsync(<Countdown onComplete={vi.fn()} />);
     expect(screen.getByText('3')).toBeInTheDocument();
   });
 
-  it('should countdown from 3 to 2', () => {
-    render(<Countdown onComplete={vi.fn()} />);
+  it('should countdown from 3 to 2', async () => {
+    await renderAsync(<Countdown onComplete={vi.fn()} />);
     expect(screen.getByText('3')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
   });
 
-  it('should countdown from 2 to 1', () => {
-    render(<Countdown onComplete={vi.fn()} />);
+  it('should countdown from 2 to 1', async () => {
+    await renderAsync(<Countdown onComplete={vi.fn()} />);
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('1')).toBeInTheDocument();
   });
 
-  it('should show GO after 1', () => {
-    render(<Countdown onComplete={vi.fn()} />);
+  it('should show GO after 1', async () => {
+    await renderAsync(<Countdown onComplete={vi.fn()} />);
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('1')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
 
     expect(screen.getByText('GO!')).toBeInTheDocument();
   });
 
-  it('should transition through all countdown states', () => {
+  it('should transition through all countdown states', async () => {
     const onComplete = vi.fn();
-    render(<Countdown onComplete={onComplete} />);
+    await renderAsync(<Countdown onComplete={onComplete} />);
 
     // Verify initial state
     expect(screen.getByText('3')).toBeInTheDocument();
 
     // Advance through countdown
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('2')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('1')).toBeInTheDocument();
 
-    act(() => {
+    await act(async () => {
       vi.advanceTimersByTime(800);
     });
     expect(screen.getByText('GO!')).toBeInTheDocument();
@@ -251,7 +251,7 @@ describe('StartScreen Component', () => {
     expect(mockOnStart).not.toHaveBeenCalled();
   });
 
-  it('should expand combo prizes when clicked', () => {
+  it('should expand combo prizes when clicked', async () => {
     const comboPrize: PrizeConfig = {
       ...MOCK_PRIZES[0]!,
       id: 'combo',
@@ -264,11 +264,11 @@ describe('StartScreen Component', () => {
     };
     const prizes = [comboPrize, ...MOCK_PRIZES.slice(1)];
 
-    render(<StartScreen prizes={prizes} onStart={mockOnStart} disabled={false} />);
+    await renderAsync(<StartScreen prizes={prizes} onStart={mockOnStart} disabled={false} />);
 
     const comboPrizeElement = screen.getByText('Combo Prize');
 
-    act(() => {
+    await act(async () => {
       fireEvent.click(comboPrizeElement.closest('div')!);
     });
 
@@ -456,12 +456,14 @@ describe('Slot Component', () => {
     expect(slot.getAttribute('data-wall-impact')).toBe('right');
   });
 
-  it('should support data-floor-impact attribute for floor collisions (set by driver)', () => {
-    render(<Slot index={0} prize={mockPrize} x={50} width={60} />);
+  it('should support data-floor-impact attribute for floor collisions (set by driver)', async () => {
+    await renderAsync(<Slot index={0} prize={mockPrize} x={50} width={60} />);
     const slot = screen.getByTestId('slot-0');
 
     // Driver sets floor impact
-    slot.setAttribute('data-floor-impact', 'true');
+    await act(async () => {
+      slot.setAttribute('data-floor-impact', 'true');
+    });
     expect(slot.getAttribute('data-floor-impact')).toBe('true');
   });
 
@@ -745,27 +747,27 @@ describe('ViewportSelector Component', () => {
 // ThemeSelector Component Tests
 // ============================================================================
 describe('ThemeSelector Component', () => {
-  it('should render theme selector', () => {
-    render(<ThemeSelector />);
+  it('should render theme selector', async () => {
+    await renderAsync(<ThemeSelector />);
     expect(screen.getByText('Theme:')).toBeInTheDocument();
   });
 
-  it('should render available themes', () => {
-    render(<ThemeSelector />);
+  it('should render available themes', async () => {
+    await renderAsync(<ThemeSelector />);
     // Default theme should be available
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });
 
-  it('should highlight current theme', () => {
-    render(<ThemeSelector />);
+  it('should highlight current theme', async () => {
+    await renderAsync(<ThemeSelector />);
     const buttons = screen.getAllByRole('button');
     // At least one button should be highlighted (current theme)
     expect(buttons.length).toBeGreaterThan(0);
   });
 
-  it('should switch theme when button clicked', () => {
-    render(<ThemeSelector />);
+  it('should switch theme when button clicked', async () => {
+    await renderAsync(<ThemeSelector />);
     const buttons = screen.getAllByRole('button');
 
     if (buttons.length > 1) {
@@ -775,8 +777,8 @@ describe('ThemeSelector Component', () => {
     }
   });
 
-  it('should render with theme styling', () => {
-    const { container } = render(<ThemeSelector />);
+  it('should render with theme styling', async () => {
+    const { container } = await renderAsync(<ThemeSelector />);
     const themeContainer = container.querySelector('.bg-black\\/20');
     expect(themeContainer).toBeInTheDocument();
   });
@@ -786,8 +788,8 @@ describe('ThemeSelector Component', () => {
 // PopupContainer Component Tests
 // ============================================================================
 describe('PopupContainer Component', () => {
-  it('should render with children', () => {
-    render(
+  it('should render with children', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Test Content</div>
       </PopupContainer>
@@ -795,8 +797,8 @@ describe('PopupContainer Component', () => {
     expect(screen.getByText('Test Content')).toBeInTheDocument();
   });
 
-  it('should render with testid', () => {
-    render(
+  it('should render with testid', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Test</div>
       </PopupContainer>
@@ -804,8 +806,8 @@ describe('PopupContainer Component', () => {
     expect(screen.getByTestId('popup-container')).toBeInTheDocument();
   });
 
-  it('should apply default min height', () => {
-    render(
+  it('should apply default min height', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Test</div>
       </PopupContainer>
@@ -814,8 +816,8 @@ describe('PopupContainer Component', () => {
     expect(container.style.minHeight).toBe('650px');
   });
 
-  it('should apply mobile overlay height when isMobileOverlay is true', () => {
-    render(
+  it('should apply mobile overlay height when isMobileOverlay is true', async () => {
+    await renderAsync(
       <PopupContainer isMobileOverlay={true}>
         <div>Test</div>
       </PopupContainer>
@@ -824,8 +826,8 @@ describe('PopupContainer Component', () => {
     expect(container.style.minHeight).toBe('100vh');
   });
 
-  it('should apply hidden overflow for mobile overlay', () => {
-    render(
+  it('should apply hidden overflow for mobile overlay', async () => {
+    await renderAsync(
       <PopupContainer isMobileOverlay={true}>
         <div>Test</div>
       </PopupContainer>
@@ -834,8 +836,8 @@ describe('PopupContainer Component', () => {
     expect(container.style.overflow).toBe('hidden');
   });
 
-  it('should apply visible overflow for non-mobile', () => {
-    render(
+  it('should apply visible overflow for non-mobile', async () => {
+    await renderAsync(
       <PopupContainer isMobileOverlay={false}>
         <div>Test</div>
       </PopupContainer>
@@ -844,8 +846,8 @@ describe('PopupContainer Component', () => {
     expect(container.style.overflow).toBe('visible');
   });
 
-  it('should render multiple children', () => {
-    render(
+  it('should render multiple children', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Child 1</div>
         <div>Child 2</div>
@@ -857,8 +859,8 @@ describe('PopupContainer Component', () => {
     expect(screen.getByText('Child 3')).toBeInTheDocument();
   });
 
-  it('should have full width', () => {
-    render(
+  it('should have full width', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Test</div>
       </PopupContainer>
@@ -867,8 +869,8 @@ describe('PopupContainer Component', () => {
     expect(container.className).toContain('w-full');
   });
 
-  it('should have relative positioning', () => {
-    render(
+  it('should have relative positioning', async () => {
+    await renderAsync(
       <PopupContainer>
         <div>Test</div>
       </PopupContainer>

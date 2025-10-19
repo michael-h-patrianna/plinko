@@ -1,0 +1,265 @@
+/* Backdrop */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10001; /* Must be above theme editor drawer (z-index: 10000) */
+  background: rgba(0, 0, 0, 0.4);
+  animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  width: 320px;
+  background: #1a1a1a;
+  border: 1px solid #333333;
+  border-radius: 12px;
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.4),
+    0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  animation: slideIn 200ms ease-out;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 32px);
+  position: relative; /* For absolute positioning of close button */
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Close button - positioned in top right corner */
+.closeButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #999999;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.closeButton:hover {
+  color: #ffffff;
+  background: #2a2a2a;
+}
+
+.closeButton:active {
+  background: #333333;
+}
+
+/* Header */
+.header {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #333333;
+  position: relative;
+  padding-right: 40px; /* Make room for close button */
+}
+
+/* Mode Switcher */
+.modeSwitcher {
+  display: flex;
+  gap: 4px;
+  padding: 12px 12px 0;
+}
+
+.modeButton {
+  flex: 1;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #999999;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.modeButton:hover {
+  color: #ffffff;
+  border-color: #666666;
+  background: #2a2a2a;
+}
+
+.modeButton.activeModeButton {
+  color: white;
+  background: #3b82f6;
+  border-color: #3b82f6;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 12px 0;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #999999;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+  position: relative;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: #ffffff;
+  background: #2a2a2a;
+}
+
+.tab.activeTab {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+/* Content container */
+.content {
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Color space selector */
+.colorSpaceSelector {
+  display: flex;
+  gap: 4px;
+  padding: 12px 16px 0;
+}
+
+.colorSpaceTab {
+  flex: 1;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid #444444;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #999999;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.colorSpaceTab:hover {
+  background: #2a2a2a;
+  border-color: #666666;
+}
+
+.colorSpaceTab.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Canvas container */
+.canvasContainer {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+/* Hue slider container */
+.hueSliderContainer {
+  padding: 0 16px 16px;
+}
+
+/* Gradient bar container */
+.gradientBarContainer {
+  padding: 0 16px 16px;
+}
+
+/* Angle control */
+.angleControl {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #2a2a2a;
+  border-top: 1px solid #333333;
+  border-bottom: 1px solid #333333;
+}
+
+.angleControl label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #ffffff;
+}
+
+.angleInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.angleInput {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #444444;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  text-align: right;
+  background: #1a1a1a;
+  color: #ffffff;
+}
+
+.angleInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.angleInputGroup span {
+  font-size: 13px;
+  color: #999999;
+}
+
+/* Stops container */
+.stopsContainer {
+  padding: 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .modal {
+    width: calc(100vw - 32px);
+    max-width: 400px;
+  }
+}

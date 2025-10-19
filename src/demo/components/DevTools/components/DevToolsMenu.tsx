@@ -10,11 +10,11 @@
  * not in the production user-facing application.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { useTheme } from '@plinko/theme';
-import { isMobileDevice } from '@plinko/utils/deviceDetection';
-import { useAnimationDriver } from '@plinko/theme/animationDrivers';
 import type { PerformanceMode } from '@demo/config/appConfig';
+import { useTheme } from '@plinko/theme';
+import { useAnimationDriver } from '@plinko/theme/animationDrivers';
+import { isMobileDevice } from '@plinko/utils/deviceDetection';
+import { useEffect, useRef, useState } from 'react';
 import ThemeEditor from './ThemeEditor';
 
 // Demo UI hardcoded styles (NOT affected by Plinko theme)
@@ -146,7 +146,7 @@ export function DevToolsMenu({
       {/* Gear Icon Button */}
       <AnimatedButton
         onClick={() => setIsOpen(!isOpen)}
-        className="rounded-full p-3 shadow-lg"
+        className="relative rounded-full p-2 transition-all"
         style={{
           background: DEMO_STYLES.gearButton.background,
           border: DEMO_STYLES.gearButton.border,
@@ -154,6 +154,7 @@ export function DevToolsMenu({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label="Dev Tools Settings"
+        data-testid="dev-tools-button"
       >
         <svg
           width="24"
@@ -228,6 +229,7 @@ export function DevToolsMenu({
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Open Theme Editor"
+                  data-testid="open-theme-editor-button"
                 >
                   <svg
                     width="14"

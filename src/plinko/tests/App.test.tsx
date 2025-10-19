@@ -3,7 +3,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from './testUtils';
+import { screen, waitFor, act } from './testUtils';
+import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '@demo/App';
 
@@ -31,9 +32,12 @@ afterEach(() => {
 });
 
 describe('App Integration', () => {
-  it('should render popup container', () => {
+  it('should render popup container', async () => {
     render(<App />);
-    expect(screen.getByTestId('popup-container')).toBeInTheDocument();
+
+    await waitFor(() => {
+      expect(screen.getByTestId('popup-container')).toBeInTheDocument();
+    });
   });
 
   it('should show start screen initially', async () => {
@@ -114,9 +118,11 @@ describe('App Integration', () => {
       expect(screen.getByTestId('popup-container')).toBeInTheDocument();
     });
 
-    // Simulate resize event
-    window.innerWidth = 414;
-    window.dispatchEvent(new Event('resize'));
+    // Simulate resize event - wrap in act() as it triggers state updates
+    await act(async () => {
+      window.innerWidth = 414;
+      window.dispatchEvent(new Event('resize'));
+    });
 
     // Just verify the app doesn't crash on resize
     await waitFor(() => {

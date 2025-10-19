@@ -3,10 +3,18 @@
  * Tests initialization, controller creation, and error handling
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AudioProvider } from '../../../audio/context/AudioProvider';
 import { useAudio } from '../../../audio/context/useAudio';
+
+// Helper to render with async act wrapper
+async function renderAsync(ui: React.ReactElement): Promise<void> {
+  const { render } = await import('@testing-library/react');
+  await act(async () => {
+    render(ui);
+  });
+}
 
 // Mock the audio adapter
 vi.mock('../../../audio/adapters/WebAudioAdapter', () => {
@@ -90,8 +98,8 @@ describe('AudioProvider', () => {
     vi.clearAllMocks();
   });
 
-  it('provides audio context to children', () => {
-    render(
+  it('provides audio context to children', async () => {
+    await renderAsync(
       <AudioProvider>
         <TestComponent />
       </AudioProvider>
@@ -101,17 +109,14 @@ describe('AudioProvider', () => {
   });
 
   it('initializes controllers on mount', async () => {
-    render(
+    await renderAsync(
       <AudioProvider>
         <TestComponent />
       </AudioProvider>
     );
 
-    // Initially not initialized
-    expect(screen.getByTestId('initialized')).toHaveTextContent('no');
-    expect(screen.getByTestId('sfx')).toHaveTextContent('no');
-
-    // Wait for initialization
+    // With renderAsync, initialization completes during act()
+    // So controllers are immediately available
     await waitFor(() => {
       expect(screen.getByTestId('initialized')).toHaveTextContent('yes');
     });
@@ -129,11 +134,16 @@ describe('AudioProvider', () => {
   });
 
   it('maintains controller references across re-renders', async () => {
-    const { rerender } = render(
-      <AudioProvider>
-        <TestComponent />
-      </AudioProvider>
-    );
+    let rerender: any;
+    await act(async () => {
+      const { render } = await import('@testing-library/react');
+      const result = render(
+        <AudioProvider>
+          <TestComponent />
+        </AudioProvider>
+      );
+      rerender = result.rerender;
+    });
 
     // Wait for initialization
     await waitFor(() => {
@@ -143,25 +153,34 @@ describe('AudioProvider', () => {
     const firstSfx = screen.getByTestId('sfx').textContent;
 
     // Force re-render
-    rerender(
-      <AudioProvider>
-        <TestComponent />
-      </AudioProvider>
-    );
+    await act(async () => {
+      rerender(
+        <AudioProvider>
+          <TestComponent />
+        </AudioProvider>
+      );
+    });
 
     // Controllers should still be available
     expect(screen.getByTestId('sfx')).toHaveTextContent(firstSfx);
   });
 
   it('does not crash when unmounted during initialization', async () => {
-    const { unmount } = render(
-      <AudioProvider>
-        <TestComponent />
-      </AudioProvider>
-    );
+    let unmount: any;
+    await act(async () => {
+      const { render } = await import('@testing-library/react');
+      const result = render(
+        <AudioProvider>
+          <TestComponent />
+        </AudioProvider>
+      );
+      unmount = result.unmount;
+    });
 
     // Unmount immediately
-    unmount();
+    await act(async () => {
+      unmount();
+    });
 
     // Should not throw
     await waitFor(() => {

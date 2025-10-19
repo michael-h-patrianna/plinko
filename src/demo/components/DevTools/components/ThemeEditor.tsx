@@ -23,7 +23,7 @@ import type { Theme } from '@plinko/theme/types';
 import { AnimatePresence } from 'motion/react';
 import * as m from 'motion/react-m';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ColorInput, GradientInput, NumberInput, SelectInput, StringInput } from './ThemePropertyInputs';
+import { ColorControlInput, NumberInput, SelectInput, StringInput } from './ThemePropertyInputs';
 
 interface ThemeEditorProps {
   isOpen: boolean;
@@ -206,10 +206,11 @@ function PropertyInput({ metadata, value, onChange }: PropertyInputProps) {
   switch (type) {
     case 'color':
       return (
-        <ColorInput
+        <ColorControlInput
           label={displayTitle}
           value={typeof value === 'string' ? value : '#000000'}
           onChange={onChange}
+          type="color"
           description={description}
         />
       );
@@ -246,10 +247,11 @@ function PropertyInput({ metadata, value, onChange }: PropertyInputProps) {
       ) : null;
     case 'gradient':
       return (
-        <GradientInput
+        <ColorControlInput
           label={displayTitle}
           value={typeof value === 'string' ? value : ''}
           onChange={onChange}
+          type="gradient"
           description={description}
         />
       );
@@ -441,6 +443,7 @@ export default function ThemeEditor({ isOpen, onClose }: ThemeEditorProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="theme-editor-title"
+            data-testid="theme-editor-dialog"
             style={{
               position: 'fixed',
               top: 0,

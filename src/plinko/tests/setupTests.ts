@@ -3,6 +3,53 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, beforeEach, vi } from 'vitest';
 import { resetHarnessState } from './fixtures/harness';
 
+// Mock canvas for JSDOM environment
+if (typeof window !== 'undefined' && typeof HTMLCanvasElement !== 'undefined') {
+  // Only mock if canvas is not already available (JSDOM doesn't implement it)
+  if (!HTMLCanvasElement.prototype.getContext) {
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, contextId: string) {
+      if (contextId === '2d') {
+        return {
+          fillStyle: '',
+          strokeStyle: '',
+          lineWidth: 1,
+          fillRect: vi.fn(),
+          clearRect: vi.fn(),
+          getImageData: vi.fn(() => ({ data: [] })),
+          putImageData: vi.fn(),
+          createImageData: vi.fn(() => ({ data: [] })),
+          setTransform: vi.fn(),
+          drawImage: vi.fn(),
+          save: vi.fn(),
+          restore: vi.fn(),
+          beginPath: vi.fn(),
+          moveTo: vi.fn(),
+          lineTo: vi.fn(),
+          closePath: vi.fn(),
+          stroke: vi.fn(),
+          translate: vi.fn(),
+          scale: vi.fn(),
+          rotate: vi.fn(),
+          arc: vi.fn(),
+          fill: vi.fn(),
+          measureText: vi.fn(() => ({ width: 0 })),
+          transform: vi.fn(),
+          rect: vi.fn(),
+          clip: vi.fn(),
+          createLinearGradient: vi.fn(() => ({
+            addColorStop: vi.fn(),
+          })),
+          createRadialGradient: vi.fn(() => ({
+            addColorStop: vi.fn(),
+          })),
+          canvas: this,
+        } as any;
+      }
+      return null;
+    } as any;
+  }
+}
+
 // Mock storage adapter to avoid localStorage dependency in Node environment
 // Note: Tests that specifically test the storage adapter should call vi.unmock()
 const mockStorage = new Map<string, string>();

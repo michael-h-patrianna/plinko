@@ -42,6 +42,9 @@ export default defineConfig({
 
   // Shared settings for all tests
   use: {
+    // CRITICAL: Always run in headless mode unless explicitly overridden
+    headless: process.env.PLAYWRIGHT_HEADLESS !== 'false',
+
     // Base URL for tests
     baseURL: process.env.BASE_URL || 'http://localhost:5173',
 

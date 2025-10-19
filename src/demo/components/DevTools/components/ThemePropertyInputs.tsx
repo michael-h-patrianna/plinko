@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { ColorValue } from '../../../../lib/color-control';
+import { ColorControl, parseGradient, parseSolidColor, serializeGradient, serializeSolidColor } from '../../../../lib/color-control';
 
 const STYLES = {
   label: {
@@ -308,7 +310,7 @@ export function SelectInput({ label, value, onChange, options, description }: Se
   );
 }
 
-// GradientInput Component
+// GradientInput Component (Legacy - kept for backward compatibility)
 export interface GradientInputProps {
   label: string;
   value: string;
@@ -355,6 +357,101 @@ export function GradientInput({ label, value, onChange, description }: GradientI
           />
         )}
       </div>
+    </div>
+  );
+}
+
+// ColorControlInput Component - Unified color and gradient picker
+export interface ColorControlInputProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type: 'color' | 'gradient';
+  description?: string;
+}
+
+export function ColorControlInput({ label, value, onChange, type, description }: ColorControlInputProps) {
+  // Convert 'color' type to 'solid' for ColorControl
+  const colorMode = type === 'color' ? 'solid' : 'gradient';
+
+  // Parse CSS string to ColorValue
+  const parseValue = useCallback((cssString: string): ColorValue => {
+    if (type === 'gradient') {
+      try {
+        return {
+          type: 'gradient',
+          data: parseGradient(cssString)
+        };
+      } catch {
+        // Fallback to default gradient
+        return {
+          type: 'gradient',
+          data: {
+            angle: 90,
+            stops: [
+              { id: '1', color: '#667eea', position: 0 },
+              { id: '2', color: '#764ba2', position: 100 }
+            ]
+          }
+        };
+      }
+    } else {
+      try {
+        return {
+          type: 'solid',
+          data: parseSolidColor(cssString)
+        };
+      } catch {
+        // Fallback to default color
+        return {
+          type: 'solid',
+          data: {
+            color: '#000000',
+            alpha: 1
+          }
+        };
+      }
+    }
+  }, [type]);
+
+  // Serialize ColorValue to CSS string
+  const serializeValue = useCallback((colorValue: ColorValue): string => {
+    if (colorValue.type === 'gradient') {
+      return serializeGradient(colorValue.data);
+    } else {
+      return serializeSolidColor(colorValue.data, 'hex');
+    }
+  }, []);
+
+  // Convert CSS string to ColorValue for ColorControl
+  const [colorValue, setColorValue] = useState<ColorValue>(() => parseValue(value));
+
+  // Update colorValue when external value changes
+  useEffect(() => {
+    setColorValue(parseValue(value));
+  }, [value, parseValue]);
+
+  // Handle ColorControl changes
+  const handleColorChange = useCallback((newColorValue: ColorValue) => {
+    setColorValue(newColorValue);
+    const cssString = serializeValue(newColorValue);
+    onChange(cssString);
+  }, [onChange, serializeValue]);
+
+  return (
+    <div style={{ marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '4px' }}>
+        <label style={{ ...STYLES.label, marginBottom: 0 }}>{label}</label>
+        {description && <Tooltip content={description} />}
+      </div>
+      <ColorControl
+        value={colorValue}
+        onChange={handleColorChange}
+        mode={colorMode}
+        colorFormat="hex"
+        maxStops={10}
+        minStops={2}
+      />
     </div>
   );
 }

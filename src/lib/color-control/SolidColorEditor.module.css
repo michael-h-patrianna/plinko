@@ -1,0 +1,49 @@
+.container {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Color space selector */
+.colorSpaceSelector {
+  display: flex;
+  gap: 8px;
+  padding: 4px;
+  background: #2a2a2a;
+  border-radius: 8px;
+}
+
+.colorSpaceTab {
+  flex: 1;
+  padding: 6px 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #999999;
+  cursor: pointer;
+  transition: all 150ms ease-out;
+}
+
+.colorSpaceTab:hover {
+  color: #ffffff;
+  background: #333333;
+}
+
+.colorSpaceTab.active {
+  background: #1a1a1a;
+  color: #3b82f6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Canvas container */
+.canvasContainer {
+  width: 100%;
+}
+
+/* Slider containers */
+.sliderContainer {
+  width: 100%;
+}

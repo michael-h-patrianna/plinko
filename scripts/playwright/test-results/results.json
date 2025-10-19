@@ -11,7 +11,7 @@
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 6
+      "actualWorkers": 1
     },
     "preserveOutput": "always",
     "reporter": [
@@ -49,7 +49,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 1
         },
         "id": "chromium",
         "name": "chromium",
@@ -65,7 +65,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 1
         },
         "id": "firefox",
         "name": "firefox",
@@ -81,7 +81,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 1
         },
         "id": "webkit",
         "name": "webkit",
@@ -97,7 +97,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 1
         },
         "id": "mobile-chrome",
         "name": "mobile-chrome",
@@ -113,7 +113,7 @@
         "repeatEach": 1,
         "retries": 0,
         "metadata": {
-          "actualWorkers": 6
+          "actualWorkers": 1
         },
         "id": "mobile-safari",
         "name": "mobile-safari",
@@ -139,21 +139,21 @@
   },
   "suites": [
     {
-      "title": "physics-determinism.spec.mjs",
-      "file": "physics-determinism.spec.mjs",
+      "title": "theme-editor-darktheme.spec.ts",
+      "file": "theme-editor-darktheme.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "Physics Determinism",
-          "file": "physics-determinism.spec.mjs",
-          "line": 14,
+          "title": "Color Control Dark Theme",
+          "file": "theme-editor-darktheme.spec.ts",
+          "line": 3,
           "column": 6,
           "specs": [
             {
-              "title": "same seed should produce consistent landing slots",
-              "ok": false,
+              "title": "should display color modal with dark theme matching demo UI",
+              "ok": true,
               "tags": [],
               "tests": [
                 {
@@ -166,167 +166,17 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "timedOut",
-                      "duration": 30067,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/michaelhaufschild/Documents/code/plinko/scripts/playwright/e2e/physics-determinism.spec.mjs",
-                            "column": 22,
-                            "line": 51
-                          },
-                          "message": "Error: page.evaluate: Target page, context or browser has been closed\n\n  49 |       } catch (error) {\n  50 |         console.error(`Run ${i + 1}: Ball did not land within 30s. Current game state:`,\n> 51 |           await page.evaluate(() => document.querySelector('[data-game-state]')?.getAttribute('data-game-state'))\n     |                      ^\n  52 |         );\n  53 |         throw error;\n  54 |       }\n    at /Users/michaelhaufschild/Documents/code/plinko/scripts/playwright/e2e/physics-determinism.spec.mjs:51:22"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "Run 1: Ball landed at x=470, y=522\n"
-                        },
-                        {
-                          "text": "Run 2: Ball landed at x=544, y=524\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.394Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-5ed3e-ce-consistent-landing-slots-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-5ed3e-ce-consistent-landing-slots-chromium/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-5ed3e-ce-consistent-landing-slots-chromium/error-context.md"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "b3993d6d88b751277b33-f559980871cf9e0b8322",
-              "file": "physics-determinism.spec.mjs",
-              "line": 21,
-              "column": 3
-            },
-            {
-              "title": "different seeds should produce varied outcomes",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "timedOut",
-                      "duration": 30069,
-                      "error": {
-                        "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m",
-                        "stack": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                      },
-                      "errors": [
-                        {
-                          "message": "\u001b[31mTest timeout of 30000ms exceeded.\u001b[39m"
-                        },
-                        {
-                          "location": {
-                            "file": "/Users/michaelhaufschild/Documents/code/plinko/scripts/playwright/test-helpers.mjs",
-                            "column": 14,
-                            "line": 91
-                          },
-                          "message": "Error: page.waitForFunction: Test timeout of 30000ms exceeded.\n\n   at ../test-helpers.mjs:91\n\n  89 |   const { timeout = 30000 } = options;\n  90 |\n> 91 |   await page.waitForFunction(\n     |              ^\n  92 |     (state) => {\n  93 |       const gameContainer = document.querySelector('[data-game-state]');\n  94 |       return gameContainer && gameContainer.getAttribute('data-game-state') === state;\n    at waitForGameState (/Users/michaelhaufschild/Documents/code/plinko/scripts/playwright/test-helpers.mjs:91:14)\n    at /Users/michaelhaufschild/Documents/code/plinko/scripts/playwright/e2e/physics-determinism.spec.mjs:124:15"
-                        }
-                      ],
-                      "stdout": [
-                        {
-                          "text": "Seed 111111: Ball landed at x=539\n"
-                        },
-                        {
-                          "text": "Seed 333333: Ball landed at x=484\n"
-                        }
-                      ],
-                      "stderr": [
-                        {
-                          "text": "Seed 555555: Ball did not land within 30s\n"
-                        }
-                      ],
-                      "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.401Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-fc9e1-uld-produce-varied-outcomes-chromium/test-failed-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-fc9e1-uld-produce-varied-outcomes-chromium/video.webm"
-                        },
-                        {
-                          "name": "error-context",
-                          "contentType": "text/markdown",
-                          "path": "/Users/michaelhaufschild/Documents/code/plinko/test-results/physics-determinism-Physic-fc9e1-uld-produce-varied-outcomes-chromium/error-context.md"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "b3993d6d88b751277b33-a427dd7239ec53106c42",
-              "file": "physics-determinism.spec.mjs",
-              "line": 99,
-              "column": 3
-            },
-            {
-              "title": "ball should never get stuck or freeze",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
                       "status": "passed",
-                      "duration": 10727,
+                      "duration": 3292,
                       "errors": [],
                       "stdout": [
                         {
-                          "text": "Ball drop completed in 7079ms\n"
+                          "text": "Screenshot saved: scripts/playwright/screenshots/color-modal-dark-theme.png\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.393Z",
+                      "startTime": "2025-10-18T21:50:40.207Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -334,126 +184,9 @@
                   "status": "expected"
                 }
               ],
-              "id": "b3993d6d88b751277b33-b5c1ea8400a4d4b43756",
-              "file": "physics-determinism.spec.mjs",
-              "line": 163,
-              "column": 3
-            },
-            {
-              "title": "ball should always land in a valid slot",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
-                      "status": "passed",
-                      "duration": 11641,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "Ball landed at valid position: { x: \u001b[33m707\u001b[39m, y: \u001b[33m524\u001b[39m, withinBoard: \u001b[33mtrue\u001b[39m }\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.401Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "b3993d6d88b751277b33-db1ab098d6a67799bd43",
-              "file": "physics-determinism.spec.mjs",
-              "line": 194,
-              "column": 3
-            },
-            {
-              "title": "trajectory should be realistic (no teleporting)",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
-                      "status": "passed",
-                      "duration": 12909,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "Recorded 194 position samples\n"
-                        },
-                        {
-                          "text": "Trajectory validated: maxDx=13px, maxDy=34px (no teleporting)\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.399Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "b3993d6d88b751277b33-6e8dd978a5483935bd64",
-              "file": "physics-determinism.spec.mjs",
-              "line": 241,
-              "column": 3
-            },
-            {
-              "title": "ball should move downward consistently",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "passed",
-                      "duration": 10652,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "Ball moved from Y:59 to Y:523 (79 samples)\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-10-17T11:50:20.395Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "b3993d6d88b751277b33-911926600513c97e4d8a",
-              "file": "physics-determinism.spec.mjs",
-              "line": 306,
+              "id": "7cd44c604c6ea4fb31a8-ae4a28d0399e10c8ce77",
+              "file": "theme-editor-darktheme.spec.ts",
+              "line": 4,
               "column": 3
             }
           ]
@@ -463,11 +196,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-10-17T11:50:18.520Z",
-    "duration": 32097.974000000002,
-    "expected": 4,
+    "startTime": "2025-10-18T21:50:38.833Z",
+    "duration": 4756.095,
+    "expected": 1,
     "skipped": 0,
-    "unexpected": 2,
+    "unexpected": 0,
     "flaky": 0
   }
 }

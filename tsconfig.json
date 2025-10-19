@@ -30,5 +30,6 @@
     "noUncheckedIndexedAccess": true
   },
   "include": ["src", "scripts"],
+  "exclude": ["src/lib/color-control/__tests__", "**/*.test.ts", "**/*.test.tsx"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

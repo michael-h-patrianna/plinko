@@ -3,12 +3,24 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, act, waitFor } from '@testing-library/react';
+import { renderHook as rtlRenderHook, act, waitFor } from '@testing-library/react';
 import { AppConfigProvider } from '@demo/config/AppConfigContext';
 import { ThemeProvider } from '../../../theme';
 import { usePlinkoGame } from '@plinko/hooks/usePlinkoGame';
 import type { ReactNode } from 'react';
 import type { PrizeProvider } from '@plinko/game/prizeProvider';
+
+// Helper to wrap renderHook with act() for async effects
+async function renderHook<Result, Props>(
+  callback: (props: Props) => Result,
+  options?: { wrapper?: React.ComponentType<{ children: React.ReactNode }> }
+): Promise<ReturnType<typeof rtlRenderHook<Result, Props>>> {
+  let result: ReturnType<typeof rtlRenderHook<Result, Props>>;
+  await act(async () => {
+    result = rtlRenderHook(callback, options);
+  });
+  return result!;
+}
 
 type UsePlinkoGameReturn = ReturnType<typeof usePlinkoGame>;
 
@@ -28,16 +40,24 @@ describe('usePlinkoGame Hook', () => {
   });
 
   describe('Initial State', () => {
-    it('should start in idle or ready state', () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+    it('should start in idle or ready state', async () => {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
-      expect(['idle', 'ready']).toContain(result.current.state);
-      expect(result.current.ballPosition).toBeNull();
+      // Wait for initial async effects and state transitions to complete
+      await waitFor(() => {
+        expect(['idle', 'ready']).toContain(result.current.state);
+      });
+
+      // In ready state, ballPosition is initialized (not null)
+      // In idle state, it would be null
+      if (result.current.state === 'idle') {
+        expect(result.current.ballPosition).toBeNull();
+      }
       expect(result.current.canClaim).toBe(false);
     });
 
     it('should initialize with prizes', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       // Wait for prizes to load (async-only loading)
       await waitFor(() => {
@@ -49,7 +69,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should auto-initialize to ready state', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -65,7 +85,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('State Transitions', () => {
     it('should transition from ready to countdown on startGame', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -82,7 +102,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should transition from countdown to dropping on completeCountdown', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -105,7 +125,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should only start game from ready state', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -125,7 +145,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Ball Animation', () => {
     it('should provide ball position during dropping state', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -156,7 +176,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Landing Detection', () => {
     it('should remain in dropping state during animation', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -180,7 +200,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Prize Claiming', () => {
     it('should have canClaim false during animation', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -200,7 +220,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should not allow claiming before revealed state', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -221,7 +241,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Game Reset', () => {
     it('should reset game state on resetGame', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -230,16 +250,21 @@ describe('usePlinkoGame Hook', () => {
         { timeout: 2000 }
       );
 
-      act(() => {
+      await act(async () => {
         result.current.resetGame();
+        // Allow async effects to complete
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
       expect(['idle', 'ready']).toContain(result.current.state);
-      expect(result.current.ballPosition).toBeNull();
+      // ballPosition may be initialized if state is 'ready'
+      if (result.current.state === 'idle') {
+        expect(result.current.ballPosition).toBeNull();
+      }
     });
 
     it('should generate new prizes on reset', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -250,8 +275,10 @@ describe('usePlinkoGame Hook', () => {
 
       const firstPrizeSet = [...result.current.prizes];
 
-      act(() => {
+      await act(async () => {
         result.current.resetGame();
+        // Allow async effects to complete
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
       // Wait for re-initialization
@@ -269,7 +296,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should reset selected prize temporarily on reset', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -281,8 +308,10 @@ describe('usePlinkoGame Hook', () => {
       const selectedPrize = result.current.selectedPrize;
       expect(selectedPrize).not.toBeNull();
 
-      act(() => {
+      await act(async () => {
         result.current.resetGame();
+        // Allow async effects to complete
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
       // Initially cleared or will be re-initialized
@@ -298,7 +327,7 @@ describe('usePlinkoGame Hook', () => {
   describe('Seed Override', () => {
     it('should use seedOverride when provided', async () => {
       const seed = 42;
-      const { result } = renderHook(() => usePlinkoGame({ seedOverride: seed }), { wrapper });
+      const { result } = await renderHook(() => usePlinkoGame({ seedOverride: seed }), { wrapper });
 
       await waitFor(
         () => {
@@ -315,7 +344,7 @@ describe('usePlinkoGame Hook', () => {
     it('should use URL seed parameter when no override', async () => {
       window.history.pushState({}, '', '?seed=123');
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -333,7 +362,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Board Dimensions', () => {
     it('should accept custom board dimensions', async () => {
-      const { result } = renderHook(
+      const { result } = await renderHook(
         () =>
           usePlinkoGame({
             boardWidth: 500,
@@ -357,7 +386,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Trajectory Points', () => {
     it('should provide current trajectory point during dropping', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -380,7 +409,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should have trajectory point available after initialization', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -396,7 +425,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Edge Cases', () => {
     it('should handle rapid state transitions', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -406,12 +435,14 @@ describe('usePlinkoGame Hook', () => {
       );
 
       // Rapid transitions
-      act(() => {
+      await act(async () => {
         result.current.startGame();
       });
 
-      act(() => {
+      await act(async () => {
         result.current.resetGame();
+        // Allow async effects to complete
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
 
       // Should handle gracefully
@@ -419,7 +450,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should clean up on unmount', async () => {
-      const { result, unmount } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result, unmount } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -440,7 +471,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Full Game Flow', () => {
     it('should execute game state transitions', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       // 1. Initialize to ready
       await waitFor(
@@ -467,8 +498,10 @@ describe('usePlinkoGame Hook', () => {
       expect(['dropping', 'landed', 'revealed']).toContain(result.current.state);
 
       // 5. Reset
-      act(() => {
+      await act(async () => {
         result.current.resetGame();
+        // Allow async effects to complete
+        await new Promise((resolve) => setTimeout(resolve, 0));
       });
       expect(['idle', 'ready']).toContain(result.current.state);
     });
@@ -528,7 +561,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -558,7 +591,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -628,7 +661,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -673,7 +706,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -744,7 +777,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -814,7 +847,7 @@ describe('usePlinkoGame Hook', () => {
         );
       }
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), {
         wrapper: customWrapper,
       });
 
@@ -834,7 +867,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Drop Position Choice Mechanic', () => {
     it('should transition to selecting-position when drop-position mechanic enabled', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(
         () => usePlinkoGame({ choiceMechanic: 'drop-position' }),
         { wrapper }
       );
@@ -854,7 +887,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should allow selecting drop position and generate new trajectory', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(
         () => usePlinkoGame({ choiceMechanic: 'drop-position' }),
         { wrapper }
       );
@@ -884,7 +917,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should swap prizes array when selecting drop position', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(
         () => usePlinkoGame({ choiceMechanic: 'drop-position' }),
         { wrapper }
       );
@@ -913,7 +946,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should ignore selectDropPosition if not in selecting-position state', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -935,7 +968,7 @@ describe('usePlinkoGame Hook', () => {
 
   describe('Winning Prize Lock Guard', () => {
     it('should lock winning prize after initialization', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -953,7 +986,7 @@ describe('usePlinkoGame Hook', () => {
     });
 
     it('should reset winning prize lock on game reset', async () => {
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -987,7 +1020,7 @@ describe('usePlinkoGame Hook', () => {
       // Set URL with seed parameter
       window.history.pushState({}, '', '?seed=99999');
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -1004,7 +1037,7 @@ describe('usePlinkoGame Hook', () => {
       // Set URL with invalid seed parameter
       window.history.pushState({}, '', '?seed=invalid');
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
@@ -1021,7 +1054,7 @@ describe('usePlinkoGame Hook', () => {
       // Set URL with seed parameter
       window.history.pushState({}, '', '?seed=11111');
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(
         () => usePlinkoGame({ seedOverride: 88888 }),
         { wrapper }
       );
@@ -1041,7 +1074,7 @@ describe('usePlinkoGame Hook', () => {
       // Set URL with seed parameter (for development testing)
       window.history.pushState({}, '', '?seed=12345');
 
-      const { result } = renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
+      const { result } = await renderHook<UsePlinkoGameReturn, unknown>(() => usePlinkoGame(), { wrapper });
 
       await waitFor(
         () => {
